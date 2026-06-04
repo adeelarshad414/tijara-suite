@@ -1,0 +1,66 @@
+<odoo>
+    <record id="action_tijara_queue_ticket" model="ir.actions.act_window">
+        <field name="name">Queue Tickets</field>
+        <field name="res_model">tijara.queue.ticket</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_queue_ticket_tree" model="ir.ui.view">
+        <field name="name">tijara.queue.ticket.tree</field>
+        <field name="model">tijara.queue.ticket</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="queue_number"/>
+                <field name="source"/>
+                <field name="order_type"/>
+                <field name="audience"/>
+                <field name="pos_order_id"/>
+                <field name="customer_id"/>
+                <field name="promised_at"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_queue_ticket_form" model="ir.ui.view">
+        <field name="name">tijara.queue.ticket.form</field>
+        <field name="model">tijara.queue.ticket</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_assign_number" type="object" string="Assign Number" invisible="queue_number"/>
+                    <button name="action_prepare" type="object" string="Prepare" invisible="state != 'waiting'"/>
+                    <button name="action_ready" type="object" string="Ready" invisible="state != 'preparing'"/>
+                    <button name="action_call" type="object" string="Call" invisible="state != 'ready'"/>
+                    <button name="action_complete" type="object" string="Complete" invisible="state not in ('ready', 'called')"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('completed', 'cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="queue_number"/>
+                            <field name="source"/>
+                            <field name="order_type"/>
+                            <field name="audience"/>
+                        </group>
+                        <group>
+                            <field name="pos_order_id"/>
+                            <field name="customer_id"/>
+                            <field name="pickup_code"/>
+                            <field name="promised_at"/>
+                            <field name="called_at"/>
+                            <field name="completed_at"/>
+                            <field name="company_id"/>
+                        </group>
+                    </group>
+                    <field name="notes"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_queue_ticket" name="Queue Tickets" parent="menu_tijara_pos_experience" action="action_tijara_queue_ticket" sequence="40"/>
+</odoo>
+

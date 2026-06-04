@@ -1,0 +1,24 @@
+<odoo>
+    <record id="product_template_form_view_tijara_superstore" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.superstore</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']" position="after">
+                <page name="tijara_superstore" string="Superstore">
+                    <group>
+                        <field name="tijara_superstore_department"/>
+                        <field name="tijara_aisle"/>
+                        <field name="tijara_shelf"/>
+                        <field name="tijara_shelf_capacity"/>
+                        <field name="tijara_case_pack_qty"/>
+                        <field name="tijara_inner_pack_qty"/>
+                        <field name="tijara_promo_eligible"/>
+                        <field name="tijara_loyalty_points"/>
+                        <field name="tijara_fast_moving_item"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

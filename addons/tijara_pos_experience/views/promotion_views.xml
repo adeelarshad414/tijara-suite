@@ -1,0 +1,69 @@
+<odoo>
+    <record id="action_tijara_promotion" model="ir.actions.act_window">
+        <field name="name">Promotions and Deals</field>
+        <field name="res_model">tijara.promotion</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_promotion_tree" model="ir.ui.view">
+        <field name="name">tijara.promotion.tree</field>
+        <field name="model">tijara.promotion</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="promotion_type"/>
+                <field name="applies_to"/>
+                <field name="discount_percent"/>
+                <field name="fixed_price"/>
+                <field name="start_at"/>
+                <field name="end_at"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_promotion_form" model="ir.ui.view">
+        <field name="name">tijara.promotion.form</field>
+        <field name="model">tijara.promotion</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="sequence"/>
+                            <field name="promotion_type"/>
+                            <field name="applies_to"/>
+                            <field name="company_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="discount_percent"/>
+                            <field name="fixed_price"/>
+                            <field name="start_at"/>
+                            <field name="end_at"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="title_english"/>
+                        <field name="title_urdu"/>
+                        <field name="display_description"/>
+                    </group>
+                    <field name="product_ids" widget="many2many_tags"/>
+                    <group>
+                        <field name="show_on_kiosk"/>
+                        <field name="show_on_menu_board"/>
+                        <field name="show_on_deals_board"/>
+                        <field name="show_on_customer_display"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_promotion" name="Promotions and Deals" parent="menu_tijara_pos_experience" action="action_tijara_promotion" sequence="30"/>
+</odoo>
+

@@ -1,0 +1,99 @@
+<odoo>
+    <record id="action_tijara_hardware_device" model="ir.actions.act_window">
+        <field name="name">Hardware Devices</field>
+        <field name="res_model">tijara.hardware.device</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_hardware_device_tree" model="ir.ui.view">
+        <field name="name">tijara.hardware.device.tree</field>
+        <field name="model">tijara.hardware.device</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="device_type"/>
+                <field name="integration_role"/>
+                <field name="connection_type"/>
+                <field name="integration_status"/>
+                <field name="ip_address"/>
+                <field name="port"/>
+                <field name="company_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_hardware_device_form" model="ir.ui.view">
+        <field name="name">tijara.hardware.device.form</field>
+        <field name="model">tijara.hardware.device</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_test_connection" type="object" string="Test Configuration" class="btn-primary"/>
+                    <button name="action_bridge_health_check" type="object" string="Bridge Health" invisible="connection_type != 'browser_bridge'"/>
+                    <button name="action_send_bridge_test_job" type="object" string="Send Bridge Test Job" class="btn-secondary" invisible="connection_type != 'browser_bridge'"/>
+                    <button name="action_mark_offline" type="object" string="Mark Offline" invisible="integration_status == 'offline'"/>
+                    <field name="integration_status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="device_type"/>
+                            <field name="integration_role"/>
+                            <field name="connection_type"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="branch_code"/>
+                            <field name="ip_address"/>
+                            <field name="port"/>
+                            <field name="serial_path"/>
+                            <field name="bridge_endpoint"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Printer / Scanner">
+                            <group>
+                                <group>
+                                    <field name="printer_language"/>
+                                    <field name="scanner_mode"/>
+                                    <field name="paper_width_mm"/>
+                                    <field name="dpi"/>
+                                </group>
+                                <group>
+                                    <field name="supports_barcode"/>
+                                    <field name="supports_qr"/>
+                                    <field name="supports_duplex"/>
+                                    <field name="auto_open_cash_drawer"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Device Details">
+                            <group>
+                                <field name="vendor_name"/>
+                                <field name="model_name"/>
+                                <field name="driver_name"/>
+                                <field name="bridge_last_job_id" readonly="1"/>
+                                <field name="bridge_last_operation" readonly="1"/>
+                                <field name="bridge_last_response_code" readonly="1"/>
+                                <field name="last_seen_at"/>
+                            </group>
+                        </page>
+                        <page string="Configuration">
+                            <group>
+                                <field name="config_json"/>
+                                <field name="test_payload"/>
+                                <field name="last_test_result" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_hardware_device" name="Hardware Devices" parent="menu_tijara_retail_configuration" action="action_tijara_hardware_device" sequence="20"/>
+</odoo>

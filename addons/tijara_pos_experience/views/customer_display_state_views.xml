@@ -1,0 +1,84 @@
+<odoo>
+    <record id="action_tijara_customer_display_state" model="ir.actions.act_window">
+        <field name="name">Customer Display States</field>
+        <field name="res_model">tijara.customer.display.state</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_customer_display_state_list" model="ir.ui.view">
+        <field name="name">tijara.customer.display.state.list</field>
+        <field name="model">tijara.customer.display.state</field>
+        <field name="arch" type="xml">
+            <list decoration-success="status in ('paid', 'thank_you')" decoration-info="status in ('building', 'payment')">
+                <field name="name"/>
+                <field name="screen_id"/>
+                <field name="status"/>
+                <field name="order_reference"/>
+                <field name="customer_name"/>
+                <field name="amount_total"/>
+                <field name="last_event_at"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_customer_display_state_form" model="ir.ui.view">
+        <field name="name">tijara.customer.display.state.form</field>
+        <field name="model">tijara.customer.display.state</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_set_idle" type="object" string="Set Idle"/>
+                    <field name="status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="screen_id"/>
+                            <field name="company_id"/>
+                            <field name="active"/>
+                            <field name="last_event_at"/>
+                        </group>
+                        <group>
+                            <field name="order_reference"/>
+                            <field name="cashier_name"/>
+                            <field name="customer_name"/>
+                            <field name="audience"/>
+                            <field name="order_type"/>
+                            <field name="payment_summary"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="amount_subtotal"/>
+                            <field name="discount_amount"/>
+                        </group>
+                        <group>
+                            <field name="tax_amount"/>
+                            <field name="amount_total"/>
+                        </group>
+                    </group>
+                    <field name="line_ids">
+                        <list editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="product_id"/>
+                            <field name="name"/>
+                            <field name="urdu_name"/>
+                            <field name="quantity"/>
+                            <field name="price_unit"/>
+                            <field name="discount"/>
+                            <field name="price_subtotal"/>
+                        </list>
+                    </field>
+                    <group>
+                        <field name="message_english"/>
+                        <field name="message_urdu"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_customer_display_state" name="Customer Display State" parent="menu_tijara_pos_experience" action="action_tijara_customer_display_state" sequence="14"/>
+</odoo>

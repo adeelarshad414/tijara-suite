@@ -1,0 +1,86 @@
+<odoo>
+    <record id="action_tijara_hardware_certification" model="ir.actions.act_window">
+        <field name="name">Hardware Certifications</field>
+        <field name="res_model">tijara.hardware.certification</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_hardware_certification_list" model="ir.ui.view">
+        <field name="name">tijara.hardware.certification.list</field>
+        <field name="model">tijara.hardware.certification</field>
+        <field name="arch" type="xml">
+            <list decoration-success="result == 'passed'" decoration-danger="result == 'failed'" decoration-warning="result == 'blocked'">
+                <field name="name"/>
+                <field name="device_id"/>
+                <field name="device_type"/>
+                <field name="vendor_name"/>
+                <field name="model_name"/>
+                <field name="observed_serial_number"/>
+                <field name="profile_name"/>
+                <field name="certification_type"/>
+                <field name="tested_at"/>
+                <field name="result"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_hardware_certification_form" model="ir.ui.view">
+        <field name="name">tijara.hardware.certification.form</field>
+        <field name="model">tijara.hardware.certification</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_mark_passed" type="object" string="Passed" class="btn-primary"/>
+                    <button name="action_mark_failed" type="object" string="Failed"/>
+                    <button name="action_mark_blocked" type="object" string="Blocked"/>
+                    <button name="action_refresh_evidence_hash" type="object" string="Refresh Evidence Hash"/>
+                    <field name="result" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="device_id"/>
+                            <field name="profile_name"/>
+                            <field name="certification_type"/>
+                            <field name="tested_by_id"/>
+                            <field name="tested_at"/>
+                        </group>
+                        <group>
+                            <field name="vendor_name"/>
+                            <field name="model_name"/>
+                            <field name="observed_serial_number"/>
+                            <field name="firmware_version"/>
+                            <field name="driver_version"/>
+                            <field name="driver_name"/>
+                            <field name="connection_type"/>
+                            <field name="store_location"/>
+                            <field name="certification_standard"/>
+                            <field name="physical_signature"/>
+                            <field name="last_physical_seen_at"/>
+                            <field name="next_retest_date"/>
+                        </group>
+                    </group>
+                    <group string="Checks">
+                        <field name="receipt_print_ok"/>
+                        <field name="label_print_ok"/>
+                        <field name="barcode_scan_ok"/>
+                        <field name="qr_scan_ok"/>
+                        <field name="cash_drawer_ok"/>
+                        <field name="scale_read_ok"/>
+                        <field name="customer_display_ok"/>
+                    </group>
+                    <group>
+                        <field name="evidence_summary"/>
+                        <field name="evidence_json"/>
+                        <field name="evidence_attachment_ids" widget="many2many_binary"/>
+                        <field name="evidence_hash" readonly="1"/>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_hardware_certification" name="Hardware Certifications" parent="menu_tijara_retail_configuration" action="action_tijara_hardware_certification" sequence="25"/>
+</odoo>

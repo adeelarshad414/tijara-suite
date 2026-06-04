@@ -1,0 +1,20 @@
+{
+    "name": "Tijara Inventory Intelligence",
+    "summary": "Low-stock, expiry, warehouse placement, racks, shelves, and bins",
+    "version": "19.0.1.0.0",
+    "category": "Tijara",
+    "author": "Tijara Suite",
+    "license": "LGPL-3",
+    "depends": ["stock", "product_expiry", "tijara_retail_core"],
+    "data": [
+        "security/ir.model.access.csv",
+        "data/inventory_cron.xml",
+        "views/inventory_menus.xml",
+        "views/storage_position_views.xml",
+        "views/inventory_alert_views.xml",
+        "views/stock_location_views.xml",
+        "views/product_template_views.xml",
+    ],
+    "installable": True,
+    "application": False,
+}

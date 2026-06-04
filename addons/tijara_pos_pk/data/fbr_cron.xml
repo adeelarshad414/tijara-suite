@@ -1,0 +1,11 @@
+<odoo>
+    <record id="ir_cron_tijara_fbr_submit" model="ir.cron">
+        <field name="name">Tijara Submit Queued FBR Invoices</field>
+        <field name="model_id" ref="model_tijara_fbr_invoice_queue"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_submit_queued()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">False</field>
+    </record>
+</odoo>

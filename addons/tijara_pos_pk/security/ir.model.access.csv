@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tijara_fbr_invoice_queue_user,tijara.fbr.invoice.queue.user,model_tijara_fbr_invoice_queue,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_fbr_invoice_queue_manager,tijara.fbr.invoice.queue.manager,model_tijara_fbr_invoice_queue,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_receipt_profile_user,tijara.receipt.profile.user,model_tijara_receipt_profile,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_receipt_profile_manager,tijara.receipt.profile.manager,model_tijara_receipt_profile,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_receipt_profile_pos_user,tijara.receipt.profile.pos.user,model_tijara_receipt_profile,point_of_sale.group_pos_user,1,0,0,0
+access_tijara_receipt_profile_pos_manager,tijara.receipt.profile.pos.manager,model_tijara_receipt_profile,point_of_sale.group_pos_manager,1,0,0,0

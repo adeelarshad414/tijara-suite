@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="tijara_pos_pk.OrderReceiptTemplateRuntime" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension">
+        <xpath expr="//ReceiptHeader" position="after">
+            <t t-if="this.tijaraProfile">
+                <style t-if="this.tijaraCustomCss">
+                    <t t-out="this.tijaraCustomCss"/>
+                </style>
+                <div class="tijara-pos-receipt-profile text-center pt-2">
+                    <div t-if="this.tijaraTitleEnglish" class="tijara-pos-receipt-title" t-out="this.tijaraTitleEnglish"/>
+                    <div t-if="this.tijaraTitleUrdu" class="tijara-pos-receipt-title tijara-urdu" t-out="this.tijaraTitleUrdu"/>
+                    <div t-if="this.tijaraHeaderEnglish" class="tijara-pos-receipt-text" t-out="this.tijaraHeaderEnglish"/>
+                    <div t-if="this.tijaraHeaderUrdu" class="tijara-pos-receipt-text tijara-urdu" t-out="this.tijaraHeaderUrdu"/>
+                    <div class="tijara-pos-receipt-meta text-start pt-1">
+                        <div t-if="this.tijaraShow('show_customer')">
+                            Customer: <span t-out="this.tijaraCustomerName"/>
+                        </div>
+                        <div t-if="this.tijaraSaleType">
+                            Sale: <span t-out="this.tijaraSaleType"/>
+                        </div>
+                        <div t-if="this.tijaraServiceMode">
+                            Mode: <span t-out="this.tijaraServiceMode"/>
+                        </div>
+                        <div t-if="order.tijara_pickup_code">
+                            Pickup: <span t-out="order.tijara_pickup_code"/>
+                        </div>
+                        <div t-if="this.tijaraShow('show_company_ntn_strn') and order.company.tijara_ntn">
+                            NTN: <span t-out="order.company.tijara_ntn"/>
+                        </div>
+                        <div t-if="this.tijaraShow('show_company_ntn_strn') and order.company.tijara_strn">
+                            STRN: <span t-out="order.company.tijara_strn"/>
+                        </div>
+                    </div>
+                    <div t-if="this.tijaraCustomBody" class="tijara-pos-receipt-custom-body text-start pt-2" t-out="this.tijaraCustomBody"/>
+                </div>
+            </t>
+        </xpath>
+        <xpath expr="//div[hasclass('before-footer')]" position="before">
+            <t t-if="this.tijaraProfile">
+                <div t-if="this.tijaraShow('show_barcode') and this.tijaraBarcodeUrl" class="tijara-pos-receipt-barcode text-center pt-3">
+                    <img t-att-src="this.tijaraBarcodeUrl"/>
+                    <div class="tijara-pos-receipt-code" t-out="this.tijaraBarcodeValue"/>
+                </div>
+                <div t-if="this.tijaraShow('show_qr') and this.tijaraQrUrl" class="tijara-pos-receipt-qr text-center pt-2">
+                    <img t-att-src="this.tijaraQrUrl"/>
+                </div>
+                <div t-if="this.tijaraShow('show_return_policy') and (this.tijaraTermsEnglish or this.tijaraTermsUrdu)" class="tijara-pos-receipt-policy pt-2">
+                    <div t-if="this.tijaraTermsEnglish" t-out="this.tijaraTermsEnglish"/>
+                    <div t-if="this.tijaraTermsUrdu" class="tijara-urdu" t-out="this.tijaraTermsUrdu"/>
+                </div>
+            </t>
+        </xpath>
+        <xpath expr="//div[hasclass('after-footer')]" position="before">
+            <t t-if="this.tijaraProfile">
+                <div t-if="this.tijaraFooterEnglish or this.tijaraFooterUrdu" class="tijara-pos-receipt-footer text-center pt-2">
+                    <div t-if="this.tijaraFooterEnglish" t-out="this.tijaraFooterEnglish"/>
+                    <div t-if="this.tijaraFooterUrdu" class="tijara-urdu" t-out="this.tijaraFooterUrdu"/>
+                </div>
+            </t>
+        </xpath>
+    </t>
+</templates>

@@ -1,0 +1,159 @@
+<odoo noupdate="1">
+    <record id="dashboard_owner_overview" model="tijara.analytics.dashboard">
+        <field name="name">Owner Overview</field>
+        <field name="code">owner_overview</field>
+        <field name="sequence">10</field>
+        <field name="audience">owner</field>
+        <field name="notes">Executive view for revenue, margin, sales trend, inventory risk, refunds, and cash variance.</field>
+    </record>
+
+    <record id="dashboard_inventory_control" model="tijara.analytics.dashboard">
+        <field name="name">Inventory Control</field>
+        <field name="code">inventory_control</field>
+        <field name="sequence">20</field>
+        <field name="audience">inventory_manager</field>
+        <field name="notes">Stock health view for low stock, expiry, placement, turnover, dead stock, and replenishment.</field>
+    </record>
+
+    <record id="dashboard_pos_performance" model="tijara.analytics.dashboard">
+        <field name="name">POS Performance</field>
+        <field name="code">pos_performance</field>
+        <field name="sequence">30</field>
+        <field name="audience">cashier_manager</field>
+        <field name="notes">Cashier and counter performance for orders, basket size, refunds, discounts, and queue wait.</field>
+    </record>
+
+    <record id="dashboard_purchase_procurement" model="tijara.analytics.dashboard">
+        <field name="name">Purchase and Procurement</field>
+        <field name="code">purchase_procurement</field>
+        <field name="sequence">40</field>
+        <field name="audience">purchase_manager</field>
+        <field name="notes">Procurement view for purchase value, supplier lead time, reorder pressure, and vendor performance.</field>
+    </record>
+
+    <record id="dashboard_customer_promotions" model="tijara.analytics.dashboard">
+        <field name="name">Customers and Promotions</field>
+        <field name="code">customers_promotions</field>
+        <field name="sequence">50</field>
+        <field name="audience">branch_manager</field>
+        <field name="notes">Customer growth, repeat sales, deal uplift, and promotion display performance.</field>
+    </record>
+
+    <record id="widget_owner_revenue" model="tijara.analytics.widget">
+        <field name="name">Revenue Trend</field>
+        <field name="dashboard_id" ref="dashboard_owner_overview"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">trend</field>
+        <field name="business_area">sales</field>
+        <field name="metric_code">revenue</field>
+        <field name="target_note">Compare daily, weekly, and monthly sales against target.</field>
+    </record>
+
+    <record id="widget_owner_margin" model="tijara.analytics.widget">
+        <field name="name">Gross Margin</field>
+        <field name="dashboard_id" ref="dashboard_owner_overview"/>
+        <field name="sequence">20</field>
+        <field name="widget_type">kpi</field>
+        <field name="business_area">finance</field>
+        <field name="metric_code">gross_margin</field>
+    </record>
+
+    <record id="widget_inventory_alerts" model="tijara.analytics.widget">
+        <field name="name">Low Stock and Expiry Alerts</field>
+        <field name="dashboard_id" ref="dashboard_inventory_control"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">alert</field>
+        <field name="business_area">inventory</field>
+        <field name="metric_code">inventory_alerts</field>
+        <field name="feature_code">inventory_intelligence</field>
+    </record>
+
+    <record id="widget_inventory_turnover" model="tijara.analytics.widget">
+        <field name="name">Stock Turnover</field>
+        <field name="dashboard_id" ref="dashboard_inventory_control"/>
+        <field name="sequence">20</field>
+        <field name="widget_type">graph</field>
+        <field name="business_area">inventory</field>
+        <field name="metric_code">stock_turnover</field>
+        <field name="feature_code">analytics_reporting</field>
+    </record>
+
+    <record id="widget_pos_basket" model="tijara.analytics.widget">
+        <field name="name">Basket Size</field>
+        <field name="dashboard_id" ref="dashboard_pos_performance"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">kpi</field>
+        <field name="business_area">pos</field>
+        <field name="metric_code">basket_size</field>
+    </record>
+
+    <record id="widget_pos_refunds" model="tijara.analytics.widget">
+        <field name="name">Refund and Exchange Trend</field>
+        <field name="dashboard_id" ref="dashboard_pos_performance"/>
+        <field name="sequence">20</field>
+        <field name="widget_type">trend</field>
+        <field name="business_area">pos</field>
+        <field name="metric_code">refunds</field>
+    </record>
+
+    <record id="widget_purchase_lead_time" model="tijara.analytics.widget">
+        <field name="name">Supplier Lead Time</field>
+        <field name="dashboard_id" ref="dashboard_purchase_procurement"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">chart</field>
+        <field name="business_area">purchase</field>
+        <field name="metric_code">supplier_lead_time</field>
+    </record>
+
+    <record id="widget_promotion_uplift" model="tijara.analytics.widget">
+        <field name="name">Promotion Uplift</field>
+        <field name="dashboard_id" ref="dashboard_customer_promotions"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">graph</field>
+        <field name="business_area">promotions</field>
+        <field name="metric_code">promotion_uplift</field>
+        <field name="feature_code">promotion_display</field>
+    </record>
+
+    <record id="report_daily_sales" model="tijara.analytics.report">
+        <field name="name">Daily Sales Summary</field>
+        <field name="code">daily_sales_summary</field>
+        <field name="business_area">sales</field>
+        <field name="report_type">pivot</field>
+        <field name="frequency">daily</field>
+        <field name="owner_role">Owner / Branch Manager</field>
+        <field name="description">Daily revenue, order count, basket size, refunds, discounts, and payment mix.</field>
+    </record>
+
+    <record id="report_inventory_health" model="tijara.analytics.report">
+        <field name="name">Inventory Health</field>
+        <field name="code">inventory_health</field>
+        <field name="business_area">inventory</field>
+        <field name="report_type">dashboard</field>
+        <field name="frequency">daily</field>
+        <field name="owner_role">Inventory Manager</field>
+        <field name="feature_code">inventory_intelligence</field>
+        <field name="description">Low stock, critical stock, expiry, dead stock, location placement, shelf/rack coverage, and stock turnover.</field>
+    </record>
+
+    <record id="report_purchase_reorder" model="tijara.analytics.report">
+        <field name="name">Purchase and Reorder Planning</field>
+        <field name="code">purchase_reorder_planning</field>
+        <field name="business_area">purchase</field>
+        <field name="report_type">list</field>
+        <field name="frequency">daily</field>
+        <field name="owner_role">Purchase Manager</field>
+        <field name="description">Items below threshold, vendor performance, pending purchase orders, and supplier lead time.</field>
+    </record>
+
+    <record id="report_customer_promotion" model="tijara.analytics.report">
+        <field name="name">Customer and Promotion Performance</field>
+        <field name="code">customer_promotion_performance</field>
+        <field name="business_area">promotions</field>
+        <field name="report_type">graph</field>
+        <field name="frequency">weekly</field>
+        <field name="owner_role">Branch Manager</field>
+        <field name="feature_code">promotion_display</field>
+        <field name="description">Promotion uplift, repeat customers, customer segments, deal performance, and menu/display effectiveness.</field>
+    </record>
+</odoo>

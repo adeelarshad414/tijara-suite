@@ -1,0 +1,26 @@
+<odoo>
+    <record id="product_template_form_view_tijara_inventory_intelligence" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.inventory.intelligence</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='tijara_retail']" position="after">
+                <page name="tijara_inventory_intelligence" string="Inventory Intelligence">
+                    <group>
+                        <group string="Alerting">
+                            <field name="tijara_min_stock_alert"/>
+                            <field name="tijara_inventory_critical_qty"/>
+                            <field name="tijara_expiry_alert_days"/>
+                            <field name="tijara_cycle_count_frequency_days"/>
+                        </group>
+                        <group string="Placement">
+                            <field name="tijara_preferred_position_id"/>
+                            <field name="tijara_requires_temperature_control"/>
+                            <field name="tijara_storage_note"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

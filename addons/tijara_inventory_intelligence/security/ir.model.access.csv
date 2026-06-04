@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tijara_storage_position_user,tijara.storage.position user,model_tijara_storage_position,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_storage_position_manager,tijara.storage.position manager,model_tijara_storage_position,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_inventory_alert_user,tijara.inventory.alert user,model_tijara_inventory_alert,tijara_base.group_tijara_user,1,1,0,0
+access_tijara_inventory_alert_manager,tijara.inventory.alert manager,model_tijara_inventory_alert,tijara_base.group_tijara_manager,1,1,1,1

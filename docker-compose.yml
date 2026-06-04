@@ -1,0 +1,157 @@
+services:
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-odoo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in secrets/.env.secrets}
+    volumes:
+      - tijara-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-odoo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: ${ODOO_IMAGE:-odoo:19.0}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: ${ODOO_DB_HOST:-db}
+      USER: ${ODOO_DB_USER:-odoo}
+      PASSWORD: ${ODOO_DB_PASSWORD:?Set ODOO_DB_PASSWORD in secrets/.env.secrets}
+      ODOO_DB_HOST: ${ODOO_DB_HOST:-db}
+      ODOO_DB_PORT: ${ODOO_DB_PORT:-5432}
+      ODOO_DB_USER: ${ODOO_DB_USER:-odoo}
+      ODOO_DB_PASSWORD: ${ODOO_DB_PASSWORD:?Set ODOO_DB_PASSWORD in secrets/.env.secrets}
+      ODOO_MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD:?Set ODOO_MASTER_PASSWORD in secrets/.env.secrets}
+      ODOO_PROXY_MODE: ${ODOO_PROXY_MODE:-True}
+      ODOO_WITHOUT_DEMO: ${ODOO_WITHOUT_DEMO:-True}
+      ODOO_WORKERS: ${ODOO_WORKERS:-0}
+      ODOO_LIMIT_TIME_CPU: ${ODOO_LIMIT_TIME_CPU:-120}
+      ODOO_LIMIT_TIME_REAL: ${ODOO_LIMIT_TIME_REAL:-240}
+      ODOO_LOG_LEVEL: ${ODOO_LOG_LEVEL:-info}
+      ODOO_DB_FILTER: ${ODOO_DB_FILTER:-.*}
+      ODOO_LIST_DB: ${ODOO_LIST_DB:-True}
+      TIJARA_ENV: ${TIJARA_ENV:-development}
+      TIJARA_BRIDGE_SHARED_SECRET: ${TIJARA_BRIDGE_SHARED_SECRET:-}
+      TIJARA_BRIDGE_TIMEOUT_SECONDS: ${TIJARA_BRIDGE_TIMEOUT_SECONDS:-5}
+      TIJARA_SAAS_ENFORCEMENT_ENABLED: ${TIJARA_SAAS_ENFORCEMENT_ENABLED:-False}
+      TIJARA_PAYMENT_WEBHOOK_SECRET: ${TIJARA_PAYMENT_WEBHOOK_SECRET:-}
+      FBR_ADAPTER_MODE: ${FBR_ADAPTER_MODE:-dry_run}
+      FBR_ADAPTER_ENDPOINT: ${FBR_ADAPTER_ENDPOINT:-}
+      FBR_CLIENT_ID: ${FBR_CLIENT_ID:-}
+      FBR_CLIENT_SECRET: ${FBR_CLIENT_SECRET:-}
+      FBR_ALLOW_INSECURE_ENDPOINT: ${FBR_ALLOW_INSECURE_ENDPOINT:-False}
+    ports:
+      - "${HTTP_PORT:-8069}:8069"
+      - "${LONGPOLLING_PORT:-8072}:8072"
+    volumes:
+      - tijara-odoo-data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+      - ./deploy/config/odoo.conf.template:/etc/odoo/odoo.conf.template:ro
+      - ./deploy/bin/start-odoo.sh:/usr/local/bin/tijara-start-odoo:ro
+    command: ["bash", "/usr/local/bin/tijara-start-odoo"]
+
+  hardware_bridge:
+    build:
+      context: ./hardware-bridge
+    profiles: ["hardware"]
+    restart: unless-stopped
+    environment:
+      TIJARA_BRIDGE_HOST: ${TIJARA_BRIDGE_HOST:-0.0.0.0}
+      TIJARA_BRIDGE_PORT: ${TIJARA_BRIDGE_PORT:-9109}
+      TIJARA_BRIDGE_SHARED_SECRET: ${TIJARA_BRIDGE_SHARED_SECRET:-}
+      TIJARA_BRIDGE_DRY_RUN: ${TIJARA_BRIDGE_DRY_RUN:-True}
+      TIJARA_BRIDGE_DEVICE_CONFIG: ${TIJARA_BRIDGE_DEVICE_CONFIG:-/etc/tijara-bridge/devices.json}
+      TIJARA_BRIDGE_JOB_DIR: ${TIJARA_BRIDGE_JOB_DIR:-/var/lib/tijara-bridge/jobs}
+      TIJARA_BRIDGE_OUTPUT_DIR: ${TIJARA_BRIDGE_OUTPUT_DIR:-/var/lib/tijara-bridge/output}
+      TIJARA_BRIDGE_REQUIRE_KNOWN_DEVICE: ${TIJARA_BRIDGE_REQUIRE_KNOWN_DEVICE:-False}
+    ports:
+      - "${TIJARA_BRIDGE_PORT:-9109}:9109"
+    volumes:
+      - ./hardware-bridge/config/devices.example.json:/etc/tijara-bridge/devices.json:ro
+      - tijara-bridge-jobs:/var/lib/tijara-bridge/jobs
+      - tijara-bridge-output:/var/lib/tijara-bridge/output
+
+  blackbox:
+    image: ${BLACKBOX_IMAGE:-prom/blackbox-exporter:v0.25.0}
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/blackbox_exporter/config.yml"
+    ports:
+      - "${BLACKBOX_PORT:-9115}:9115"
+    volumes:
+      - ./deploy/monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+
+  prometheus:
+    image: ${PROMETHEUS_IMAGE:-prom/prometheus:v2.54.1}
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    depends_on:
+      - blackbox
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/monitoring/tijara-alerts.yml:/etc/prometheus/rules/tijara-alerts.yml:ro
+      - tijara-prometheus-data:/prometheus
+
+  alertmanager:
+    image: ${ALERTMANAGER_IMAGE:-prom/alertmanager:v0.27.0}
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./deploy/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+
+  loki:
+    image: ${LOKI_IMAGE:-grafana/loki:3.2.0}
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    command:
+      - "-config.file=/etc/loki/loki.yml"
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./deploy/logging/loki.yml:/etc/loki/loki.yml:ro
+      - tijara-loki-data:/loki
+
+  grafana:
+    image: ${GRAFANA_IMAGE:-grafana/grafana:11.2.0}
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - loki
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in secrets/.env.secrets}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - ./deploy/monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/tijara.yml:ro
+      - tijara-grafana-data:/var/lib/grafana
+
+volumes:
+  tijara-db-data:
+  tijara-odoo-data:
+  tijara-bridge-jobs:
+  tijara-bridge-output:
+  tijara-prometheus-data:
+  tijara-loki-data:
+  tijara-grafana-data:

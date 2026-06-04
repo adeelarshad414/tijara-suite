@@ -1,0 +1,15 @@
+<odoo>
+    <record id="view_pos_config_form_tijara_receipt_template" model="ir.ui.view">
+        <field name="name">pos.config.form.tijara.receipt.template</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Tijara Receipt Printing">
+                    <field name="tijara_receipt_profile_id"/>
+                    <field name="tijara_receipt_printer_device_id"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,24 @@
+<odoo>
+    <record id="product_template_form_view_tijara_pharmacy" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.pharmacy</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']" position="after">
+                <page name="tijara_pharmacy" string="Pharmacy">
+                    <group>
+                        <field name="tijara_is_medicine"/>
+                        <field name="tijara_generic_name"/>
+                        <field name="tijara_dosage_form"/>
+                        <field name="tijara_strength"/>
+                        <field name="tijara_manufacturer"/>
+                        <field name="tijara_drug_registration_no"/>
+                        <field name="tijara_pharmacy_mrp"/>
+                        <field name="tijara_requires_prescription"/>
+                        <field name="tijara_expiry_sensitive"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

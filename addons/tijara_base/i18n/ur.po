@@ -1,0 +1,28 @@
+# Translation scaffold for Tijara Base Pakistan.
+msgid ""
+msgstr ""
+"Project-Id-Version: Tijara Base Pakistan\n"
+"Language: ur\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Tijara"
+msgstr "تجارہ"
+
+msgid "Urdu Name"
+msgstr "اردو نام"
+
+msgid "Business Type"
+msgstr "کاروبار کی قسم"
+
+msgid "Receipt Language"
+msgstr "رسید کی زبان"
+
+msgid "Walk-in Customer"
+msgstr "عام گاہک"
+
+msgid "Retail Credit Limit"
+msgstr "ریٹیل کریڈٹ حد"
+
+msgid "Pakistan Tax Category"
+msgstr "پاکستان ٹیکس کیٹیگری"
+

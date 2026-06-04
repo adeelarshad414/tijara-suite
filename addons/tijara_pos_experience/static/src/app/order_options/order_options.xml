@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="tijara_pos_experience.OrderOptionsControlButtons" t-inherit="point_of_sale.ControlButtons" t-inherit-mode="extension">
+        <xpath expr="//t[@t-if='props.showRemainingButtons']/div/button[hasclass('o_pricelist_button')]" position="before">
+            <button
+                t-if="this.pos.cashier._role != 'minimal'"
+                class="tijara_offline_queue_button"
+                t-att-class="buttonClass"
+                t-on-click="() => this.clickTijaraOfflineQueue()">
+                <i class="fa fa-cloud-upload me-2" role="img" aria-label="Offline queue" title="Offline queue"/>
+                <span>Offline</span>
+                <span t-if="this.pos.tijaraOfflineQueue" class="badge rounded-pill text-bg-secondary ms-2" t-esc="this.pos.tijaraOfflineQueue().length"/>
+            </button>
+            <button
+                t-if="pos.config.tijara_show_audience_toggle and (pos.config.tijara_allow_b2c or pos.config.tijara_allow_b2b) and this.pos.cashier._role != 'minimal'"
+                class="tijara_sale_type_button"
+                t-att-class="buttonClass"
+                t-on-click="() => this.clickTijaraAudience()">
+                <i class="fa fa-users me-2" role="img" aria-label="Sale type" title="Sale type"/>
+                <t t-esc="currentOrder.tijaraAudienceLabel"/>
+            </button>
+            <button
+                t-if="this.pos.cashier._role != 'minimal'"
+                class="tijara_order_type_button"
+                t-att-class="buttonClass"
+                t-on-click="() => this.clickTijaraOrderType()">
+                <i class="fa fa-cutlery me-2" role="img" aria-label="Service mode" title="Service mode"/>
+                <t t-esc="currentOrder.tijaraOrderTypeLabel"/>
+            </button>
+        </xpath>
+    </t>
+</templates>

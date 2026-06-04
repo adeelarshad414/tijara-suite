@@ -1,0 +1,78 @@
+<odoo>
+    <record id="view_tijara_analytics_report_list" model="ir.ui.view">
+        <field name="name">tijara.analytics.report.list</field>
+        <field name="model">tijara.analytics.report</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="business_area"/>
+                <field name="report_type"/>
+                <field name="frequency"/>
+                <field name="owner_role"/>
+                <field name="feature_code"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_analytics_report_form" model="ir.ui.view">
+        <field name="name">tijara.analytics.report.form</field>
+        <field name="model">tijara.analytics.report</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="business_area"/>
+                            <field name="report_type"/>
+                            <field name="frequency"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="owner_role"/>
+                            <field name="feature_code"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Definition">
+                        <field name="description"/>
+                        <field name="acceptance_notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_analytics_report_search" model="ir.ui.view">
+        <field name="name">tijara.analytics.report.search</field>
+        <field name="model">tijara.analytics.report</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="business_area"/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="inventory" string="Inventory" domain="[('business_area', '=', 'inventory')]"/>
+                <filter name="sales" string="Sales" domain="[('business_area', 'in', ['sales', 'pos'])]"/>
+                <group>
+                    <filter name="group_area" string="Business Area" context="{'group_by': 'business_area'}"/>
+                    <filter name="group_type" string="Report Type" context="{'group_by': 'report_type'}"/>
+                    <filter name="group_frequency" string="Frequency" context="{'group_by': 'frequency'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_tijara_analytics_report" model="ir.actions.act_window">
+        <field name="name">Report Catalog</field>
+        <field name="res_model">tijara.analytics.report</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_tijara_analytics_report_search"/>
+    </record>
+
+    <menuitem id="menu_tijara_analytics_report" name="Report Catalog" parent="menu_tijara_analytics_reports" action="action_tijara_analytics_report" sequence="20"/>
+</odoo>

@@ -1,0 +1,137 @@
+<odoo>
+    <record id="view_tijara_inventory_alert_list" model="ir.ui.view">
+        <field name="name">tijara.inventory.alert.list</field>
+        <field name="model">tijara.inventory.alert</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="severity == 'critical'" decoration-warning="severity == 'warning'" decoration-muted="state == 'resolved'">
+                <header>
+                    <button name="action_scan_inventory_alerts" type="object" string="Scan Alerts" class="btn-primary"/>
+                </header>
+                <field name="alert_date"/>
+                <field name="alert_type"/>
+                <field name="severity"/>
+                <field name="state"/>
+                <field name="product_id"/>
+                <field name="lot_id"/>
+                <field name="location_id"/>
+                <field name="position_id"/>
+                <field name="quantity"/>
+                <field name="threshold"/>
+                <field name="expiry_date"/>
+                <field name="last_seen_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_inventory_alert_form" model="ir.ui.view">
+        <field name="name">tijara.inventory.alert.form</field>
+        <field name="model">tijara.inventory.alert</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_acknowledge" type="object" string="Acknowledge" class="btn-primary" invisible="state != 'new'"/>
+                    <button name="action_resolve" type="object" string="Resolve" invisible="state == 'resolved'"/>
+                    <button name="action_reopen" type="object" string="Reopen" invisible="state != 'resolved'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="new,acknowledged,resolved"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="alert_type"/>
+                            <field name="severity"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="alert_date"/>
+                            <field name="last_seen_date"/>
+                            <field name="expiry_date"/>
+                        </group>
+                    </group>
+                    <group string="Inventory Context">
+                        <group>
+                            <field name="product_id"/>
+                            <field name="product_tmpl_id"/>
+                            <field name="lot_id"/>
+                        </group>
+                        <group>
+                            <field name="location_id"/>
+                            <field name="position_id"/>
+                            <field name="quantity"/>
+                            <field name="threshold"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_inventory_alert_search" model="ir.ui.view">
+        <field name="name">tijara.inventory.alert.search</field>
+        <field name="model">tijara.inventory.alert</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="product_id"/>
+                <field name="lot_id"/>
+                <field name="location_id"/>
+                <filter name="open_alerts" string="Open" domain="[('state', 'in', ['new', 'acknowledged'])]"/>
+                <filter name="critical" string="Critical" domain="[('severity', '=', 'critical')]"/>
+                <filter name="low_stock" string="Low Stock" domain="[('alert_type', 'in', ['low_stock', 'critical_stock'])]"/>
+                <filter name="expiry" string="Expiry" domain="[('alert_type', '=', 'expiry')]"/>
+                <group>
+                    <filter name="group_type" string="Alert Type" context="{'group_by': 'alert_type'}"/>
+                    <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
+                    <filter name="group_severity" string="Severity" context="{'group_by': 'severity'}"/>
+                    <filter name="group_product" string="Product" context="{'group_by': 'product_id'}"/>
+                    <filter name="group_location" string="Location" context="{'group_by': 'location_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_tijara_inventory_alert_graph" model="ir.ui.view">
+        <field name="name">tijara.inventory.alert.graph</field>
+        <field name="model">tijara.inventory.alert</field>
+        <field name="arch" type="xml">
+            <graph string="Inventory Alerts" type="bar">
+                <field name="alert_type"/>
+                <field name="severity"/>
+                <field name="quantity" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_tijara_inventory_alert_pivot" model="ir.ui.view">
+        <field name="name">tijara.inventory.alert.pivot</field>
+        <field name="model">tijara.inventory.alert</field>
+        <field name="arch" type="xml">
+            <pivot string="Inventory Alert Analysis">
+                <field name="alert_type" type="row"/>
+                <field name="severity" type="col"/>
+                <field name="quantity" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_tijara_inventory_alert" model="ir.actions.act_window">
+        <field name="name">Inventory Alerts</field>
+        <field name="res_model">tijara.inventory.alert</field>
+        <field name="view_mode">list,form,graph,pivot</field>
+        <field name="search_view_id" ref="view_tijara_inventory_alert_search"/>
+        <field name="context">{'search_default_open_alerts': 1}</field>
+    </record>
+
+    <record id="action_tijara_inventory_alert_analysis" model="ir.actions.act_window">
+        <field name="name">Inventory Alert Analysis</field>
+        <field name="res_model">tijara.inventory.alert</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="search_view_id" ref="view_tijara_inventory_alert_search"/>
+    </record>
+
+    <menuitem id="menu_tijara_inventory_alert" name="Alerts" parent="menu_tijara_inventory_intelligence" action="action_tijara_inventory_alert" sequence="10"/>
+    <menuitem id="menu_tijara_inventory_alert_analysis" name="Alert Analysis" parent="menu_tijara_inventory_reports" action="action_tijara_inventory_alert_analysis" sequence="10"/>
+</odoo>

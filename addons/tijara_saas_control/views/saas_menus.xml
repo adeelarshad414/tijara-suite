@@ -1,0 +1,4 @@
+<odoo>
+    <menuitem id="menu_tijara_saas" name="SaaS Control" parent="tijara_base.menu_tijara_root" sequence="80" groups="tijara_base.group_tijara_manager"/>
+</odoo>
+

@@ -1,0 +1,1519 @@
+# Progress
+
+## Iteration 1: Enterprise Product Scaffold
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Created the Tijara Suite repository scaffold.
+- Added Docker Compose development setup for Odoo and PostgreSQL.
+- Added `tijara_base` for Pakistan localization foundations.
+- Added `tijara_retail_core` for hardware devices, cash shifts, refunds, and
+  exchanges.
+- Added `tijara_pos_pk` for receipt profiles and FBR invoice queue foundation.
+- Added `tijara_saas_control` for SaaS features, plans, and subscriptions.
+- Added vertical module foundations for pharmacy, restaurant, garments, and
+  electronics.
+- Added Urdu translation scaffolds.
+- Added architecture, roadmap, Pakistan localization, QA/security/devops, and
+  MVP documentation.
+
+### Validation
+
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- XML files parse successfully.
+- Docker Compose configuration validates.
+
+### Known Gaps
+
+- Odoo containers have not been started yet.
+- Modules have not yet been installed into a live Odoo database.
+- FBR integration is a queue/stub foundation, not a production adapter.
+- Offline POS, hardware bridge, and subscription billing automation are not yet
+  implemented.
+
+### Next Iteration
+
+- Start the Odoo stack.
+- Install the base, retail, POS Pakistan, and SaaS modules.
+- Fix any live Odoo module compatibility issues.
+- Begin the retail MVP cashier workflow: receipt profile, refund/exchange stock
+  behavior, and cash shift reporting.
+
+## Iteration 2: Additional Retail Verticals
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added `tijara_vertical_cloth` for fabric rolls, meter/yard sales, cutting
+  loss, and tailoring fields.
+- Added `tijara_vertical_superstore` for department, aisle, shelf, case pack,
+  promotion, loyalty, and fast-moving item fields.
+- Added `tijara_vertical_grocery` for perishables, loose items, weigh-scale PLU,
+  cold chain, shelf life, and freshness checks.
+- Added `tijara_vertical_bakery` for bakery product metadata and production
+  batch workflow.
+- Added cloth, grocery, and bakery business types to company settings.
+- Added SaaS feature records for the new vertical packs.
+- Updated README, roadmap, and MVP scope documentation.
+
+### Validation
+
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 30 XML files parse successfully.
+- Docker Compose configuration validates.
+- 12 Odoo module manifests are present.
+
+### Known Gaps
+
+- New verticals are configuration/workflow foundations, not complete POS screens.
+- Bakery batch workflow does not yet create stock moves or consume ingredients.
+- Grocery price-embedded barcode parsing is not yet implemented.
+- Cloth roll cutting does not yet reserve/decrement roll-level stock.
+
+### Next Iteration
+
+- Validate all new module files and XML.
+- Start Odoo and perform live module install checks.
+- Implement the first real retail MVP workflow against a running database.
+
+## Iteration 3: POS Experience, Restaurant Service Modes, and B2B/B2C Pricing
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added `tijara_pos_experience` module for kiosk, POS customer display, menu
+  boards, deals boards, display content, promotions/deals, and queue tickets.
+- Added POS configuration fields for B2B/B2C enablement, kiosk enablement,
+  queue enablement, customer display, menu board, deals board, and queue display.
+- Added POS order fields for sale type, dine-in/takeaway/pickup order type,
+  queue ticket, pickup code, and promised time.
+- Added restaurant service profile for dine-in, takeaway, and pickup support.
+- Added order type, pickup code, and promised time to restaurant kitchen tickets.
+- Added separate product fields for B2C retail price and B2B trade price.
+- Added POS Experience as a SaaS feature and included it in Retail, Vertical,
+  and Enterprise plans.
+- Updated README, architecture, roadmap, and MVP specification.
+
+### Validation
+
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 40 XML files parse successfully.
+- Docker Compose configuration validates.
+- 13 Odoo module manifests are present.
+
+### Known Gaps
+
+- Kiosk and display screen models are backend foundations; the browser display
+  UI routes are not implemented yet.
+- Product B2B/B2C fields are explicit item fields; full Odoo pricelist sync is
+  still future work.
+- Queue tickets are not yet automatically created from POS/kiosk orders.
+- Restaurant service modes are modeled, but POS frontend buttons are not yet
+  implemented.
+
+### Next Iteration
+
+- Validate all new module files and XML.
+- Start the Odoo stack and install modules in a live database.
+- Build the first POS frontend controls for B2B/B2C and dine-in/takeaway/pickup.
+
+## Iteration 4: Separate SaaS Flags for POS Experience Features
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Split B2B sales, queue system, promotion/deals display, and POS customer
+  display into separate SaaS feature records.
+- Kept `pos_experience` as the shared technical/core feature.
+- Added the separate SaaS feature flags to Retail, Vertical, and Enterprise
+  plans according to plan level.
+- Added effective feature computation on subscriptions.
+- Added `has_feature(feature_code)` helper for future enforcement logic.
+- Updated README, architecture, and MVP documentation.
+
+### Validation
+
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 40 XML files parse successfully.
+- Docker Compose configuration validates.
+- 13 Odoo module manifests are present.
+
+### Known Gaps
+
+- The feature flags are modeled and visible in SaaS plans/subscriptions, but
+  runtime enforcement in POS frontend controllers is not yet implemented.
+- Display and queue browser routes are still future work.
+
+### Next Iteration
+
+- Validate all module files and XML.
+- Start Odoo and install the modules in a live database.
+- Add runtime feature checks to POS configuration and frontend flows.
+
+## Iteration 5: Live Odoo 19 Install Smoke Test
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Started the Docker Compose Odoo 19 and PostgreSQL stack.
+- Installed all 13 Tijara custom modules into the live `tijara_dev` database.
+- Fixed Odoo 19 security compatibility by using `res.groups.privilege` instead
+  of legacy group categories.
+- Fixed Odoo 19 product view inheritance by targeting the product template-only
+  form and adding dedicated Tijara pages.
+- Migrated custom backend view declarations from legacy `tree` to Odoo 19
+  `list` views.
+- Confirmed the SaaS feature catalog is seeded with 19 feature flags.
+- Restarted the Odoo web service after successful module installation.
+- Fixed the scaffold validator so it works from the project root.
+- Added `make validate` as the local validation entry point.
+- Updated README with the live install command and current status.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 40 XML files parse successfully.
+- Docker Compose starts PostgreSQL and Odoo successfully.
+- Live Odoo install command completed successfully.
+- Database check confirms all 13 `tijara_*` modules are in `installed` state.
+- Database check confirms 19 SaaS feature records.
+- HTTP check confirms `http://localhost:8069` responds and redirects to `/odoo`.
+
+### Known Gaps
+
+- Runtime SaaS enforcement is not yet wired into POS actions and display flows.
+- Kiosk, customer display, queue display, promotion display, menu display, and
+  deals display still need browser routes and frontend screens.
+- B2B/B2C price fields are modeled, but POS pricing selection still needs
+  frontend behavior and pricelist integration.
+- Restaurant dine-in, takeaway, and pickup are modeled, but POS controls and
+  kitchen ticket automation still need implementation.
+- Hardware bridge support for receipt printers, barcode scanners, QR, scales,
+  and payment terminals is still foundation-level.
+
+### Next Iteration
+
+- Add runtime SaaS feature checks to POS configuration, display, queue, and
+  kiosk workflows.
+- Build the first POS frontend controls for B2B/B2C and dine-in/takeaway/pickup.
+- Implement queue-ticket creation from POS/kiosk orders.
+- Add basic browser routes for customer display, promotion display, menu/deals
+  display, and kiosk.
+
+## Iteration 6: DevOps Deployment Structure, Secrets, and Device QA Baseline
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added `DEPLOY.md` as the maintained deployment runbook.
+- Split configuration into centered non-secret and secret templates:
+  `.env.example` and `secrets/.env.secrets.example`.
+- Updated `.gitignore` so actual env and secret files stay out of source
+  control.
+- Replaced committed `deploy/odoo.conf` with secret-free
+  `deploy/config/odoo.conf.template`.
+- Added `deploy/bin/start-odoo.sh` to render the Odoo runtime config from
+  environment variables and secrets.
+- Updated Docker Compose to use the runtime config renderer and require secret
+  variables instead of using built-in password fallbacks.
+- Added `make config` and `make install-suite` for easier DevOps operation.
+- Hardened the nginx baseline for proxy headers, long-polling/websocket traffic,
+  upload size, and basic response security headers.
+- Added `docs/FRONTEND_DEVICE_QA.md` for touch, device, viewport, browser, Urdu,
+  POS, kiosk, customer display, queue display, promotion display, and menu
+  display acceptance.
+- Added `tijara_pos_experience/static/src/scss/touch_responsive.scss` and wired
+  it into backend, POS, and customer display asset bundles.
+- Updated README, architecture, QA/security/devops, and PostgreSQL operations
+  docs.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 40 XML files parse successfully.
+- `docker compose --env-file .env.example --env-file secrets/.env.secrets.example config`
+  validates the updated Compose structure.
+- `bash -n deploy/bin/start-odoo.sh` passes.
+- Compose can inspect the existing running Odoo/PostgreSQL stack with the
+  centralized env-file pattern.
+
+### Known Gaps
+
+- Actual `.env` and `secrets/.env.secrets` files must be created per environment
+  before starting a fresh deployment.
+- Production should use a managed secret store instead of plain env files.
+- The touch/responsive stylesheet is a baseline; kiosk, customer display, queue,
+  promotion/menu/deal display, and POS frontend screens still need to be built
+  and browser-tested.
+- Automated cross-browser Playwright tests are documented but not implemented
+  yet.
+
+### Next Iteration
+
+- Add runtime SaaS feature checks to POS, queue, display, and kiosk flows.
+- Build browser routes/controllers for kiosk, customer display, queue display,
+  promotion display, and menu/deals display.
+- Start Playwright smoke tests for the documented viewport and browser matrix.
+- Add POS frontend controls for B2B/B2C and dine-in/takeaway/pickup.
+
+## Iteration 7: Inventory Intelligence, Dashboards, Reporting, and Analytics
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added `tijara_inventory_intelligence` module.
+- Added storage-position model for warehouse, location, zone, aisle, rack,
+  shelf, bin, barcode/QR, capacity, and temperature zone.
+- Added physical placement fields to Odoo stock locations.
+- Added product-level preferred storage position, critical stock quantity,
+  expiry alert days, cycle-count frequency, temperature-control flag, and
+  storage notes.
+- Added inventory alert workbench for low stock, critical stock, expiry,
+  overstock, misplaced stock, and dead stock.
+- Added scheduled inventory alert scan foundation.
+- Added list, form, graph, and pivot views for inventory alerts.
+- Added `tijara_analytics` module.
+- Added dashboard definitions, dashboard widgets, KPI snapshot history, graph
+  and pivot views, and report catalog.
+- Seeded five dashboard templates and four report catalog templates.
+- Added SaaS features `inventory_intelligence` and `analytics_reporting`.
+- Updated default SaaS plan templates:
+  Retail gets inventory intelligence.
+  Vertical gets inventory intelligence and analytics/reporting.
+  Enterprise gets inventory intelligence and analytics/reporting.
+- Updated `make install-suite` to include the two new modules.
+- Added `docs/INVENTORY_INTELLIGENCE.md` and `docs/ANALYTICS_REPORTING.md`.
+- Updated README, architecture, roadmap, MVP spec, and progress documentation.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 51 XML files parse successfully.
+- Live Odoo install/upgrade completed for `tijara_inventory_intelligence` and
+  `tijara_analytics`.
+- Live Odoo upgrade completed for `tijara_saas_control`.
+- Database check confirms 15 installed `tijara_*` modules.
+- Database check confirms 21 SaaS feature records.
+- Database check confirms the two new modules are installed.
+- Database check confirms Retail, Vertical, and Enterprise plan entitlements for
+  inventory intelligence and analytics/reporting.
+
+### Known Gaps
+
+- KPI snapshots are modeled, but automated KPI collectors from POS, sale,
+  purchase, stock, queue, promotion, refund, exchange, and cash-shift data are
+  not yet implemented.
+- Inventory alert scanning currently covers low stock, critical stock, and
+  expiry foundations; overstock, misplaced stock, dead stock, FEFO planning, and
+  reorder suggestions are future automation.
+- Storage positions exist as master data; mobile shelf audit and scan-to-place
+  workflows are not yet implemented.
+- Dashboard templates and report catalog records are backend foundations; rich
+  role-specific dashboard UI still needs to be built.
+
+### Next Iteration
+
+- Implement automated KPI snapshot collectors for sales/POS, purchase,
+  inventory, refunds/exchanges, queue, and promotion data.
+- Add reorder suggestion generation from low-stock and critical-stock alerts.
+- Build dashboard UI surfaces for owner, inventory manager, cashier manager, and
+  purchase manager.
+- Add shelf/rack/bin audit workflow and barcode/QR lookup for storage positions.
+
+## Iteration 8: Overall POS Bill Discount
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added Odoo `pos_discount` as the proven discount engine dependency for
+  Tijara POS Experience.
+- Added POS configuration controls for enabling overall bill discounts, default
+  entry mode, maximum discount percentage, and future manager approval.
+- Added POS order audit fields for bill discount mode, bill base, percentage,
+  amount, and net bill amount.
+- Added backend POS order and POS configuration views for the new bill discount
+  fields.
+- Added a touch-friendly POS popup where cashiers can enter either discount
+  percentage or discount amount.
+- Implemented two-way calculation so changing percentage recalculates amount,
+  and changing amount recalculates percentage.
+- Preserved fixed-amount behavior when order lines change by recalculating the
+  required Odoo global discount percentage from the desired amount.
+- Synced enabled Tijara bill discounts with Odoo `module_pos_discount`,
+  `iface_discount`, and discount product setup for existing and future POS
+  configurations.
+- Updated README, MVP specification, roadmap, analytics reporting notes, and
+  progress documentation.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 53 XML files parse successfully.
+- POS bill discount JavaScript files pass `node --check`.
+- Live Odoo upgrade completed for `tijara_pos_experience`.
+- Database check confirms `pos_discount` and `tijara_pos_experience` are
+  installed.
+- Database check confirms nine `tijara_bill_discount_*` fields exist across
+  `pos.config` and `pos.order`.
+- HTTP check confirms `http://localhost:8069/odoo` responds and redirects to
+  login.
+
+### Known Gaps
+
+- Full browser POS cashier testing is still pending because this dev database
+  currently has no POS configuration/session data.
+- Existing sync hooks are ready for POS configurations when they are created.
+- Manager approval is a configuration foundation flag; runtime approval
+  enforcement still needs to be implemented.
+- Amount mode uses Odoo's global discount line by converting the entered amount
+  to the matching percentage for the current bill base.
+
+### Next Iteration
+
+- Create seeded POS config/session/product demo data for browser smoke tests.
+- Add runtime manager approval checks for high bill discounts.
+- Add discount KPIs to automated POS analytics snapshot collectors.
+- Continue POS frontend controls for B2B/B2C and dine-in/takeaway/pickup.
+
+## Iteration 9: Public Open-Source Governance
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added root `LICENSE` notice for LGPL-3.0.
+- Added `docs/OPEN_SOURCE_POLICY.md` for public repository and community
+  governance.
+- Documented that core behavior must use Odoo Community and open-source tools.
+- Documented that Odoo Enterprise modules, proprietary dependencies, private
+  assets, and vendor-locked services are not allowed in the core suite.
+- Added a dependency intake checklist for future open-source compatibility
+  reviews.
+- Updated README and architecture documentation with open-source-first rules.
+
+### Validation
+
+- Confirmed all current Tijara Odoo addon manifests declare `LGPL-3`.
+- `make validate` passes from the project root.
+- 53 XML files parse successfully.
+
+### Known Gaps
+
+- A full third-party dependency license inventory file should be generated once
+  frontend/package dependencies are added.
+- Community contribution workflow, code of conduct, and issue templates are not
+  created yet.
+
+### Next Iteration
+
+- Add `CONTRIBUTING.md`, public issue templates, and contributor setup notes.
+- Add dependency/license inventory automation when Node/Python package manifests
+  are introduced.
+- Continue seeded POS demo data and browser smoke tests.
+
+## Iteration 10: POS Demo Seed and Cashier Controls
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added optional `tijara_demo_pos` module for public-repo safe POS cashier demo
+  data.
+- Seeded reusable demo products with barcodes, B2C/B2B prices, stock quantities,
+  Urdu names, and POS availability.
+- Seeded demo B2C walk-in and B2B wholesale customers.
+- Seeded demo POS configuration, display screens, kiosk profile, promotion, and
+  queue ticket.
+- Added automatic demo POS session creation when no open session exists for the
+  seeded POS config.
+- Added `make seed-pos-demo` as the optional dev/test seeding entry point.
+- Added `docs/POS_DEMO_SEED.md` with seed instructions and cashier smoke path.
+- Added POS action-menu controls for B2B/B2C sale type and
+  dine-in/takeaway/pickup service mode.
+- Added POS order serialization and loading support for Tijara sale type,
+  service mode, pickup code, promised time, and bill discount audit fields.
+- Added POS product loading support for Tijara B2C/B2B price fields.
+- Added current-ticket repricing when the cashier switches B2B/B2C.
+- Added runtime manager guard for bill discounts when manager approval is
+  enabled on the POS config.
+- Updated README, MVP specification, roadmap, and progress documentation.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 55 XML files parse successfully.
+- POS bill discount and order option JavaScript files pass `node --check`.
+- Live Odoo upgrade/install completed for `tijara_pos_experience` and
+  `tijara_demo_pos`.
+- Database checks confirm the demo module, POS config, products, customers,
+  display screens, queue ticket, and open demo POS session exist.
+- Database check confirms seeded stock quantities for all four demo products.
+- Odoo service was recreated with the current compose config after an old
+  container mount expected the removed `deploy/odoo.conf` file; the service is
+  back up and `/odoo` redirects to login.
+
+### Known Gaps
+
+- Full browser click-through smoke testing still needs authenticated POS UI
+  execution.
+- B2B/B2C repricing currently updates existing ticket lines; automatic pricing
+  at the exact product-add event needs a deeper POS add-line hook.
+- Manager approval is enforced as a runtime manager-only guard; PIN-based
+  escalation/temporary approval is still future work.
+- Refund/exchange browser flow is not yet automated.
+
+### Next Iteration
+
+- Run authenticated browser smoke for the seeded POS cashier path.
+- Add automatic B2B/B2C pricing at product-add time.
+- Add queue ticket creation from completed POS/kiosk orders.
+- Automate refund/exchange POS smoke coverage.
+
+## Iteration 11: Invoice Templates, Return Scan, Hardware, and Bulk Data
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Expanded invoice and receipt templates with scope, layout, language, printer
+  width, custom dimensions, printer device assignment, barcode source, display
+  flags, English/Urdu content, custom HTML, custom CSS, and internal notes.
+- Added `tijara_invoice_barcode` on POS orders for future receipt/return barcode
+  workflows.
+- Added invoice barcode/QR scanning on refund/exchange requests with support
+  for `TJINV:`, `POS:`, `INV:`, and `FBR:` scan prefixes.
+- Added matched POS order, matched customer invoice, scanner device, scan
+  status, and scan result tracking on refund/exchange requests.
+- Added automatic return-line population from matched POS orders or customer
+  invoices.
+- Expanded hardware device configuration for scanner/printer/customer-display
+  integration roles, connection status, printer language, scanner mode, bridge
+  endpoint, paper width, DPI, barcode/QR support, CUPS, and keyboard-wedge
+  scanners.
+- Added hardware Test Configuration and Mark Offline actions.
+- Added `tijara.bulk.data.operation` for CSV import/export operations.
+- Added CSV import/export support for products/prices, inventory quantities,
+  contacts, hardware devices, invoice/receipt templates, storage positions, and
+  promotions/deals.
+- Added safer import validation for required CSV identifiers and optional-module
+  fields.
+- Added `docs/RETAIL_OPERATIONS_DATA.md` for invoice templates, return scan,
+  hardware registry, CSV rules, and deployment notes.
+- Updated README, MVP specification, roadmap, architecture, deployment, QA, and
+  progress documentation.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 56 XML files parse successfully.
+- Live Odoo upgrade completed for `tijara_retail_core`, `tijara_pos_pk`, and
+  `tijara_pos_experience`.
+- Database checks confirm `tijara.bulk.data.operation` and the new invoice,
+  scanner/printer, return-scan, and POS barcode fields are registered.
+- Odoo shell smoke confirms product CSV export creates a downloadable result.
+- Odoo shell smoke confirms product CSV import creates a B2B/B2C-priced product.
+- Odoo shell smoke confirms inventory CSV import sets stock quantity and
+  inventory CSV export creates a downloadable result.
+- Odoo shell smoke confirms hardware device CSV import creates scanner metadata.
+- Odoo shell smoke confirms receipt-template CSV schema export works.
+- Odoo shell smoke confirms hardware Test Configuration marks a scanner ready.
+- Odoo shell smoke confirms a custom customer-invoice template can be saved with
+  printer assignment, custom HTML, and custom CSS.
+- Odoo shell smoke confirms return scan handles both not-found and matched
+  customer-invoice paths.
+
+### Known Gaps
+
+- At the end of Iteration 11, custom invoice/receipt template settings were
+  stored and import/exportable, but rendering was still pending. Backend QWeb
+  report rendering was completed in Iteration 12.
+- Hardware bridge runtime drivers for ESC/POS, ZPL, CUPS, cash drawers, scales,
+  and customer displays are not implemented yet.
+- CSV import/export has core operational coverage, but row-level error files,
+  validation previews, scheduled exports, and every vertical-specific field are
+  future work.
+- Return scanning was smoke-tested through Odoo shell; an authenticated browser
+  cashier flow still needs automated coverage.
+
+### Next Iteration
+
+- Completed in Iteration 12: render configured invoice/receipt templates into
+  backend POS/customer-invoice report output.
+- Build the open-source local hardware bridge foundation for printer, scanner,
+  cash drawer, scale, and customer-display runtime integration.
+- Add browser tests for refund/exchange invoice scanning and bulk import/export
+  forms.
+- Extend import/export coverage to deeper vertical-specific fields and add
+  row-level validation reports.
+
+## Iteration 12: Backend Invoice and Receipt Template Rendering
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added default Tijara receipt template selection on POS configurations.
+- Added optional Tijara invoice template override on customer invoices and
+  credit notes.
+- Added stored `tijara_invoice_barcode` on customer invoices for consistent
+  invoice barcode/QR return scanning.
+- Extended refund/exchange invoice scanning to match customer invoices by
+  `tijara_invoice_barcode`.
+- Added backend QWeb PDF/HTML report action for Tijara POS receipts.
+- Added backend QWeb PDF/HTML report action for Tijara customer invoices.
+- Added `Tijara Receipt` button on POS orders.
+- Added `Tijara Invoice` button on customer invoices and credit notes.
+- Rendered template profile settings into reports, including titles, logo,
+  company NTN/STRN, English/Urdu header/footer/terms, customer, cashier, line
+  table, discount column, tax, totals, payment summary, barcode, QR, custom
+  HTML, and custom CSS.
+- Added escaped custom HTML tokens for document number, date, customer, cashier,
+  company, totals, tax, barcode value, and POS FBR invoice number.
+- Updated README, retail operations guide, MVP specification, roadmap,
+  architecture, and progress documentation.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 59 XML files parse successfully.
+- Live Odoo upgrade completed for `tijara_pos_pk` and `tijara_retail_core`.
+- Database checks confirm new `account.move`, `pos.config`, and report action
+  records are registered.
+- Odoo shell smoke confirms Tijara customer invoice HTML rendering includes the
+  configured custom HTML token output.
+- Odoo shell smoke confirms Tijara POS receipt HTML rendering includes the
+  configured receipt title.
+- Odoo shell smoke confirms Tijara customer invoice and POS receipt QWeb PDF
+  reports generate valid PDF bytes.
+- Odoo shell smoke confirms refund/exchange scan can match a customer invoice
+  by the generated `tijara_invoice_barcode`.
+- HTTP check confirms `http://localhost:8069/odoo` still redirects to login.
+
+### Known Gaps
+
+- The live browser POS receipt screen and immediate thermal print payload still
+  need to consume Tijara template profiles.
+- PDF generation succeeds, but the dev database has a missing company logo
+  filestore attachment warning that should be cleaned up in test data.
+- Hardware bridge runtime drivers for ESC/POS, ZPL, CUPS, cash drawers, scales,
+  and customer displays are still future work.
+- Browser-authenticated tests for the new report buttons are not implemented
+  yet.
+
+### Next Iteration
+
+- Override the browser POS receipt/print payload to use Tijara receipt profiles.
+- Start the open-source local hardware bridge foundation.
+- Add browser tests for the Tijara Invoice and Tijara Receipt buttons.
+- Add row-level validation result files for bulk import/export.
+
+## Iteration 13: Browser POS Receipt Profile Runtime
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added POS data loading for `tijara.receipt.profile` so browser POS sessions
+  receive active POS receipt templates for the current company.
+- Added POS user and POS manager read access for receipt profiles.
+- Added POS company field loading for Tijara NTN, STRN, branch code, and FBR POS
+  identifier so receipts can show Pakistan fiscal metadata.
+- Added a browser POS model class for Tijara receipt profiles.
+- Patched the live Odoo POS receipt component to inject the selected Tijara POS
+  receipt profile into the receipt screen.
+- Rendered configured English/Urdu title, header, footer, return policy, custom
+  body HTML tokens, barcode value, QR value, customer, B2B/B2C sale type, and
+  restaurant service mode on the browser POS receipt screen.
+- Extended loaded POS order fields with Tijara invoice barcode, FBR QR payload,
+  refund/exchange markers, and the core draft-order fields needed by Odoo POS
+  device synchronization.
+- Fixed browser POS boot regressions caused by draft-order loader fields missing
+  `partner_id`, `lines`, `payment_ids`, and `write_date`.
+- Updated README, MVP specification, retail operations guide, roadmap,
+  architecture, deployment notes, frontend QA, and progress documentation.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 60 XML files parse successfully.
+- `node --check` passes for the new POS receipt profile model JS.
+- `node --check` passes for the POS receipt runtime patch JS.
+- Live Odoo upgrade completed for `tijara_pos_pk`.
+- Odoo shell smoke confirms `tijara.receipt.profile` is present in the POS model
+  load list.
+- Odoo shell smoke confirms the assigned POS receipt profile is loaded into POS
+  boot data.
+- Odoo shell smoke confirms POS order barcode/FBR fields and company NTN fields
+  are exposed to the POS loader.
+- Full POS load-data smoke confirms `pos.config`, `pos.order`, `res.company`,
+  and `tijara.receipt.profile` records load together.
+- HTTP JSON-RPC smoke confirms draft POS orders include `partner_id`, `lines`,
+  `payment_ids`, `write_date`, and Tijara barcode/FBR fields.
+- Authenticated in-app browser smoke reaches the live POS product screen.
+- Authenticated in-app browser smoke opens the register, adds a cash payment,
+  validates the demo order, and reaches the receipt screen.
+- Browser receipt text confirms the Tijara profile rendered `Tijara Runtime
+  Receipt`, Urdu title text, custom token output, sale type, service mode,
+  barcode value, return policy, and footer content.
+
+### Known Gaps
+
+- This is a first-pass receipt component extension; it does not fully replace
+  Odoo's thermal print payload or every standard line, tax, discount, and
+  payment layout section yet.
+- Browser screenshot capture timed out during this run, although the browser DOM
+  text confirmed receipt rendering.
+- Hardware bridge runtime drivers for ESC/POS, ZPL, CUPS, cash drawers, scales,
+  and customer displays are still future work.
+- Browser-authenticated tests for backend Tijara Invoice/Tijara Receipt buttons
+  are not implemented yet.
+- Bulk import/export row-level validation result files are still pending.
+
+### Next Iteration
+
+- Start the open-source local hardware bridge foundation for ESC/POS, ZPL, CUPS,
+  scanner, cash drawer, scale, and customer-display runtime integration.
+- Add browser tests for backend Tijara Invoice and Tijara Receipt buttons.
+- Add deeper receipt template controls for line, tax, discount, payment, and
+  fiscal sections.
+- Add row-level validation result files and preview flows for bulk import/export.
+
+## Iteration 14: Local Hardware Bridge Foundation
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added `hardware-bridge/`, an open-source local shop-machine bridge service
+  built with Python standard-library HTTP handling.
+- Added bridge endpoints for health, generic test, receipt print, label print,
+  cash-drawer open, customer display, scale read, and scanner event dry-run
+  jobs.
+- Added HMAC request signing with `X-Tijara-Timestamp` and
+  `X-Tijara-Signature` headers for all bridge POST requests.
+- Added dry-run job persistence so signed bridge jobs are written as JSON files
+  until physical driver adapters are implemented.
+- Added example bridge device configuration for receipt printer, label printer,
+  cash drawer, scale, and customer display.
+- Added a bridge Dockerfile and optional Docker Compose `hardware` profile.
+- Added Makefile targets for `bridge-up`, `bridge-logs`, and `bridge-ps`.
+- Added centralized non-secret bridge config to `.env.example`.
+- Added centralized bridge shared secret placeholder to
+  `secrets/.env.secrets.example`.
+- Passed `TIJARA_BRIDGE_SHARED_SECRET` and bridge timeout into the Odoo service
+  environment for runtime bridge calls.
+- Added Odoo Hardware Device actions for `Bridge Health` and `Send Bridge Test
+  Job`.
+- Added Odoo-side signed bridge client helpers using standard Python
+  `urllib`, `hmac`, and `hashlib`.
+- Added bridge result tracking fields for last bridge job id, operation, and
+  HTTP status.
+- Updated README, MVP specification, roadmap, architecture, retail operations,
+  deployment, frontend QA, and progress documentation.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 60 XML files parse successfully.
+- Docker Compose config validates with `.env.example` and
+  `secrets/.env.secrets.example`.
+- Local bridge server starts on `127.0.0.1:19109` with the example device
+  configuration.
+- Bridge `GET /health` smoke returns HTTP 200 with five configured devices and
+  declared capabilities.
+- Signed `POST /v1/print/receipt` smoke returns HTTP 202 and writes an accepted
+  dry-run receipt job.
+- Live Odoo upgrade completed for `tijara_retail_core`.
+- Odoo shell smoke creates/updates a browser-bridge receipt printer device.
+- Odoo shell smoke confirms `Bridge Health` records HTTP 200 and ready status.
+- Odoo shell smoke confirms `Send Bridge Test Job` records HTTP 202, operation
+  `print_receipt`, and a bridge job id.
+- Odoo HTTP service restarted after module upgrade.
+
+### Known Gaps
+
+- The bridge currently records dry-run jobs only; real ESC/POS, ZPL, CUPS,
+  serial scale, cash-drawer, scanner-event, and customer-display drivers are
+  future work.
+- The browser POS receipt print action is not yet wired to submit the live
+  receipt payload to the bridge.
+- Bridge websocket/event streaming for scanners and customer displays is not
+  implemented yet.
+- Production device hardening still needs per-store network binding rules,
+  service install scripts, retry queues, and observability.
+
+### Next Iteration
+
+- Wire the browser POS receipt print flow to submit the rendered Tijara receipt
+  payload to the local bridge for receipt-printer devices.
+- Add first real driver adapters in priority order: ESC/POS dry-run-to-bytes,
+  CUPS print submission, ZPL label output, and cash-drawer pulse command.
+- Add browser tests for backend Tijara Invoice and Tijara Receipt buttons.
+- Add row-level validation result files and preview flows for bulk import/export.
+
+## Iteration 15: POS Receipt Print-to-Bridge Flow
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added the first bridge driver adapter for receipt dry-runs: rendered receipt
+  text can now be converted into ESC/POS bytes and stored as base64 in the bridge
+  job file for audit/testing.
+- Extended bridge responses with driver output format and byte count when the
+  ESC/POS dry-run adapter is used.
+- Added a reusable Odoo hardware-device submission helper so application flows
+  can send signed bridge jobs with custom payloads, not only generic device test
+  payloads.
+- Added a POS configuration field for selecting the local bridge receipt printer
+  used by browser POS receipt printing.
+- Exposed the new POS receipt printer field through the POS config data loader.
+- Added POS order bridge print audit fields for job id, status, result JSON, and
+  printed timestamp.
+- Added `action_tijara_print_receipt_to_bridge` on POS orders. It selects the
+  configured bridge receipt printer, enriches the rendered receipt payload with
+  order/config/profile/company/totals/barcode metadata, signs the bridge job, and
+  records the result.
+- Patched the browser POS receipt print flow so, when a bridge receipt printer is
+  configured, the print action submits the rendered receipt HTML/text payload to
+  Odoo and then to the local bridge.
+- Updated README, deployment guide, hardware bridge guide, architecture, MVP,
+  roadmap, retail operations, frontend QA, and progress documentation.
+
+### Validation
+
+- `make validate` passes from the project root.
+- Python module files compile with `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- 60 XML files parse successfully.
+- `node --check` passes for the POS receipt bridge print patch.
+- Docker Compose config validates with `.env.example` and
+  `secrets/.env.secrets.example`.
+- Live Odoo upgrade completed for `tijara_retail_core` and `tijara_pos_pk`.
+- Odoo HTTP service restarted after module upgrade.
+- Local bridge server starts on `127.0.0.1:19109` with the example device
+  configuration.
+- Bridge `GET /health` smoke returns HTTP 200 with five configured devices.
+- Signed `POST /v1/print/receipt` smoke returns HTTP 202 and includes
+  `driver_output_format` as `escpos_base64`.
+- Odoo shell smoke configures the demo receipt printer, assigns it to POS
+  configuration, and confirms the POS loader includes
+  `tijara_receipt_printer_device_id`.
+- Odoo shell smoke submits a POS order receipt print job to the bridge and
+  confirms successful status, matching bridge job id, accepted POS order audit
+  status, and ESC/POS output metadata in the stored result JSON.
+- In-app browser smoke confirms the restarted Odoo web UI renders the login
+  screen at `http://127.0.0.1:8069/odoo`.
+
+### Known Gaps
+
+- The current ESC/POS output is a dry-run bytes adapter for validation and audit;
+  production printer submission still needs tested hardware drivers.
+- The browser print hook has backend and JS syntax validation plus Odoo-side
+  bridge smoke coverage, but a full authenticated browser click-through from
+  checkout receipt screen to bridge job still needs stable automation coverage.
+- ZPL, CUPS, cash-drawer pulse, serial/network scale, scanner-event streaming,
+  and customer-display runtime adapters are still future work.
+- Full thermal receipt payload replacement and advanced control over line, tax,
+  discount, payment, and fiscal sections are still pending.
+
+### Next Iteration
+
+- Add browser-authenticated coverage for clicking POS receipt print and
+  verifying the resulting bridge job from the browser checkout screen.
+- Add the next production-facing hardware adapters in priority order: CUPS print
+  submission, ZPL label output, cash-drawer pulse command, and customer-display
+  update route.
+- Add row-level validation result files and preview flows for bulk import/export.
+- Add browser tests for backend Tijara Invoice and Tijara Receipt buttons.
+
+## Iteration 16: Enterprise Runtime Foundations
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Expanded the hardware bridge driver layer beyond ESC/POS dry-run bytes.
+- Added adapter foundations for ESC/POS receipt bytes, ZPL label bytes,
+  CUPS/raw TCP/file delivery, ESC/POS cash-drawer pulse bytes, scale readings,
+  scanner-event JSON persistence, and customer-display JSON output.
+- Extended bridge capabilities and job responses with driver transport/status
+  details.
+- Added central bridge output directory configuration and an output volume for
+  Docker Compose hardware deployments.
+- Added SaaS enforcement helpers on companies, controlled by
+  `TIJARA_SAAS_ENFORCEMENT_ENABLED` or the
+  `tijara.saas.enforcement_enabled` system parameter.
+- Added POS configuration entitlement checks for B2B sales, queue system,
+  promotion/menu/deals display, customer display, and kiosk core access.
+- Added tenant provisioning request/admin console foundation for SaaS operators.
+- Added subscription usage/limit status and a manual plan-limit check action.
+- Replaced the FBR queue stub with dry-run/live HTTP adapter submission,
+  endpoint/secret configuration, response mapping, POS order update, and a
+  disabled-by-default FBR submission cron.
+- Added public display/kiosk routes and JSON endpoints for menu, deals,
+  promotion, customer display, kiosk, and queue display screens.
+- Added the first daily analytics KPI collector for POS revenue/orders/basket
+  size/refunds, inventory alert counts, queue wait time, and active promotions.
+- Added a disabled-by-default analytics collection cron and a manual
+  `Collect Daily Snapshots` server action.
+- Added GitHub Actions CI baseline, JavaScript syntax check script, security
+  audit script, PostgreSQL backup script, k6 load-smoke script, and Makefile
+  targets for the new operations.
+- Added Nginx rate limiting for login, database, JSON-RPC, display, and kiosk
+  paths.
+- Updated README, deployment guide, hardware bridge guide, architecture, MVP,
+  roadmap, retail operations, analytics, QA/security/devops, and progress docs.
+
+### Validation
+
+- `make validate` passes from the project root and now compiles both addons and
+  the hardware bridge package.
+- 63 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- Docker Compose config validates with `.env.example` and
+  `secrets/.env.secrets.example`.
+- Live Odoo upgrade completed for `tijara_retail_core`, `tijara_saas_control`,
+  `tijara_pos_experience`, `tijara_pos_pk`, and `tijara_analytics`.
+- Odoo HTTP service restarted after module upgrade.
+- Odoo shell smoke confirms SaaS enforcement blocks B2B on Starter plan and
+  allows B2B/queue/customer display on Enterprise plan.
+- Odoo shell smoke confirms subscription limit check reports `ok`.
+- Odoo shell smoke confirms tenant provisioning request reaches `provisioned`.
+- Odoo shell smoke confirms FBR dry-run adapter submits and generates a
+  `DRY-FBR-*` invoice number.
+- Odoo shell smoke confirms display and queue records can be seeded.
+- Odoo shell smoke confirms daily analytics collection creates KPI snapshots.
+- Bridge driver smoke confirms ESC/POS receipt file output, ZPL label file
+  output, cash-drawer pulse file output, customer-display JSON file output, and
+  scale dry-run reading.
+- HTTP smoke confirms `/tijara/display/smoke-menu` returns 200 and
+  `/tijara/display/smoke-menu/data` returns configured content and promotions.
+- In-app browser smoke confirms the display screen renders `Smoke Menu`,
+  `Smoke Deal`, `PKR 250`, and promotion content.
+
+### Known Gaps
+
+- Hardware adapters are production-shaped but not target-hardware certified.
+- CUPS, raw TCP, serial scale, cash drawer, and customer-display behavior still
+  need physical device QA and per-model support notes.
+- Tenant provisioning has an admin console but does not yet create databases,
+  install modules, or configure DNS/backups automatically.
+- Subscription billing/payment automation is still pending.
+- FBR live mode is adapter-ready, but certified provider/API credentials and
+  production compliance validation are still pending.
+- Display/kiosk routes show configured content, promotions, and queue data; full
+  self-ordering kiosk checkout is still pending.
+- CI is a baseline; full browser E2E, Odoo transaction tests, load tests,
+  dependency/container scanning, and security regression suites still need
+  expansion.
+
+### Next Iteration
+
+- Add real Odoo transaction tests for SaaS enforcement, FBR dry-run submission,
+  analytics collection, and display-route payloads.
+- Add browser-authenticated POS checkout print-to-bridge automation and backend
+  report-button browser tests.
+- Add tenant database provisioning automation script/runbook and subscription
+  invoice generation foundation.
+- Add physical-device certification profiles for target ESC/POS, ZPL, CUPS,
+  cash drawer, customer display, and scale models.
+- Expand display/kiosk routes toward real self-service ordering and
+  customer-display live order state.
+
+## Iteration 17: Production Readiness QA and Operations
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added committed Odoo post-install tests for:
+  - SaaS enforcement enabled/disabled behavior.
+  - Starter-plan blocking and Enterprise-plan allowing B2B, queue, and customer
+    display features.
+  - Tenant provisioning request state flow into active subscription state.
+  - FBR dry-run submission, invoice number, QR payload, and response storage.
+  - FBR live-mode guard behavior when endpoint/credentials are missing.
+  - Daily analytics collector snapshot generation.
+  - Display controller entitlement checks and public payload assembly.
+- Added `scripts/run_odoo_tests.sh` and `make test-odoo` for repeatable Odoo
+  transaction/HTTP-style testing.
+- Added Playwright browser E2E scaffolds under `tests/e2e/` for public
+  display/kiosk routes and staging-gated authenticated POS checkout,
+  refund/exchange, and report smoke tests.
+- Added `package.json`, `playwright.config.mjs`, and extended JS syntax checks
+  to include E2E `.mjs` files.
+- Added tenant database provisioning automation with
+  `scripts/provision_tenant_db.sh` and `make provision-tenant`.
+- Added SaaS subscription billing foundation:
+  - `account` dependency for invoice generation.
+  - Billing cycle, amount override, billing product, last invoice, payment
+    provider/status, external reference, paid timestamp, and invoice count.
+  - Draft customer invoice generation from subscription plans.
+  - Billing-status sync and external-payment recording actions.
+- Added FBR live adapter hardening:
+  - Provider field, client ID, idempotency key, submission attempts,
+    last-request timestamp, and response status.
+  - HTTPS-only live endpoint guard by default.
+  - Client/idempotency headers and response invoice-number validation.
+  - Failed submissions now persist failed state and error message instead of
+    being rolled back by a raised UI exception.
+- Added hardware certification profiles and `make hardware-cert-smoke` for
+  ESC/POS receipt/cash drawer, ZPL labels, scanner event, scale reading, and
+  customer display dry-run validation.
+- Added restore-drill automation with `deploy/postgres/restore-drill.sh` and
+  `make restore-drill`.
+- Added Prometheus and Blackbox Exporter monitoring profile/config plus
+  `make monitoring-up` and `make monitoring-logs`.
+- Added logging guidance in `deploy/logging/README.md`.
+- Added Trivy/npm/pip-audit hooks with `make container-scan` and
+  `make dependency-scan`.
+- Updated `README.md`, `DEPLOY.md`, `docs/QA_SECURITY_DEVOPS.md`,
+  `docs/ROADMAP.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 64 XML files parse successfully.
+- `bash scripts/js_check.sh` passes, including the new Playwright `.mjs` files.
+- `bash scripts/security_audit.sh` passes before Odoo test execution and again
+  after generated cache cleanup.
+- `python3 scripts/hardware_certification_smoke.py` passes all dry-run hardware
+  certification profiles.
+- Docker Compose config validates with `.env.example` and
+  `secrets/.env.secrets.example`.
+- Odoo test runner passed on isolated database `tijara_test_iter17e`:
+  - 8 post-install tests.
+  - 0 failures.
+  - 0 errors.
+  - Covered `tijara_saas_control`, `tijara_pos_pk`, `tijara_analytics`, and
+    `tijara_pos_experience`.
+- Odoo tests generated Python cache artifacts in mounted addons; generated
+  `__pycache__` folders were removed after the run.
+- Final cleanup check confirms no `__pycache__` folders and no `.pyc` files
+  remain under `outputs/tijara-suite`.
+
+### Known Gaps
+
+- Playwright E2E tests are committed but authenticated POS/refund/report flows
+  still require staging credentials, POS config IDs, and route URLs to run.
+- Physical hardware is still not certified; the new certification profiles are
+  dry-run and must be repeated on real printer, cash drawer, scanner, scale,
+  label printer, and customer-display models.
+- Tenant provisioning now creates/updates tenant databases through an operator
+  script, but DNS, ingress, tenant admin setup, backup policy assignment,
+  monitoring labels, and post-provision smoke tests are not fully automated.
+- Subscription billing creates draft Odoo invoices and tracks external payment
+  state, but production provider webhooks, reconciliation, dunning, tax policy,
+  and suspension automation are still pending.
+- FBR live mode is hardened, but certified provider credentials, exact payload
+  mapping, sandbox certification, and production compliance validation are still
+  pending.
+- Monitoring is a baseline availability profile; PostgreSQL exporter, Odoo
+  business metrics, Alertmanager routing, dashboards, and incident automation
+  still need production setup.
+- Offline POS and full self-service kiosk ordering checkout are still pending.
+
+### Next Iteration
+
+- Run Playwright E2E against the live dev/staging Odoo instance with seeded POS
+  config IDs and display slugs.
+- Build real kiosk self-ordering checkout flow and customer-display live order
+  state.
+- Add physical hardware certification evidence capture per supported device
+  model.
+- Automate tenant DNS/ingress, admin user creation, backup policy, monitoring
+  labels, and post-provision smoke tests around `scripts/provision_tenant_db.sh`.
+- Add payment provider webhook adapters and subscription dunning/suspension
+  rules.
+- Add Alertmanager/Grafana/Loki or OpenSearch stack and incident runbooks.
+- Continue toward offline POS sync and FBR certified-provider integration.
+
+## Iteration 18: Staging E2E, Kiosk Checkout, Customer Display, and SaaS Ops
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Built a real kiosk self-ordering checkout foundation:
+  - Public `/tijara/kiosk/<slug>` touch UI with cart, customer/mobile capture,
+    payment method selection, B2B/B2C audience selection, and
+    dine-in/takeaway/pickup order type selection.
+  - Public `/tijara/kiosk/<slug>/checkout` POST route with server-side item and
+    price validation.
+  - New `tijara.kiosk.order` and `tijara.kiosk.order.line` records with totals,
+    pickup code, status workflow, and queue-ticket creation when the tenant has
+    the `queue_system` feature.
+- Added customer-display live order state:
+  - New `tijara.customer.display.state` and line models.
+  - Customer-display payload now returns order reference, line items, payment
+    state, customer/cashier context, and totals.
+  - POS orders can publish to the configured customer display state.
+- Expanded SaaS billing operations:
+  - Added secret-guarded public payment webhook route
+    `/tijara/saas/payment/webhook/<provider>`.
+  - Added auditable webhook event records and idempotent provider event lookup.
+  - Added paid/failed/past-due/refunded status application into subscriptions.
+  - Added dunning level, grace date, suspension reason, and dunning/suspension
+    action on subscriptions.
+- Improved tenant provisioning operations:
+  - Added DNS, ingress, admin, backup, monitoring, and operations-manifest
+    fields to provisioning requests.
+  - Added `scripts/generate_tenant_ops_manifest.py` and
+    `make provision-tenant-ops` to generate tenant DevOps artifacts.
+- Added physical hardware certification records:
+  - New `tijara.hardware.certification` model and views for printer, scanner,
+    scale, cash drawer, label printer, and customer-display evidence tracking.
+- Expanded monitoring baseline:
+  - Added Alertmanager, Grafana, and Loki services/configuration to the
+    monitoring Compose profile.
+  - Added Grafana Prometheus/Loki datasource provisioning and Loki retention
+    baseline.
+- Upgraded browser E2E from scaffold to live seeded checks:
+  - Added `scripts/e2e_seed.py`, `scripts/seed_e2e_odoo.sh`, and `make seed-e2e`.
+  - Seed creates stable menu, kiosk, and customer-display slugs plus an
+    Enterprise subscription for the target dev/staging DB.
+  - Playwright tests now support `ODOO_DATABASE` for multi-database Odoo
+    sessions and exercise public display data, kiosk shell, kiosk checkout, and
+    customer-display live state on desktop and mobile projects.
+- Added `package-lock.json` and `.gitignore` entries for Node/Playwright
+  generated artifacts.
+- Updated `README.md`, `DEPLOY.md`, `tests/e2e/README.md`,
+  `deploy/monitoring/README.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 68 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- Docker Compose config validates with `.env.example` and
+  `secrets/.env.secrets.example`.
+- `python3 scripts/hardware_certification_smoke.py` passes all dry-run device
+  certification profiles.
+- `npm install` completed for Playwright dependencies with 0 vulnerabilities.
+- Live dev DB `tijara_dev` was upgraded for `tijara_retail_core`,
+  `tijara_saas_control`, and `tijara_pos_experience`, then Odoo HTTP was
+  restarted.
+- `make seed-e2e DB=tijara_dev` seeded and committed public E2E screen/profile
+  data.
+- Seeded Playwright run passed:
+  - Command used `ODOO_BASE_URL=http://127.0.0.1:8069`,
+    `ODOO_DATABASE=tijara_dev`, `TIJARA_DISPLAY_SLUG=tijara-e2e-menu`,
+    `TIJARA_KIOSK_SLUG=tijara-e2e-kiosk`, and
+    `TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer`.
+  - 8 browser tests passed across desktop and mobile projects.
+- Final Odoo test runner passed on isolated database `tijara_test_iter18c`:
+  - 12 post-install tests.
+  - 0 failures.
+  - 0 errors.
+  - Covered `tijara_saas_control`, `tijara_pos_pk`, `tijara_analytics`, and
+    `tijara_pos_experience`.
+- Final cleanup removed generated `node_modules`, Playwright result artifacts,
+  `__pycache__` folders, and `.pyc` files from the output tree.
+
+### Known Gaps
+
+- Kiosk checkout creates auditable kiosk/queue orders but does not yet complete
+  paid POS accounting, payment-terminal authorization, or kitchen/payment
+  orchestration.
+- Customer display has live state records and payloads, but the POS frontend
+  still needs continuous real-time publishing during cart editing/payment.
+- Payment webhook foundation is provider-agnostic; JazzCash, Easypaisa, Stripe,
+  or local bank payload mapping, signature verification, reconciliation, and
+  settlement reports still need production adapter work.
+- Tenant operations manifests are generated, but actual DNS provider APIs,
+  certificate issuance, tenant admin creation, and post-provision smoke
+  execution are still provider-specific follow-up work.
+- Hardware certification records now exist, but physical certification on real
+  printer, scanner, cash drawer, scale, label printer, and display models is
+  still pending.
+- Monitoring now includes Prometheus, Blackbox, Alertmanager, Grafana, and Loki,
+  but production still needs alert routes, log shippers, PostgreSQL exporter,
+  dashboards, and incident runbooks.
+- FBR still needs certified provider credentials, exact payload mapping,
+  sandbox sign-off, and production compliance testing.
+- Offline POS sync remains pending.
+
+### Next Iteration
+
+- Wire POS frontend live updates into customer-display state during cart,
+  discount, payment, refund, and receipt phases.
+- Extend kiosk checkout into POS order/payment/kitchen ticket creation for
+  restaurant and bakery pilots.
+- Add real provider-specific payment webhook adapters and reconciliation
+  reports.
+- Automate tenant admin creation, DNS provider integration, TLS issuance,
+  Blackbox target reload, and post-provision smoke execution.
+- Add physical hardware certification evidence import/export and per-model pilot
+  sign-off reports.
+- Start offline POS queue/sync design and first implementation slice.
+
+## Iteration 19: Kiosk POS Sync, Provider Adapters, FBR Compliance, and Offline Queue
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added kiosk-to-Odoo-POS sync:
+  - Kiosk profiles can map a POS register plus cash/card/bank payment methods.
+  - Kiosk payment capture modes now include pay-at-counter, record-paid,
+    terminal-reference, and provider-webhook modes.
+  - Kiosk orders now store payment provider/status/reference/terminal fields,
+    linked POS config/session/order/payment method/payment record, sync
+    timestamp, and sync error.
+  - Configured kiosk checkout can create a linked `pos.order`, add a
+    `pos.payment`, mark the POS order paid, and attempt stock picking creation
+    while preserving a kiosk sync error if picking needs follow-up.
+- Added continuous customer-display publishing foundation:
+  - Authenticated `/tijara/customer-display/publish` JSON route.
+  - Backend method for POS frontend snapshots with line/totals payloads.
+  - POS frontend best-effort live publisher with fingerprinting so cart edits
+    update customer-display state without blocking checkout.
+  - Server-side POS order create/write auto-publish for configured customer
+    displays when the tenant has the customer-display feature.
+- Added provider-aware SaaS payment webhook adapters:
+  - JazzCash, Easypaisa, Stripe, and generic/manual payload normalization.
+  - Provider reference, transaction id, settlement batch, signature status,
+    reconciliation status, and reconciled timestamp fields.
+- Added FBR production-compliance metadata:
+  - Certification environment, certified provider name, credential reference,
+    provider invoice UUID, sandbox/certification reference, signed payload hash,
+    compliance status, and certification check timestamp.
+  - Live mode now checks certified-provider/client/credential readiness before
+    submitting.
+- Added real-device hardware certification evidence fields:
+  - Observed serial, store location, driver version, physical signature,
+    last physical seen timestamp, attachment evidence, and evidence hash.
+- Added offline POS queue foundation:
+  - `tijara.offline.pos.queue` model, access rules, menu, and views.
+  - Payload hashing, JSON validation, duplicate-conflict detection, replay
+    state, and error tracking.
+- Updated demo seeding so the demo kiosk profile links to the demo POS config
+  after POS config creation.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 69 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes after generated Python cache cleanup.
+- `python3 scripts/hardware_certification_smoke.py` passes all dry-run device
+  profiles.
+- Docker Compose config validates with `.env.example` and
+  `secrets/.env.secrets.example`.
+- Odoo test runner passed on isolated database `tijara_test_iter19e`:
+  - 16 post-install tests.
+  - 0 failures.
+  - 0 errors.
+  - Covered `tijara_saas_control`, `tijara_pos_pk`, `tijara_analytics`, and
+    `tijara_pos_experience`.
+- Live `tijara_dev` module upgrade completed for retail core, POS Pakistan,
+  SaaS control, POS experience, and demo POS modules; the Odoo web container was
+  restarted after the upgrade.
+- Seeded E2E data was generated for public display, kiosk, customer display,
+  and POS config flows.
+- `npm install` completed for the Playwright E2E dependencies with 0
+  vulnerabilities.
+- Seeded Playwright E2E passed against live Odoo with elevated browser and
+  localhost permissions:
+  - 8 browser tests passed across desktop and mobile-touch projects.
+  - 6 authenticated backend/POS route tests were skipped pending a fuller
+    browser POS login/session harness.
+- Final cleanup removed generated Python caches, Node dependencies, and
+  Playwright result artifacts; the security audit passes on the cleaned tree.
+
+### Known Gaps
+
+- Kiosk POS sync now creates paid POS orders when configured, but full payment
+  terminal authorization and kitchen/payment orchestration still require
+  provider/device contracts and end-to-end pilots.
+- POS customer-display live publishing is best-effort frontend polling; richer
+  event-driven lifecycle hooks for payment, refund, and receipt phases are next.
+- Provider adapters normalize common JazzCash/Easypaisa/Stripe payload shapes,
+  but production still needs exact contract validation, native signature checks,
+  settlement files, chargeback/refund reconciliation, and PSP certification.
+- Physical hardware certification now stores evidence, but real printer,
+  scanner, scale, cash drawer, label printer, and customer-display certification
+  must still be performed on target models.
+- FBR compliance metadata is present, but live certified provider credentials,
+  sandbox sign-off, and production API compliance are still pending.
+- Offline POS queue exists, but the offline browser/mobile POS client and replay
+  worker are not complete yet.
+
+### Next Iteration
+
+- Run and stabilize Odoo tests, module upgrade, seeded E2E, and live POS browser
+  flows after this implementation.
+- Build offline POS browser queue capture and replay worker for linked POS
+  orders.
+- Add provider-native signature verification and settlement reconciliation jobs.
+- Add physical hardware certification import/export reports and pilot sign-off
+  templates.
+- Harden FBR payload mapping with certified-provider sandbox credentials.
+- Add customer-display lifecycle hooks for payment, paid/receipt, refund, and
+  idle timeout states.
+
+## Iteration 20: Offline POS Browser Capture, Replay Worker, and E2E Harness
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added authenticated offline POS browser endpoints:
+  - `POST /tijara/offline-pos/capture` for one captured browser order.
+  - `POST /tijara/offline-pos/replay` for pending queue replay by device or all
+    devices.
+  - `GET /tijara/offline-pos/status` for queue state counts.
+- Extended `tijara.offline.pos.queue` with source app, order reference, payment
+  status, amount, offline captured timestamp, replay attempts, last replay time,
+  and server-side replay methods.
+- Added server replay into real Odoo POS accounting flow:
+  - Opens or creates the POS session for the captured register.
+  - Rebuilds POS order lines with product taxes and discounts.
+  - Recreates POS payments from captured browser payment payloads.
+  - Marks the POS order paid when payments cover the total.
+  - Stores linked replayed `pos.order`, replay state, attempts, and errors.
+- Added duplicate protection for replayed device/order UID pairs and payload
+  hash conflicts.
+- Added per-register PostgreSQL advisory locking and retryable lock/serialization
+  handling for offline replay into the same POS configuration.
+- Added disabled-by-default `Tijara Replay Offline POS Orders` cron for staged
+  worker rollout.
+- Added POS frontend offline queue asset:
+  - Stable per-register device id.
+  - localStorage queue for captured browser orders.
+  - Order serialization with products, customer, B2B/B2C, service mode, totals,
+    and payment lines.
+  - Automatic replay when the browser is online.
+  - Best-effort capture on POS sync failure.
+- Extended Odoo transaction tests for offline POS capture/replay and replayed
+  source-order deduplication.
+- Added Playwright helper utilities and an authenticated offline POS replay
+  browser smoke test.
+- Updated the E2E seed script to print product and payment-method IDs required
+  by the authenticated offline replay test.
+- Added optional `TIJARA_E2E_PASSWORD`/`TIJARA_E2E_LOGIN` user seeding for
+  authenticated staging browser tests without committing credentials.
+- Updated `README.md`, `DEPLOY.md`, E2E docs, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 70 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes after generated-artifact cleanup.
+- Docker Compose config validates with `.env.example` and
+  `secrets/.env.secrets.example`.
+- Odoo test runner passed on isolated database `tijara_test_iter20_final`:
+  - 18 post-install tests.
+  - 0 failures.
+  - 0 errors.
+  - Covered `tijara_saas_control`, `tijara_pos_pk`, `tijara_analytics`, and
+    `tijara_pos_experience`.
+- Live `tijara_dev` module upgrade completed for `tijara_pos_experience`; the
+  Odoo web container was restarted after the upgrade.
+- Seeded E2E data was generated with display, kiosk, customer-display, POS
+  config, product, payment method, and optional authenticated E2E user exports.
+- `npm install` completed for Playwright dependencies with 0 vulnerabilities.
+- Seeded Playwright E2E passed against live Odoo with elevated browser and
+  localhost permissions:
+  - 9 browser tests passed.
+  - 7 tests skipped intentionally: POS UI shell is opt-in, refund/report routes
+    need staging URLs, and mobile offline replay is opt-in to avoid parallel
+    replay against one POS register.
+- Final cleanup removed generated Python caches, Node dependencies, and
+  Playwright result artifacts; artifact scans are empty.
+
+### Known Gaps
+
+- Offline POS now has browser capture and server replay, but the cashier-facing
+  offline mode UX, conflict review screen, mobile offline replay certification,
+  and full offline payment terminal orchestration still need pilot hardening.
+- Replay uses captured product/payment IDs and current Odoo tax/payment
+  configuration; production rollout must certify this per POS register and
+  store network.
+- Payment provider adapters still need native provider signatures, settlement
+  file reconciliation, refunds, chargebacks, and PSP certification.
+- FBR still needs certified-provider credentials, sandbox sign-off, and live
+  compliance tests.
+- Hardware certification still needs real device pilots and signed evidence.
+- Monitoring, alerting, restore drills, security scanning, and load testing
+  still need production execution against staging.
+
+### Next Iteration
+
+- Add offline conflict review/actions for duplicate source orders and failed
+  replay records.
+- Enable properly permissioned staging POS credentials and opt into POS UI,
+  mobile offline replay, refund, and report browser checks.
+- Build provider-native signature verification and settlement reconciliation
+  jobs.
+- Continue FBR certified-provider sandbox wiring and hardware certification
+  pilot records.
+
+## Iteration 21: Offline Conflict Review and Full Staging POS E2E Harness
+
+Status: Completed
+
+Date: 2026-06-04
+
+### Completed
+
+- Added cashier-facing offline POS queue UX:
+  - POS control button shows local browser queue count.
+  - Cashiers can trigger an immediate replay check from the POS shell.
+  - The status dialog reports queued orders, blocked review items, and replayed
+    items from the current check.
+- Expanded `tijara.offline.pos.queue` into a back-office review workbench:
+  - New terminal states: duplicate, merged, and cancelled.
+  - Review metadata: reviewer, review time, review action, review note,
+    duplicate target, and merge target.
+  - Stored audit measures: payload line count, payment count, total delta, and
+    replay latency.
+  - Actions for retry, cancel, mark duplicate, merge, manual mark replayed, and
+    fail.
+  - Dedicated Offline Conflict Review action plus Offline Replay Audit
+    pivot/graph views.
+- Added Odoo transaction tests for offline conflict resolution:
+  - Duplicate marking.
+  - Merge resolution.
+  - Cancellation with reviewer metadata.
+  - Retry-to-replay for a previously failed but valid offline order.
+- Added staging POS user setup to the E2E seed:
+  - Creates/updates a staging-only POS E2E user when
+    `TIJARA_E2E_PASSWORD` is supplied.
+  - Grants internal user, POS user, POS manager, Tijara user, and Tijara manager
+    groups using Odoo 19 `group_ids`.
+  - Prints seeded POS/product/payment/refund/report/offline-review exports.
+- Added seeded browser E2E coverage:
+  - Authenticated POS shell launch through `pos.config.open_ui()`.
+  - Offline conflict review backend route.
+  - Offline browser capture/replay into a paid POS order.
+  - Receipt report rendering for replayed POS orders.
+  - Print-to-bridge method coverage with accepted/unreachable bridge outcomes.
+  - Refund barcode scan against a seeded POS receipt through authenticated
+    Odoo JSON-RPC.
+- Fixed Odoo 19 POS config loader compatibility:
+  - `tijara_pos_pk` now loads required core `pos.config` fields such as
+    company, currency, payment methods, pricelist flags, receipt flags,
+    discount flags, printer/proxy flags, and POS UI toggles.
+  - This fixed the direct staging POS UI crash caused by missing
+    `use_pricelist`, `currency_id`, and related config data.
+- Updated `README.md`, `DEPLOY.md`, E2E docs, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 70 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes after generated-artifact cleanup.
+- Docker Compose config validates with required dev secret values supplied.
+- Live `tijara_dev` module upgrades completed for:
+  - `tijara_pos_experience`
+  - `tijara_pos_pk`
+- The live Odoo web container was restarted after module upgrades.
+- POS loader shell probe confirmed `pos.config`, `pos.session`,
+  `res.company`, `res.currency`, and `res.users` data now load for the seeded
+  POS session.
+- Odoo test runner passed on isolated database `tijara_test_iter21_final`:
+  - 20 post-install tests.
+  - 0 failures.
+  - 0 errors.
+  - Covered `tijara_saas_control`, `tijara_pos_pk`, `tijara_analytics`, and
+    `tijara_pos_experience`.
+- Seeded Playwright E2E passed against live Odoo with POS UI enabled:
+  - 19 browser tests passed across desktop and mobile-touch projects.
+  - 1 test skipped intentionally: mobile offline replay remains opt-in via
+    `TIJARA_RUN_MOBILE_OFFLINE_E2E=1`.
+- Final cleanup removed generated Python caches, `node_modules`, and Playwright
+  result artifacts; artifact scan is empty.
+
+### Known Gaps
+
+- POS offline capture/replay and conflict review are now functional, but
+  store-network pilots still need real cashier training, recovery runbooks,
+  payment-terminal behavior, and load testing.
+- Print-to-bridge browser E2E reaches the Odoo method path; a real local bridge
+  service and physical receipt printer are still required for accepted print
+  certification.
+- Payment providers still need native signatures, settlement reconciliation,
+  refunds, chargebacks, and PSP certification.
+- FBR still needs certified-provider credentials, sandbox sign-off, and live
+  compliance tests.
+- Hardware certification still needs real printer, scanner, scale, cash drawer,
+  label printer, and customer-display devices.
+- Monitoring, alerting, restore drills, security scanning, and load testing
+  still need staging/production execution.
+
+### Next Iteration
+
+- Start provider-native payment hardening: JazzCash/Easypaisa/Stripe signature
+  verification, settlement reconciliation, refunds, and chargeback records.
+- Add FBR certified-provider sandbox adapter configuration and compliance test
+  fixtures once credentials/contracts are available.
+- Add offline POS runbooks and pilot dashboards for queue age, conflicts,
+  duplicate rate, replay latency, and failed-retry trends.
+- Build physical hardware certification execution records around the bridge E2E
+  path for each target printer/scanner/scale/display model.
+- Add staging monitoring drills for POS/offline endpoints, hardware bridge
+  health, backup restore, and alert routing.

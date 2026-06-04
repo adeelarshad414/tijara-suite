@@ -1,0 +1,80 @@
+/* Touch and device baseline for Tijara POS, kiosk, and display surfaces. */
+:root {
+    --tijara-touch-target-min: 44px;
+    --tijara-touch-gap: 8px;
+    --tijara-panel-radius: 8px;
+}
+
+.o_tijara_touch_surface {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.o_tijara_touch_surface button,
+.o_tijara_touch_surface .btn,
+.o_tijara_touch_surface input,
+.o_tijara_touch_surface select,
+.o_tijara_touch_surface textarea,
+.o_tijara_touch_surface [role="button"] {
+    min-height: var(--tijara-touch-target-min);
+}
+
+.o_tijara_touch_surface button,
+.o_tijara_touch_surface .btn,
+.o_tijara_touch_surface [role="button"] {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+}
+
+.o_tijara_touch_surface input,
+.o_tijara_touch_surface select,
+.o_tijara_touch_surface textarea {
+    font-size: 16px;
+}
+
+.o_tijara_touch_grid {
+    display: grid;
+    gap: var(--tijara-touch-gap);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.o_tijara_no_text_overflow {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (pointer: coarse) {
+    .o_tijara_touch_surface {
+        --tijara-touch-target-min: 48px;
+        --tijara-touch-gap: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .o_tijara_touch_grid {
+        grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    }
+
+    .o_tijara_mobile_stack {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .o_tijara_touch_surface *,
+    .o_tijara_touch_surface *::before,
+    .o_tijara_touch_surface *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+[dir="rtl"] .o_tijara_touch_surface,
+.o_tijara_touch_surface[dir="rtl"] {
+    text-align: right;
+}

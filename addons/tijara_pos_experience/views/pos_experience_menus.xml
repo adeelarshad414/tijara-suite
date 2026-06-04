@@ -1,0 +1,5 @@
+<odoo>
+    <menuitem id="menu_tijara_pos_experience" name="POS Experience" parent="tijara_base.menu_tijara_root" sequence="25"/>
+    <menuitem id="menu_tijara_pos_experience_config" name="Experience Configuration" parent="tijara_base.menu_tijara_configuration" sequence="25"/>
+</odoo>
+

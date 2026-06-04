@@ -1,0 +1,86 @@
+<odoo>
+    <record id="action_tijara_saas_subscription" model="ir.actions.act_window">
+        <field name="name">SaaS Subscriptions</field>
+        <field name="res_model">tijara.saas.subscription</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_saas_subscription_tree" model="ir.ui.view">
+        <field name="name">tijara.saas.subscription.tree</field>
+        <field name="model">tijara.saas.subscription</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="tenant_name"/>
+                <field name="database_name"/>
+                <field name="plan_id"/>
+                <field name="start_date"/>
+                    <field name="next_invoice_date"/>
+                    <field name="billing_cycle"/>
+                    <field name="payment_status"/>
+                    <field name="limit_status"/>
+                    <field name="state"/>
+                </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_subscription_form" model="ir.ui.view">
+        <field name="name">tijara.saas.subscription.form</field>
+        <field name="model">tijara.saas.subscription</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start_trial" type="object" string="Start Trial" invisible="state != 'draft'"/>
+                    <button name="action_activate" type="object" string="Activate" invisible="state not in ('draft', 'trial', 'past_due', 'suspended')"/>
+                    <button name="action_suspend" type="object" string="Suspend" invisible="state not in ('active', 'past_due')"/>
+                    <button name="action_generate_subscription_invoice" type="object" string="Generate Invoice" class="btn-primary" invisible="state in ('cancelled', 'suspended')"/>
+                    <button name="action_sync_billing_status" type="object" string="Sync Billing"/>
+                    <button name="action_run_dunning" type="object" string="Run Dunning" invisible="state in ('draft', 'trial', 'cancelled')"/>
+                    <button name="action_mark_paid_external" type="object" string="Record External Payment" invisible="not last_invoice_id or payment_status == 'paid'"/>
+                    <button name="action_check_plan_limits" type="object" string="Check Limits"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancelled'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="tenant_name"/>
+                            <field name="database_name"/>
+                            <field name="customer_id"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <field name="plan_id"/>
+                            <field name="start_date"/>
+                            <field name="next_invoice_date"/>
+                            <field name="billing_cycle"/>
+                            <field name="billing_amount"/>
+                            <field name="billing_product_id"/>
+                            <field name="payment_provider"/>
+                            <field name="payment_status"/>
+                            <field name="external_payment_reference"/>
+                            <field name="last_invoice_id" readonly="1"/>
+                            <field name="last_invoice_date" readonly="1"/>
+                            <field name="paid_at" readonly="1"/>
+                            <field name="dunning_level"/>
+                            <field name="grace_until"/>
+                            <field name="last_dunning_at" readonly="1"/>
+                            <field name="suspension_reason"/>
+                            <field name="user_limit_override"/>
+                            <field name="branch_limit_override"/>
+                            <field name="current_user_count"/>
+                            <field name="current_branch_count"/>
+                            <field name="limit_status"/>
+                        </group>
+                    </group>
+                    <field name="feature_ids" widget="many2many_tags"/>
+                    <field name="effective_feature_ids" widget="many2many_tags" readonly="1"/>
+                    <field name="notes"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_saas_subscription" name="Subscriptions" parent="menu_tijara_saas" action="action_tijara_saas_subscription" sequence="30"/>
+</odoo>

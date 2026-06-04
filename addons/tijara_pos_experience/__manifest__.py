@@ -1,0 +1,51 @@
+{
+    "name": "Tijara POS Experience",
+    "summary": "Kiosk, customer display, menu/deal screens, promotions, and queue system",
+    "version": "19.0.1.0.0",
+    "category": "Tijara",
+    "author": "Tijara Suite",
+    "license": "LGPL-3",
+    "depends": [
+        "point_of_sale",
+        "pos_discount",
+        "tijara_pos_pk",
+        "tijara_retail_core",
+        "tijara_saas_control",
+    ],
+    "data": [
+        "security/ir.model.access.csv",
+        "data/tijara_sequences.xml",
+        "data/offline_pos_cron.xml",
+        "data/pos_discount_config.xml",
+        "views/pos_experience_menus.xml",
+        "views/offline_pos_queue_views.xml",
+        "views/kiosk_profile_views.xml",
+        "views/kiosk_order_views.xml",
+        "views/display_screen_views.xml",
+        "views/customer_display_state_views.xml",
+        "views/display_content_views.xml",
+        "views/promotion_views.xml",
+        "views/queue_ticket_views.xml",
+        "views/pos_config_views.xml",
+        "views/pos_order_views.xml",
+    ],
+    "assets": {
+        "point_of_sale._assets_pos": [
+            "tijara_pos_experience/static/src/app/bill_discount/**/*",
+            "tijara_pos_experience/static/src/app/order_options/**/*",
+            "tijara_pos_experience/static/src/app/customer_display/**/*",
+            "tijara_pos_experience/static/src/app/offline_pos/**/*",
+        ],
+        "web.assets_backend": [
+            "tijara_pos_experience/static/src/scss/touch_responsive.scss",
+        ],
+        "point_of_sale.assets_prod": [
+            "tijara_pos_experience/static/src/scss/touch_responsive.scss",
+        ],
+        "point_of_sale.customer_display_assets": [
+            "tijara_pos_experience/static/src/scss/touch_responsive.scss",
+        ],
+    },
+    "installable": True,
+    "application": False,
+}

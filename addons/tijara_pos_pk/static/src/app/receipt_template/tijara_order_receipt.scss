@@ -1,0 +1,49 @@
+.pos-receipt {
+    .tijara-pos-receipt-profile,
+    .tijara-pos-receipt-policy,
+    .tijara-pos-receipt-footer {
+        border-top: 1px dashed #9ca3af;
+        color: #111827;
+        font-size: 11px;
+        line-height: 1.35;
+        margin-top: 6px;
+        white-space: pre-line;
+    }
+
+    .tijara-pos-receipt-title {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .tijara-pos-receipt-text,
+    .tijara-pos-receipt-custom-body {
+        overflow-wrap: anywhere;
+    }
+
+    .tijara-pos-receipt-meta {
+        border-top: 1px dotted #d1d5db;
+        font-size: 10px;
+        margin-top: 6px;
+    }
+
+    .tijara-pos-receipt-barcode img {
+        max-height: 48px;
+        max-width: 100%;
+    }
+
+    .tijara-pos-receipt-qr img {
+        height: 96px;
+        width: 96px;
+    }
+
+    .tijara-pos-receipt-code {
+        font-size: 9px;
+        overflow-wrap: anywhere;
+    }
+
+    .tijara-urdu {
+        direction: rtl;
+        text-align: right;
+    }
+}

@@ -1,0 +1,82 @@
+{
+  "profiles": [
+    {
+      "code": "escpos-80mm-receipt-printer",
+      "label": "Generic 80mm ESC/POS receipt printer",
+      "device": {
+        "code": "receipt-main",
+        "type": "receipt_printer",
+        "driver": "escpos",
+        "printer_language": "escpos",
+        "paper_width_mm": 80
+      },
+      "tests": [
+        {
+          "operation": "print_receipt",
+          "payload": {
+            "ticket_text": "Tijara hardware certification\nReceipt printer smoke\nPKR 1,250\n"
+          }
+        },
+        {
+          "operation": "open_cash_drawer",
+          "payload": {
+            "cash_drawer_pin": 0,
+            "pulse_on_time": 25,
+            "pulse_off_time": 250
+          }
+        }
+      ]
+    },
+    {
+      "code": "zpl-label-printer",
+      "label": "Generic ZPL barcode label printer",
+      "device": {
+        "code": "label-main",
+        "type": "label_printer",
+        "driver": "zpl",
+        "printer_language": "zpl"
+      },
+      "tests": [
+        {
+          "operation": "print_label",
+          "payload": {
+            "zpl": "^XA^FO40,40^A0N,32,32^FDTijara SKU^FS^FO40,90^BY2^BCN,80,Y,N,N^FD8964000000012^FS^XZ"
+          }
+        }
+      ]
+    },
+    {
+      "code": "scale-scanner-display",
+      "label": "Scanner, scale, and customer display bridge profile",
+      "device": {
+        "code": "counter-devices",
+        "type": "customer_display",
+        "driver": "dry_run"
+      },
+      "tests": [
+        {
+          "operation": "scanner_event",
+          "payload": {
+            "scan_value": "TJINV:CERT-0001"
+          }
+        },
+        {
+          "operation": "read_scale",
+          "payload": {
+            "test_weight": 2.75,
+            "unit": "kg"
+          }
+        },
+        {
+          "operation": "customer_display",
+          "payload": {
+            "line_1": "Tijara Customer Display",
+            "amount_total": 1250,
+            "currency": "PKR"
+          }
+        }
+      ]
+    }
+  ]
+}
+

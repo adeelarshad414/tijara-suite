@@ -1,0 +1,59 @@
+<odoo>
+    <record id="action_tijara_bakery_batch" model="ir.actions.act_window">
+        <field name="name">Bakery Batches</field>
+        <field name="res_model">tijara.bakery.batch</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_bakery_batch_tree" model="ir.ui.view">
+        <field name="name">tijara.bakery.batch.tree</field>
+        <field name="model">tijara.bakery.batch</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="product_id"/>
+                <field name="production_date"/>
+                <field name="planned_qty"/>
+                <field name="produced_qty"/>
+                <field name="expiry_datetime"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_bakery_batch_form" model="ir.ui.view">
+        <field name="name">tijara.bakery.batch.form</field>
+        <field name="model">tijara.bakery.batch</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" type="object" string="Start" invisible="state != 'draft'"/>
+                    <button name="action_done" type="object" string="Done" invisible="state != 'in_production'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('done', 'cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="product_id"/>
+                            <field name="production_date"/>
+                            <field name="expiry_datetime"/>
+                        </group>
+                        <group>
+                            <field name="planned_qty"/>
+                            <field name="produced_qty"/>
+                            <field name="responsible_id"/>
+                            <field name="company_id"/>
+                        </group>
+                    </group>
+                    <field name="note"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_bakery" name="Bakery" parent="tijara_base.menu_tijara_root" sequence="55"/>
+    <menuitem id="menu_tijara_bakery_batch" name="Production Batches" parent="menu_tijara_bakery" action="action_tijara_bakery_batch" sequence="10"/>
+</odoo>
+

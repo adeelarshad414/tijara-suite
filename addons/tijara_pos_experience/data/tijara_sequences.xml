@@ -1,0 +1,14 @@
+<odoo noupdate="1">
+    <record id="seq_tijara_queue_ticket" model="ir.sequence">
+        <field name="name">Tijara Queue Ticket</field>
+        <field name="code">tijara.queue.ticket</field>
+        <field name="prefix">Q/%(y)s/</field>
+        <field name="padding">4</field>
+    </record>
+    <record id="seq_tijara_kiosk_order" model="ir.sequence">
+        <field name="name">Tijara Kiosk Order</field>
+        <field name="code">tijara.kiosk.order</field>
+        <field name="prefix">K/%(y)s/</field>
+        <field name="padding">4</field>
+    </record>
+</odoo>

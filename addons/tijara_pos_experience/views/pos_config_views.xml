@@ -1,0 +1,37 @@
+<odoo>
+    <record id="view_pos_config_form_tijara_experience" model="ir.ui.view">
+        <field name="name">pos.config.form.tijara.experience</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Tijara Experience">
+                    <group>
+                        <field name="tijara_allow_b2c"/>
+                        <field name="tijara_allow_b2b"/>
+                        <field name="tijara_default_audience"/>
+                        <field name="tijara_show_audience_toggle"/>
+                    </group>
+                    <group>
+                        <field name="tijara_queue_enabled"/>
+                        <field name="tijara_kiosk_enabled"/>
+                        <field name="tijara_customer_display_enabled"/>
+                    </group>
+                    <group string="Bill Discount">
+                        <field name="tijara_bill_discount_enabled"/>
+                        <field name="tijara_bill_discount_default_mode"/>
+                        <field name="tijara_bill_discount_max_percent"/>
+                        <field name="tijara_bill_discount_requires_manager"/>
+                        <field name="discount_product_id" invisible="not tijara_bill_discount_enabled"/>
+                    </group>
+                    <group>
+                        <field name="tijara_menu_board_id"/>
+                        <field name="tijara_deals_board_id"/>
+                        <field name="tijara_customer_display_id"/>
+                        <field name="tijara_queue_display_id"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

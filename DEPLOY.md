@@ -1,0 +1,452 @@
+# Deploy Guide
+
+This guide is the operational entry point for deploying Tijara Suite. Keep it
+updated whenever deployment, configuration, secrets, observability, backup, or
+release behavior changes.
+
+## Deployment Layout
+
+```text
+.env.example                         Central non-secret environment template
+secrets/.env.secrets.example          Central secret environment template
+deploy/config/odoo.conf.template      Secret-free Odoo runtime config template
+deploy/bin/start-odoo.sh              Renders the runtime Odoo config
+deploy/logging/                       Logging aggregation and retention notes
+deploy/monitoring/                    Prometheus and Blackbox Exporter baseline
+deploy/nginx/tijara.conf              Reverse proxy baseline
+deploy/postgres/                      Database backup, restore drill, operations
+hardware-bridge/                      Local shop-machine bridge service
+docs/RETAIL_OPERATIONS_DATA.md        Hardware, templates, scanning, CSV notes
+docker-compose.yml                    Development and small deployment runtime
+Makefile                              Operator shortcuts
+```
+
+Do not put passwords, API keys, database passwords, backup keys, FBR credentials,
+payment credentials, or JWT/session material in committed configuration files.
+
+## Environment Files
+
+Use two centered files per environment:
+
+- `.env`: non-secret runtime configuration, copied from `.env.example`.
+- `secrets/.env.secrets`: secret runtime configuration, copied from
+  `secrets/.env.secrets.example`.
+
+For production, plain env files should be replaced by a secret manager such as
+Vault, SOPS, Kubernetes Secrets, Docker secrets, Doppler, 1Password Secrets
+Automation, AWS Secrets Manager, Azure Key Vault, or Google Secret Manager.
+
+Local bootstrap:
+
+```bash
+cp .env.example .env
+mkdir -p secrets
+cp secrets/.env.secrets.example secrets/.env.secrets
+```
+
+Generate strong values for production secrets:
+
+```bash
+openssl rand -base64 48
+```
+
+## Compose Commands
+
+The Makefile automatically includes `.env` and `secrets/.env.secrets` when they
+exist.
+
+```bash
+make validate
+make js-check
+make security-audit
+make config
+make up
+make ps
+make logs
+make install-suite
+make seed-e2e DB=tijara_dev
+make test-odoo
+make e2e
+make bridge-up
+make bridge-logs
+make backup-db
+make restore-drill BACKUP=deploy/runtime/backups/file.dump
+make provision-tenant TENANT_DB=tijara_customer_001 TENANT_NAME="Customer 001"
+make provision-tenant-ops TENANT_DB=tijara_customer_001 TENANT_DOMAIN=customer.example.com ADMIN_EMAIL=admin@example.com
+make hardware-cert-smoke
+make monitoring-up
+make load-smoke
+```
+
+Direct Compose usage should include both env files:
+
+```bash
+docker compose --env-file .env --env-file secrets/.env.secrets up -d
+docker compose --env-file .env --env-file secrets/.env.secrets ps
+```
+
+Install the custom module suite into a fresh database with the Makefile target:
+
+```bash
+make install-suite
+```
+
+The equivalent direct Compose command is:
+
+```bash
+docker compose --env-file .env --env-file secrets/.env.secrets run --rm odoo bash /usr/local/bin/tijara-start-odoo -d tijara_dev -i tijara_base,tijara_retail_core,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery --without-demo --stop-after-init
+```
+
+## Runtime Config
+
+`deploy/config/odoo.conf.template` is safe to commit because it contains
+placeholders only. `deploy/bin/start-odoo.sh` renders the real Odoo config inside
+the container at runtime using environment variables. The generated file is not
+committed and should not be copied out to source control.
+
+Compose requires these secret values before startup:
+
+- `POSTGRES_PASSWORD`
+- `ODOO_DB_PASSWORD`
+- `ODOO_MASTER_PASSWORD`
+- `TIJARA_BRIDGE_SHARED_SECRET` for hardware bridge deployments
+- `TIJARA_PAYMENT_WEBHOOK_SECRET` for public payment webhook validation
+- `GRAFANA_ADMIN_PASSWORD` for the monitoring profile
+
+The startup script refuses to start production if placeholder or development
+secret values are still present.
+
+## Production Checklist
+
+- Pin Docker image versions and record the Odoo version used for each release.
+- Use HTTPS at the reverse proxy and keep `proxy_mode=True`.
+- Disable public database listing in production with `ODOO_LIST_DB=False`.
+- Use database-per-tenant isolation for SaaS customers.
+- Use separate staging and production databases.
+- Run `make validate` before every release.
+- Install or upgrade modules in staging before production.
+- Take a database backup before module upgrades.
+- Keep PostgreSQL backups encrypted and restore-tested.
+- Run `make restore-drill BACKUP=...` after backup process changes and at least
+  monthly in production.
+- Configure monitoring for Odoo HTTP, long polling/websocket, PostgreSQL health,
+  disk usage, worker memory, and queue latency.
+- Configure audit logging for refunds, exchanges, discounts, voids, stock
+  adjustments, SaaS entitlement changes, and admin settings.
+- Rotate secrets when staff access changes or after any suspected exposure.
+
+## Backup Baseline
+
+Minimum backup policy for pilots:
+
+- Nightly PostgreSQL logical backup.
+- Daily filestore backup.
+- Seven-day local retention.
+- Thirty-day offsite encrypted retention.
+- Monthly restore drill.
+
+Production SaaS should move to continuous WAL archiving or managed PostgreSQL
+point-in-time recovery.
+
+Restore drill:
+
+```bash
+CONFIRM_RESTORE_DRILL=YES bash deploy/postgres/restore-drill.sh deploy/runtime/backups/latest.dump
+```
+
+The restore drill creates a temporary database, restores the backup into it,
+runs a simple query, and drops the temporary database on exit.
+
+## Touch, Device, and Browser Readiness
+
+Production release cannot rely on desktop-only behavior. Validate the POS,
+kiosk, customer display, queue display, promotion display, menu display, and
+back-office workflows against:
+
+- Touch screens and mouse/keyboard devices.
+- Android Chrome, iOS Safari, desktop Chrome, desktop Edge, desktop Firefox, and
+  desktop Safari.
+- 360 px, 390 px, 768 px, 1024 px, 1366 px, and 1920 px viewport widths.
+- Urdu and English layouts.
+- Barcode scanner keyboard-wedge input.
+- Receipt printer and customer display hardware paths where available.
+
+See `docs/FRONTEND_DEVICE_QA.md` for the acceptance standard.
+
+## Hardware Bridge Readiness
+
+The current Odoo layer stores scanner/printer/customer-display/cash-drawer/scale
+configuration and can validate required connection metadata. The first
+open-source local bridge foundation lives in `hardware-bridge/` and can run as a
+Docker Compose `hardware` profile service:
+
+```bash
+make bridge-up
+make bridge-logs
+```
+
+The foundation accepts signed jobs for receipt print, label print, cash drawer,
+scale read, scanner event, and customer-display routes. It can build ESC/POS
+receipt bytes, ZPL label bytes, cash-drawer pulse bytes, customer-display JSON,
+scanner-event JSON, and dry-run scale readings. Non-dry-run delivery supports
+CUPS queues, raw TCP devices, and file output, but every physical device path
+still needs target-hardware validation before pilot rollout.
+
+For POS receipt printing through the bridge:
+
+1. Set `TIJARA_BRIDGE_SHARED_SECRET` in the Odoo runtime environment or the
+   `tijara.bridge.shared_secret` Odoo system parameter.
+2. Register a `receipt_printer` hardware device with `browser_bridge`
+   connection type, `escpos` printer language where appropriate, and the local
+   bridge endpoint.
+3. Run `Bridge Health` and `Send Bridge Test Job` from the hardware device form.
+4. Select that device in the POS configuration as the Tijara receipt printer.
+5. Complete a POS order and use the POS receipt print action; the order should
+   record bridge print status, job id, result JSON, and printed timestamp.
+
+Bridge deployment rules:
+
+- Keep bridge configuration separate from Odoo database secrets.
+- Use signed local HTTP or websocket requests between Odoo/POS and bridge.
+- Restrict bridge network binding to localhost or the trusted store LAN.
+- Log print/scan/display test results for support and audit.
+- Support keyboard-wedge scanner fallback where no driver is required.
+- Validate ESC/POS, ZPL, CUPS/browser print, QR/barcode output, and Urdu text
+  rendering with the target hardware before pilot go-live.
+
+See `docs/RETAIL_OPERATIONS_DATA.md` for the current device registry fields and
+runtime gaps.
+
+Run dry-run certification profiles before physical QA:
+
+```bash
+make hardware-cert-smoke
+```
+
+Then repeat the same profile categories on target hardware and record model,
+firmware, connection type, paper/label size, Urdu rendering, barcode/QR scan
+success, cash drawer pulse, scale readings, and customer-display behavior.
+Use Hardware Certifications in Retail Configuration to store evidence per
+physical printer, scanner, scale, drawer, and display model.
+
+## Tenant Provisioning
+
+For database-per-tenant SaaS rollout, create or approve a provisioning request
+in SaaS Admin, then run:
+
+```bash
+make provision-tenant TENANT_DB=tijara_customer_001 TENANT_NAME="Customer 001"
+```
+
+The script validates the database name, runs the Tijara module install command
+inside the Odoo container, and leaves the SaaS operator to mark the matching
+provisioning request as provisioned.
+
+Generate tenant operations artifacts after database provisioning:
+
+```bash
+make provision-tenant-ops TENANT_DB=tijara_customer_001 TENANT_DOMAIN=customer.example.com ADMIN_EMAIL=admin@example.com
+```
+
+This writes a tenant operations manifest, Nginx location snippet, and Prometheus
+Blackbox target under `deploy/runtime/tenants/<tenant_db>/`. The matching Odoo
+provisioning request can also generate an operations manifest from SaaS Admin.
+Production DNS changes, certificate issuance, admin-user creation, and smoke
+execution still need provider-specific automation.
+
+## Subscription Billing
+
+Subscriptions can generate draft Odoo customer invoices from the selected plan
+price or a billing override amount. Operators can:
+
+- Set billing customer, cycle, price override, billing product, and provider.
+- Generate the customer invoice from the subscription form.
+- Sync invoice/payment state.
+- Record external payment confirmation for manual, JazzCash, Easypaisa, Stripe,
+  or other provider flows.
+- Receive signed/secret-guarded provider webhook payloads at
+  `/tijara/saas/payment/webhook/<provider>`.
+- Store webhook events, normalize JazzCash/Easypaisa/Stripe/manual payloads,
+  track provider reference, transaction id, settlement batch, signature status,
+  reconciliation status, and run dunning/suspension actions from the
+  subscription form.
+
+Set `TIJARA_PAYMENT_WEBHOOK_SECRET` in the secret store or set the Odoo system
+parameter `tijara.saas.payment_webhook_secret`. Provider requests must include
+`X-Tijara-Webhook-Secret`. Production still needs exact provider payload
+contract validation, provider-native signature validation, settlement
+reconciliation policy, and tax configuration.
+
+## SaaS Enforcement
+
+Feature flags are modeled in `tijara_saas_control`. Runtime enforcement can be
+enabled with either:
+
+```bash
+TIJARA_SAAS_ENFORCEMENT_ENABLED=True
+```
+
+or the Odoo system parameter:
+
+```text
+tijara.saas.enforcement_enabled = 1
+```
+
+When enforcement is on, POS configuration blocks unavailable B2B sales, queue
+system, promotion/menu/deals display, and customer-display settings unless the
+active subscription includes the matching feature code.
+
+## FBR Adapter
+
+The FBR queue supports:
+
+- `dry_run` mode for pilots and public-repo validation.
+- `live` mode posting JSON to `FBR_ADAPTER_ENDPOINT` or the
+  `tijara.fbr.endpoint` system parameter.
+- Credentials from `FBR_CLIENT_SECRET` or `tijara.fbr.client_secret`.
+- HTTPS-only live endpoints by default.
+- Client ID and idempotency headers.
+- Submission attempt tracking and response-status validation.
+- Certification environment, certified provider name, provider credential
+  reference, provider invoice UUID, sandbox/certification reference, signed
+  payload hash, and compliance status fields.
+
+Keep FBR credentials in the secret store. Enable the queued FBR cron only after
+validating the adapter endpoint in staging.
+
+Set `FBR_ALLOW_INSECURE_ENDPOINT=True` only for local/staging mock adapters.
+Production certified adapters must use HTTPS.
+
+## Kiosk POS Sync and Offline Queue
+
+Kiosk profiles can optionally create linked Odoo POS orders when checkout is
+submitted. Configure:
+
+- `POS Register` on the kiosk profile.
+- Payment capture mode: pay at counter, record paid, terminal reference, or
+  provider webhook.
+- Cash/card/bank POS payment method mappings.
+
+When configured, kiosk orders store the linked POS session/order/payment method,
+payment record, terminal/provider reference, sync timestamp, and any sync error.
+If not configured, the kiosk can still submit an auditable kiosk order and queue
+ticket for counter payment.
+
+Offline POS browser capture now has three layers:
+
+- POS frontend localStorage queueing for the active order when browser sync
+  fails or the register is offline, plus a cashier-facing POS queue button that
+  shows queued/blocked counts and triggers a replay check.
+- Authenticated browser endpoints:
+  - `POST /tijara/offline-pos/capture` to capture and optionally replay one
+    offline order.
+  - `POST /tijara/offline-pos/replay` to replay pending queue records for one
+    device or all devices.
+  - `GET /tijara/offline-pos/status` to return queue counts by state.
+- Server-side replay into `pos.order`, POS order lines, POS payments, paid-order
+  workflow, duplicate detection, replay attempts, and linked replayed order
+  audit fields.
+- Per-register advisory locking so replay into the same POS configuration is
+  serialized before POS sequence/session/payment creation.
+- Back-office review surfaces under POS Experience:
+  - Offline Conflict Review for failed/conflict/queued/validated records.
+  - Retry, cancel, mark duplicate, merge, manual mark replayed, and fail
+    actions.
+  - Reviewer, reviewed time, review note, duplicate/merge target, payload line
+    count, payment count, total delta, replay attempts, and replay latency.
+  - Offline Replay Audit pivot/graph views for operational reporting.
+
+The `Tijara Replay Offline POS Orders` cron is installed inactive by default.
+Enable it only after staging proves product, payment-method, tax, stock-picking,
+and duplicate handling for the target POS configuration. Full production offline
+readiness still needs store-network pilots, physical payment-terminal/device
+certification, load testing, and signed operational runbooks. The default
+Playwright offline replay smoke runs on desktop; set
+`TIJARA_RUN_MOBILE_OFFLINE_E2E=1` only for staging environments prepared to test
+concurrent replay into the same POS register.
+
+## Monitoring and Logging
+
+Start the open-source monitoring baseline:
+
+```bash
+make monitoring-up
+```
+
+This launches Prometheus, Blackbox Exporter, Alertmanager, Loki, and Grafana
+with Odoo login and hardware bridge health checks. See
+`deploy/monitoring/README.md`.
+
+Logging guidance is in `deploy/logging/README.md`. Production should centralize
+Odoo, PostgreSQL, Nginx/ingress, hardware bridge, FBR adapter, and backup job
+logs with searchable retention. Loki is included as the first open-source log
+aggregation baseline; production still needs log shippers and retention tuning.
+
+## Display Routes
+
+Public display routes are available for store screens:
+
+```text
+/tijara/display/<slug>
+/tijara/display/<slug>/data
+/tijara/kiosk/<slug>
+/tijara/kiosk/<slug>/data
+/tijara/kiosk/<slug>/checkout
+```
+
+Use HTTPS and reverse-proxy rate limiting in production. The baseline Nginx file
+already rate-limits login, database, JSON-RPC, display, and kiosk paths.
+
+Seed staging browser data:
+
+```bash
+TIJARA_E2E_PASSWORD=<staging-test-password> make seed-e2e DB=tijara_dev
+export TIJARA_DISPLAY_SLUG=tijara-e2e-menu
+export TIJARA_KIOSK_SLUG=tijara-e2e-kiosk
+export TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer
+export TIJARA_E2E_PRODUCT_ID=<printed-by-seed>
+export TIJARA_E2E_PAYMENT_METHOD_ID=<printed-by-seed>
+export TIJARA_E2E_REFUND_REASON_ID=<printed-by-seed>
+export TIJARA_E2E_POS_ORDER_ID=<printed-by-seed>
+export TIJARA_E2E_REFUND_BARCODE=<printed-by-seed>
+export TIJARA_REFUND_ACTION_URL=<printed-by-seed>
+export TIJARA_REPORT_ORDER_URL=<printed-by-seed>
+export TIJARA_OFFLINE_QUEUE_ACTION_URL=<printed-by-seed>
+export ODOO_USERNAME=<printed-by-seed>
+export ODOO_PASSWORD=<staging-test-password>
+export ODOO_DATABASE=tijara_dev
+export TIJARA_RUN_POS_UI_E2E=1
+ODOO_BASE_URL=http://127.0.0.1:8069 npm run test:e2e
+```
+
+## CI, Security, and Load Smoke
+
+The first GitHub Actions workflow is `.github/workflows/tijara-ci.yml`. Local
+operators can run:
+
+```bash
+make validate
+make js-check
+make security-audit
+make config
+```
+
+Optional tools:
+
+- Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.
+- Run `make container-scan` when Trivy is installed.
+- Run `make dependency-scan` for npm audit and pip-audit where available.
+- Run `make test-odoo` for committed Odoo transaction/HTTP tests.
+- Run `make e2e` after installing Playwright and setting staging environment
+  variables for authenticated flows.
+
+## Rollback Baseline
+
+For every production release, keep:
+
+- The previous Docker image tags.
+- The previous addon code bundle.
+- A pre-upgrade database backup.
+- A written migration note with installed/updated modules.
+- A smoke checklist result for login, POS load, product search, checkout,
+  receipt profile rendering, refund/exchange, inventory adjustment, and reports.

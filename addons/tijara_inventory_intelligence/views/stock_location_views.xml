@@ -1,0 +1,39 @@
+<odoo>
+    <record id="stock_location_form_view_tijara_inventory" model="ir.ui.view">
+        <field name="name">stock.location.form.tijara.inventory</field>
+        <field name="model">stock.location</field>
+        <field name="inherit_id" ref="stock.view_location_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='additional_info']" position="after">
+                <group string="Tijara Physical Placement" invisible="usage != 'internal'">
+                    <field name="tijara_zone"/>
+                    <field name="tijara_aisle"/>
+                    <field name="tijara_rack"/>
+                    <field name="tijara_shelf"/>
+                    <field name="tijara_bin"/>
+                    <field name="tijara_location_barcode"/>
+                    <field name="tijara_capacity_qty"/>
+                    <field name="tijara_temperature_zone"/>
+                    <field name="tijara_picking_priority"/>
+                    <field name="tijara_is_front_shelf"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="stock_location_list_view_tijara_inventory" model="ir.ui.view">
+        <field name="name">stock.location.list.tijara.inventory</field>
+        <field name="model">stock.location</field>
+        <field name="inherit_id" ref="stock.view_location_tree2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='storage_category_id']" position="after">
+                <field name="tijara_zone" optional="hide"/>
+                <field name="tijara_aisle" optional="show"/>
+                <field name="tijara_rack" optional="show"/>
+                <field name="tijara_shelf" optional="show"/>
+                <field name="tijara_bin" optional="show"/>
+                <field name="tijara_picking_priority" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="tijara_pos_experience.BillDiscountPopup">
+        <Dialog title="props.title" bodyClass="'o_tijara_touch_surface tijara-bill-discount-popup'" size="'md'">
+            <div class="tijara-bill-discount-summary">
+                <div>
+                    <span class="tijara-bill-discount-label">Bill Base</span>
+                    <strong t-esc="props.formatCurrency(state.baseAmount)"/>
+                </div>
+                <div>
+                    <span class="tijara-bill-discount-label">Net Bill</span>
+                    <strong t-esc="props.formatCurrency(state.netAmount)"/>
+                </div>
+            </div>
+
+            <div class="tijara-bill-discount-fields">
+                <label class="tijara-bill-discount-field">
+                    <span>Discount %</span>
+                    <input
+                        class="form-control form-control-lg"
+                        type="number"
+                        inputmode="decimal"
+                        min="0"
+                        t-att-max="props.maxPercent"
+                        step="0.01"
+                        t-att-value="state.percent"
+                        t-on-input="onPercentInput"/>
+                </label>
+                <label class="tijara-bill-discount-field">
+                    <span>Discount Amount</span>
+                    <input
+                        class="form-control form-control-lg"
+                        type="number"
+                        inputmode="decimal"
+                        min="0"
+                        step="0.01"
+                        t-att-value="state.amount"
+                        t-on-input="onAmountInput"/>
+                </label>
+            </div>
+
+            <div class="tijara-bill-discount-note">
+                <span t-if="state.mode == 'percent'">Amount is calculated from the percentage.</span>
+                <span t-else="">Percentage is calculated from the amount.</span>
+            </div>
+
+            <t t-set-slot="footer">
+                <div class="d-flex flex-grow-1 justify-content-center w-100">
+                    <button
+                        class="btn btn-primary btn-lg lh-lg o-default-button me-2 flex-fill"
+                        t-att-disabled="!state.baseAmount"
+                        t-on-click="confirm">
+                        Apply Discount
+                    </button>
+                    <button
+                        class="btn btn-secondary btn-lg lh-lg o-default-button flex-fill"
+                        t-on-click="cancel">
+                        Discard
+                    </button>
+                </div>
+            </t>
+        </Dialog>
+    </t>
+</templates>

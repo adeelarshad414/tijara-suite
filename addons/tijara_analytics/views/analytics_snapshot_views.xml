@@ -1,0 +1,141 @@
+<odoo>
+    <record id="view_tijara_analytics_snapshot_list" model="ir.ui.view">
+        <field name="name">tijara.analytics.snapshot.list</field>
+        <field name="model">tijara.analytics.snapshot</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="snapshot_date"/>
+                <field name="period_type"/>
+                <field name="business_area"/>
+                <field name="metric_type"/>
+                <field name="warehouse_id"/>
+                <field name="amount"/>
+                <field name="quantity"/>
+                <field name="count"/>
+                <field name="rate"/>
+                <field name="target_amount"/>
+                <field name="variance_amount"/>
+                <field name="variance_rate"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_analytics_snapshot_form" model="ir.ui.view">
+        <field name="name">tijara.analytics.snapshot.form</field>
+        <field name="model">tijara.analytics.snapshot</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="snapshot_date"/>
+                            <field name="period_type"/>
+                            <field name="business_area"/>
+                            <field name="metric_type"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id"/>
+                            <field name="warehouse_id"/>
+                        </group>
+                    </group>
+                    <group string="Actuals">
+                        <field name="amount"/>
+                        <field name="quantity"/>
+                        <field name="count"/>
+                        <field name="rate"/>
+                    </group>
+                    <group string="Targets and Variance">
+                        <field name="target_amount"/>
+                        <field name="target_quantity"/>
+                        <field name="target_count"/>
+                        <field name="variance_amount"/>
+                        <field name="variance_rate"/>
+                    </group>
+                    <group>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_analytics_snapshot_search" model="ir.ui.view">
+        <field name="name">tijara.analytics.snapshot.search</field>
+        <field name="model">tijara.analytics.snapshot</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="business_area"/>
+                <field name="metric_type"/>
+                <field name="warehouse_id"/>
+                <filter name="sales" string="Sales" domain="[('business_area', '=', 'sales')]"/>
+                <filter name="pos" string="POS" domain="[('business_area', '=', 'pos')]"/>
+                <filter name="inventory" string="Inventory" domain="[('business_area', '=', 'inventory')]"/>
+                <filter name="purchase" string="Purchase" domain="[('business_area', '=', 'purchase')]"/>
+                <filter name="month" string="This Month" date="snapshot_date"/>
+                <group>
+                    <filter name="group_date" string="Date" context="{'group_by': 'snapshot_date'}"/>
+                    <filter name="group_area" string="Business Area" context="{'group_by': 'business_area'}"/>
+                    <filter name="group_metric" string="Metric" context="{'group_by': 'metric_type'}"/>
+                    <filter name="group_warehouse" string="Warehouse" context="{'group_by': 'warehouse_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_tijara_analytics_snapshot_graph" model="ir.ui.view">
+        <field name="name">tijara.analytics.snapshot.graph</field>
+        <field name="model">tijara.analytics.snapshot</field>
+        <field name="arch" type="xml">
+            <graph string="KPI Trends" type="line">
+                <field name="snapshot_date" interval="day"/>
+                <field name="business_area"/>
+                <field name="amount" type="measure"/>
+                <field name="quantity" type="measure"/>
+                <field name="count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_tijara_analytics_snapshot_pivot" model="ir.ui.view">
+        <field name="name">tijara.analytics.snapshot.pivot</field>
+        <field name="model">tijara.analytics.snapshot</field>
+        <field name="arch" type="xml">
+            <pivot string="KPI Analysis">
+                <field name="business_area" type="row"/>
+                <field name="metric_type" type="row"/>
+                <field name="snapshot_date" type="col" interval="month"/>
+                <field name="amount" type="measure"/>
+                <field name="quantity" type="measure"/>
+                <field name="count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_tijara_analytics_snapshot" model="ir.actions.act_window">
+        <field name="name">KPI History</field>
+        <field name="res_model">tijara.analytics.snapshot</field>
+        <field name="view_mode">list,graph,pivot,form</field>
+        <field name="search_view_id" ref="view_tijara_analytics_snapshot_search"/>
+    </record>
+
+    <record id="action_tijara_analytics_trends" model="ir.actions.act_window">
+        <field name="name">Trends and Charts</field>
+        <field name="res_model">tijara.analytics.snapshot</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="search_view_id" ref="view_tijara_analytics_snapshot_search"/>
+    </record>
+
+    <record id="action_tijara_collect_daily_snapshots" model="ir.actions.server">
+        <field name="name">Collect Daily Snapshots</field>
+        <field name="model_id" ref="model_tijara_analytics_snapshot"/>
+        <field name="state">code</field>
+        <field name="code">env["tijara.analytics.snapshot"].action_collect_daily_snapshots()</field>
+    </record>
+
+    <menuitem id="menu_tijara_analytics_snapshot" name="KPI History" parent="menu_tijara_analytics" action="action_tijara_analytics_snapshot" sequence="20"/>
+    <menuitem id="menu_tijara_analytics_trends" name="Trends and Charts" parent="menu_tijara_analytics_reports" action="action_tijara_analytics_trends" sequence="10"/>
+    <menuitem id="menu_tijara_collect_daily_snapshots" name="Collect Daily Snapshots" parent="menu_tijara_analytics" action="action_tijara_collect_daily_snapshots" sequence="25" groups="tijara_base.group_tijara_manager"/>
+</odoo>

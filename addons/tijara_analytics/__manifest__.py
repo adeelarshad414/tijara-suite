@@ -1,0 +1,27 @@
+{
+    "name": "Tijara Analytics and Reporting",
+    "summary": "Dashboards, KPI history, trends, charts, graphs, and business reports",
+    "version": "19.0.1.0.0",
+    "category": "Tijara",
+    "author": "Tijara Suite",
+    "license": "LGPL-3",
+    "depends": [
+        "sale_management",
+        "purchase",
+        "point_of_sale",
+        "stock",
+        "tijara_inventory_intelligence",
+        "tijara_saas_control",
+    ],
+    "data": [
+        "security/ir.model.access.csv",
+        "data/dashboard_templates.xml",
+        "data/analytics_cron.xml",
+        "views/analytics_menus.xml",
+        "views/analytics_dashboard_views.xml",
+        "views/analytics_snapshot_views.xml",
+        "views/analytics_report_views.xml",
+    ],
+    "installable": True,
+    "application": False,
+}

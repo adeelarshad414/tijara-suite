@@ -1,0 +1,5 @@
+<odoo>
+    <menuitem id="menu_tijara_retail" name="Retail Operations" parent="tijara_base.menu_tijara_root" sequence="10"/>
+    <menuitem id="menu_tijara_retail_configuration" name="Retail Configuration" parent="tijara_base.menu_tijara_configuration" sequence="10"/>
+</odoo>
+

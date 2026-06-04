@@ -1,0 +1,15 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tijara_hardware_device_user,tijara.hardware.device.user,model_tijara_hardware_device,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_hardware_device_manager,tijara.hardware.device.manager,model_tijara_hardware_device,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_hardware_certification_user,tijara.hardware.certification.user,model_tijara_hardware_certification,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_hardware_certification_manager,tijara.hardware.certification.manager,model_tijara_hardware_certification,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_bulk_data_operation_user,tijara.bulk.data.operation.user,model_tijara_bulk_data_operation,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_bulk_data_operation_manager,tijara.bulk.data.operation.manager,model_tijara_bulk_data_operation,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_refund_reason_user,tijara.refund.reason.user,model_tijara_refund_reason,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_refund_reason_manager,tijara.refund.reason.manager,model_tijara_refund_reason,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_exchange_request_user,tijara.exchange.request.user,model_tijara_exchange_request,tijara_base.group_tijara_user,1,1,1,0
+access_tijara_exchange_request_manager,tijara.exchange.request.manager,model_tijara_exchange_request,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_exchange_request_line_user,tijara.exchange.request.line.user,model_tijara_exchange_request_line,tijara_base.group_tijara_user,1,1,1,0
+access_tijara_exchange_request_line_manager,tijara.exchange.request.line.manager,model_tijara_exchange_request_line,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_cash_shift_user,tijara.cash.shift.user,model_tijara_cash_shift,tijara_base.group_tijara_user,1,1,1,0
+access_tijara_cash_shift_manager,tijara.cash.shift.manager,model_tijara_cash_shift,tijara_base.group_tijara_manager,1,1,1,1

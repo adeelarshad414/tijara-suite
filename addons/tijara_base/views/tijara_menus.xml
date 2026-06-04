@@ -1,0 +1,5 @@
+<odoo>
+    <menuitem id="menu_tijara_root" name="Tijara" sequence="5"/>
+    <menuitem id="menu_tijara_configuration" name="Configuration" parent="menu_tijara_root" sequence="90"/>
+</odoo>
+

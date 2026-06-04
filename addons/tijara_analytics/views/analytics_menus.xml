@@ -1,0 +1,5 @@
+<odoo>
+    <menuitem id="menu_tijara_analytics" name="Analytics" parent="tijara_base.menu_tijara_root" sequence="30"/>
+    <menuitem id="menu_tijara_analytics_reports" name="Reports" parent="menu_tijara_analytics" sequence="30"/>
+    <menuitem id="menu_tijara_analytics_configuration" name="Analytics Configuration" parent="tijara_base.menu_tijara_configuration" sequence="30"/>
+</odoo>

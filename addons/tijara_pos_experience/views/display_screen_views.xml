@@ -1,0 +1,56 @@
+<odoo>
+    <record id="action_tijara_display_screen" model="ir.actions.act_window">
+        <field name="name">Display Screens</field>
+        <field name="res_model">tijara.display.screen</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_display_screen_tree" model="ir.ui.view">
+        <field name="name">tijara.display.screen.tree</field>
+        <field name="model">tijara.display.screen</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="display_type"/>
+                <field name="language_mode"/>
+                <field name="price_mode"/>
+                <field name="url_slug"/>
+                <field name="company_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_display_screen_form" model="ir.ui.view">
+        <field name="name">tijara.display.screen.form</field>
+        <field name="model">tijara.display.screen</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="display_type"/>
+                            <field name="language_mode"/>
+                            <field name="orientation"/>
+                            <field name="price_mode"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="url_slug"/>
+                            <field name="refresh_seconds"/>
+                            <field name="hardware_device_id"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <field name="content_ids" widget="many2many_tags"/>
+                    <field name="notes"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_display_screen" name="Display Screens" parent="menu_tijara_pos_experience" action="action_tijara_display_screen" sequence="10"/>
+</odoo>
+

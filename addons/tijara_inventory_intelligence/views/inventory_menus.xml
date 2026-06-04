@@ -1,0 +1,5 @@
+<odoo>
+    <menuitem id="menu_tijara_inventory_intelligence" name="Inventory Intelligence" parent="tijara_base.menu_tijara_root" sequence="20"/>
+    <menuitem id="menu_tijara_inventory_reports" name="Reports" parent="menu_tijara_inventory_intelligence" sequence="40"/>
+    <menuitem id="menu_tijara_inventory_configuration" name="Inventory Configuration" parent="tijara_base.menu_tijara_configuration" sequence="20"/>
+</odoo>

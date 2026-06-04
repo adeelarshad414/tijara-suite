@@ -1,0 +1,21 @@
+<odoo>
+    <record id="product_template_form_view_tijara_electronics" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.electronics</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']" position="after">
+                <page name="tijara_electronics" string="Electronics">
+                    <group>
+                        <field name="tijara_serial_required"/>
+                        <field name="tijara_imei_required"/>
+                        <field name="tijara_warranty_months"/>
+                        <field name="tijara_installation_required"/>
+                        <field name="tijara_warranty_provider"/>
+                        <field name="tijara_warranty_terms"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

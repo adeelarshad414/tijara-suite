@@ -1,0 +1,62 @@
+<odoo>
+    <record id="action_tijara_display_content" model="ir.actions.act_window">
+        <field name="name">Display Content</field>
+        <field name="res_model">tijara.display.content</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_display_content_tree" model="ir.ui.view">
+        <field name="name">tijara.display.content.tree</field>
+        <field name="model">tijara.display.content</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence"/>
+                <field name="name"/>
+                <field name="content_type"/>
+                <field name="product_id"/>
+                <field name="promotion_id"/>
+                <field name="b2c_price"/>
+                <field name="b2b_price"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_display_content_form" model="ir.ui.view">
+        <field name="name">tijara.display.content.form</field>
+        <field name="model">tijara.display.content</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="sequence"/>
+                            <field name="content_type"/>
+                            <field name="company_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="promotion_id"/>
+                            <field name="b2c_price"/>
+                            <field name="b2b_price"/>
+                            <field name="start_at"/>
+                            <field name="end_at"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="title_english"/>
+                        <field name="title_urdu"/>
+                        <field name="subtitle_english"/>
+                        <field name="subtitle_urdu"/>
+                    </group>
+                    <field name="screen_ids" widget="many2many_tags"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_display_content" name="Display Content" parent="menu_tijara_pos_experience" action="action_tijara_display_content" sequence="20"/>
+</odoo>
+

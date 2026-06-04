@@ -1,0 +1,40 @@
+{
+  "devices": [
+    {
+      "code": "receipt-demo",
+      "type": "receipt_printer",
+      "driver": "dry_run_escpos",
+      "printer_language": "escpos",
+      "output_file": "/var/lib/tijara-bridge/output/receipt-demo.escpos",
+      "enabled": true
+    },
+    {
+      "code": "label-demo",
+      "type": "label_printer",
+      "driver": "dry_run_zpl",
+      "printer_language": "zpl",
+      "output_file": "/var/lib/tijara-bridge/output/label-demo.zpl",
+      "enabled": true
+    },
+    {
+      "code": "drawer-demo",
+      "type": "cash_drawer",
+      "driver": "dry_run_cash_drawer",
+      "output_file": "/var/lib/tijara-bridge/output/drawer-demo.bin",
+      "enabled": true
+    },
+    {
+      "code": "scale-demo",
+      "type": "weighing_scale",
+      "driver": "dry_run_scale",
+      "enabled": true
+    },
+    {
+      "code": "display-demo",
+      "type": "customer_display",
+      "driver": "dry_run_display",
+      "output_file": "/var/lib/tijara-bridge/output/display-demo.json",
+      "enabled": true
+    }
+  ]
+}

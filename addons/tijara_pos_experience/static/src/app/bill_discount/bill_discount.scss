@@ -1,0 +1,49 @@
+.tijara-bill-discount-popup {
+    .tijara-bill-discount-summary {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 16px;
+
+        > div {
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: var(--tijara-panel-radius, 8px);
+            min-width: 0;
+            padding: 12px;
+        }
+    }
+
+    .tijara-bill-discount-label,
+    .tijara-bill-discount-field span {
+        color: #5f6368;
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+    .tijara-bill-discount-fields {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tijara-bill-discount-field {
+        min-width: 0;
+    }
+
+    .tijara-bill-discount-note {
+        color: #5f6368;
+        font-size: 13px;
+        margin-top: 10px;
+        min-height: 20px;
+    }
+}
+
+@media (max-width: 520px) {
+    .tijara-bill-discount-popup {
+        .tijara-bill-discount-summary,
+        .tijara-bill-discount-fields {
+            grid-template-columns: 1fr;
+        }
+    }
+}

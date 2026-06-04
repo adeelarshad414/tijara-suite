@@ -1,0 +1,3 @@
+<odoo>
+    <function model="pos.config" name="_sync_all_tijara_bill_discount_flags"/>
+</odoo>

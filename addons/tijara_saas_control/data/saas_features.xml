@@ -1,0 +1,198 @@
+<odoo>
+    <record id="feature_pos" model="tijara.saas.feature">
+        <field name="name">POS</field>
+        <field name="code">pos</field>
+        <field name="module_name">point_of_sale</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="feature_inventory" model="tijara.saas.feature">
+        <field name="name">Inventory</field>
+        <field name="code">inventory</field>
+        <field name="module_name">stock</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="feature_inventory_intelligence" model="tijara.saas.feature">
+        <field name="name">Inventory Intelligence</field>
+        <field name="code">inventory_intelligence</field>
+        <field name="module_name">tijara_inventory_intelligence</field>
+        <field name="sequence">22</field>
+        <field name="description">Low-stock, critical-stock, expiry, warehouse placement, rack, shelf, and bin intelligence.</field>
+    </record>
+
+    <record id="feature_analytics_reporting" model="tijara.saas.feature">
+        <field name="name">Analytics and Reporting</field>
+        <field name="code">analytics_reporting</field>
+        <field name="module_name">tijara_analytics</field>
+        <field name="sequence">24</field>
+        <field name="description">Dashboards, KPI history, trends, charts, graphs, report catalog, and business analytics.</field>
+    </record>
+
+    <record id="feature_purchase" model="tijara.saas.feature">
+        <field name="name">Purchase</field>
+        <field name="code">purchase</field>
+        <field name="module_name">purchase</field>
+        <field name="sequence">30</field>
+    </record>
+
+    <record id="feature_refunds_exchanges" model="tijara.saas.feature">
+        <field name="name">Refunds and Exchanges</field>
+        <field name="code">refunds_exchanges</field>
+        <field name="module_name">tijara_retail_core</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="feature_urdu" model="tijara.saas.feature">
+        <field name="name">Urdu Support</field>
+        <field name="code">urdu_support</field>
+        <field name="module_name">tijara_base</field>
+        <field name="sequence">50</field>
+    </record>
+
+    <record id="feature_fbr" model="tijara.saas.feature">
+        <field name="name">FBR POS Queue</field>
+        <field name="code">fbr_pos_queue</field>
+        <field name="module_name">tijara_pos_pk</field>
+        <field name="sequence">60</field>
+    </record>
+
+    <record id="feature_pos_experience" model="tijara.saas.feature">
+        <field name="name">POS Experience Core</field>
+        <field name="code">pos_experience</field>
+        <field name="module_name">tijara_pos_experience</field>
+        <field name="sequence">65</field>
+    </record>
+
+    <record id="feature_b2b_sales" model="tijara.saas.feature">
+        <field name="name">B2B Sales</field>
+        <field name="code">b2b_sales</field>
+        <field name="module_name">tijara_pos_experience</field>
+        <field name="sequence">66</field>
+        <field name="description">Enables B2B sale mode and trade pricing controls.</field>
+    </record>
+
+    <record id="feature_queue_system" model="tijara.saas.feature">
+        <field name="name">Queue System</field>
+        <field name="code">queue_system</field>
+        <field name="module_name">tijara_pos_experience</field>
+        <field name="sequence">67</field>
+        <field name="description">Enables order queue tickets and queue display workflows.</field>
+    </record>
+
+    <record id="feature_promotion_display" model="tijara.saas.feature">
+        <field name="name">Promotion Display</field>
+        <field name="code">promotion_display</field>
+        <field name="module_name">tijara_pos_experience</field>
+        <field name="sequence">68</field>
+        <field name="description">Enables promotion, deal, and menu display screen workflows.</field>
+    </record>
+
+    <record id="feature_customer_display" model="tijara.saas.feature">
+        <field name="name">POS Customer Display</field>
+        <field name="code">customer_display</field>
+        <field name="module_name">tijara_pos_experience</field>
+        <field name="sequence">69</field>
+        <field name="description">Enables customer-facing POS display configuration.</field>
+    </record>
+
+    <record id="feature_pharmacy" model="tijara.saas.feature">
+        <field name="name">Pharmacy Pack</field>
+        <field name="code">pharmacy_pack</field>
+        <field name="module_name">tijara_vertical_pharmacy</field>
+        <field name="sequence">70</field>
+    </record>
+
+    <record id="feature_restaurant" model="tijara.saas.feature">
+        <field name="name">Restaurant Pack</field>
+        <field name="code">restaurant_pack</field>
+        <field name="module_name">tijara_vertical_restaurant</field>
+        <field name="sequence">80</field>
+    </record>
+
+    <record id="feature_garments" model="tijara.saas.feature">
+        <field name="name">Garments Pack</field>
+        <field name="code">garments_pack</field>
+        <field name="module_name">tijara_vertical_garments</field>
+        <field name="sequence">90</field>
+    </record>
+
+    <record id="feature_electronics" model="tijara.saas.feature">
+        <field name="name">Electronics Pack</field>
+        <field name="code">electronics_pack</field>
+        <field name="module_name">tijara_vertical_electronics</field>
+        <field name="sequence">100</field>
+    </record>
+
+    <record id="feature_cloth" model="tijara.saas.feature">
+        <field name="name">Cloth/Fabric Pack</field>
+        <field name="code">cloth_pack</field>
+        <field name="module_name">tijara_vertical_cloth</field>
+        <field name="sequence">110</field>
+    </record>
+
+    <record id="feature_superstore" model="tijara.saas.feature">
+        <field name="name">Superstore Pack</field>
+        <field name="code">superstore_pack</field>
+        <field name="module_name">tijara_vertical_superstore</field>
+        <field name="sequence">120</field>
+    </record>
+
+    <record id="feature_grocery" model="tijara.saas.feature">
+        <field name="name">Grocery Pack</field>
+        <field name="code">grocery_pack</field>
+        <field name="module_name">tijara_vertical_grocery</field>
+        <field name="sequence">130</field>
+    </record>
+
+    <record id="feature_bakery" model="tijara.saas.feature">
+        <field name="name">Bakery Pack</field>
+        <field name="code">bakery_pack</field>
+        <field name="module_name">tijara_vertical_bakery</field>
+        <field name="sequence">140</field>
+    </record>
+
+    <record id="plan_starter" model="tijara.saas.plan">
+        <field name="name">Starter</field>
+        <field name="code">starter</field>
+        <field name="sequence">10</field>
+        <field name="monthly_price">4999</field>
+        <field name="user_limit">2</field>
+        <field name="branch_limit">1</field>
+        <field name="product_limit">1000</field>
+        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_urdu')])]"/>
+    </record>
+
+    <record id="plan_retail" model="tijara.saas.plan">
+        <field name="name">Retail</field>
+        <field name="code">retail</field>
+        <field name="sequence">20</field>
+        <field name="monthly_price">9999</field>
+        <field name="user_limit">5</field>
+        <field name="branch_limit">1</field>
+        <field name="product_limit">10000</field>
+        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_pos_experience'), ref('feature_b2b_sales')])]"/>
+    </record>
+
+    <record id="plan_vertical" model="tijara.saas.plan">
+        <field name="name">Vertical</field>
+        <field name="code">vertical</field>
+        <field name="sequence">30</field>
+        <field name="monthly_price">14999</field>
+        <field name="user_limit">10</field>
+        <field name="branch_limit">2</field>
+        <field name="product_limit">25000</field>
+        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_analytics_reporting'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_pos_experience'), ref('feature_b2b_sales'), ref('feature_queue_system'), ref('feature_promotion_display'), ref('feature_customer_display'), ref('feature_pharmacy'), ref('feature_restaurant'), ref('feature_garments'), ref('feature_electronics'), ref('feature_cloth'), ref('feature_superstore'), ref('feature_grocery'), ref('feature_bakery')])]"/>
+    </record>
+
+    <record id="plan_enterprise" model="tijara.saas.plan">
+        <field name="name">Enterprise</field>
+        <field name="code">enterprise</field>
+        <field name="sequence">40</field>
+        <field name="monthly_price">29999</field>
+        <field name="user_limit">50</field>
+        <field name="branch_limit">10</field>
+        <field name="product_limit">100000</field>
+        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_analytics_reporting'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_fbr'), ref('feature_pos_experience'), ref('feature_b2b_sales'), ref('feature_queue_system'), ref('feature_promotion_display'), ref('feature_customer_display'), ref('feature_pharmacy'), ref('feature_restaurant'), ref('feature_garments'), ref('feature_electronics'), ref('feature_cloth'), ref('feature_superstore'), ref('feature_grocery'), ref('feature_bakery')])]"/>
+    </record>
+</odoo>

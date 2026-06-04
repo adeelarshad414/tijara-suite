@@ -1,0 +1,21 @@
+groups:
+  - name: tijara-availability
+    rules:
+      - alert: TijaraEndpointDown
+        expr: probe_success == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tijara endpoint is down"
+          description: "{{ $labels.instance }} has failed blackbox health checks for more than 2 minutes."
+
+      - alert: TijaraSlowEndpoint
+        expr: probe_duration_seconds > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tijara endpoint is slow"
+          description: "{{ $labels.instance }} response time is above 3 seconds."
+

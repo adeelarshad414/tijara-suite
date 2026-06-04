@@ -1,0 +1,30 @@
+<odoo>
+    <record id="product_template_form_view_tijara_retail" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.retail</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']" position="after">
+                <page name="tijara_retail" string="Tijara Retail">
+                    <group>
+                        <group>
+                            <field name="tijara_quick_sale"/>
+                            <field name="tijara_min_stock_alert"/>
+                            <field name="tijara_reorder_multiple"/>
+                            <field name="tijara_allow_refund"/>
+                            <field name="tijara_allow_exchange"/>
+                            <field name="tijara_requires_manager_discount"/>
+                        </group>
+                        <group>
+                            <field name="tijara_b2c_price"/>
+                            <field name="tijara_b2b_price"/>
+                            <field name="tijara_b2b_min_qty"/>
+                            <field name="tijara_b2c_tax_included"/>
+                            <field name="tijara_b2b_tax_included"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

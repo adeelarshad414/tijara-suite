@@ -1,0 +1,8 @@
+<odoo noupdate="1">
+    <record id="product_tijara_saas_subscription" model="product.product">
+        <field name="name">Tijara SaaS Subscription</field>
+        <field name="type">service</field>
+        <field name="sale_ok">1</field>
+        <field name="purchase_ok">0</field>
+    </record>
+</odoo>

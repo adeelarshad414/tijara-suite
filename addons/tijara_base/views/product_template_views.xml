@@ -1,0 +1,23 @@
+<odoo>
+    <record id="product_template_form_view_tijara" model="ir.ui.view">
+        <field name="name">product.template.form.tijara</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']" position="after">
+                <page name="tijara_pk" string="Tijara PK">
+                    <group>
+                        <field name="tijara_urdu_name"/>
+                        <field name="tijara_local_sku"/>
+                        <field name="tijara_barcode_alias"/>
+                        <field name="tijara_label_name"/>
+                        <field name="tijara_hs_code"/>
+                        <field name="tijara_tax_category"/>
+                        <field name="tijara_is_weighed_item"/>
+                        <field name="tijara_retail_unit"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

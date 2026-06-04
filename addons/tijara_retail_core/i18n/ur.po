@@ -1,0 +1,22 @@
+# Translation scaffold for Tijara Retail Core.
+msgid ""
+msgstr ""
+"Project-Id-Version: Tijara Retail Core\n"
+"Language: ur\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Retail Operations"
+msgstr "ریٹیل آپریشنز"
+
+msgid "Hardware Devices"
+msgstr "ہارڈویئر آلات"
+
+msgid "Cash Shifts"
+msgstr "کیش شفٹس"
+
+msgid "Refunds and Exchanges"
+msgstr "واپسی اور تبدیلی"
+
+msgid "Refund Reasons"
+msgstr "واپسی کی وجوہات"
+

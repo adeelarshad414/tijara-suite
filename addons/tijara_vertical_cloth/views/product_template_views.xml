@@ -1,0 +1,24 @@
+<odoo>
+    <record id="product_template_form_view_tijara_cloth" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.cloth</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']" position="after">
+                <page name="tijara_cloth" string="Cloth/Fabric">
+                    <group>
+                        <field name="tijara_is_fabric"/>
+                        <field name="tijara_fabric_type"/>
+                        <field name="tijara_sale_by_meter"/>
+                        <field name="tijara_measure_unit"/>
+                        <field name="tijara_roll_number"/>
+                        <field name="tijara_roll_length"/>
+                        <field name="tijara_cutting_loss_percent"/>
+                        <field name="tijara_tailoring_available"/>
+                        <field name="tijara_tailoring_days"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

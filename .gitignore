@@ -1,0 +1,17 @@
+.env
+*.env
+!*.env.example
+secrets/*
+!secrets/.env.secrets.example
+deploy/runtime/
+*.pyc
+__pycache__/
+.DS_Store
+.pytest_cache/
+.mypy_cache/
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+odoo-data/
+postgres-data/

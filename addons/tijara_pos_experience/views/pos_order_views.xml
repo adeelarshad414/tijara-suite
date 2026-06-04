@@ -1,0 +1,29 @@
+<odoo>
+    <record id="view_pos_pos_form_tijara_experience" model="ir.ui.view">
+        <field name="name">pos.order.form.tijara.experience</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="tijara_order_type"/>
+                <field name="tijara_audience"/>
+                <field name="tijara_queue_ticket_id"/>
+                <field name="tijara_pickup_code"/>
+                <field name="tijara_promised_at"/>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <group string="Tijara Bill Discount">
+                    <group>
+                        <field name="tijara_bill_discount_mode"/>
+                        <field name="tijara_bill_discount_percent"/>
+                        <field name="tijara_bill_discount_amount"/>
+                    </group>
+                    <group>
+                        <field name="tijara_bill_discount_base_amount" readonly="1"/>
+                        <field name="tijara_bill_discount_net_amount" readonly="1"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,4 @@
+<odoo>
+    <function model="tijara.demo.pos.seed" name="seed_demo"/>
+</odoo>
+

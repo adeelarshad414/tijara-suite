@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tijara_saas_feature_manager,tijara.saas.feature.manager,model_tijara_saas_feature,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_saas_plan_manager,tijara.saas.plan.manager,model_tijara_saas_plan,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_saas_subscription_manager,tijara.saas.subscription.manager,model_tijara_saas_subscription,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_tenant_provision_request_manager,tijara.tenant.provision.request.manager,model_tijara_tenant_provision_request,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_saas_payment_webhook_event_manager,tijara.saas.payment.webhook.event.manager,model_tijara_saas_payment_webhook_event,tijara_base.group_tijara_manager,1,1,1,1

@@ -1,0 +1,21 @@
+<odoo>
+    <record id="view_pos_pos_form_tijara_pk" model="ir.ui.view">
+        <field name="name">pos.order.form.tijara.pk</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_tijara_print_receipt_template" type="object" string="Tijara Receipt" class="btn-secondary"/>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="tijara_fbr_invoice_number"/>
+                <field name="tijara_invoice_barcode"/>
+                <field name="tijara_is_refund_exchange"/>
+                <field name="tijara_exchange_origin_ref"/>
+                <field name="tijara_bridge_print_status"/>
+                <field name="tijara_bridge_print_job_id"/>
+                <field name="tijara_bridge_printed_at"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

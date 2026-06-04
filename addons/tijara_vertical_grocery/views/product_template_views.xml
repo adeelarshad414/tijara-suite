@@ -1,0 +1,23 @@
+<odoo>
+    <record id="product_template_form_view_tijara_grocery" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.grocery</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']" position="after">
+                <page name="tijara_grocery" string="Grocery">
+                    <group>
+                        <field name="tijara_grocery_category"/>
+                        <field name="tijara_perishable"/>
+                        <field name="tijara_shelf_life_days"/>
+                        <field name="tijara_cold_chain_required"/>
+                        <field name="tijara_weigh_scale_plu"/>
+                        <field name="tijara_loose_item"/>
+                        <field name="tijara_price_embedded_barcode"/>
+                        <field name="tijara_freshness_check_required"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

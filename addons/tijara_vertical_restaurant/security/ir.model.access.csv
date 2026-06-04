@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tijara_restaurant_table_user,tijara.restaurant.table.user,model_tijara_restaurant_table,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_restaurant_table_manager,tijara.restaurant.table.manager,model_tijara_restaurant_table,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_kitchen_ticket_user,tijara.kitchen.ticket.user,model_tijara_kitchen_ticket,tijara_base.group_tijara_user,1,1,1,0
+access_tijara_kitchen_ticket_manager,tijara.kitchen.ticket.manager,model_tijara_kitchen_ticket,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_restaurant_service_profile_user,tijara.restaurant.service.profile.user,model_tijara_restaurant_service_profile,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_restaurant_service_profile_manager,tijara.restaurant.service.profile.manager,model_tijara_restaurant_service_profile,tijara_base.group_tijara_manager,1,1,1,1

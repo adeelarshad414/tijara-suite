@@ -1,0 +1,22 @@
+{
+    "name": "Tijara SaaS Control",
+    "summary": "SaaS plans, tenant metadata, subscriptions, and feature flags",
+    "version": "19.0.1.0.0",
+    "category": "Tijara",
+    "author": "Tijara Suite",
+    "license": "LGPL-3",
+    "depends": ["account", "tijara_base"],
+    "data": [
+        "security/ir.model.access.csv",
+        "data/saas_features.xml",
+        "data/billing_product.xml",
+        "views/saas_menus.xml",
+        "views/saas_feature_views.xml",
+        "views/saas_plan_views.xml",
+        "views/saas_subscription_views.xml",
+        "views/tenant_provision_request_views.xml",
+        "views/payment_webhook_event_views.xml",
+    ],
+    "installable": True,
+    "application": False,
+}

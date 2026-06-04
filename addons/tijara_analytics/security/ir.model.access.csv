@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tijara_analytics_dashboard_user,tijara.analytics.dashboard user,model_tijara_analytics_dashboard,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_analytics_dashboard_manager,tijara.analytics.dashboard manager,model_tijara_analytics_dashboard,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_analytics_widget_user,tijara.analytics.widget user,model_tijara_analytics_widget,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_analytics_widget_manager,tijara.analytics.widget manager,model_tijara_analytics_widget,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_analytics_snapshot_user,tijara.analytics.snapshot user,model_tijara_analytics_snapshot,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_analytics_snapshot_manager,tijara.analytics.snapshot manager,model_tijara_analytics_snapshot,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_analytics_report_user,tijara.analytics.report user,model_tijara_analytics_report,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_analytics_report_manager,tijara.analytics.report manager,model_tijara_analytics_report,tijara_base.group_tijara_manager,1,1,1,1

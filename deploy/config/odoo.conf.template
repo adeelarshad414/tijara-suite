@@ -1,0 +1,19 @@
+[options]
+; Runtime-rendered by deploy/bin/start-odoo.sh.
+; Do not put raw secrets in this template.
+
+admin_passwd = ${ODOO_MASTER_PASSWORD}
+db_host = ${ODOO_DB_HOST}
+db_port = ${ODOO_DB_PORT}
+db_user = ${ODOO_DB_USER}
+db_password = ${ODOO_DB_PASSWORD}
+
+addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
+proxy_mode = ${ODOO_PROXY_MODE}
+without_demo = ${ODOO_WITHOUT_DEMO}
+workers = ${ODOO_WORKERS}
+limit_time_cpu = ${ODOO_LIMIT_TIME_CPU}
+limit_time_real = ${ODOO_LIMIT_TIME_REAL}
+log_level = ${ODOO_LOG_LEVEL}
+dbfilter = ${ODOO_DB_FILTER}
+list_db = ${ODOO_LIST_DB}

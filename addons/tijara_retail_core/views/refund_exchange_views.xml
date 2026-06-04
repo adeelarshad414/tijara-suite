@@ -1,0 +1,88 @@
+<odoo>
+    <record id="action_tijara_exchange_request" model="ir.actions.act_window">
+        <field name="name">Refunds and Exchanges</field>
+        <field name="res_model">tijara.exchange.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_exchange_request_tree" model="ir.ui.view">
+        <field name="name">tijara.exchange.request.tree</field>
+        <field name="model">tijara.exchange.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="request_date"/>
+                <field name="customer_id"/>
+                <field name="original_order_ref"/>
+                <field name="scan_status"/>
+                <field name="reason_id"/>
+                <field name="amount_total"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_exchange_request_form" model="ir.ui.view">
+        <field name="name">tijara.exchange.request.form</field>
+        <field name="model">tijara.exchange.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit" type="object" string="Submit" invisible="state != 'draft'"/>
+                    <button name="action_scan_invoice_barcode" type="object" string="Scan Invoice" invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_approve" type="object" string="Approve" invisible="state != 'pending_approval'" groups="tijara_base.group_tijara_manager"/>
+                    <button name="action_process" type="object" string="Process" invisible="state != 'approved'"/>
+                    <button name="action_reject" type="object" string="Reject" invisible="state not in ('draft', 'pending_approval')" groups="tijara_base.group_tijara_manager"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('processed', 'rejected', 'cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="request_date"/>
+                            <field name="customer_id"/>
+                            <field name="original_order_ref"/>
+                            <field name="scanned_invoice_barcode"/>
+                            <field name="scanner_device_id"/>
+                            <field name="reason_id"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="requested_by_id"/>
+                            <field name="approved_by_id"/>
+                            <field name="amount_total" readonly="1"/>
+                            <field name="matched_pos_order_id" readonly="1"/>
+                            <field name="matched_invoice_id" readonly="1"/>
+                            <field name="scan_status" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="line_ids">
+                        <list editable="bottom">
+                            <field name="product_id"/>
+                            <field name="return_qty"/>
+                            <field name="return_price"/>
+                            <field name="return_subtotal" readonly="1"/>
+                            <field name="replacement_product_id"/>
+                            <field name="replacement_qty"/>
+                            <field name="note"/>
+                        </list>
+                    </field>
+                    <group>
+                        <field name="scan_result_message" readonly="1"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tijara_refund_reason" model="ir.actions.act_window">
+        <field name="name">Refund Reasons</field>
+        <field name="res_model">tijara.refund.reason</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_tijara_exchange_request" name="Refunds and Exchanges" parent="menu_tijara_retail" action="action_tijara_exchange_request" sequence="30"/>
+    <menuitem id="menu_tijara_refund_reason" name="Refund Reasons" parent="menu_tijara_retail_configuration" action="action_tijara_refund_reason" sequence="30"/>
+</odoo>
