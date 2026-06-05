@@ -461,9 +461,9 @@ The detailed policy and dependency intake checklist are maintained in
   operations artifacts, writing auditable rollout and rollback evidence under
   `deploy/runtime/tenant-rollouts/`.
 - `scripts/export_monitoring_evidence.py` and `make monitoring-evidence`
-  collect post-deploy monitoring evidence from production smoke, tenant smoke,
-  deployment, rollback, and Prometheus/Alertmanager/Grafana endpoint probes under
-  `deploy/runtime/monitoring-evidence/`.
+  collect post-deploy monitoring evidence from production smoke, tenant rollout,
+  tenant smoke, deployment, rollback, and Prometheus/Alertmanager/Grafana
+  endpoint probes under `deploy/runtime/monitoring-evidence/`.
 - `scripts/export_incident_runbook_evidence.py` and
   `make incident-runbook-evidence` collect release owner, DevOps, support,
   business, on-call, alert-route, runbook, backup, restore, rollback, and

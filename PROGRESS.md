@@ -5046,3 +5046,78 @@ Date: 2026-06-05
 - Add provider-specific DNS rollback adapters once the DNS provider is selected.
 - Continue authenticated POS checkout/refund/print E2E and real FBR/provider
   execution when staging credentials are available.
+
+## Iteration 72: Tenant Rollout Monitoring Evidence Linkage
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/export_monitoring_evidence.py` with
+  `--tenant-rollout-evidence` /
+  `TIJARA_MONITORING_TENANT_ROLLOUT_EVIDENCE`.
+- Monitoring evidence now records tenant rollout decision status as a post-deploy
+  signal alongside production smoke, tenant smoke, deployment gate, rollback,
+  and monitoring endpoint checks.
+- Monitoring evidence now records tenant rollout rollback action count and
+  requires `rollback-plan.md` next to attached tenant rollout evidence.
+- Missing `rollback-plan.md` now blocks monitoring evidence when tenant rollout
+  evidence is supplied.
+- Enhanced `scripts/run_operations_release_bundle.py` so bundled monitoring
+  evidence automatically receives `tenant-rollout/tenant-rollout-evidence.json`
+  when the `tenant-rollout` bundle step is enabled.
+- Enhanced `scripts/generate_signoff_pack.py` so `monitoring_reviews` records
+  `tenant_rollout_attached`, `tenant_rollout_rollback_plan_attached`, and
+  `tenant_rollout_rollback_action_count`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_monitoring_evidence.py scripts/generate_signoff_pack.py
+  scripts/run_operations_release_bundle.py` passes.
+- Standalone monitoring evidence with tenant rollout evidence passes in
+  non-strict mode at `/private/tmp/tijara-monitoring-tenant-rollout` and records
+  tenant rollout, rollback actions, and rollback plan checks as passed.
+- Focused operations release bundle with `tenant-rollout,monitoring` passes in
+  warning mode at `/private/tmp/tijara-ops-rollout-monitoring` and confirms the
+  bundled monitoring step automatically receives
+  `tenant-rollout/tenant-rollout-evidence.json`.
+- Generated a sign-off package at
+  `/private/tmp/tijara-signoff-monitoring-rollout`.
+- Confirmed `monitoring_reviews` includes `tenant_rollout_attached=true`,
+  `tenant_rollout_rollback_plan_attached=true`, and
+  `tenant_rollout_rollback_action_count=7`.
+- Confirmed monitoring evidence blocks when rollout evidence is supplied without
+  adjacent `rollback-plan.md`:
+  `/private/tmp/tijara-monitoring-rollout-missing-plan/monitoring-evidence.json`
+  records `decision=failed` and `ci_status=fail`.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- Monitoring evidence can now verify rollout evidence and rollback-plan
+  presence, but live production proof still needs Prometheus, Alertmanager, and
+  Grafana endpoint checks from the actual deployment environment.
+- DNS rollback remains provider/manual review text until a certified DNS
+  provider API is selected and configured.
+- Authenticated POS checkout/refund browser E2E still requires a staging POS
+  user and seeded POS register.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add provider-specific DNS rollback adapters once the DNS provider is selected.
+- Continue authenticated POS checkout/refund/print E2E and real FBR/provider
+  execution when staging credentials are available.
+- Add live monitoring endpoint evidence once production-like observability URLs
+  are available.

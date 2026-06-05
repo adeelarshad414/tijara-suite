@@ -63,6 +63,51 @@ def _decision_row(name, payload, source, good, warn):
     return _row(name, "failed", "%s decision is %s/%s." % (name, decision or "empty", ci_status or "empty"), source)
 
 
+def _tenant_rollout_rows(payload, source):
+    if not payload or not source:
+        return []
+    rows = []
+    rollback_action_count = int(payload.get("rollback_action_count") or 0)
+    if rollback_action_count > 0:
+        rows.append(
+            _row(
+                "tenant-rollout-rollback-actions",
+                "passed",
+                "%s tenant rollout rollback action(s) recorded." % rollback_action_count,
+                source,
+            )
+        )
+    else:
+        rows.append(
+            _row(
+                "tenant-rollout-rollback-actions",
+                "warning",
+                "Tenant rollout evidence has no rollback actions recorded.",
+                source,
+            )
+        )
+    rollback_plan = Path(source).with_name("rollback-plan.md")
+    if rollback_plan.is_file():
+        rows.append(
+            _row(
+                "tenant-rollout-rollback-plan",
+                "passed",
+                "Tenant rollout rollback plan is attached.",
+                str(rollback_plan),
+            )
+        )
+    else:
+        rows.append(
+            _row(
+                "tenant-rollout-rollback-plan",
+                "failed",
+                "Tenant rollout rollback-plan.md is missing next to rollout evidence.",
+                str(rollback_plan),
+            )
+        )
+    return rows
+
+
 def _endpoint_items(args):
     items = []
     if args.prometheus_url:
@@ -167,6 +212,7 @@ def main():
     parser.add_argument("--output", default=os.environ.get("TIJARA_MONITORING_OUTPUT", ""))
     parser.add_argument("--smoke-decision", default=os.environ.get("TIJARA_MONITORING_SMOKE_DECISION", ""))
     parser.add_argument("--tenant-smoke-evidence", default=os.environ.get("TIJARA_MONITORING_TENANT_SMOKE_EVIDENCE", ""))
+    parser.add_argument("--tenant-rollout-evidence", default=os.environ.get("TIJARA_MONITORING_TENANT_ROLLOUT_EVIDENCE", ""))
     parser.add_argument("--deployment-decision", default=os.environ.get("TIJARA_MONITORING_DEPLOYMENT_DECISION", ""))
     parser.add_argument("--rollback-decision", default=os.environ.get("TIJARA_MONITORING_ROLLBACK_DECISION", ""))
     parser.add_argument("--prometheus-url", default=os.environ.get("TIJARA_PROMETHEUS_URL", ""))
@@ -185,6 +231,7 @@ def main():
     try:
         smoke_decision, smoke_path = _load_json(args.smoke_decision)
         tenant_smoke_evidence, tenant_smoke_path = _load_json(args.tenant_smoke_evidence)
+        tenant_rollout_evidence, tenant_rollout_path = _load_json(args.tenant_rollout_evidence)
         deployment_decision, deployment_path = _load_json(args.deployment_decision)
         rollback_decision, rollback_path = _load_json(args.rollback_decision)
     except RuntimeError as error:
@@ -207,6 +254,13 @@ def main():
             {"warning"},
         ),
         _decision_row(
+            "tenant-rollout",
+            tenant_rollout_evidence,
+            tenant_rollout_path,
+            {"dry-run", "executed"},
+            {"warning"},
+        ),
+        _decision_row(
             "deployment-gate",
             deployment_decision,
             deployment_path,
@@ -221,6 +275,7 @@ def main():
             set(),
         ),
     ]
+    rows.extend(_tenant_rollout_rows(tenant_rollout_evidence, tenant_rollout_path))
 
     endpoint_checks = [_check_url(name, url, args.timeout) for name, url in _endpoint_items(args)]
     if not endpoint_checks:
@@ -271,6 +326,13 @@ def main():
         "evidence_refs": {
             "smoke_decision": smoke_path,
             "tenant_smoke_evidence": tenant_smoke_path,
+            "tenant_rollout_evidence": tenant_rollout_path,
+            "tenant_rollout_rollback_plan": str(Path(tenant_rollout_path).with_name("rollback-plan.md"))
+            if tenant_rollout_path
+            else "",
+            "tenant_rollout_rollback_action_count": int(tenant_rollout_evidence.get("rollback_action_count") or 0)
+            if tenant_rollout_evidence
+            else 0,
             "deployment_decision": deployment_path,
             "rollback_decision": rollback_path,
         },
@@ -282,6 +344,9 @@ def main():
             "target_environment=%s" % args.target_environment,
             "smoke_decision=%s" % (smoke_path or "<unset>"),
             "tenant_smoke_evidence=%s" % (tenant_smoke_path or "<unset>"),
+            "tenant_rollout_evidence=%s" % (tenant_rollout_path or "<unset>"),
+            "tenant_rollout_rollback_action_count=%s"
+            % (int(tenant_rollout_evidence.get("rollback_action_count") or 0) if tenant_rollout_evidence else 0),
             "deployment_decision=%s" % (deployment_path or "<unset>"),
             "rollback_decision=%s" % (rollback_path or "<unset>"),
             "prometheus_url=%s" % (args.prometheus_url or "<unset>"),

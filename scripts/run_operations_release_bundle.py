@@ -277,6 +277,8 @@ def _step_specs(args, output):
 
     if smoke_decision.is_file() or "smoke" in args.checks:
         specs["monitoring"]["command"].extend(["--smoke-decision", str(smoke_decision)])
+    if tenant_rollout_evidence.is_file() or "tenant-rollout" in args.checks:
+        specs["monitoring"]["command"].extend(["--tenant-rollout-evidence", str(tenant_rollout_evidence)])
     if tenant_smoke_evidence.is_file() or "tenant-smoke" in args.checks:
         specs["monitoring"]["command"].extend(["--tenant-smoke-evidence", str(tenant_smoke_evidence)])
     if args.deployment_decision:

@@ -619,6 +619,14 @@ def _monitoring_reviews(evidence_entries):
                 "ci_status": payload.get("ci_status", ""),
                 "smoke_decision_attached": bool(refs.get("smoke_decision")),
                 "tenant_smoke_attached": bool(refs.get("tenant_smoke_evidence")),
+                "tenant_rollout_attached": bool(refs.get("tenant_rollout_evidence")),
+                "tenant_rollout_rollback_plan_attached": bool(
+                    refs.get("tenant_rollout_rollback_plan")
+                ),
+                "tenant_rollout_rollback_action_count": refs.get(
+                    "tenant_rollout_rollback_action_count",
+                    0,
+                ),
                 "deployment_decision_attached": bool(refs.get("deployment_decision")),
                 "rollback_decision_attached": bool(refs.get("rollback_decision")),
                 "check_count": len(payload.get("checks") or []),
@@ -1226,13 +1234,19 @@ def _evidence_summary(context, evidence_entries):
         monitoring_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
         monitoring_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
         monitoring_lines.append(
-            "- Smoke/tenant-smoke/deployment/rollback refs: %s/%s/%s/%s"
+            "- Smoke/tenant-smoke/tenant-rollout/rollout-rollback-plan/deployment/rollback refs: %s/%s/%s/%s/%s/%s"
             % (
                 "yes" if review["smoke_decision_attached"] else "no",
                 "yes" if review["tenant_smoke_attached"] else "no",
+                "yes" if review["tenant_rollout_attached"] else "no",
+                "yes" if review["tenant_rollout_rollback_plan_attached"] else "no",
                 "yes" if review["deployment_decision_attached"] else "no",
                 "yes" if review["rollback_decision_attached"] else "no",
             )
+        )
+        monitoring_lines.append(
+            "- Tenant rollout rollback actions: %s"
+            % review["tenant_rollout_rollback_action_count"]
         )
         monitoring_lines.append("- Check count: %s" % review["check_count"])
         monitoring_lines.append("")

@@ -1389,6 +1389,7 @@ Capture monitoring evidence after deployment or rollback:
 python3 scripts/export_monitoring_evidence.py \
   --run-id 2026-06-05-prod \
   --smoke-decision deploy/runtime/production-smoke/2026-06-05-prod/smoke-decision.json \
+  --tenant-rollout-evidence deploy/runtime/tenant-rollouts/2026-06-05-prod/tenant-rollout-evidence.json \
   --tenant-smoke-evidence deploy/runtime/tenant-smoke/2026-06-05-prod/tenant-smoke-evidence.json \
   --deployment-decision deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json \
   --rollback-decision deploy/runtime/rollback-runs/2026-06-05-prod/rollback-decision.json \
@@ -1399,7 +1400,10 @@ python3 scripts/export_monitoring_evidence.py \
 
 Monitoring evidence is written under
 `deploy/runtime/monitoring-evidence/<run-id>/` and can be included in
-`TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence. When tenant rollout
+evidence is attached, the exporter records rollout decision status, rollback
+action count, and whether `rollback-plan.md` is present next to the rollout
+evidence.
 
 Capture load-test evidence after the release candidate load smoke:
 
