@@ -429,6 +429,12 @@ The detailed policy and dependency intake checklist are maintained in
   secret-backed auth headers, and mandatory PSP/FBR/hardware certification
   inputs under
   `deploy/runtime/protected-runner-preflight/`.
+- `scripts/export_protected_service_checks.py` and
+  `make protected-service-checks` export deeper protected service checks for
+  Odoo login/session authentication, signed hardware bridge test jobs,
+  Prometheus, Alertmanager, and Grafana under
+  `deploy/runtime/protected-service-checks/`, recording credential presence
+  and probe outcomes without writing secret values.
 - `scripts/export_protected_post_run_verification.py` and
   `make protected-post-run-verification` scan protected evidence folders after
   a run, verify required artifact presence, failed/warning `status.tsv` rows,

@@ -6821,3 +6821,87 @@ Date: 2026-06-05
   credentials are available.
 - Continue hardening offline POS sync conflict handling against live staging
   order/payment replay.
+
+## Iteration 96: Protected Authenticated Service Checks
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_service_checks.py` to export deeper
+  protected service evidence under `deploy/runtime/protected-service-checks/`.
+- The exporter supports Odoo `/web/login`, Odoo
+  `/web/session/authenticate`, hardware bridge `/health`, signed hardware
+  bridge `/v1/test`, Prometheus `/-/ready`, Alertmanager `/-/ready`, and
+  Grafana `/api/health` checks.
+- Probe evidence records redacted URLs, status codes, auth header names, auth
+  env names, credential presence, probe outcomes, and secret-safe metadata only.
+- Added `make protected-service-checks`.
+- Wired `.github/workflows/tijara-ci.yml` to run protected service checks after
+  protected runner preflight, include them in release-retention evidence,
+  sign-off package inputs, post-run required artifacts, protected artifact
+  summary defaults, and protected artifact upload paths.
+- Updated first-run expected artifacts and post-run verifier required
+  artifacts for `protected-service-checks`.
+- Classified `protected-service-checks` as Operations evidence in
+  `scripts/generate_signoff_pack.py`.
+- Updated `deploy/config/github-protected-vars.example`, `README.md`, and
+  `DEPLOY.md` with service-check controls and protected-runner guidance.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_service_checks.py
+  scripts/export_github_artifact_metadata.py
+  scripts/export_protected_post_run_verification.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes `TIJARA_SERVICE_CHECKS_TIMEOUT`.
+- Disabled service-check fixture writes `decision=warning` and
+  `ci_status=pass_with_warnings`, making non-execution visible.
+- Strict missing-probe fixture writes `decision=failed` and `ci_status=fail`.
+- Secret-like metadata fixture with `client_secret` is rejected.
+- Local HTTP fixture exercises all seven probes successfully: Odoo login,
+  Odoo session authentication, hardware bridge health, signed bridge test,
+  Prometheus, Alertmanager, and Grafana.
+- Updated post-run verifier fixture requires and accepts
+  `protected-service-checks`.
+- Protected artifact summary over service-check evidence writes
+  `decision=passed`.
+- Updated first-run checklist fixture expects `protected-service-checks`.
+- `make protected-service-checks` passes and writes warning evidence when live
+  probes are disabled.
+- Sign-off package with passing service-check evidence classifies it as
+  Operations evidence and passes release readiness.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- Local fixtures prove the probe logic, but real Odoo RBAC/login, hardware
+  bridge signed jobs, Prometheus, Alertmanager, and Grafana checks still need a
+  protected staging runner with real credentials and service URLs.
+- Service checks prove service authentication/availability, not complete POS
+  checkout/refund/print/accounting behavior.
+- Live PSP/FBR certification, physical hardware proof, offline POS sync, and
+  production operations drills remain external production blockers.
+
+### Next Iteration
+
+- Add FBR/PSP live adapter certification evidence once provider sandbox/live
+  credentials are available.
+- Add protected staging transaction replay evidence for offline POS order and
+  payment sync once live staging Odoo credentials are available.
+- Continue tightening production incident, backup restore, and monitoring
+  alert drill execution evidence on the protected runner.

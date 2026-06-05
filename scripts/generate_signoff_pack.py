@@ -401,6 +401,7 @@ def _evidence_group(entry):
         or "protected-runbook-handoff" in relative_lower
         or "protected-first-run" in relative_lower
         or "protected-post-run-verification" in relative_lower
+        or "protected-service-checks" in relative_lower
         or "github-artifact-metadata" in relative_lower
         or "protected-runner-preflight" in relative_lower
         or "release-retention-evidence" in relative_lower
@@ -421,6 +422,7 @@ def _evidence_group(entry):
         or filename == "protected-runbook-handoff.json"
         or filename == "protected-first-run-checklist.json"
         or filename == "protected-post-run-verification.json"
+        or filename == "protected-service-checks.json"
         or filename == "github-artifact-metadata.json"
         or filename == "protected-runner-preflight.json"
         or filename == "release-retention-evidence.json"

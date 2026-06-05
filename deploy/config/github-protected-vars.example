@@ -24,11 +24,14 @@ TIJARA_FIRST_RUN_CHANGE_TICKET_REF=change:protected-staging-first-run
 TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF=runbook:rollback-protected-staging
 TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF=slack:tijara-incidents
 TIJARA_FIRST_RUN_BACKUP_REF=backup:staging-latest
-TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS=protected-runbook-handoff,protected-first-run,protected-runner-preflight,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary
+TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS=protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-service-checks,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary
 TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS=0
 TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER=protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-artifact-summary,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages
-TIJARA_POST_RUN_REQUIRED_ARTIFACTS=protected-runbook-handoff,protected-first-run,protected-runner-preflight,release-evidence,protected-e2e,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata
+TIJARA_POST_RUN_REQUIRED_ARTIFACTS=protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-service-checks,release-evidence,protected-e2e,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata
 TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS=30
+TIJARA_SERVICE_CHECKS_PROBE=0
+TIJARA_SERVICE_CHECKS_REQUIRE_PROBES=0
+TIJARA_SERVICE_CHECKS_TIMEOUT=8
 
 TIJARA_PREFLIGHT_PROBE_URLS=1
 TIJARA_PREFLIGHT_REQUIRE_URLS=0

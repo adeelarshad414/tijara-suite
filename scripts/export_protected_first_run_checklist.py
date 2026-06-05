@@ -13,6 +13,7 @@ DEFAULT_ARTIFACTS = [
     "protected-runbook-handoff",
     "protected-first-run",
     "protected-runner-preflight",
+    "protected-service-checks",
     "release-evidence",
     "protected-e2e",
     "ops-tool-evidence",

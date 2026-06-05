@@ -1057,8 +1057,10 @@ The protected job first exports an operator handoff runbook under
 checklist under `deploy/runtime/protected-first-run/<run-id>/`, exports
 redacted runner preflight evidence under
 `deploy/runtime/protected-runner-preflight/<run-id>/`, runs the
-release-candidate gate, runs protected Browser E2E seed/profile/browser/
-execution evidence under `deploy/runtime/protected-e2e/<run-id>/`, captures raw
+authenticated service checks under
+`deploy/runtime/protected-service-checks/<run-id>/`, runs the release-candidate
+gate, runs protected Browser E2E seed/profile/browser/execution evidence under
+`deploy/runtime/protected-e2e/<run-id>/`, captures raw
 restore, security, dependency, container, npm audit, and k6 outputs under
 `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
 evidence, collects strict PSP/FBR/hardware certification evidence when the
@@ -1201,6 +1203,22 @@ certification groups, URL/load/E2E toggles, and required PSP/FBR/hardware
 evidence fields. Attach that directory to `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the
 sign-off package reads `summary.md` and `status.tsv`, so strict preflight
 failures appear as release-readiness blockers.
+
+Run deeper authenticated service checks when the protected runner has service
+credentials available:
+
+```bash
+TIJARA_SERVICE_CHECKS_PROBE=1
+TIJARA_SERVICE_CHECKS_REQUIRE_PROBES=1
+TIJARA_SERVICE_CHECKS_TIMEOUT=8
+```
+
+The service checker validates Odoo `/web/login`, Odoo
+`/web/session/authenticate` with `ODOO_DATABASE`, `TIJARA_E2E_LOGIN`, and
+`TIJARA_E2E_PASSWORD`, hardware bridge `/health`, signed hardware bridge
+`/v1/test` using `TIJARA_BRIDGE_SHARED_SECRET`, Prometheus `/-/ready`,
+Alertmanager `/-/ready`, and Grafana `/api/health`. It records redacted URLs,
+status codes, auth header names, auth env names, and credential presence only.
 
 Enable optional URL probes when the protected runner should prove basic network
 reachability before expensive evidence collection:
