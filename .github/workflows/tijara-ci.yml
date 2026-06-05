@@ -148,10 +148,10 @@ jobs:
       TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF: ${{ vars.TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF }}
       TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF: ${{ vars.TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF }}
       TIJARA_FIRST_RUN_BACKUP_REF: ${{ vars.TIJARA_FIRST_RUN_BACKUP_REF || vars.TIJARA_BACKUP_ARTIFACT_REF }}
-      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary' }}
+      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary' }}
       TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS: ${{ vars.TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS || '0' }}
-      TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-artifact-summary,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
-      TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,release-evidence,protected-e2e,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata' }}
+      TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-artifact-summary,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
+      TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,release-evidence,protected-e2e,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata' }}
       TIJARA_SERVICE_CHECKS_PROBE: ${{ vars.TIJARA_SERVICE_CHECKS_PROBE || '0' }}
       TIJARA_SERVICE_CHECKS_REQUIRE_PROBES: ${{ vars.TIJARA_SERVICE_CHECKS_REQUIRE_PROBES || '0' }}
       TIJARA_SERVICE_CHECKS_TIMEOUT: ${{ vars.TIJARA_SERVICE_CHECKS_TIMEOUT || '8' }}
@@ -191,6 +191,47 @@ jobs:
       TIJARA_SECRET_MANAGER_REFERENCE: ${{ vars.TIJARA_SECRET_MANAGER_REFERENCE }}
       TIJARA_SECRET_ROTATION_POLICY_REF: ${{ vars.TIJARA_SECRET_ROTATION_POLICY_REF }}
       TIJARA_SECRET_ACCESS_REVIEW_REF: ${{ vars.TIJARA_SECRET_ACCESS_REVIEW_REF }}
+      TIJARA_RELEASE_OWNER: ${{ vars.TIJARA_RELEASE_OWNER || vars.TIJARA_FIRST_RUN_RELEASE_OWNER }}
+      TIJARA_DEVOPS_OWNER: ${{ vars.TIJARA_DEVOPS_OWNER || vars.TIJARA_FIRST_RUN_DEVOPS_OWNER }}
+      TIJARA_SUPPORT_OWNER: ${{ vars.TIJARA_SUPPORT_OWNER || vars.TIJARA_FIRST_RUN_SUPPORT_OWNER }}
+      TIJARA_BUSINESS_OWNER: ${{ vars.TIJARA_BUSINESS_OWNER || vars.TIJARA_FIRST_RUN_BUSINESS_OWNER }}
+      TIJARA_ONCALL_CONTACT: ${{ vars.TIJARA_ONCALL_CONTACT }}
+      TIJARA_ALERT_ROUTE: ${{ vars.TIJARA_ALERT_ROUTE || vars.TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF }}
+      TIJARA_INCIDENT_RUNBOOK_URL: ${{ vars.TIJARA_INCIDENT_RUNBOOK_URL }}
+      TIJARA_INCIDENT_BACKUP_REF: ${{ vars.TIJARA_INCIDENT_BACKUP_REF || vars.TIJARA_BACKUP_ARTIFACT_REF || vars.TIJARA_FIRST_RUN_BACKUP_REF }}
+      TIJARA_INCIDENT_RESTORE_DRILL_REF: ${{ vars.TIJARA_INCIDENT_RESTORE_DRILL_REF || vars.TIJARA_RESTORE_DRILL_BACKUP }}
+      TIJARA_INCIDENT_ROLLBACK_REF: ${{ vars.TIJARA_INCIDENT_ROLLBACK_REF || vars.TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF }}
+      TIJARA_INCIDENT_MONITORING_REF: ${{ vars.TIJARA_INCIDENT_MONITORING_REF || vars.TIJARA_GRAFANA_URL }}
+      TIJARA_DEPLOYMENT_ENVIRONMENT_NAME: ${{ vars.TIJARA_DEPLOYMENT_ENVIRONMENT_NAME || inputs.target_environment }}
+      TIJARA_BRANCH_POLICY_REF: ${{ vars.TIJARA_BRANCH_POLICY_REF }}
+      TIJARA_DEPLOYMENT_APPROVERS: ${{ vars.TIJARA_DEPLOYMENT_APPROVERS }}
+      TIJARA_APPROVER_GROUP_REF: ${{ vars.TIJARA_APPROVER_GROUP_REF }}
+      TIJARA_MINIMUM_APPROVERS: ${{ vars.TIJARA_MINIMUM_APPROVERS || '2' }}
+      TIJARA_PROMOTION_RUNBOOK_REF: ${{ vars.TIJARA_PROMOTION_RUNBOOK_REF }}
+      TIJARA_ROLLBACK_RUNBOOK_REF: ${{ vars.TIJARA_ROLLBACK_RUNBOOK_REF || vars.TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF }}
+      TIJARA_DEPLOYMENT_GATE_REF: ${{ vars.TIJARA_DEPLOYMENT_GATE_REF || 'workflow:tijara-ci/protected-release-evidence' }}
+      TIJARA_ENV_INCIDENT_RUNBOOK_REF: ${{ vars.TIJARA_ENV_INCIDENT_RUNBOOK_REF || vars.TIJARA_INCIDENT_RUNBOOK_URL }}
+      TIJARA_ENV_BACKUP_POLICY_REF: ${{ vars.TIJARA_ENV_BACKUP_POLICY_REF || vars.TIJARA_ARTIFACT_RETENTION_POLICY_REF }}
+      TIJARA_ENV_MONITORING_REF: ${{ vars.TIJARA_ENV_MONITORING_REF || vars.TIJARA_GRAFANA_URL }}
+      TIJARA_CHANGE_TICKET_REF: ${{ vars.TIJARA_CHANGE_TICKET_REF || vars.TIJARA_FIRST_RUN_CHANGE_TICKET_REF }}
+      TIJARA_FREEZE_WINDOW_REF: ${{ vars.TIJARA_FREEZE_WINDOW_REF }}
+      TIJARA_SECRET_RUNTIME_PROBES: ${{ vars.TIJARA_SECRET_RUNTIME_PROBES || 'odoo_password=env:ODOO_PASSWORD,e2e_password=env:TIJARA_E2E_PASSWORD,bridge_secret=env:TIJARA_BRIDGE_SHARED_SECRET' }}
+      TIJARA_SECRET_RUNTIME_EXPECTED_SECRETS: ${{ vars.TIJARA_SECRET_RUNTIME_EXPECTED_SECRETS || 'odoo_password,e2e_password' }}
+      TIJARA_SECRET_RUNTIME_MINIMUM_PROBES: ${{ vars.TIJARA_SECRET_RUNTIME_MINIMUM_PROBES || '2' }}
+      TIJARA_SECRET_RUNTIME_TIMEOUT: ${{ vars.TIJARA_SECRET_RUNTIME_TIMEOUT || '8' }}
+      TIJARA_SECRET_RUNTIME_ALLOW_PLACEHOLDER: ${{ vars.TIJARA_SECRET_RUNTIME_ALLOW_PLACEHOLDER || '0' }}
+      TIJARA_TENANT_OPS_ARTIFACTS: ${{ vars.TIJARA_TENANT_OPS_ARTIFACTS }}
+      TIJARA_TENANT_OPS_MINIMUM_TENANTS: ${{ vars.TIJARA_TENANT_OPS_MINIMUM_TENANTS || '1' }}
+      TIJARA_TENANT_OPS_REQUIRE_DNS_PROVIDER: ${{ vars.TIJARA_TENANT_OPS_REQUIRE_DNS_PROVIDER || '1' }}
+      TIJARA_TENANT_OPS_REQUIRE_ADMIN_EMAIL: ${{ vars.TIJARA_TENANT_OPS_REQUIRE_ADMIN_EMAIL || '1' }}
+      TIJARA_TENANT_OPS_REQUIRE_RESTORE_DRILL: ${{ vars.TIJARA_TENANT_OPS_REQUIRE_RESTORE_DRILL || '1' }}
+      TIJARA_TENANT_OPS_REQUIRE_MONITORING: ${{ vars.TIJARA_TENANT_OPS_REQUIRE_MONITORING || '1' }}
+      TIJARA_TENANT_OPS_REQUIRE_ALL_ARTIFACTS: ${{ vars.TIJARA_TENANT_OPS_REQUIRE_ALL_ARTIFACTS || '1' }}
+      TIJARA_MONITORING_TIMEOUT: ${{ vars.TIJARA_MONITORING_TIMEOUT || '8' }}
+      TIJARA_MONITORING_NON_STRICT: ${{ vars.TIJARA_MONITORING_NON_STRICT || '1' }}
+      TIJARA_OPS_BUNDLE_CHECKS: ${{ vars.TIJARA_OPS_BUNDLE_CHECKS || 'load-matrix,load-enterprise,smoke,monitoring,incident,retention' }}
+      TIJARA_OPS_BUNDLE_STRICT: ${{ vars.TIJARA_OPS_BUNDLE_STRICT || '0' }}
+      TIJARA_OPS_BUNDLE_FAIL_ON_WARNING: ${{ vars.TIJARA_OPS_BUNDLE_FAIL_ON_WARNING || '0' }}
       TIJARA_RESTORE_DRILL_BACKUP: ${{ vars.TIJARA_RESTORE_DRILL_BACKUP }}
       TIJARA_BACKUP_ARTIFACT_REF: ${{ vars.TIJARA_BACKUP_ARTIFACT_REF }}
       ODOO_IMAGE: ${{ vars.ODOO_IMAGE }}
@@ -466,6 +507,104 @@ jobs:
             --k6-summary-json "$TIJARA_OPS_TOOL_RAW_DIR/k6-summary.json" \
             --strict \
             --fail-on-warning
+      - name: Protected operations release bundle
+        continue-on-error: true
+        run: |
+          python3 scripts/run_operations_release_bundle.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID"
+      - name: Protected incident runbook evidence
+        continue-on-error: true
+        run: |
+          python3 scripts/export_incident_runbook_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/incident-runbooks/$TIJARA_PROTECTED_RUN_ID" \
+            --backup-reference "${TIJARA_INCIDENT_BACKUP_REF:-}" \
+            --restore-drill-reference "${TIJARA_INCIDENT_RESTORE_DRILL_REF:-}" \
+            --rollback-reference "${TIJARA_INCIDENT_ROLLBACK_REF:-}" \
+            --monitoring-reference "${TIJARA_INCIDENT_MONITORING_REF:-}" \
+            --strict
+      - name: Protected deployment environment evidence
+        continue-on-error: true
+        run: |
+          APPROVER_ARGS=()
+          IFS=',' read -ra DEPLOYMENT_APPROVERS <<< "${TIJARA_DEPLOYMENT_APPROVERS:-}"
+          for approver in "${DEPLOYMENT_APPROVERS[@]}"; do
+            approver="${approver#"${approver%%[![:space:]]*}"}"
+            approver="${approver%"${approver##*[![:space:]]}"}"
+            if [[ -n "$approver" ]]; then
+              APPROVER_ARGS+=(--approver "$approver")
+            fi
+          done
+          python3 scripts/export_deployment_environment_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/deployment-environments/$TIJARA_PROTECTED_RUN_ID" \
+            "${APPROVER_ARGS[@]}" \
+            --strict
+      - name: Protected secret runtime evidence
+        continue-on-error: true
+        run: |
+          python3 scripts/export_secret_runtime_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/secret-runtime-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --secret-manager-provider "$TIJARA_SECRET_MANAGER_PROVIDER" \
+            --secret-manager-reference "$TIJARA_SECRET_MANAGER_REFERENCE" \
+            --secret-access-review-ref "$TIJARA_SECRET_ACCESS_REVIEW_REF" \
+            --minimum-probes "$TIJARA_SECRET_RUNTIME_MINIMUM_PROBES" \
+            --timeout "$TIJARA_SECRET_RUNTIME_TIMEOUT" \
+            --strict
+      - name: Protected tenant operations evidence
+        continue-on-error: true
+        run: |
+          TENANT_OPS_ARGS=()
+          if [[ "${TIJARA_TENANT_OPS_REQUIRE_DNS_PROVIDER:-1}" == "1" ]]; then
+            TENANT_OPS_ARGS+=(--require-dns-provider)
+          fi
+          if [[ "${TIJARA_TENANT_OPS_REQUIRE_ADMIN_EMAIL:-1}" == "1" ]]; then
+            TENANT_OPS_ARGS+=(--require-admin-email)
+          fi
+          if [[ "${TIJARA_TENANT_OPS_REQUIRE_RESTORE_DRILL:-1}" == "1" ]]; then
+            TENANT_OPS_ARGS+=(--require-restore-drill)
+          fi
+          if [[ "${TIJARA_TENANT_OPS_REQUIRE_MONITORING:-1}" == "1" ]]; then
+            TENANT_OPS_ARGS+=(--require-monitoring)
+          fi
+          if [[ "${TIJARA_TENANT_OPS_REQUIRE_ALL_ARTIFACTS:-1}" == "1" ]]; then
+            TENANT_OPS_ARGS+=(--require-all-artifacts)
+          fi
+          python3 scripts/export_tenant_ops_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/tenant-ops-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --minimum-tenants "$TIJARA_TENANT_OPS_MINIMUM_TENANTS" \
+            "${TENANT_OPS_ARGS[@]}" \
+            --strict
+      - name: Protected monitoring evidence
+        continue-on-error: true
+        run: |
+          MONITORING_ARGS=()
+          if [[ -f "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/production-smoke/smoke-decision.json" ]]; then
+            MONITORING_ARGS+=(--smoke-decision "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/production-smoke/smoke-decision.json")
+          fi
+          if [[ -f "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/tenant-smoke/tenant-smoke-evidence.json" ]]; then
+            MONITORING_ARGS+=(--tenant-smoke-evidence "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/tenant-smoke/tenant-smoke-evidence.json")
+          fi
+          if [[ -f "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/tenant-rollout/tenant-rollout-evidence.json" ]]; then
+            MONITORING_ARGS+=(--tenant-rollout-evidence "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/tenant-rollout/tenant-rollout-evidence.json")
+          fi
+          if [[ "${TIJARA_MONITORING_NON_STRICT:-1}" == "1" ]]; then
+            MONITORING_ARGS+=(--non-strict)
+          fi
+          python3 scripts/export_monitoring_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/monitoring-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --timeout "$TIJARA_MONITORING_TIMEOUT" \
+            "${MONITORING_ARGS[@]}"
       - name: Protected certification evidence
         continue-on-error: true
         run: make protected-certification-evidence
@@ -496,6 +635,12 @@ jobs:
             --evidence-path "deploy/runtime/protected-e2e/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/monitoring-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/incident-runbooks/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/secret-runtime-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/deployment-environments/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/tenant-ops-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --strict
       - name: Protected secret manager evidence
@@ -517,11 +662,22 @@ jobs:
             --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
             --output "deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
             --operations-bundle "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/operations-release-bundle.json" \
+            --monitoring-evidence "deploy/runtime/monitoring-evidence/$TIJARA_PROTECTED_RUN_ID/monitoring-evidence.json" \
+            --incident-runbook-evidence "deploy/runtime/incident-runbooks/$TIJARA_PROTECTED_RUN_ID/incident-runbook-evidence.json" \
             --load-evidence "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/load-enterprise/load-evidence.json" \
+            --load-profile-matrix "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/load-profile-matrix/load-profile-matrix.json" \
             --release-retention-evidence "deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID/release-retention-evidence.json" \
             --secret-manager-evidence "deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID/secret-manager-evidence.json" \
+            --secret-runtime-evidence "deploy/runtime/secret-runtime-evidence/$TIJARA_PROTECTED_RUN_ID/secret-runtime-evidence.json" \
+            --deployment-environment-evidence "deploy/runtime/deployment-environments/$TIJARA_PROTECTED_RUN_ID/deployment-environment-evidence.json" \
+            --tenant-ops-evidence "deploy/runtime/tenant-ops-evidence/$TIJARA_PROTECTED_RUN_ID/tenant-ops-evidence.json" \
             --ops-tool-evidence "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID/ops-tool-evidence.json" \
+            --ops-status "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID/status.tsv" \
             --backup-artifact-ref "${TIJARA_BACKUP_ARTIFACT_REF:-}" \
+            --restore-drill-ref "deploy/runtime/ops-tool-raw/$TIJARA_PROTECTED_RUN_ID/restore-drill.log" \
+            --security-audit-ref "deploy/runtime/ops-tool-raw/$TIJARA_PROTECTED_RUN_ID/security-audit.log" \
+            --dependency-scan-ref "deploy/runtime/ops-tool-raw/$TIJARA_PROTECTED_RUN_ID/dependency-scan.log" \
+            --container-scan-ref "deploy/runtime/ops-tool-raw/$TIJARA_PROTECTED_RUN_ID/container-scan.log" \
             --strict \
             --fail-on-warning
       - name: Generate protected sign-off package
@@ -532,7 +688,7 @@ jobs:
           fi
           TIJARA_SIGNOFF_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_ENVIRONMENT="$TIJARA_TARGET_ENVIRONMENT" \
-          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/protected-runbook-handoff/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-first-run/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-service-checks/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-provider-readiness/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-payment-lifecycle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-e2e/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
+          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/protected-runbook-handoff/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-first-run/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-service-checks/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-provider-readiness/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-payment-lifecycle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-e2e/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/monitoring-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/incident-runbooks/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-runtime-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/deployment-environments/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/tenant-ops-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS="$REQUIRED_GROUPS" \
           TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
           make signoff-pack
@@ -596,6 +752,11 @@ jobs:
             deploy/runtime/ops-tool-raw/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/ops-tool-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/operations-release-bundle/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/monitoring-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/incident-runbooks/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/secret-runtime-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/deployment-environments/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/tenant-ops-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/certification-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/release-retention-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/secret-manager-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}

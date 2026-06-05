@@ -1042,8 +1042,10 @@ the same workflow:
    `tijara-protected`.
 2. Configure the GitHub environment named `staging` or `production` with the
    required secrets and variables for Odoo, Playwright, backup restore drills,
-   artifact storage, secret manager references, PSP/FBR/hardware certification
-   evidence paths, Trivy, k6, npm, and optional pip-audit.
+   artifact storage, secret manager references, runtime secret probes,
+   deployment approvers/gates, tenant operations artifacts, monitoring/incident
+   references, PSP/FBR/hardware certification evidence paths, Trivy, k6, npm,
+   and optional pip-audit.
    Use `deploy/config/github-protected-vars.example` for non-secret environment
    variables and `secrets/github-protected-secrets.example` for the required
    secret names. Use the JSON templates under
@@ -1069,11 +1071,20 @@ seed/profile/browser/execution evidence under
 evidence under `deploy/runtime/protected-offline-replay/<run-id>/`, captures raw
 restore, security, dependency, container, npm audit, and k6 outputs under
 `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
-evidence, collects strict PSP/FBR/hardware certification evidence when the
-matching `TIJARA_CERT_*` variables are configured, exports retention and
-secret-manager evidence, runs strict production operations readiness, generates
-the protected sign-off package, checks `release-readiness.json`, and exports a
-post-run evidence verifier under
+evidence, runs the operations release bundle under
+`deploy/runtime/operations-release-bundle/<run-id>/`, exports standalone
+monitoring evidence under `deploy/runtime/monitoring-evidence/<run-id>/`,
+incident runbook evidence under `deploy/runtime/incident-runbooks/<run-id>/`,
+runtime secret delivery evidence under
+`deploy/runtime/secret-runtime-evidence/<run-id>/`, deployment environment
+protection evidence under `deploy/runtime/deployment-environments/<run-id>/`,
+and tenant operations evidence under
+`deploy/runtime/tenant-ops-evidence/<run-id>/`. It then collects strict
+PSP/FBR/hardware certification evidence when the matching `TIJARA_CERT_*`
+variables are configured, exports retention and secret-manager evidence, runs
+strict production operations readiness with all of those inputs attached,
+generates the protected sign-off package, checks `release-readiness.json`, and
+exports a post-run evidence verifier under
 `deploy/runtime/protected-post-run-verification/<run-id>/`. It then prepares a
 pre-upload GitHub artifact metadata placeholder under
 `deploy/runtime/github-artifact-metadata/<run-id>/`, writes the final protected
@@ -1483,6 +1494,11 @@ Optional tools:
   retention evidence under one Operations evidence directory. Set
   `TIJARA_OPS_BUNDLE_TENANT_SMOKE_ARTIFACTS` or
   `TIJARA_TENANT_SMOKE_ARTIFACTS` to include tenant smoke automatically.
+- In the protected GitHub workflow, the operations bundle is now paired with
+  standalone monitoring, incident runbook, runtime secret, deployment
+  environment, and tenant operations evidence so
+  `export_production_ops_readiness.py --strict --fail-on-warning` can block on
+  a complete evidence set instead of a single coarse bundle verdict.
 - Run `make ops-tool-evidence` or `scripts/export_ops_tool_evidence.py` after
   capturing restore, security, dependency, container, and k6 outputs to produce
   structured tool evidence for protected-runner sign-off.

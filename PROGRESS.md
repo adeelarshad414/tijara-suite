@@ -7196,3 +7196,124 @@ Date: 2026-06-05
   provider sandbox payloads are available.
 - Continue hardening finance closeout proof for refund, chargeback, payout
   clearing, and write-off accounting actions on staging.
+
+## Iteration 100: Protected Production Ops Evidence Correlation
+
+Status: Complete
+
+### Scope
+
+- Wire the protected GitHub release lane to generate and attach richer
+  production-operations evidence before the strict production readiness gate.
+- Keep the protected first-run, runbook, post-run verification, artifact
+  summary, README, DEPLOY, and GitHub environment variable examples aligned
+  with the new artifact families.
+
+### Completed
+
+- Updated `.github/workflows/tijara-ci.yml` so the protected release job now
+  runs the operations release bundle plus standalone monitoring, incident
+  runbook, deployment environment, runtime secret, and tenant operations
+  evidence before `export_production_ops_readiness.py --strict
+  --fail-on-warning`.
+- Fed production ops readiness with direct evidence paths for monitoring,
+  incident runbook, load evidence, load profile matrix, release retention,
+  secret-manager, secret-runtime, deployment environment, tenant operations,
+  ops-tool JSON, ops status table, backup/restore, security, dependency, and
+  container scan references.
+- Added the new artifact families to protected first-run expected artifacts,
+  runbook review order, post-run required artifacts, release-retention evidence
+  paths, protected sign-off evidence paths, artifact summary defaults, and
+  protected artifact upload paths.
+- Updated `scripts/export_production_ops_readiness.py` so optional
+  release-readiness evidence is evaluated only when explicitly required or
+  attached. This fixes the protected workflow order where production ops
+  readiness runs before the sign-off package creates `release-readiness.json`.
+- Updated `scripts/export_protected_first_run_checklist.py`,
+  `scripts/export_protected_post_run_verification.py`,
+  `scripts/export_protected_artifact_summary.py`, and
+  `scripts/export_protected_runbook_handoff.py` to recognize
+  `operations-release-bundle`, `monitoring-evidence`,
+  `incident-runbook-evidence`, `secret-runtime-evidence`,
+  `deployment-environment-evidence`, and `tenant-ops-evidence`.
+- Extended `deploy/config/github-protected-vars.example` with protected
+  production ops owners, incident references, deployment gate/approver refs,
+  runtime secret probe settings, tenant operations artifacts, monitoring
+  controls, and operations bundle controls.
+- Updated `README.md` and `DEPLOY.md` with the new protected production ops
+  evidence flow and DevOps configuration expectations.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_production_ops_readiness.py
+  scripts/export_incident_runbook_evidence.py
+  scripts/export_secret_runtime_evidence.py
+  scripts/export_deployment_environment_evidence.py
+  scripts/export_tenant_ops_evidence.py scripts/export_monitoring_evidence.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_post_run_verification.py
+  scripts/export_protected_runbook_handoff.py scripts/generate_signoff_pack.py`
+  passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes runtime secret, tenant ops, and operations bundle variables.
+- Generated tenant operations artifacts for a production fixture at
+  `/private/tmp/tijara-prod-ops-correlated/tenants/tijara_prod_001`.
+- Strict tenant operations evidence writes `decision=passed` and
+  `ci_status=pass`.
+- Strict incident runbook evidence writes `decision=passed` and
+  `ci_status=pass`.
+- Strict deployment environment evidence writes `decision=passed` and
+  `ci_status=pass`.
+- Strict runtime secret evidence resolves env-backed probes without exposing
+  secret values and writes `decision=passed`.
+- Strict load profile matrix and load evidence fixtures write
+  `decision=passed`.
+- Monitoring evidence with production smoke, tenant smoke, executed tenant
+  rollout, deployment gate, rollback, rollback plan, and file-backed endpoint
+  fixture writes `decision=passed`.
+- Release retention and secret-manager evidence fixtures write
+  `decision=passed`.
+- Strict production operations readiness with all correlated evidence attached
+  writes `decision=ready` and `ci_status=pass` at
+  `/private/tmp/tijara-prod-ops-correlated/production-ops-readiness`.
+- Protected first-run checklist fixture writes `decision=passed` and includes
+  the new artifact expectations.
+- Protected runbook handoff fixture writes `decision=passed` and includes the
+  new artifact review order.
+- Protected post-run verifier fixture writes `decision=passed` against the new
+  required artifact set.
+- Protected artifact summary fixture writes `decision=passed` with the new
+  evidence folders attached.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The protected CI lane now expects richer production operations evidence, but
+  it still needs an actual self-hosted protected runner with staging/production
+  GitHub Environment variables, real tenant operations artifacts, monitoring
+  URLs, backup artifacts, k6, Trivy, npm audit, and optional pip-audit.
+- Monitoring and restore evidence are structurally wired, but live alert
+  routing, backup restore drills, load tests, dependency/container scans, and
+  runbook execution still need protected staging and production runs.
+- PSP/FBR live certification, physical hardware certification, live offline POS
+  replay, and finance posting/tax sign-off remain production-readiness
+  blockers.
+
+### Next Iteration
+
+- Add protected run execution guidance and evidence fixtures for live
+  monitoring/alert drill outcomes, backup restore proof, and load/security scan
+  artifacts from a real self-hosted runner.
+- Add GitHub Actions summary output for the protected production ops verdict so
+  release owners can see blockers without downloading artifacts.
+- Continue PSP/FBR/hardware certification and live offline POS pilot proof once
+  provider/device credentials and staging hardware are available.

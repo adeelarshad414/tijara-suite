@@ -236,6 +236,12 @@ proves duplicate replay handling. Direct cashier POS UI click-through selectors
 now cover seeded product search, add-to-cart, payment navigation, optional sale
 validation/receipt print, and refund barcode form entry for prepared staging
 registers.
+The protected GitHub release lane now correlates real production-operations
+evidence more tightly: it runs the operations release bundle, standalone
+monitoring evidence, incident runbook evidence, deployment environment
+protection evidence, runtime secret delivery evidence, tenant operations
+evidence, release retention, secret-manager evidence, and raw ops-tool outputs
+before the strict production operations readiness gate and sign-off package.
 Remaining enterprise phases include real target-hardware certification, full
 authenticated browser POS click-through coverage in staging, production FBR
 provider certification, secret-manager rollout, offline POS pilot
@@ -458,6 +464,13 @@ The detailed policy and dependency intake checklist are maintained in
   conflict review screens, Odoo transaction tests, Browser E2E spec coverage,
   and correlated protected E2E/Playwright evidence when staging credentials are
   available.
+- The protected GitHub workflow now runs `scripts/run_operations_release_bundle.py`
+  and standalone monitoring, incident, deployment-environment, secret-runtime,
+  and tenant-ops evidence exporters before strict production operations
+  readiness. These artifacts are included in first-run expected artifacts,
+  runbook review order, post-run verification, artifact summary, release
+  retention evidence paths, sign-off evidence paths, and protected artifact
+  uploads.
 - `scripts/export_protected_post_run_verification.py` and
   `make protected-post-run-verification` scan protected evidence folders after
   a run, verify required artifact presence, failed/warning `status.tsv` rows,

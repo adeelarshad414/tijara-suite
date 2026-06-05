@@ -378,7 +378,16 @@ def main():
     components.append(_component("secret-runtime", "Secret runtime evidence", secret_runtime, secret_runtime_path, required and args.require_secret_runtime))
     components.append(_component("deployment-environment", "Deployment environment evidence", deployment_environment, deployment_environment_path, required))
     components.append(_component("tenant-ops", "Tenant operations evidence", tenant_ops, tenant_ops_path, required and args.require_tenant_ops))
-    components.append(_component("release-readiness", "Release readiness evidence", release_readiness, release_readiness_path, args.require_release_readiness))
+    if args.require_release_readiness or release_readiness_path:
+        components.append(
+            _component(
+                "release-readiness",
+                "Release readiness evidence",
+                release_readiness,
+                release_readiness_path,
+                args.require_release_readiness,
+            )
+        )
     for index, (payload, source) in enumerate(ops_tool_payloads, start=1):
         components.append(
             _component(
