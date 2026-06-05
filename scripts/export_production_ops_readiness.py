@@ -216,6 +216,21 @@ def _reference_component(name, label, value, required):
     }
 
 
+def _ops_tool_passed_refs(payloads, names, reference_key=""):
+    wanted = {name.lower() for name in names}
+    refs = []
+    for payload, source in payloads:
+        if str(payload.get("decision") or "").strip().lower() in BAD_DECISIONS:
+            continue
+        for component in payload.get("components") or []:
+            name = str(component.get("name") or "").strip().lower()
+            status = str(component.get("status") or "").strip().lower()
+            if name in wanted and status == "passed":
+                references = component.get("references") or {}
+                refs.append(references.get(reference_key) if reference_key else component.get("source") or source)
+    return ",".join(ref for ref in refs if ref)
+
+
 def _status_tsv(components):
     lines = ["check\tstatus\trequired\tdecision\tci_status\tsource\tmessage"]
     lines.extend(
@@ -298,6 +313,7 @@ def main():
     parser.add_argument("--secret-runtime-evidence", default=os.environ.get("TIJARA_PROD_OPS_SECRET_RUNTIME_EVIDENCE", ""))
     parser.add_argument("--deployment-environment-evidence", default=os.environ.get("TIJARA_PROD_OPS_DEPLOYMENT_ENVIRONMENT_EVIDENCE", ""))
     parser.add_argument("--tenant-ops-evidence", default=os.environ.get("TIJARA_PROD_OPS_TENANT_OPS_EVIDENCE", ""))
+    parser.add_argument("--ops-tool-evidence", action="append", default=_csv_items(os.environ.get("TIJARA_PROD_OPS_TOOL_EVIDENCE")))
     parser.add_argument("--ops-status", action="append", default=_csv_items(os.environ.get("TIJARA_PROD_OPS_STATUS")))
     parser.add_argument("--release-readiness", default=os.environ.get("TIJARA_PROD_OPS_RELEASE_READINESS", ""))
     parser.add_argument("--backup-artifact-ref", default=os.environ.get("TIJARA_PROD_OPS_BACKUP_ARTIFACT_REF", ""))
@@ -330,6 +346,10 @@ def main():
     deployment_environment, deployment_environment_path = _read_json(args.deployment_environment_evidence)
     tenant_ops, tenant_ops_path = _read_json(args.tenant_ops_evidence)
     release_readiness, release_readiness_path = _read_json(args.release_readiness)
+    ops_tool_payloads = []
+    for raw_path in args.ops_tool_evidence:
+        payload, source = _read_json(raw_path)
+        ops_tool_payloads.append((payload, source))
 
     for key, value in {
         "operations_bundle": operations_bundle_path,
@@ -345,6 +365,8 @@ def main():
     }.items():
         if value:
             evidence_refs[key] = value
+    if ops_tool_payloads:
+        evidence_refs["ops_tool"] = [source for _payload, source in ops_tool_payloads if source]
 
     required = bool(args.strict)
     components.append(_component("operations-bundle", "Operations release bundle", operations_bundle, operations_bundle_path, required))
@@ -357,14 +379,27 @@ def main():
     components.append(_component("deployment-environment", "Deployment environment evidence", deployment_environment, deployment_environment_path, required))
     components.append(_component("tenant-ops", "Tenant operations evidence", tenant_ops, tenant_ops_path, required and args.require_tenant_ops))
     components.append(_component("release-readiness", "Release readiness evidence", release_readiness, release_readiness_path, args.require_release_readiness))
+    for index, (payload, source) in enumerate(ops_tool_payloads, start=1):
+        components.append(
+            _component(
+                "ops-tool-evidence-%s" % index,
+                "Operations tool evidence %s" % index,
+                payload,
+                source,
+                False,
+            )
+        )
 
     load_components = []
     for index, raw_path in enumerate(args.load_evidence, start=1):
         payload, source = _read_json(raw_path)
         evidence_refs["load_%s" % index] = source
         load_components.append(_component("load-evidence-%s" % index, "Load evidence %s" % index, payload, source, required))
+    ops_tool_load_ref = _ops_tool_passed_refs(ops_tool_payloads, {"load-k6"})
     if load_components:
         components.extend(load_components)
+    elif ops_tool_load_ref:
+        components.append(_reference_component("load-evidence", "Load evidence", ops_tool_load_ref, required))
     else:
         components.append(
             {
@@ -398,20 +433,20 @@ def main():
         "incident-runbook" if _has_incident_ref(incident, "references", "backup_reference_present") else ""
     ) or (
         "deployment-environment" if _has_deployment_env_ref(deployment_environment, "backup_policy_ref_present") else ""
-    )
-    restore_ref = args.restore_drill_ref or (
+    ) or _ops_tool_passed_refs(ops_tool_payloads, {"restore-drill"}, "backup_artifact_ref")
+    restore_ref = args.restore_drill_ref or _ops_tool_passed_refs(ops_tool_payloads, {"restore-drill"}) or (
         "incident-runbook" if _has_incident_ref(incident, "references", "restore_drill_reference_present") else ""
     )
     if restore_status_rows and not restore_ref:
         passed_restore = [row for row in restore_status_rows if row["status"].strip().lower() == "passed"]
         if passed_restore:
             restore_ref = ",".join(row["source"] for row in passed_restore)
-    dependency_ref = args.dependency_scan_ref
+    dependency_ref = args.dependency_scan_ref or _ops_tool_passed_refs(ops_tool_payloads, {"dependency-scan"})
     if dependency_status_rows and not dependency_ref:
         passed_dependency = [row for row in dependency_status_rows if row["status"].strip().lower() == "passed"]
         if passed_dependency:
             dependency_ref = ",".join(row["source"] for row in passed_dependency)
-    container_ref = args.container_scan_ref
+    container_ref = args.container_scan_ref or _ops_tool_passed_refs(ops_tool_payloads, {"container-scan"})
     if container_status_rows and not container_ref:
         passed_container = [row for row in container_status_rows if row["status"].strip().lower() == "passed"]
         if passed_container:
@@ -419,7 +454,14 @@ def main():
 
     components.append(_reference_component("backup-artifact", "Backup artifact reference", backup_ref, required))
     components.append(_reference_component("restore-drill", "Restore drill reference", restore_ref, required))
-    components.append(_reference_component("security-audit", "Security audit reference", args.security_audit_ref, required))
+    components.append(
+        _reference_component(
+            "security-audit",
+            "Security audit reference",
+            args.security_audit_ref or _ops_tool_passed_refs(ops_tool_payloads, {"security-audit"}),
+            required,
+        )
+    )
     components.append(_reference_component("dependency-scan", "Dependency scan reference", dependency_ref, required))
     components.append(_reference_component("container-scan", "Container scan reference", container_ref, required))
 
@@ -496,6 +538,7 @@ def main():
             "secret_runtime_evidence=%s" % (secret_runtime_path or "<unset>"),
             "deployment_environment_evidence=%s" % (deployment_environment_path or "<unset>"),
             "tenant_ops_evidence=%s" % (tenant_ops_path or "<unset>"),
+            "ops_tool_evidence=%s" % (",".join(args.ops_tool_evidence) or "<unset>"),
             "ops_status=%s" % (",".join(ops_status_sources) or "<unset>"),
             "backup_artifact_ref=%s" % ("<set>" if args.backup_artifact_ref else "<unset>"),
             "restore_drill_ref=%s" % ("<set>" if args.restore_drill_ref else "<unset>"),

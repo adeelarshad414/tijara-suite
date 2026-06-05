@@ -93,6 +93,7 @@ make tenant-ops-evidence
 make load-evidence
 make operations-release-bundle
 make production-ops-readiness
+make ops-tool-evidence
 make signoff-pack
 ```
 
@@ -775,6 +776,48 @@ directories, logs, `status.tsv`, `env-summary.txt`, and `summary.md` under
 `TIJARA_OPS_BUNDLE_STRICT=1` and `TIJARA_OPS_BUNDLE_FAIL_ON_WARNING=1` for
 production release drills where missing evidence or warnings must block.
 
+On a protected runner, convert real command outputs into structured operations
+tool evidence. Capture logs or JSON from the tools first, then export a single
+machine-checkable evidence bundle:
+
+```bash
+mkdir -p deploy/runtime/ops-tool-raw/2026-06-05-rc1
+CONFIRM_RESTORE_DRILL=YES bash deploy/postgres/restore-drill.sh deploy/runtime/backups/latest.dump \
+  > deploy/runtime/ops-tool-raw/2026-06-05-rc1/restore-drill.log 2>&1
+bash scripts/security_audit.sh \
+  > deploy/runtime/ops-tool-raw/2026-06-05-rc1/security-audit.log 2>&1
+npm audit --json \
+  > deploy/runtime/ops-tool-raw/2026-06-05-rc1/npm-audit.json
+pip-audit --format json \
+  > deploy/runtime/ops-tool-raw/2026-06-05-rc1/pip-audit.json
+trivy image --format json --severity HIGH,CRITICAL "${ODOO_IMAGE:-odoo:19.0}" \
+  > deploy/runtime/ops-tool-raw/2026-06-05-rc1/trivy-odoo.json
+k6 run --summary-export deploy/runtime/ops-tool-raw/2026-06-05-rc1/k6-summary.json \
+  scripts/load_smoke.k6.js
+python3 scripts/export_ops_tool_evidence.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment production \
+  --restore-drill-log deploy/runtime/ops-tool-raw/2026-06-05-rc1/restore-drill.log \
+  --restore-drill-exit-code 0 \
+  --backup-artifact-ref backup:2026-06-05-rc1 \
+  --security-audit-log deploy/runtime/ops-tool-raw/2026-06-05-rc1/security-audit.log \
+  --security-audit-exit-code 0 \
+  --npm-audit-json deploy/runtime/ops-tool-raw/2026-06-05-rc1/npm-audit.json \
+  --pip-audit-json deploy/runtime/ops-tool-raw/2026-06-05-rc1/pip-audit.json \
+  --trivy-json deploy/runtime/ops-tool-raw/2026-06-05-rc1/trivy-odoo.json \
+  --k6-summary-json deploy/runtime/ops-tool-raw/2026-06-05-rc1/k6-summary.json \
+  --strict \
+  --fail-on-warning
+```
+
+The exporter writes `ops-tool-evidence.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/ops-tool-evidence/<run-id>/`. Attach that directory to
+`TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package extracts
+`ops_tool_reviews`. Production operations readiness can also consume it through
+`--ops-tool-evidence`, and passed tool components satisfy restore, security,
+dependency, container, and k6 load references.
+
 Export the top-level production operations readiness gate after the operations
 bundle and supporting evidence are available:
 
@@ -792,6 +835,7 @@ python3 scripts/export_production_ops_readiness.py \
   --secret-runtime-evidence deploy/runtime/secret-runtime-evidence/2026-06-05-rc1/secret-runtime-evidence.json \
   --deployment-environment-evidence deploy/runtime/deployment-environments/2026-06-05-rc1/deployment-environment-evidence.json \
   --tenant-ops-evidence deploy/runtime/tenant-ops-evidence/2026-06-05-rc1/tenant-ops-evidence.json \
+  --ops-tool-evidence deploy/runtime/ops-tool-evidence/2026-06-05-rc1/ops-tool-evidence.json \
   --ops-status deploy/runtime/ops-evidence/2026-06-05-rc1/status.tsv \
   --backup-artifact-ref backup:2026-06-05-rc1 \
   --restore-drill-ref restore:2026-06-05-rc1 \
@@ -1125,6 +1169,9 @@ Optional tools:
   retention evidence under one Operations evidence directory. Set
   `TIJARA_OPS_BUNDLE_TENANT_SMOKE_ARTIFACTS` or
   `TIJARA_TENANT_SMOKE_ARTIFACTS` to include tenant smoke automatically.
+- Run `make ops-tool-evidence` or `scripts/export_ops_tool_evidence.py` after
+  capturing restore, security, dependency, container, and k6 outputs to produce
+  structured tool evidence for protected-runner sign-off.
 - Run `make production-ops-readiness` or
   `scripts/export_production_ops_readiness.py --strict --fail-on-warning`
   after the supporting evidence is attached to create one release-blocking
@@ -1410,7 +1457,10 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   bundle step status and evidence references are included under
   `operations_bundle_reviews`; when production operations readiness evidence is
   attached, component status, backup/restore, scan, and required-reference
-  reviews are included under `production_ops_readiness_reviews`; when release
+  reviews are included under `production_ops_readiness_reviews`; when
+  operations tool evidence is attached, restore, security, dependency,
+  container, Trivy, npm audit, pip-audit, and k6 component reviews are included
+  under `ops_tool_reviews`; when release
   retention evidence is attached,
   artifact-store, secret-manager, retention, and evidence fingerprint reviews
   are included under `release_retention_reviews`; when secret-manager evidence

@@ -139,6 +139,7 @@ make tenant-ops-evidence
 make load-evidence
 make operations-release-bundle
 make production-ops-readiness
+make ops-tool-evidence
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make staging-release-signoff
@@ -499,6 +500,10 @@ The detailed policy and dependency intake checklist are maintained in
   incident, load, retention, secret-manager/runtime, deployment environment,
   tenant operations, backup/restore, and scan references into one production
   operations verdict under `deploy/runtime/production-ops-readiness/`.
+- `scripts/export_ops_tool_evidence.py` and `make ops-tool-evidence` turn
+  actual restore-drill logs, security-audit logs, dependency scan logs, Trivy
+  JSON, npm audit JSON, pip-audit JSON, and k6 summaries into structured
+  Operations evidence under `deploy/runtime/ops-tool-evidence/`.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, POS checkout, refund barcode, receipt print, and offline
   POS replay browser tests, then writes E2E seed evidence under

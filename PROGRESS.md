@@ -5738,3 +5738,91 @@ Date: 2026-06-05
   are available.
 - Continue toward live staging E2E execution when Odoo URL, credentials, seeded
   POS config, and hardware bridge are available.
+
+## Iteration 81: Operations Tool Output Evidence Adapters
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_ops_tool_evidence.py` to convert real operations tool
+  outputs into structured release evidence.
+- The exporter supports restore-drill logs, security-audit logs, dependency
+  scan logs, container scan logs, Trivy JSON, npm audit JSON, pip-audit JSON,
+  and k6 summary JSON.
+- The exporter writes `ops-tool-evidence.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/ops-tool-evidence/<run-id>/`.
+- Added `make ops-tool-evidence` and `npm run ops:tool-evidence`.
+- Enhanced `scripts/export_production_ops_readiness.py` with
+  `--ops-tool-evidence` so passed tool components can satisfy load, restore,
+  security-audit, dependency-scan, container-scan, and backup artifact
+  references.
+- Enhanced `scripts/generate_signoff_pack.py` to classify
+  `ops-tool-evidence.json` as Operations evidence.
+- Sign-off evidence summaries now include `## Operations Tool Evidence`.
+- `release-readiness.json` now includes `ops_tool_reviews` and blocks or warns
+  from the operations tool evidence decision.
+- Updated `README.md` and `DEPLOY.md` with protected-runner command examples
+  for restore, security, dependency, container, Trivy, npm audit, pip-audit, and
+  k6 evidence capture.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_ops_tool_evidence.py scripts/export_production_ops_readiness.py
+  scripts/generate_signoff_pack.py` passes.
+- Strict synthetic clean operations tool evidence passes at
+  `/private/tmp/tijara-ops-tool-ready` with `decision=passed` and
+  `ci_status=pass`.
+- Strict synthetic Trivy critical evidence blocks at
+  `/private/tmp/tijara-ops-tool-blocked` with `decision=failed` and
+  `ci_status=fail`.
+- `npm run ops:tool-evidence` passes in warning mode at
+  `/private/tmp/tijara-ops-tool-npm`.
+- Production operations readiness consumes the clean ops-tool evidence and
+  marks load, restore, security-audit, dependency-scan, and container-scan
+  references as passed in
+  `/private/tmp/tijara-prod-ops-tool-ready/status.tsv`.
+- Generated sign-off packages at
+  `/private/tmp/tijara-signoff-ops-tool-ready` and
+  `/private/tmp/tijara-signoff-ops-tool-blocked`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-ops-tool-ready/release-readiness.json` passes
+  with `decision=ready` and `ci_status=pass`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-ops-tool-blocked/release-readiness.json` blocks
+  as expected because Trivy evidence is failed.
+- Confirmed `evidence-summary.md` includes `Operations Tool Evidence` and
+  `release-readiness.json` includes `ops_tool_reviews`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The adapters parse provided tool outputs; they still depend on a protected
+  runner to execute restore drills, k6, Trivy, npm audit, pip-audit, and
+  production secret probes against real infrastructure.
+- Public CI remains warning-mode for production operations readiness because it
+  has no live backup artifact, production monitoring endpoints, tenant URLs, or
+  secret-manager runtime access.
+- FBR, PSP, physical hardware certification, and live POS checkout/refund/print
+  browser evidence remain production blockers until real external systems are
+  available.
+
+### Next Iteration
+
+- Add a protected-runner strict workflow profile for staging/production
+  evidence that can call the new ops-tool exporter, production operations
+  readiness, sign-off package generation, and release-readiness checks together.
+- Add CI artifact upload paths for protected-runner ops-tool evidence and
+  production operations readiness evidence.
+- Continue toward live staging E2E execution when Odoo URL, credentials, seeded
+  POS config, and hardware bridge are available.
