@@ -2501,3 +2501,53 @@ Date: 2026-06-05
 - Continue direct cashier POS UI selector coverage.
 - Execute staging release evidence once staging credentials and external
   provider/device evidence are available.
+
+## Iteration 37: CI Release Readiness Wiring
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Wired `.github/workflows/tijara-ci.yml` into the release-readiness flow:
+  - Runs `TIJARA_RELEASE_RUN_ID=ci-local TIJARA_RELEASE_CHECKS=local make
+    release-candidate`.
+  - Generates a strict CI sign-off package from
+    `deploy/runtime/release-evidence/ci-local`.
+  - Requires the `Release Candidate` evidence group.
+  - Runs `make check-release-readiness` against
+    `deploy/runtime/signoff-packages/ci-local/release-readiness.json`.
+  - Uploads release evidence and sign-off package artifacts as
+    `tijara-ci-release-evidence`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Local CI-equivalent release gate passes with temporary evidence output.
+- Local CI-equivalent sign-off package generation passes with strict release
+  evidence requirement.
+- Local CI-equivalent readiness check exits `0`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- The CI wiring proves local release readiness only; it does not run live
+  staging browser E2E, Odoo transaction tests, monitoring, restore, load,
+  dependency, or container checks.
+- Staging and production deployment pipelines still need environment-specific
+  release gates, artifact retention policy, approvals, rollback automation, and
+  secret-manager integration.
+- External PSP/FBR/hardware certification evidence is still pending.
+
+### Next Iteration
+
+- Add a staging release evidence runbook script that sequences full release
+  candidate, E2E, ops, sign-off package generation, readiness check, and
+  artifact paths.
+- Continue direct cashier POS UI selector coverage.
+- Prepare production deployment/rollback automation once staging evidence is
+  available.

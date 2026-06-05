@@ -609,6 +609,25 @@ make security-audit
 make config
 ```
 
+CI also runs a local release-candidate evidence path:
+
+```bash
+TIJARA_RELEASE_RUN_ID=ci-local TIJARA_RELEASE_CHECKS=local make release-candidate
+TIJARA_SIGNOFF_RUN_ID=ci-local \
+TIJARA_SIGNOFF_ENVIRONMENT=ci \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release \
+TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
+make signoff-pack
+make check-release-readiness READINESS=deploy/runtime/signoff-packages/ci-local/release-readiness.json
+```
+
+The workflow uploads `deploy/runtime/release-evidence/ci-local` and
+`deploy/runtime/signoff-packages/ci-local` as the
+`tijara-ci-release-evidence` artifact. This is not a substitute for staging
+release evidence, but it prevents PRs from merging with a broken local release
+gate or malformed readiness package.
+
 Optional tools:
 
 - Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.

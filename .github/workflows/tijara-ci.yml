@@ -23,3 +23,23 @@ jobs:
         run: bash scripts/security_audit.sh
       - name: Validate compose config
         run: docker compose --env-file .env.example --env-file secrets/.env.secrets.example config --quiet
+      - name: Local release candidate gate
+        run: TIJARA_RELEASE_RUN_ID=ci-local TIJARA_RELEASE_CHECKS=local make release-candidate
+      - name: Generate CI sign-off package
+        run: |
+          TIJARA_SIGNOFF_RUN_ID=ci-local \
+          TIJARA_SIGNOFF_ENVIRONMENT=ci \
+          TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local \
+          TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release \
+          TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
+          make signoff-pack
+      - name: Check CI release readiness
+        run: make check-release-readiness READINESS=deploy/runtime/signoff-packages/ci-local/release-readiness.json
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tijara-ci-release-evidence
+          path: |
+            deploy/runtime/release-evidence/ci-local
+            deploy/runtime/signoff-packages/ci-local
