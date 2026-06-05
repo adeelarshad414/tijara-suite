@@ -6090,3 +6090,76 @@ Date: 2026-06-05
   protected sign-off package.
 - Continue tightening PSP/FBR live adapter certification once real provider
   sandbox/live credentials and compliance documents are available.
+
+## Iteration 86: Protected Runner Preflight Evidence
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_runner_preflight.py` to export redacted
+  protected-runner configuration evidence before strict staging/production
+  release gates run.
+- Added `make protected-runner-preflight` for local and protected-runner
+  execution.
+- The preflight exporter validates core protected release variables, artifact
+  retention references, secret-manager references, restore/backup references,
+  URL/load/E2E toggles, and selected PSP/FBR/hardware certification groups.
+- Strict mode now turns missing or placeholder protected-runner variables into
+  blockers while preserving a redacted, sign-off-ready evidence package.
+- Wired the protected GitHub workflow to generate preflight evidence after
+  resolving the protected run ID and before release-candidate execution.
+- Added protected workflow environment bindings for URL, hardware bridge,
+  monitoring, E2E, and load variables that were already documented in the
+  protected variable template.
+- Attached protected preflight evidence to release retention evidence,
+  protected sign-off package inputs, and protected artifact uploads.
+- Classified `protected-runner-preflight` as Operations evidence inside
+  `scripts/generate_signoff_pack.py`.
+- Updated `README.md` and `DEPLOY.md` with protected preflight guidance and the
+  strict release-readiness behavior.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_runner_preflight.py scripts/generate_signoff_pack.py`
+  passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Strict protected preflight with missing PSP certification variables fails
+  with `decision=failed`.
+- Strict protected preflight with core protected variables and PSP
+  certification variables passes with `decision=passed`.
+- Sign-off package with passing preflight evidence passes
+  `scripts/check_release_readiness.py` with `decision=ready`.
+- Sign-off package with missing strict preflight evidence fails
+  `scripts/check_release_readiness.py` with `decision=blocked`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The preflight verifies variable presence and placeholder hygiene, but it does
+  not prove that external URLs, evidence files, provider APIs, or hardware
+  devices are reachable.
+- Protected workflow execution still needs a real self-hosted runner,
+  configured GitHub environments, mounted/downloaded evidence bundles, and
+  provider/device certification artifacts.
+- Live Browser E2E execution, PSP/FBR certification, and physical hardware
+  proof remain production blockers until run against real systems.
+
+### Next Iteration
+
+- Add a protected live Browser E2E evidence handoff that consumes protected
+  Odoo credentials and attaches Browser E2E execution evidence to the protected
+  sign-off package.
+- Add optional preflight URL reachability probes for staging Odoo, hardware
+  bridge, Prometheus, Alertmanager, and Grafana without exposing credentials.
+- Continue hardening PSP/FBR live adapters when certified provider sandbox/live
+  credentials become available.

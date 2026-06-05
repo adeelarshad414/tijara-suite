@@ -364,7 +364,8 @@ The detailed policy and dependency intake checklist are maintained in
   tijara-protected]`; see `deploy/config/github-protected-vars.example` and
   `secrets/github-protected-secrets.example` for setup templates, plus
   `deploy/config/certification-manifests/` for PSP, FBR, and hardware
-  certification manifest examples.
+  certification manifest examples. The protected job now emits a redacted
+  runner preflight evidence report before executing strict release gates.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
@@ -402,6 +403,11 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_release_candidate_gate.sh` and `make release-candidate` assemble
   local, Odoo, browser, and operations checks into a release-candidate evidence
   report under `deploy/runtime/release-evidence/`.
+- `scripts/export_protected_runner_preflight.py` and
+  `make protected-runner-preflight` export a redacted protected-runner
+  configuration report for release variables, evidence groups, URLs, load/E2E
+  toggles, and mandatory PSP/FBR/hardware certification inputs under
+  `deploy/runtime/protected-runner-preflight/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or

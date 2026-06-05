@@ -1052,8 +1052,10 @@ the same workflow:
 3. Start the workflow manually with `protected_release=true`,
    `target_environment=staging` or `production`, and an optional `run_id`.
 
-The protected job runs the release-candidate gate, captures raw restore,
-security, dependency, container, npm audit, and k6 outputs under
+The protected job first exports redacted runner preflight evidence under
+`deploy/runtime/protected-runner-preflight/<run-id>/`, then runs the
+release-candidate gate, captures raw restore, security, dependency, container,
+npm audit, and k6 outputs under
 `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
 evidence, collects strict PSP/FBR/hardware certification evidence when the
 matching `TIJARA_CERT_*` variables are configured, exports retention and
@@ -1070,6 +1072,25 @@ release. The protected sign-off package will append certification evidence
 directories to `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the selected groups;
 missing, expired, unapproved, or hash-mismatched certification evidence becomes
 a release-readiness blocker.
+
+Run the protected preflight locally before a protected workflow if you want to
+check the non-secret environment surface without executing release gates:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware \
+python3 scripts/export_protected_runner_preflight.py \
+  --output deploy/runtime/protected-runner-preflight/2026-06-05-rc1 \
+  --strict
+```
+
+The preflight manifest does not print secret values. It records presence,
+placeholder status, and redacted previews for protected release variables,
+certification groups, URL/load/E2E toggles, and required PSP/FBR/hardware
+evidence fields. Attach that directory to `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the
+sign-off package reads `summary.md` and `status.tsv`, so strict preflight
+failures appear as release-readiness blockers.
 
 Export release retention and secret-manager evidence before production
 approval:

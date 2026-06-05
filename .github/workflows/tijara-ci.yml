@@ -141,6 +141,23 @@ jobs:
       TIJARA_BACKUP_ARTIFACT_REF: ${{ vars.TIJARA_BACKUP_ARTIFACT_REF }}
       ODOO_IMAGE: ${{ vars.ODOO_IMAGE }}
       POSTGRES_IMAGE: ${{ vars.POSTGRES_IMAGE }}
+      TIJARA_BASE_URL: ${{ vars.TIJARA_BASE_URL }}
+      ODOO_BASE_URL: ${{ vars.ODOO_BASE_URL }}
+      TIJARA_HARDWARE_BRIDGE_URL: ${{ vars.TIJARA_HARDWARE_BRIDGE_URL }}
+      TIJARA_PROMETHEUS_URL: ${{ vars.TIJARA_PROMETHEUS_URL }}
+      TIJARA_ALERTMANAGER_URL: ${{ vars.TIJARA_ALERTMANAGER_URL }}
+      TIJARA_GRAFANA_URL: ${{ vars.TIJARA_GRAFANA_URL }}
+      TIJARA_E2E_SCOPE: ${{ vars.TIJARA_E2E_SCOPE }}
+      TIJARA_RUN_POS_UI_E2E: ${{ vars.TIJARA_RUN_POS_UI_E2E }}
+      TIJARA_RUN_DIRECT_POS_CLICKTHROUGH: ${{ vars.TIJARA_RUN_DIRECT_POS_CLICKTHROUGH }}
+      TIJARA_RUN_DIRECT_POS_VALIDATE_E2E: ${{ vars.TIJARA_RUN_DIRECT_POS_VALIDATE_E2E }}
+      TIJARA_RUN_DIRECT_REFUND_FORM_E2E: ${{ vars.TIJARA_RUN_DIRECT_REFUND_FORM_E2E }}
+      TIJARA_RUN_MOBILE_OFFLINE_E2E: ${{ vars.TIJARA_RUN_MOBILE_OFFLINE_E2E }}
+      TIJARA_LOAD_VUS: ${{ vars.TIJARA_LOAD_VUS }}
+      TIJARA_LOAD_DURATION: ${{ vars.TIJARA_LOAD_DURATION }}
+      TIJARA_LOAD_MAX_P95_MS: ${{ vars.TIJARA_LOAD_MAX_P95_MS }}
+      TIJARA_LOAD_MAX_FAIL_RATE: ${{ vars.TIJARA_LOAD_MAX_FAIL_RATE }}
+      TIJARA_LOAD_MIN_CHECKS_RATE: ${{ vars.TIJARA_LOAD_MIN_CHECKS_RATE }}
       TIJARA_CERT_PSP_PROVIDER: ${{ vars.TIJARA_CERT_PSP_PROVIDER }}
       TIJARA_CERT_PSP_REFERENCE: ${{ vars.TIJARA_CERT_PSP_REFERENCE }}
       TIJARA_CERT_PSP_OWNER: ${{ vars.TIJARA_CERT_PSP_OWNER }}
@@ -190,6 +207,14 @@ jobs:
             RUN_ID="${{ inputs.target_environment }}-${GITHUB_RUN_ID}"
           fi
           echo "TIJARA_PROTECTED_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+      - name: Protected runner preflight evidence
+        continue-on-error: true
+        run: |
+          python3 scripts/export_protected_runner_preflight.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID" \
+            --strict
       - name: Protected release candidate gate
         run: |
           TIJARA_RELEASE_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
@@ -279,6 +304,7 @@ jobs:
             --certification-evidence-retention-days 365 \
             --log-retention-days 30 \
             --backup-retention-days 30 \
+            --evidence-path "deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID" \
@@ -317,7 +343,7 @@ jobs:
           fi
           TIJARA_SIGNOFF_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_ENVIRONMENT="$TIJARA_TARGET_ENVIRONMENT" \
-          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
+          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS="$REQUIRED_GROUPS" \
           TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
           make signoff-pack
@@ -331,6 +357,7 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
           path: |
+            deploy/runtime/protected-runner-preflight/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/release-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/e2e-seed/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/e2e-profile/${{ env.TIJARA_PROTECTED_RUN_ID }}
