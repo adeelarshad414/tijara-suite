@@ -11,6 +11,7 @@ RELEASE_DIR="${TIJARA_RELEASE_EVIDENCE_DIR:-$RUNTIME_ROOT/release-evidence/$RUN_
 E2E_SEED_DIR="${TIJARA_E2E_SEED_EVIDENCE_DIR:-$RUNTIME_ROOT/e2e-seed/$RUN_ID}"
 E2E_PROFILE_DIR="${TIJARA_E2E_PROFILE_OUTPUT:-$RUNTIME_ROOT/e2e-profile/$RUN_ID}"
 E2E_DIR="${TIJARA_E2E_EVIDENCE_DIR:-$RUNTIME_ROOT/e2e-evidence/$RUN_ID}"
+E2E_EXECUTION_DIR="${TIJARA_E2E_EXECUTION_OUTPUT:-$RUNTIME_ROOT/e2e-execution/$RUN_ID}"
 OPS_DIR="${TIJARA_OPS_EVIDENCE_DIR:-$RUNTIME_ROOT/ops-evidence/$RUN_ID}"
 ENV_PROTECTION_DIR="${TIJARA_ENV_PROTECTION_OUTPUT:-$RUNTIME_ROOT/deployment-environments/$RUN_ID}"
 TENANT_OPS_DIR="${TIJARA_TENANT_OPS_OUTPUT:-$RUNTIME_ROOT/tenant-ops-evidence/$RUN_ID}"
@@ -30,6 +31,7 @@ ENV_PROTECTION_STRICT="${TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT:-$STRICT_R
 TENANT_OPS_ARTIFACTS="${TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS:-${TIJARA_TENANT_OPS_ARTIFACTS:-}}"
 SEED_E2E="${TIJARA_STAGING_RELEASE_SEED_E2E:-0}"
 PROFILE_E2E="${TIJARA_STAGING_RELEASE_PROFILE_E2E:-0}"
+EXECUTION_E2E="${TIJARA_STAGING_RELEASE_EXECUTION_EVIDENCE:-0}"
 INCLUDE_E2E_SEED="${TIJARA_STAGING_RELEASE_INCLUDE_E2E_SEED:-}"
 if [[ -z "$INCLUDE_E2E_SEED" && -n "${TIJARA_E2E_SEED_EVIDENCE_DIR:-}" ]]; then
     INCLUDE_E2E_SEED="1"
@@ -41,6 +43,12 @@ if [[ -z "$INCLUDE_E2E_PROFILE" && -n "${TIJARA_E2E_PROFILE_OUTPUT:-}" ]]; then
     INCLUDE_E2E_PROFILE="1"
 elif [[ -z "$INCLUDE_E2E_PROFILE" ]]; then
     INCLUDE_E2E_PROFILE="$PROFILE_E2E"
+fi
+INCLUDE_E2E_EXECUTION="${TIJARA_STAGING_RELEASE_INCLUDE_E2E_EXECUTION:-}"
+if [[ -z "$INCLUDE_E2E_EXECUTION" && -n "${TIJARA_E2E_EXECUTION_OUTPUT:-}" ]]; then
+    INCLUDE_E2E_EXECUTION="1"
+elif [[ -z "$INCLUDE_E2E_EXECUTION" ]]; then
+    INCLUDE_E2E_EXECUTION="0"
 fi
 TENANT_OPS_INCLUDE="${TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS:-}"
 if [[ -z "$TENANT_OPS_INCLUDE" && -n "$TENANT_OPS_ARTIFACTS" ]]; then
@@ -72,6 +80,11 @@ case "$(echo "$INCLUDE_E2E_PROFILE" | tr '[:upper:]' '[:lower:]')" in
         SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$E2E_PROFILE_DIR"
         ;;
 esac
+case "$(echo "$INCLUDE_E2E_EXECUTION" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$E2E_EXECUTION_DIR"
+        ;;
+esac
 case "$(echo "$TENANT_OPS_INCLUDE" | tr '[:upper:]' '[:lower:]')" in
     1|true|yes|y|on)
         SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$TENANT_OPS_DIR"
@@ -90,6 +103,7 @@ mkdir -p "$ORCH_DIR"
     echo "e2e_seed_evidence_dir=$E2E_SEED_DIR"
     echo "e2e_profile_evidence_dir=$E2E_PROFILE_DIR"
     echo "e2e_evidence_dir=$E2E_DIR"
+    echo "e2e_execution_evidence_dir=$E2E_EXECUTION_DIR"
     echo "ops_evidence_dir=$OPS_DIR"
     echo "deployment_environment_dir=$ENV_PROTECTION_DIR"
     echo "tenant_ops_evidence_dir=$TENANT_OPS_DIR"
@@ -105,6 +119,8 @@ mkdir -p "$ORCH_DIR"
     echo "include_e2e_seed=$INCLUDE_E2E_SEED"
     echo "profile_e2e=$PROFILE_E2E"
     echo "include_e2e_profile=$INCLUDE_E2E_PROFILE"
+    echo "execution_e2e=$EXECUTION_E2E"
+    echo "include_e2e_execution=$INCLUDE_E2E_EXECUTION"
     echo "tenant_ops_include=$TENANT_OPS_INCLUDE"
     echo "tenant_ops_strict=$TENANT_OPS_STRICT"
     echo "tenant_ops_artifacts=${TENANT_OPS_ARTIFACTS:-<unset>}"
@@ -242,6 +258,28 @@ run_step "release-readiness" \
     TIJARA_RELEASE_FAIL_ON_WARNING="$FAIL_ON_WARNING" \
     make check-release-readiness READINESS="$READINESS_FILE"
 
+case "$(echo "$EXECUTION_E2E" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        run_step "e2e-execution" \
+            env \
+            TIJARA_E2E_EXECUTION_RUN_ID="$RUN_ID" \
+            TIJARA_E2E_EXECUTION_ENVIRONMENT="$SIGNOFF_ENVIRONMENT" \
+            TIJARA_E2E_EXECUTION_OUTPUT="$E2E_EXECUTION_DIR" \
+            TIJARA_E2E_EXECUTION_SEED_EVIDENCE="$E2E_SEED_DIR/e2e-seed-evidence.json" \
+            TIJARA_E2E_EXECUTION_PROFILE_EVIDENCE="$E2E_PROFILE_DIR/staging-e2e-profile.json" \
+            TIJARA_E2E_EXECUTION_E2E_DIR="$E2E_DIR" \
+            TIJARA_E2E_EXECUTION_READINESS_EVIDENCE="$E2E_DIR/e2e-readiness.json" \
+            TIJARA_E2E_EXECUTION_PLAYWRIGHT_JSON="$E2E_DIR/playwright-results.json" \
+            TIJARA_E2E_EXECUTION_E2E_SUMMARY="$E2E_DIR/summary.md" \
+            TIJARA_E2E_EXECUTION_SIGNOFF_READINESS="$READINESS_FILE" \
+            TIJARA_E2E_EXECUTION_ORCH_STATUS="$STATUS_FILE" \
+            make e2e-execution-evidence
+        ;;
+    *)
+        record_status "e2e-execution" "skipped" "0" "" "execution combiner not requested"
+        ;;
+esac
+
 passed_count="$(awk -F '\t' '$2 == "passed" {count++} END {print count + 0}' "$STATUS_FILE")"
 failed_count="$(awk -F '\t' '$2 == "failed" {count++} END {print count + 0}' "$STATUS_FILE")"
 overall_status="passed"
@@ -278,6 +316,7 @@ fi
     echo "- Browser E2E seed evidence: $E2E_SEED_DIR"
     echo "- Browser E2E profile evidence: $E2E_PROFILE_DIR"
     echo "- Browser E2E evidence: $E2E_DIR"
+    echo "- Browser E2E execution evidence: $E2E_EXECUTION_DIR"
     echo "- Operations evidence: $OPS_DIR"
     echo "- Deployment environment evidence: $ENV_PROTECTION_DIR"
     echo "- Tenant operations evidence: $TENANT_OPS_DIR"

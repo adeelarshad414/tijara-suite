@@ -36,8 +36,8 @@ and writes evidence under `deploy/runtime/e2e-evidence/<run-id>/`:
 
 `e2e-readiness.json` records the selected scope, required environment
 variables with secret values masked, selected specs, and optional POS/refund
-flags. The release sign-off pack extracts seed, profile, and readiness evidence
-under `e2e_seed_reviews`, `e2e_profile_reviews`, and
+flags. The release sign-off pack extracts seed, profile, execution, and readiness evidence
+under `e2e_seed_reviews`, `e2e_profile_reviews`, `e2e_execution_reviews`, and
 `e2e_readiness_reviews`.
 
 Use `TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display routes only,
@@ -80,6 +80,23 @@ The profile evidence writes `staging-e2e-profile.json`, `status.tsv`,
 `env-summary.txt`, and `summary.md` under
 `deploy/runtime/e2e-profile/<run-id>/`. The sign-off pack extracts it under
 `e2e_profile_reviews`.
+
+After a staging browser run and sign-off package are available, correlate the
+whole Browser E2E chain:
+
+```bash
+TIJARA_E2E_EXECUTION_RUN_ID=staging-pos-seed-001 \
+TIJARA_E2E_EXECUTION_STRICT=1 \
+TIJARA_E2E_EXECUTION_SEED_EVIDENCE=deploy/runtime/e2e-seed/staging-pos-seed-001/e2e-seed-evidence.json \
+TIJARA_E2E_EXECUTION_PROFILE_EVIDENCE=deploy/runtime/e2e-profile/staging-pos-seed-001/staging-e2e-profile.json \
+TIJARA_E2E_EXECUTION_E2E_DIR=deploy/runtime/e2e-evidence/staging-pos-seed-001 \
+TIJARA_E2E_EXECUTION_SIGNOFF_READINESS=deploy/runtime/signoff-packages/staging-pos-seed-001/release-readiness.json \
+make e2e-execution-evidence
+```
+
+Execution evidence writes `e2e-execution-evidence.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/e2e-execution/<run-id>/`.
 
 Useful environment variables:
 

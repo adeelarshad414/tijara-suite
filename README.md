@@ -378,6 +378,10 @@ The detailed policy and dependency intake checklist are maintained in
   browser evidence runs for POS, refund, print, customer display, offline
   replay, kiosk, public display coverage, and the authenticated enterprise POS
   journey spec.
+- `scripts/export_e2e_execution_evidence.py`, `make e2e-execution-evidence`,
+  and `npm run test:e2e:execution` correlate seed, profile, readiness,
+  Playwright JSON, E2E summary, sign-off readiness, and staging orchestration
+  evidence under one Browser E2E execution decision.
 - `scripts/export_staging_e2e_profile.py`, `make staging-e2e-profile`, and
   `npm run test:e2e:profile` validate live staging E2E profile readiness,
   including seed env/evidence, required credentials, selected specs, optional
@@ -436,9 +440,10 @@ The detailed policy and dependency intake checklist are maintained in
   review under `deploy/runtime/signoff-packages/`, with optional
   required-evidence group guardrails for release, E2E, operations, security,
   hardware, FBR, and PSP evidence. PSP/FBR readiness manifests, FBR fixture
-  smoke evidence, E2E seed/profile/readiness evidence, monitoring, incident runbook,
-  release retention, secret manager, secret runtime, deployment environment,
-  and load evidence are extracted into readiness reviews for approvers and CI.
+  smoke evidence, E2E seed/profile/execution/readiness evidence, monitoring,
+  incident runbook, release retention, secret manager, secret runtime,
+  deployment environment, and load evidence are extracted into readiness
+  reviews for approvers and CI.
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.
@@ -446,7 +451,8 @@ The detailed policy and dependency intake checklist are maintained in
   sequence optional E2E seeding, optional staging E2E profile preflight,
   staging release-candidate evidence, browser E2E evidence, operations evidence,
   deployment environment evidence, sign-off package generation, readiness
-  checking, and artifact path reporting under one run ID.
+  checking, optional E2E execution evidence, and artifact path reporting under
+  one run ID.
 - `scripts/export_e2e_readiness.py`, used by `make e2e-staging`, writes
   authenticated POS/refund/print browser readiness evidence with secret-masked
   required-variable checks before Playwright starts.

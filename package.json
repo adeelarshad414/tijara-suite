@@ -7,6 +7,7 @@
     "test:e2e": "playwright test",
     "test:e2e:staging": "bash scripts/run_staging_e2e.sh",
     "test:e2e:profile": "python3 scripts/export_staging_e2e_profile.py",
+    "test:e2e:execution": "python3 scripts/export_e2e_execution_evidence.py",
     "ops:staging": "bash scripts/run_staging_ops_checks.sh",
     "ops:release-bundle": "python3 scripts/run_operations_release_bundle.py",
     "release:candidate": "bash scripts/run_release_candidate_gate.sh",

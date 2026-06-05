@@ -5500,3 +5500,86 @@ Date: 2026-06-05
 - Then execute checkout, refund barcode scan, receipt print, customer display,
   and offline replay against a reachable staging Odoo when credentials are
   available.
+
+## Iteration 78: Browser E2E Execution Evidence Combiner
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_e2e_execution_evidence.py` to correlate Browser E2E
+  seed, profile, readiness, Playwright JSON, E2E summary, sign-off readiness,
+  and optional staging orchestration status under one run ID.
+- The execution combiner writes `e2e-execution-evidence.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md`, with strict CI outcomes for ready,
+  warning, blocked, and failed execution evidence.
+- Added `make e2e-execution-evidence` and `npm run test:e2e:execution` entry
+  points for local, CI, and staging release use.
+- Enhanced `scripts/generate_signoff_pack.py` so execution evidence is grouped
+  as Browser E2E evidence, extracted into `e2e_execution_reviews`, and included
+  in release readiness blocking/warning decisions.
+- Enhanced `scripts/run_staging_release_signoff.sh` with optional execution
+  evidence generation through `TIJARA_STAGING_RELEASE_EXECUTION_EVIDENCE=1`.
+- The staging wrapper can now attach pre-existing execution evidence with
+  `TIJARA_STAGING_RELEASE_INCLUDE_E2E_EXECUTION=1` or by setting
+  `TIJARA_E2E_EXECUTION_OUTPUT`.
+- Updated `README.md`, `DEPLOY.md`, and `tests/e2e/README.md` with the Browser
+  E2E seed, profile, execution, readiness, and sign-off workflow.
+
+### Validation
+
+- `bash -n scripts/run_staging_release_signoff.sh` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_e2e_execution_evidence.py scripts/generate_signoff_pack.py`
+  passes.
+- Strict synthetic ready execution evidence passes at
+  `/private/tmp/tijara-e2e-execution-ready` with `decision=ready` and
+  `ci_status=pass`.
+- Strict synthetic blocked execution evidence blocks at
+  `/private/tmp/tijara-e2e-execution-blocked` because the E2E summary is failed
+  and Playwright reports unexpected tests.
+- Generated sign-off packages at
+  `/private/tmp/tijara-signoff-e2e-execution-ready` and
+  `/private/tmp/tijara-signoff-e2e-execution-blocked`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-e2e-execution-ready/release-readiness.json` passes
+  with `decision=ready` and `ci_status=pass`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-e2e-execution-blocked/release-readiness.json`
+  blocks as expected with `decision=blocked` and `ci_status=fail`.
+- Execution-enabled staging wrapper smoke passes at
+  `/private/tmp/tijara-staging-wrapper-execution-smoke`.
+- The wrapper smoke records `e2e-execution: passed` and writes correlated
+  execution evidence under
+  `/private/tmp/tijara-staging-wrapper-execution-smoke/e2e-execution/staging-wrapper-execution-smoke`.
+- Wrapper release readiness is `warning/pass_with_warnings` only because local
+  deployment environment references were intentionally unset.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The execution combiner correlates and gates evidence; it still does not run a
+  live browser checkout/refund/print/offline replay by itself.
+- Live staging E2E still needs a reachable Odoo URL, credentials, seeded POS
+  config/display slugs, Playwright browser dependencies, and optional hardware
+  bridge availability for print evidence.
+- Full production readiness still depends on FBR certified-provider sandbox/live
+  validation, PSP certification, physical hardware certification, monitoring,
+  alerting, load testing, backup restore drills, and deeper security scans.
+
+### Next Iteration
+
+- Run the full seed/profile/execution-enabled staging wrapper against a
+  reachable staging Odoo environment with the staging POS user.
+- Attach live checkout, refund barcode scan, receipt print, customer display,
+  and offline replay browser results into the execution evidence chain.
+- Continue production hardening with observability, restore-drill, load-test,
+  and security-scan evidence gates.

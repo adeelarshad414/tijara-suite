@@ -854,6 +854,25 @@ with `TIJARA_RUN_DIRECT_POS_CLICKTHROUGH=1`,
 `TIJARA_RUN_DIRECT_POS_VALIDATE_E2E=1`, and
 `TIJARA_RUN_DIRECT_REFUND_FORM_E2E=1`.
 
+Correlate seed, profile, browser E2E, and sign-off evidence after a staging run:
+
+```bash
+TIJARA_E2E_EXECUTION_RUN_ID=staging-pos-seed-001 \
+TIJARA_E2E_EXECUTION_STRICT=1 \
+TIJARA_E2E_EXECUTION_SEED_EVIDENCE=deploy/runtime/e2e-seed/staging-pos-seed-001/e2e-seed-evidence.json \
+TIJARA_E2E_EXECUTION_PROFILE_EVIDENCE=deploy/runtime/e2e-profile/staging-pos-seed-001/staging-e2e-profile.json \
+TIJARA_E2E_EXECUTION_E2E_DIR=deploy/runtime/e2e-evidence/staging-pos-seed-001 \
+TIJARA_E2E_EXECUTION_SIGNOFF_READINESS=deploy/runtime/signoff-packages/staging-pos-seed-001/release-readiness.json \
+make e2e-execution-evidence
+```
+
+The combiner writes `e2e-execution-evidence.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/e2e-execution/<run-id>/`. Because it references final
+`release-readiness.json`, it normally runs after the sign-off package is
+generated; attach it to a follow-up/final sign-off package when release owners
+want one Browser E2E execution decision for the whole chain.
+
 ## CI, Security, and Load Smoke
 
 The first GitHub Actions workflow is `.github/workflows/tijara-ci.yml`. Local
@@ -1144,6 +1163,7 @@ the staging E2E, Odoo, monitoring, restore, and provider/device variables:
 TIJARA_STAGING_RELEASE_RUN_ID=2026-06-05-rc1 \
 TIJARA_STAGING_RELEASE_SEED_E2E=1 \
 TIJARA_STAGING_RELEASE_PROFILE_E2E=1 \
+TIJARA_STAGING_RELEASE_EXECUTION_EVIDENCE=1 \
 TIJARA_E2E_PROFILE_STRICT=1 \
 TIJARA_E2E_PROFILE_REQUIRE_SEED=1 \
 TIJARA_STAGING_RELEASE_CHECKS=full \
@@ -1189,6 +1209,8 @@ The wrapper keeps a single run ID across:
   `TIJARA_STAGING_RELEASE_PROFILE_E2E=1` or
   `TIJARA_STAGING_RELEASE_INCLUDE_E2E_PROFILE=1`.
 - `deploy/runtime/e2e-evidence/<run-id>/`
+- `deploy/runtime/e2e-execution/<run-id>/` when
+  `TIJARA_STAGING_RELEASE_EXECUTION_EVIDENCE=1`.
 - `deploy/runtime/ops-evidence/<run-id>/`
 - `deploy/runtime/release-retention-evidence/<run-id>/` when exported
   separately or nested under an operations release bundle.
@@ -1208,6 +1230,9 @@ the sign-off package.
 When `TIJARA_STAGING_RELEASE_PROFILE_E2E=1`, the wrapper runs
 `make staging-e2e-profile` after seed env sourcing and appends profile evidence
 to the sign-off package.
+When `TIJARA_STAGING_RELEASE_EXECUTION_EVIDENCE=1`, the wrapper runs
+`make e2e-execution-evidence` after sign-off readiness checking so the combiner
+can reference the final `release-readiness.json`.
 Tenant operations evidence is opt-in for the wrapper. Set
 `TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS` to one or more comma-separated
 tenant artifact directories, or set `TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS=1`
@@ -1309,9 +1334,10 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   `psp_readiness_reviews`; when FBR readiness evidence is attached,
   certified-provider readiness is included under `fbr_readiness_reviews`; when
   FBR fixture smoke evidence is attached, response fixture coverage is included
-  under `fbr_fixture_reviews`; when browser E2E seed, profile, or readiness
-  evidence is attached, reviews are included under `e2e_seed_reviews`,
-  `e2e_profile_reviews`, and `e2e_readiness_reviews`; when monitoring evidence is attached,
+  under `fbr_fixture_reviews`; when browser E2E seed, profile, execution, or
+  readiness evidence is attached, reviews are included under
+  `e2e_seed_reviews`, `e2e_profile_reviews`, `e2e_execution_reviews`, and
+  `e2e_readiness_reviews`; when monitoring evidence is attached,
   observability reviews are included under
   `monitoring_reviews`; when incident runbook evidence is attached, ownership
   and response references are included under `incident_runbook_reviews`; when

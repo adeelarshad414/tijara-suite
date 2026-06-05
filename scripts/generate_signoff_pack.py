@@ -377,10 +377,12 @@ def _evidence_group(entry):
         "e2e-evidence/" in relative
         or "e2e-seed/" in relative_lower
         or "e2e-profile/" in relative_lower
+        or "e2e-execution/" in relative_lower
         or filename in {
             "e2e-readiness.json",
             "e2e-seed-evidence.json",
             "staging-e2e-profile.json",
+            "e2e-execution-evidence.json",
         }
     ):
         return "Browser E2E"
@@ -712,6 +714,42 @@ def _e2e_profile_reviews(evidence_entries):
                 ],
                 "seed_evidence_decision": payload.get("seed_evidence_decision", ""),
                 "probe_status": (payload.get("probe_result") or {}).get("status", ""),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
+def _e2e_execution_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "e2e-execution-evidence.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        review_map = payload.get("reviews") or {}
+        playwright = review_map.get("playwright") or {}
+        signoff = review_map.get("signoff") or {}
+        orchestration = review_map.get("orchestration") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "run_id": context.get("run_id", ""),
+                "target_environment": context.get("target_environment", ""),
+                "strict": bool(context.get("strict")),
+                "seed_decision": (review_map.get("seed") or {}).get("decision", ""),
+                "profile_decision": (review_map.get("profile") or {}).get("decision", ""),
+                "readiness_decision": (review_map.get("readiness") or {}).get("decision", ""),
+                "e2e_summary_status": (review_map.get("e2e_summary") or {}).get("status", ""),
+                "playwright_unexpected": (playwright.get("stats") or {}).get("unexpected", 0),
+                "playwright_interrupted": (playwright.get("stats") or {}).get("interrupted", 0),
+                "playwright_skipped": (playwright.get("stats") or {}).get("skipped", 0),
+                "signoff_decision": signoff.get("decision", ""),
+                "orchestration_failed_steps": orchestration.get("failed_steps") or [],
                 "blockers": payload.get("blockers") or [],
                 "warnings": payload.get("warnings") or [],
             }
@@ -1188,6 +1226,7 @@ def _evidence_summary(context, evidence_entries):
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
+    e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
@@ -1438,6 +1477,45 @@ def _evidence_summary(context, evidence_entries):
         e2e_profile_lines.append("")
     if not e2e_profile_lines:
         e2e_profile_lines = ["- No `staging-e2e-profile.json` files were attached.", ""]
+
+    e2e_execution_lines = []
+    for review in e2e_execution_reviews:
+        e2e_execution_lines.append("### `%s`" % review["path"])
+        e2e_execution_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        e2e_execution_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        e2e_execution_lines.append(
+            "- Run/environment/strict: %s/%s/%s"
+            % (
+                review["run_id"] or "unset",
+                review["target_environment"] or "unset",
+                "yes" if review["strict"] else "no",
+            )
+        )
+        e2e_execution_lines.append(
+            "- Seed/profile/readiness/signoff: %s/%s/%s/%s"
+            % (
+                review["seed_decision"] or "unset",
+                review["profile_decision"] or "unset",
+                review["readiness_decision"] or "unset",
+                review["signoff_decision"] or "unset",
+            )
+        )
+        e2e_execution_lines.append(
+            "- E2E summary/playwright unexpected/interrupted/skipped: %s/%s/%s/%s"
+            % (
+                review["e2e_summary_status"] or "unset",
+                review["playwright_unexpected"],
+                review["playwright_interrupted"],
+                review["playwright_skipped"],
+            )
+        )
+        e2e_execution_lines.append(
+            "- Failed orchestration steps: %s"
+            % (", ".join(review["orchestration_failed_steps"]) or "none")
+        )
+        e2e_execution_lines.append("")
+    if not e2e_execution_lines:
+        e2e_execution_lines = ["- No `e2e-execution-evidence.json` files were attached.", ""]
 
     e2e_readiness_lines = []
     for review in e2e_readiness_reviews:
@@ -1900,6 +1978,9 @@ def _evidence_summary(context, evidence_entries):
 ## Browser E2E Profile Evidence
 
 {chr(10).join(e2e_profile_lines)}
+## Browser E2E Execution Evidence
+
+{chr(10).join(e2e_execution_lines)}
 ## Browser E2E Readiness Evidence
 
 {chr(10).join(e2e_readiness_lines)}
@@ -1960,6 +2041,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
+    e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
@@ -2080,6 +2162,13 @@ def _release_readiness(context, evidence_entries, group_counts):
             blockers.append("Browser E2E profile %s is %s" % (review["path"], review["decision"]))
         elif decision in {"warning", "warn"}:
             warnings.append("Browser E2E profile %s is %s" % (review["path"], review["decision"]))
+
+    for review in e2e_execution_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"blocked", "failed"}:
+            blockers.append("Browser E2E execution %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Browser E2E execution %s is %s" % (review["path"], review["decision"]))
 
     for review in e2e_readiness_reviews:
         decision = str(review.get("decision") or "").lower()
@@ -2242,6 +2331,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "fbr_fixture_reviews": fbr_fixture_reviews,
         "e2e_seed_reviews": e2e_seed_reviews,
         "e2e_profile_reviews": e2e_profile_reviews,
+        "e2e_execution_reviews": e2e_execution_reviews,
         "e2e_readiness_reviews": e2e_readiness_reviews,
         "monitoring_reviews": monitoring_reviews,
         "incident_runbook_reviews": incident_runbook_reviews,
