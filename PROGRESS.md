@@ -1826,3 +1826,79 @@ Date: 2026-06-05
   settlement close SOP.
 - Continue toward staging execution: browser E2E, monitoring drill, restore
   drill, load smoke, and security scan runs.
+
+## Iteration 25: Finance Account Mapping and Draft Accounting Moves
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added company-level payment accounting configuration:
+  - Payment accounting journal.
+  - PSP clearing account.
+  - Payment counterpart account.
+  - Provider fee expense account.
+  - Refund/credit-note account.
+  - Chargeback receivable account.
+  - Chargeback fee expense account.
+  - Write-off expense account.
+- Added guarded accounting move creation on
+  `tijara.saas.payment.accounting.action`:
+  - Approved actions can create balanced draft Odoo journal entries.
+  - Draft move creation is blocked until the required finance configuration is
+    present.
+  - Manual-review actions intentionally refuse automatic move creation.
+  - Existing draft moves are reused to avoid duplicate accounting entries.
+  - Draft move creator/time and audit hash are tracked.
+- Added accounting routes for payout clearing, provider fees,
+  refund/credit-note clearing, refund payment clearing, chargeback receivable,
+  chargeback fee, and write-off actions.
+- Added back-office UI:
+  - Company form finance account fields.
+  - Payment Accounting Action buttons for `Create Draft Move` and `Post Move`.
+  - Search/list visibility for approved actions that still need a draft move.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 74 XML files parse successfully.
+- Isolated Docker/Odoo transaction suite passed with `0 failed, 0 error(s)` of
+  31 tests for `tijara_saas_control`, `tijara_retail_core`, `tijara_pos_pk`,
+  `tijara_pos_experience`, and `tijara_analytics`.
+- New Odoo transaction tests cover:
+  - Approved accounting actions refusing draft move creation when finance
+    configuration is missing.
+  - Approved provider fee actions creating balanced draft journal entries from
+    configured company accounts.
+  - Re-running draft move creation reuses the existing move.
+  - Manual-review actions refusing automatic accounting moves.
+
+### Known Gaps
+
+- Draft journal entries exist, but production posting policy still needs
+  finance sign-off for each PSP, bank, tax, refund, and write-off scenario.
+- Credit-note and refund-payment specialization is still modeled as draft
+  journal-entry foundation rather than full tax-aware payment workflows.
+- PSP settlement parser certification still needs signed-off JazzCash,
+  Easypaisa, Stripe, and bank statement samples.
+- FBR certified-provider sandbox/live sign-off remains pending.
+- Physical hardware certification, staging browser E2E, monitoring drills,
+  backup restore drills, load testing, dependency/container scans, and security
+  review still need staging/production execution.
+
+### Next Iteration
+
+- Add finance batch actions to create draft moves for all approved settlement
+  or dispute accounting actions in one operator step.
+- Add specialized refund/credit-note and refund-payment workflows where Odoo
+  accounting/tax treatment requires customer documents instead of journal
+  entries.
+- Add staging browser E2E execution for POS checkout, refund barcode scan,
+  receipt print-to-bridge, customer display, and offline replay.
+- Run monitoring drill, restore drill, load smoke, dependency/container scans,
+  and security audit against a prepared staging stack.
+- Continue PSP/FBR certification work once real provider samples, credentials,
+  and compliance contracts are available.

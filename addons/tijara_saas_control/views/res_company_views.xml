@@ -1,0 +1,20 @@
+<odoo>
+    <record id="view_company_form_tijara_saas_accounting" model="ir.ui.view">
+        <field name="name">res.company.form.tijara.saas.accounting</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='currency_id']" position="after">
+                <separator string="Tijara Payment Accounting"/>
+                <field name="tijara_payment_accounting_journal_id"/>
+                <field name="tijara_payment_clearing_account_id"/>
+                <field name="tijara_payment_counterpart_account_id"/>
+                <field name="tijara_provider_fee_account_id"/>
+                <field name="tijara_refund_account_id"/>
+                <field name="tijara_chargeback_receivable_account_id"/>
+                <field name="tijara_chargeback_fee_account_id"/>
+                <field name="tijara_writeoff_account_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -154,7 +154,10 @@ attachments, observed serials, driver/firmware versions, operator signatures,
 execution checks, bridge job ids, response codes, durations, and reproducible
 evidence hashes. SaaS runtime enforcement can block B2B,
 queue, promotion display, and customer display features when enabled. Public kiosk/display routes
-serve menu, deal, promotion, customer-display, and queue screen payloads. The
+serve menu, deal, promotion, customer-display, and queue screen payloads. Payment
+settlement closeout now has finance approval actions that can create guarded
+draft Odoo journal entries from configured provider clearing, fee, refund,
+chargeback, write-off, and counterpart accounts. The
 kiosk route now includes a real self-ordering cart and checkout foundation that
 creates auditable kiosk orders, queue tickets when the tenant has the queue
 feature, and linked Odoo POS orders/payments when a kiosk profile is mapped to a
@@ -241,6 +244,9 @@ The retail operations layer now includes:
 - Payment settlement parser profiles for JSON/CSV provider statements, finance
   accounting action records, approval gates, and audit hashes for payout
   clearing, provider fees, refunds, chargebacks, and write-off review.
+- Finance account mapping on the company record plus guarded draft Odoo journal
+  move creation for approved provider fee, payout clearing, refund,
+  chargeback, and write-off accounting actions.
 - FBR dry-run/live HTTP adapter foundation for queued invoices with certified
   provider metadata and compliance evidence fields.
 - Offline POS queue foundation with payload hashing, validation, duplicate

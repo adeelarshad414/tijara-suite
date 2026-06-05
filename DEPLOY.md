@@ -294,6 +294,10 @@ price or a billing override amount. Operators can:
   payments, chargeback receivables, chargeback fees, write-off review, and
   manual review. Settlement batches cannot be marked reconciled while finance
   approval is required and generated actions are missing or unapproved.
+- Configure finance accounts on the company record and create draft Odoo
+  journal entries from approved accounting actions. The system refuses draft
+  move creation until the payment accounting journal and required clearing,
+  counterpart, fee, refund, chargeback, and write-off accounts are configured.
 
 Set `TIJARA_PAYMENT_WEBHOOK_SECRET` in the secret store or set the Odoo system
 parameter `tijara.saas.payment_webhook_secret`. Provider requests must include
@@ -328,8 +332,39 @@ Settlement import flow:
 7. Run `Generate Finance Actions` and review payout clearing, fee, refund,
    chargeback, write-off, or manual-review actions.
 8. Run `Approve Finance` after finance review.
-9. Mark the batch reconciled only after all lines are matched, no mismatch
+9. On each approved accounting action, run `Create Draft Move` after finance
+   configuration is complete. Review draft journal lines before posting.
+10. Mark the batch reconciled only after all lines are matched, no mismatch
    remains, and finance approval status is approved.
+
+Finance account setup:
+
+1. Open Settings > Companies and edit the tenant company.
+2. Configure `Tijara Payment Accounting Journal` as the general journal used
+   for PSP settlement entries.
+3. Configure `Tijara PSP Clearing Account` for provider settlement clearing.
+4. Configure `Tijara Payment Counterpart Account` for the bank/suspense side of
+   payout clearing.
+5. Configure provider fee expense, refund/credit-note, chargeback receivable,
+   chargeback fee expense, and write-off expense accounts.
+6. Run a staging settlement import and create draft moves for every action type
+   before enabling production closeout.
+
+Month-end settlement close SOP:
+
+1. Import final PSP/bank statements for JazzCash, Easypaisa, Stripe, and manual
+   bank transfers.
+2. Match all settlement lines to webhooks, subscriptions, invoices, or approved
+   manual references.
+3. Open refund/chargeback cases, attach evidence, and resolve won/lost/refunded
+   outcomes before finance close.
+4. Generate and approve finance accounting actions.
+5. Create draft accounting moves from approved actions.
+6. Review draft moves against provider statements, bank statements, tax
+   treatment, and write-off policy.
+7. Post reviewed moves through normal Odoo accounting controls.
+8. Mark settlement batches reconciled and archive provider statements, evidence
+   hashes, and closeout notes.
 
 Refund and chargeback workflow:
 
@@ -346,8 +381,9 @@ Refund and chargeback workflow:
 - `Approve Finance` stamps the approval user/time and refreshes action hashes.
 
 Production still needs real PSP statement samples for parser certification,
-automatic journal/credit-note/payment posting with configured accounts, PSP
-certification, and formal finance reconciliation SOP sign-off.
+full finance sign-off for posting policy, automatic credit-note/refund-payment
+specialization where required by tax treatment, PSP certification, and formal
+finance reconciliation SOP sign-off.
 
 ## SaaS Enforcement
 

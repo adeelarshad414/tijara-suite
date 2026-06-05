@@ -39,6 +39,64 @@ class TestTijaraSaasEnforcement(TransactionCase):
             }
         )
 
+    def _create_account(self, name, code, account_type):
+        account_model = self.env["account.account"].with_company(self.company)
+        values = {
+            "name": name,
+            "code": code,
+            "account_type": account_type,
+        }
+        if "company_ids" in account_model._fields:
+            values["company_ids"] = [(6, 0, [self.company.id])]
+        elif "company_id" in account_model._fields:
+            values["company_id"] = self.company.id
+        return account_model.create(values)
+
+    def _configure_payment_accounting(self):
+        clearing = self._create_account("Tijara PSP Clearing", "TJP001", "asset_current")
+        counterpart = self._create_account("Tijara PSP Counterpart", "TJP002", "asset_current")
+        provider_fee = self._create_account("Tijara PSP Fees", "TJP003", "expense")
+        refund = self._create_account("Tijara Refunds", "TJP004", "expense")
+        chargeback_receivable = self._create_account(
+            "Tijara Chargeback Receivable",
+            "TJP005",
+            "asset_current",
+        )
+        chargeback_fee = self._create_account("Tijara Chargeback Fees", "TJP006", "expense")
+        writeoff = self._create_account("Tijara Write-Offs", "TJP007", "expense")
+        journal_values = {
+            "name": "Tijara PSP Accounting",
+            "code": "TJPA",
+            "type": "general",
+            "company_id": self.company.id,
+        }
+        journal_model = self.env["account.journal"].with_company(self.company)
+        if "default_account_id" in journal_model._fields:
+            journal_values["default_account_id"] = clearing.id
+        journal = journal_model.create(journal_values)
+        self.company.write(
+            {
+                "tijara_payment_accounting_journal_id": journal.id,
+                "tijara_payment_clearing_account_id": clearing.id,
+                "tijara_payment_counterpart_account_id": counterpart.id,
+                "tijara_provider_fee_account_id": provider_fee.id,
+                "tijara_refund_account_id": refund.id,
+                "tijara_chargeback_receivable_account_id": chargeback_receivable.id,
+                "tijara_chargeback_fee_account_id": chargeback_fee.id,
+                "tijara_writeoff_account_id": writeoff.id,
+            }
+        )
+        return {
+            "journal": journal,
+            "clearing": clearing,
+            "counterpart": counterpart,
+            "provider_fee": provider_fee,
+            "refund": refund,
+            "chargeback_receivable": chargeback_receivable,
+            "chargeback_fee": chargeback_fee,
+            "writeoff": writeoff,
+        }
+
     def test_saas_feature_enforcement_blocks_starter_and_allows_enterprise(self):
         subscription = self._subscription(self.starter_plan)
 
@@ -470,6 +528,69 @@ class TestTijaraSaasEnforcement(TransactionCase):
 
         self.assertEqual(case.finance_approval_status, "approved")
         self.assertTrue(all(action.audit_hash for action in case.accounting_action_ids))
+
+    def test_accounting_action_requires_finance_config_before_draft_move(self):
+        action = self.env["tijara.saas.payment.accounting.action"].create(
+            {
+                "action_type": "provider_fee",
+                "provider": "stripe",
+                "company_id": self.company.id,
+                "amount": 75,
+            }
+        )
+        action.action_approve()
+
+        with self.assertRaises(UserError):
+            action.action_create_draft_accounting_move()
+
+        self.assertFalse(action.accounting_move_id)
+        self.assertEqual(action.status, "approved")
+
+    def test_approved_accounting_action_creates_balanced_draft_move(self):
+        config = self._configure_payment_accounting()
+        action = self.env["tijara.saas.payment.accounting.action"].create(
+            {
+                "action_type": "provider_fee",
+                "provider": "stripe",
+                "company_id": self.company.id,
+                "amount": 75,
+            }
+        )
+        action.action_approve()
+
+        action.action_create_draft_accounting_move()
+        move = action.accounting_move_id
+
+        self.assertTrue(move)
+        self.assertEqual(move.state, "draft")
+        self.assertEqual(move.journal_id, config["journal"])
+        self.assertEqual(move.company_id, self.company)
+        self.assertEqual(sum(move.line_ids.mapped("debit")), 75)
+        self.assertEqual(sum(move.line_ids.mapped("credit")), 75)
+        self.assertIn(config["provider_fee"], move.line_ids.mapped("account_id"))
+        self.assertIn(config["clearing"], move.line_ids.mapped("account_id"))
+        self.assertEqual(action.status, "approved")
+        self.assertTrue(action.audit_hash)
+
+        action.action_create_draft_accounting_move()
+        self.assertEqual(action.accounting_move_id, move)
+
+    def test_manual_review_action_does_not_create_automatic_move(self):
+        self._configure_payment_accounting()
+        action = self.env["tijara.saas.payment.accounting.action"].create(
+            {
+                "action_type": "manual_review",
+                "provider": "manual",
+                "company_id": self.company.id,
+                "amount": 100,
+            }
+        )
+        action.action_approve()
+
+        with self.assertRaises(UserError):
+            action.action_create_draft_accounting_move()
+
+        self.assertFalse(action.accounting_move_id)
 
     def test_dunning_suspends_after_grace_period(self):
         subscription = self._subscription(self.enterprise_plan, state="active")

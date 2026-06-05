@@ -15,6 +15,7 @@
         "views/saas_plan_views.xml",
         "views/saas_subscription_views.xml",
         "views/tenant_provision_request_views.xml",
+        "views/res_company_views.xml",
         "views/payment_webhook_event_views.xml",
         "views/payment_accounting_action_views.xml",
         "views/payment_settlement_views.xml",

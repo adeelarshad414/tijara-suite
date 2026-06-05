@@ -18,6 +18,7 @@
                 <field name="invoice_id"/>
                 <filter name="pending" string="Pending Approval" domain="[('status', '=', 'pending_approval')]"/>
                 <filter name="approved" string="Approved" domain="[('status', 'in', ['approved', 'posted'])]"/>
+                <filter name="approved_without_move" string="Approved Without Move" domain="[('status', '=', 'approved'), ('accounting_move_id', '=', False)]"/>
                 <filter name="blocked" string="Blocked" domain="[('status', 'in', ['blocked', 'rejected'])]"/>
                 <group>
                     <filter name="group_by_provider" string="Provider" context="{'group_by': 'provider'}"/>
@@ -42,6 +43,7 @@
                 <field name="dispute_case_id"/>
                 <field name="subscription_id"/>
                 <field name="amount"/>
+                <field name="accounting_move_id"/>
                 <field name="requested_at"/>
                 <field name="approval_user_id"/>
                 <field name="status"/>
@@ -58,6 +60,8 @@
                     <button name="action_request_approval" type="object" string="Request Approval" invisible="status != 'draft'"/>
                     <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="status not in ('draft', 'pending_approval')"/>
                     <button name="action_reject" type="object" string="Reject" invisible="status not in ('draft', 'pending_approval')"/>
+                    <button name="action_create_draft_accounting_move" type="object" string="Create Draft Move" class="btn-primary" invisible="status != 'approved' or accounting_move_id"/>
+                    <button name="action_post_accounting_move" type="object" string="Post Move" invisible="status != 'approved' or not accounting_move_id"/>
                     <button name="action_mark_posted" type="object" string="Mark Posted" invisible="status not in ('approved', 'blocked')"/>
                     <button name="action_mark_blocked" type="object" string="Block" invisible="status in ('posted', 'blocked')"/>
                     <button name="action_refresh_audit_hash" type="object" string="Refresh Hash"/>
@@ -88,6 +92,8 @@
                         <field name="requested_at"/>
                         <field name="approval_user_id"/>
                         <field name="approved_at"/>
+                        <field name="draft_move_created_by_id"/>
+                        <field name="draft_move_created_at"/>
                         <field name="posted_at"/>
                     </group>
                     <notebook>
