@@ -5277,3 +5277,77 @@ Date: 2026-06-05
   offline replay E2E once staging credentials are available.
 - Continue production evidence wiring for monitoring, alerting, backups, restore
   drills, load testing, and security scans.
+
+## Iteration 75: Staging POS E2E Seed Evidence
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Hardened `scripts/e2e_seed.py` so printed `export` values are shell-quoted,
+  including product and payment method names with spaces.
+- Added `ODOO_DATABASE` to generated seed exports so browser E2E runs can source
+  a complete non-secret staging environment.
+- Added `scripts/export_e2e_seed_evidence.py` to parse seed output and write
+  `e2e-seed.env`, `status.tsv`, `summary.md`, and `e2e-seed-evidence.json`.
+- Enhanced `scripts/seed_e2e_odoo.sh` so every `make seed-e2e` run writes
+  auditable seed evidence under `deploy/runtime/e2e-seed/<run-id>/`.
+- Seed evidence now covers display, kiosk, customer display, POS config,
+  product, payment method, refund reason, report order, refund barcode, receipt
+  report URL, offline review URL, and the staging POS user secret requirement.
+- Enhanced `scripts/generate_signoff_pack.py` so `e2e-seed-evidence.json` is
+  classified as Browser E2E evidence and extracted into `e2e_seed_reviews`.
+- Release readiness now blocks on failed or blocked Browser E2E seed evidence.
+- Updated `README.md`, `DEPLOY.md`, and `tests/e2e/README.md` with the sourceable
+  seed env and sign-off evidence workflow.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/e2e_seed.py scripts/export_e2e_seed_evidence.py
+  scripts/generate_signoff_pack.py` passes.
+- `bash -n scripts/seed_e2e_odoo.sh` passes.
+- Synthetic ready seed output generates ready evidence at
+  `/private/tmp/tijara-e2e-seed-ready`.
+- Synthetic missing-password seed output blocks at
+  `/private/tmp/tijara-e2e-seed-blocked`.
+- `e2e-seed.env` shell-quotes values such as `E2E Bakery Bun` and `Cash PKR`.
+- Generated sign-off packages at
+  `/private/tmp/tijara-signoff-e2e-seed-ready` and
+  `/private/tmp/tijara-signoff-e2e-seed-blocked`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-e2e-seed-ready/release-readiness.json` passes with
+  `decision=ready` and `ci_status=pass`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-e2e-seed-blocked/release-readiness.json` blocks as
+  expected with `decision=blocked` and `ci_status=fail`.
+- Sign-off summaries include `Browser E2E Seed Evidence` and
+  `e2e_seed_reviews`.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The seed wrapper now prepares and proves staging E2E prerequisites, but live
+  checkout/refund/print browser execution still needs a reachable Odoo staging
+  server and operator-provided staging secret values.
+- The seed evidence records that `ODOO_PASSWORD` was provided; it intentionally
+  does not store the password in evidence or generated env files.
+- Real POS print-to-bridge still depends on a running hardware bridge and
+  physical or certified virtual device profile.
+- FBR/PSP certification, hardware certification, full monitoring drills, load
+  tests, and deeper security scans remain production blockers.
+
+### Next Iteration
+
+- Add a staging E2E orchestration wrapper that chains seed evidence, readiness
+  evidence, Playwright execution, and sign-off packaging under one run ID.
+- Then run live authenticated checkout, refund barcode scan, receipt print, and
+  offline replay E2E once staging credentials and Odoo URL are available.

@@ -1,4 +1,5 @@
 import os
+import shlex
 
 company = env.company
 env["ir.config_parameter"].sudo().set_param("tijara.saas.enforcement_enabled", "1")
@@ -23,6 +24,10 @@ def grant_groups(user, xmlids):
             elif "users" in group._fields:
                 group.sudo().write({"users": [(4, user.id)]})
     return groups
+
+
+def print_export(name, value):
+    print("export %s=%s" % (name, shlex.quote(str(value or ""))))
 
 enterprise_plan = env.ref("tijara_saas_control.plan_enterprise")
 customer = env["res.partner"].sudo().search([("name", "=", "Tijara E2E Billing Customer")], limit=1)
@@ -268,27 +273,28 @@ if pos_config and payment_method:
     except Exception as error:
         print("# Tijara E2E report POS order seed skipped: %s" % error)
 
-print("export TIJARA_DISPLAY_SLUG=tijara-e2e-menu")
-print("export TIJARA_KIOSK_SLUG=tijara-e2e-kiosk")
-print("export TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer")
-print("export TIJARA_E2E_PRODUCT_ID=%s" % product.id)
-print("export TIJARA_E2E_PRODUCT_NAME=%s" % product.display_name)
-print("export TIJARA_E2E_REFUND_REASON_ID=%s" % refund_reason.id)
-print("export TIJARA_REFUND_ACTION_URL=/odoo/action-tijara_retail_core.action_tijara_exchange_request")
-print("export TIJARA_OFFLINE_QUEUE_ACTION_URL=/odoo/action-tijara_pos_experience.action_tijara_offline_pos_review")
+print_export("ODOO_DATABASE", env.cr.dbname)
+print_export("TIJARA_DISPLAY_SLUG", "tijara-e2e-menu")
+print_export("TIJARA_KIOSK_SLUG", "tijara-e2e-kiosk")
+print_export("TIJARA_CUSTOMER_DISPLAY_SLUG", "tijara-e2e-customer")
+print_export("TIJARA_E2E_PRODUCT_ID", product.id)
+print_export("TIJARA_E2E_PRODUCT_NAME", product.display_name)
+print_export("TIJARA_E2E_REFUND_REASON_ID", refund_reason.id)
+print_export("TIJARA_REFUND_ACTION_URL", "/odoo/action-tijara_retail_core.action_tijara_exchange_request")
+print_export("TIJARA_OFFLINE_QUEUE_ACTION_URL", "/odoo/action-tijara_pos_experience.action_tijara_offline_pos_review")
 if e2e_password:
-    print("export ODOO_USERNAME=%s" % e2e_login)
+    print_export("ODOO_USERNAME", e2e_login)
     if e2e_groups:
         print("# E2E user groups: %s" % ", ".join(group.display_name for group in e2e_groups))
 if pos_config:
-    print("export TIJARA_POS_CONFIG_ID=%s" % pos_config.id)
+    print_export("TIJARA_POS_CONFIG_ID", pos_config.id)
     if payment_method:
-        print("export TIJARA_E2E_PAYMENT_METHOD_ID=%s" % payment_method.id)
-        print("export TIJARA_E2E_PAYMENT_METHOD_NAME=%s" % payment_method.display_name)
+        print_export("TIJARA_E2E_PAYMENT_METHOD_ID", payment_method.id)
+        print_export("TIJARA_E2E_PAYMENT_METHOD_NAME", payment_method.display_name)
 if e2e_pos_order:
-    print("export TIJARA_E2E_POS_ORDER_ID=%s" % e2e_pos_order.id)
-    print(
-        "export TIJARA_REPORT_ORDER_URL=/report/html/tijara_pos_pk.report_tijara_pos_receipt/%s"
-        % e2e_pos_order.id
+    print_export("TIJARA_E2E_POS_ORDER_ID", e2e_pos_order.id)
+    print_export(
+        "TIJARA_REPORT_ORDER_URL",
+        "/report/html/tijara_pos_pk.report_tijara_pos_receipt/%s" % e2e_pos_order.id,
     )
-    print("export TIJARA_E2E_REFUND_BARCODE=%s" % e2e_pos_order.tijara_invoice_barcode)
+    print_export("TIJARA_E2E_REFUND_BARCODE", e2e_pos_order.tijara_invoice_barcode)

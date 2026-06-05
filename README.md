@@ -222,8 +222,8 @@ DNS/ingress/admin/backup/monitoring operations manifests, generated
 Kubernetes/Nginx/DNS/TLS/backup/admin/smoke-test artifacts, and tenant
 operations evidence that can be attached to release sign-off; the staging
 release wrapper can include that evidence automatically when tenant artifact
-paths are supplied. The repo also includes Playwright browser E2E seed and
-checkout scaffolds, hardware certification records/profiles,
+paths are supplied. The repo also includes Playwright browser E2E seed,
+seed-evidence, and checkout scaffolds, hardware certification records/profiles,
 Prometheus/Blackbox/Alertmanager/Grafana/Loki monitoring config, staging
 monitoring drill script, restore-drill scripts, and container/dependency scan
 hooks. Authenticated staging browser evidence now includes an integrated POS
@@ -431,9 +431,9 @@ The detailed policy and dependency intake checklist are maintained in
   review under `deploy/runtime/signoff-packages/`, with optional
   required-evidence group guardrails for release, E2E, operations, security,
   hardware, FBR, and PSP evidence. PSP/FBR readiness manifests, FBR fixture
-  smoke evidence, monitoring, incident runbook, release retention, secret
-  manager, secret runtime, deployment environment, and load evidence are
-  extracted into readiness reviews for approvers and CI.
+  smoke evidence, E2E seed/readiness evidence, monitoring, incident runbook,
+  release retention, secret manager, secret runtime, deployment environment,
+  and load evidence are extracted into readiness reviews for approvers and CI.
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.
@@ -444,6 +444,10 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/export_e2e_readiness.py`, used by `make e2e-staging`, writes
   authenticated POS/refund/print browser readiness evidence with secret-masked
   required-variable checks before Playwright starts.
+- `scripts/export_e2e_seed_evidence.py`, used by `make seed-e2e`, writes
+  sourceable non-secret staging seed exports plus seed status, summary, and
+  release sign-off JSON for POS checkout, refund, receipt print, display,
+  kiosk, customer display, and offline replay browser setup.
 - `scripts/run_production_deployment_gate.py` and
   `make production-deployment-gate` generate deployment gate evidence from a
   staging sign-off package, including required deployment environment evidence,
@@ -477,7 +481,9 @@ The detailed policy and dependency intake checklist are maintained in
   production smoke, optional tenant rollout, optional tenant smoke, monitoring,
   and incident runbook evidence under one operations run ID for release sign-off.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
-  customer-display, and offline POS replay browser tests.
+  customer-display, POS checkout, refund barcode, receipt print, and offline
+  POS replay browser tests, then writes E2E seed evidence under
+  `deploy/runtime/e2e-seed/`.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through
   the Odoo container module install path.
 - `scripts/generate_tenant_ops_manifest.py` generates tenant DNS, ingress,

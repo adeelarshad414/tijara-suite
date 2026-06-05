@@ -373,7 +373,11 @@ def _evidence_group(entry):
     filename = Path(entry["path"]).name
     if "release-evidence/" in relative:
         return "Release Candidate"
-    if "e2e-evidence/" in relative or filename == "e2e-readiness.json":
+    if (
+        "e2e-evidence/" in relative
+        or "e2e-seed/" in relative_lower
+        or filename in {"e2e-readiness.json", "e2e-seed-evidence.json"}
+    ):
         return "Browser E2E"
     if (
         "ops-evidence/" in relative
@@ -631,6 +635,33 @@ def _e2e_readiness_reviews(evidence_entries):
                     for item in optional_flags
                     if item.get("enabled")
                 ],
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
+def _e2e_seed_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "e2e-seed-evidence.json":
+            continue
+        payload = _read_json(path)
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "scope": payload.get("scope", ""),
+                "database": payload.get("database", ""),
+                "required_variable_count": len(payload.get("required_variables") or []),
+                "missing_variable_count": payload.get("missing_variable_count", 0),
+                "missing_variables": payload.get("missing_variables") or [],
+                "password_secret_required": bool(payload.get("password_secret_required")),
+                "password_secret_provided": bool(payload.get("password_secret_provided")),
+                "seeded_surfaces": payload.get("seeded_surfaces") or {},
                 "blockers": payload.get("blockers") or [],
                 "warnings": payload.get("warnings") or [],
             }
@@ -1105,6 +1136,7 @@ def _evidence_summary(context, evidence_entries):
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
+    e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
@@ -1262,6 +1294,53 @@ def _evidence_summary(context, evidence_entries):
         fbr_fixture_lines.append("")
     if not fbr_fixture_lines:
         fbr_fixture_lines = ["- No `fbr-fixture-smoke.json` files were attached.", ""]
+
+    e2e_seed_lines = []
+    for review in e2e_seed_reviews:
+        surfaces = review["seeded_surfaces"]
+        e2e_seed_lines.append("### `%s`" % review["path"])
+        e2e_seed_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        e2e_seed_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        e2e_seed_lines.append(
+            "- Scope/database/required/missing: %s/%s/%s/%s"
+            % (
+                review["scope"] or "unset",
+                review["database"] or "unset",
+                review["required_variable_count"],
+                review["missing_variable_count"],
+            )
+        )
+        e2e_seed_lines.append(
+            "- POS/product/payment/refund-barcode: %s/%s/%s/%s"
+            % (
+                surfaces.get("pos_config_id") or "unset",
+                surfaces.get("product_id") or "unset",
+                surfaces.get("payment_method_id") or "unset",
+                "yes" if surfaces.get("refund_barcode_present") else "no",
+            )
+        )
+        e2e_seed_lines.append(
+            "- Display/kiosk/customer-display: %s/%s/%s"
+            % (
+                surfaces.get("display_slug") or "unset",
+                surfaces.get("kiosk_slug") or "unset",
+                surfaces.get("customer_display_slug") or "unset",
+            )
+        )
+        e2e_seed_lines.append(
+            "- Password secret required/provided: %s/%s"
+            % (
+                "yes" if review["password_secret_required"] else "no",
+                "yes" if review["password_secret_provided"] else "no",
+            )
+        )
+        e2e_seed_lines.append(
+            "- Missing variables: %s"
+            % (", ".join(review["missing_variables"]) or "none")
+        )
+        e2e_seed_lines.append("")
+    if not e2e_seed_lines:
+        e2e_seed_lines = ["- No `e2e-seed-evidence.json` files were attached.", ""]
 
     e2e_readiness_lines = []
     for review in e2e_readiness_reviews:
@@ -1718,6 +1797,9 @@ def _evidence_summary(context, evidence_entries):
 ## FBR Fixture Evidence
 
 {chr(10).join(fbr_fixture_lines)}
+## Browser E2E Seed Evidence
+
+{chr(10).join(e2e_seed_lines)}
 ## Browser E2E Readiness Evidence
 
 {chr(10).join(e2e_readiness_lines)}
@@ -1776,6 +1858,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
+    e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
@@ -1882,6 +1965,13 @@ def _release_readiness(context, evidence_entries, group_counts):
             blockers.append("FBR fixture smoke %s is %s" % (review["path"], review["decision"]))
         elif decision in {"warning", "warn"}:
             warnings.append("FBR fixture smoke %s is %s" % (review["path"], review["decision"]))
+
+    for review in e2e_seed_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"blocked", "failed"}:
+            blockers.append("Browser E2E seed %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Browser E2E seed %s is %s" % (review["path"], review["decision"]))
 
     for review in e2e_readiness_reviews:
         decision = str(review.get("decision") or "").lower()
@@ -2042,6 +2132,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "psp_readiness_reviews": psp_readiness_reviews,
         "fbr_readiness_reviews": fbr_readiness_reviews,
         "fbr_fixture_reviews": fbr_fixture_reviews,
+        "e2e_seed_reviews": e2e_seed_reviews,
         "e2e_readiness_reviews": e2e_readiness_reviews,
         "monitoring_reviews": monitoring_reviews,
         "incident_runbook_reviews": incident_runbook_reviews,

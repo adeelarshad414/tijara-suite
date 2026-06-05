@@ -37,6 +37,7 @@ and writes evidence under `deploy/runtime/e2e-evidence/<run-id>/`:
 `e2e-readiness.json` records the selected scope, required environment
 variables with secret values masked, selected specs, and optional POS/refund
 flags. The release sign-off pack extracts it under `e2e_readiness_reviews`.
+Seed evidence from `make seed-e2e` is extracted under `e2e_seed_reviews`.
 
 Use `TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display routes only,
 `TIJARA_E2E_SCOPE=authenticated` for POS/refund/offline-report routes, or
@@ -47,25 +48,18 @@ for a controlled drill.
 Seed local/staging public-display data before the first run:
 
 ```bash
-TIJARA_E2E_PASSWORD=<staging-test-password> make seed-e2e DB=tijara_dev
-export TIJARA_DISPLAY_SLUG=tijara-e2e-menu
-export TIJARA_KIOSK_SLUG=tijara-e2e-kiosk
-export TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer
-export TIJARA_E2E_PRODUCT_ID=<printed-by-seed>
-export TIJARA_E2E_PRODUCT_NAME=<printed-by-seed>
-export TIJARA_E2E_PAYMENT_METHOD_ID=<printed-by-seed>
-export TIJARA_E2E_PAYMENT_METHOD_NAME=<printed-by-seed>
-export TIJARA_E2E_REFUND_REASON_ID=<printed-by-seed>
-export TIJARA_E2E_POS_ORDER_ID=<printed-by-seed>
-export TIJARA_E2E_REFUND_BARCODE=<printed-by-seed>
-export TIJARA_REFUND_ACTION_URL=<printed-by-seed>
-export TIJARA_REPORT_ORDER_URL=<printed-by-seed>
-export TIJARA_OFFLINE_QUEUE_ACTION_URL=<printed-by-seed>
-export ODOO_USERNAME=<printed-by-seed>
+TIJARA_E2E_SEED_RUN_ID=staging-pos-seed-001 \
+TIJARA_E2E_PASSWORD=<staging-test-password> \
+make seed-e2e DB=tijara_dev
+
+source deploy/runtime/e2e-seed/staging-pos-seed-001/e2e-seed.env
 export ODOO_PASSWORD=<staging-test-password>
-export ODOO_DATABASE=tijara_dev
 ODOO_BASE_URL=http://127.0.0.1:8069 npm run test:e2e
 ```
+
+The seed wrapper writes `e2e-seed.env`, `status.tsv`, `summary.md`, and
+`e2e-seed-evidence.json` under `deploy/runtime/e2e-seed/<run-id>/`. The env
+file is sourceable and non-secret; keep `ODOO_PASSWORD` in staging secrets.
 
 Useful environment variables:
 

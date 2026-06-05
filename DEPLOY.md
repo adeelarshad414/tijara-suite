@@ -792,27 +792,23 @@ already rate-limits login, database, JSON-RPC, display, and kiosk paths.
 Seed staging browser data:
 
 ```bash
-TIJARA_E2E_PASSWORD=<staging-test-password> make seed-e2e DB=tijara_dev
-export TIJARA_DISPLAY_SLUG=tijara-e2e-menu
-export TIJARA_KIOSK_SLUG=tijara-e2e-kiosk
-export TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer
-export TIJARA_E2E_PRODUCT_ID=<printed-by-seed>
-export TIJARA_E2E_PRODUCT_NAME=<printed-by-seed>
-export TIJARA_E2E_PAYMENT_METHOD_ID=<printed-by-seed>
-export TIJARA_E2E_PAYMENT_METHOD_NAME=<printed-by-seed>
-export TIJARA_E2E_REFUND_REASON_ID=<printed-by-seed>
-export TIJARA_E2E_POS_ORDER_ID=<printed-by-seed>
-export TIJARA_E2E_REFUND_BARCODE=<printed-by-seed>
-export TIJARA_REFUND_ACTION_URL=<printed-by-seed>
-export TIJARA_REPORT_ORDER_URL=<printed-by-seed>
-export TIJARA_OFFLINE_QUEUE_ACTION_URL=<printed-by-seed>
-export ODOO_USERNAME=<printed-by-seed>
+TIJARA_E2E_SEED_RUN_ID=staging-pos-seed-001 \
+TIJARA_E2E_PASSWORD=<staging-test-password> \
+make seed-e2e DB=tijara_dev
+
+source deploy/runtime/e2e-seed/staging-pos-seed-001/e2e-seed.env
 export ODOO_PASSWORD=<staging-test-password>
-export ODOO_DATABASE=tijara_dev
 export TIJARA_RUN_POS_UI_E2E=1
 export TIJARA_RUN_DIRECT_POS_CLICKTHROUGH=1
 ODOO_BASE_URL=http://127.0.0.1:8069 npm run test:e2e
 ```
+
+`make seed-e2e` writes `seed-output.log`, `e2e-seed.env`, `status.tsv`,
+`summary.md`, and `e2e-seed-evidence.json` under
+`deploy/runtime/e2e-seed/<run-id>/`. The env file contains only non-secret
+exports; load `ODOO_PASSWORD` from the staging secret manager before browser
+E2E. Attach the seed evidence folder to sign-off packages as Browser E2E
+evidence.
 
 For staging sign-off, run the guarded evidence harness instead of a raw
 Playwright command:
