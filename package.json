@@ -20,6 +20,7 @@
     "fbr:readiness": "python3 scripts/export_fbr_readiness.py",
     "monitoring:evidence": "python3 scripts/export_monitoring_evidence.py",
     "incident:runbook": "python3 scripts/export_incident_runbook_evidence.py",
+    "load:evidence": "python3 scripts/export_load_evidence.py",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },

@@ -82,6 +82,7 @@ make psp-fixture-smoke
 make fbr-readiness-evidence
 make monitoring-evidence
 make incident-runbook-evidence
+make load-evidence
 make signoff-pack
 ```
 
@@ -726,6 +727,8 @@ gate or malformed readiness package.
 Optional tools:
 
 - Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.
+- Run `make load-evidence` after k6 to export structured load evidence for
+  release sign-off.
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
@@ -736,6 +739,22 @@ Optional tools:
 - Run `make release-candidate` for the local release gate. Use
   `TIJARA_RELEASE_CHECKS=full make release-candidate` after staging E2E,
   operations evidence, Docker, and Odoo test prerequisites are ready.
+
+Structured load evidence can be captured from a k6 summary export:
+
+```bash
+mkdir -p deploy/runtime/load-evidence/2026-06-05-rc1
+k6 run --summary-export deploy/runtime/load-evidence/2026-06-05-rc1/k6-summary.json scripts/load_smoke.k6.js
+python3 scripts/export_load_evidence.py \
+  --run-id 2026-06-05-rc1 \
+  --summary-json deploy/runtime/load-evidence/2026-06-05-rc1/k6-summary.json \
+  --base-url https://staging.example.com \
+  --vus 5 \
+  --duration 30s
+```
+
+Load evidence is written under `deploy/runtime/load-evidence/<run-id>/` and
+can be included in `TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
 
 Release candidate evidence is written to
 `deploy/runtime/release-evidence/<run-id>/`. The default `local` scope runs
@@ -852,8 +871,8 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `security-review-signoff.md` for scan results, RBAC, logs, rate limits,
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
-  status-table, PSP/FBR readiness, monitoring evidence, and non-secret
-  environment summaries for approvers.
+  status-table, PSP/FBR readiness, monitoring, incident runbook, load evidence,
+  and non-secret environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -862,7 +881,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   certified-provider readiness is included under `fbr_readiness_reviews`; when
   monitoring evidence is attached, observability reviews are included under
   `monitoring_reviews`; when incident runbook evidence is attached, ownership
-  and response references are included under `incident_runbook_reviews`.
+  and response references are included under `incident_runbook_reviews`; when
+  load evidence is attached, threshold and profile reviews are included under
+  `load_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 
@@ -960,6 +981,23 @@ python3 scripts/export_monitoring_evidence.py \
 Monitoring evidence is written under
 `deploy/runtime/monitoring-evidence/<run-id>/` and can be included in
 `TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
+
+Capture load-test evidence after the release candidate load smoke:
+
+```bash
+mkdir -p deploy/runtime/load-evidence/2026-06-05-prod
+k6 run --summary-export deploy/runtime/load-evidence/2026-06-05-prod/k6-summary.json scripts/load_smoke.k6.js
+python3 scripts/export_load_evidence.py \
+  --strict \
+  --run-id 2026-06-05-prod \
+  --summary-json deploy/runtime/load-evidence/2026-06-05-prod/k6-summary.json \
+  --base-url https://pos.example.com \
+  --vus 10 \
+  --duration 2m
+```
+
+Load evidence is written under `deploy/runtime/load-evidence/<run-id>/` and can
+be included in `TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
 
 Capture incident runbook evidence before production cutover:
 

@@ -120,6 +120,7 @@ make js-check
 make security-audit
 make hardware-cert-smoke
 make e2e
+make load-smoke
 make release-candidate
 make certification-evidence
 make psp-readiness-evidence
@@ -127,6 +128,7 @@ make psp-fixture-smoke
 make fbr-readiness-evidence
 make monitoring-evidence
 make incident-runbook-evidence
+make load-evidence
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make staging-release-signoff
@@ -340,6 +342,9 @@ The detailed policy and dependency intake checklist are maintained in
   release evidence artifacts.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
+- `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
+  test evidence, threshold decisions, and non-secret load profiles under
+  `deploy/runtime/load-evidence/`.
 - `scripts/run_odoo_tests.sh`, `tests/e2e/`, and `playwright.config.mjs`
   provide committed Odoo and browser regression scaffolds. The Odoo test
   runner performs a redacted database credential preflight before the module
@@ -376,8 +381,9 @@ The detailed policy and dependency intake checklist are maintained in
   an evidence manifest for PSP, FBR, hardware, finance, security, and go/no-go
   review under `deploy/runtime/signoff-packages/`, with optional
   required-evidence group guardrails for release, E2E, operations, security,
-  hardware, FBR, and PSP evidence. PSP/FBR readiness manifests are extracted
-  into readiness reviews for approvers and CI.
+  hardware, FBR, and PSP evidence. PSP/FBR readiness manifests plus monitoring,
+  incident runbook, and load evidence are extracted into readiness reviews for
+  approvers and CI.
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.

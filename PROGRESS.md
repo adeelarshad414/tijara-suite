@@ -3422,3 +3422,81 @@ Date: 2026-06-05
 - Add staging/live Odoo FBR transaction execution after database credentials are
   corrected.
 - Add load-test evidence extraction and sign-off parsing.
+
+## Iteration 52: Load Test Evidence Extraction
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_load_evidence.py` for k6/load-test release evidence.
+- The exporter:
+  - Reads k6 `--summary-export` JSON when attached.
+  - Accepts explicitly supplied p95 duration, failure-rate, and checks-rate
+    metrics for deterministic dry-runs.
+  - Applies configurable thresholds for p95 duration, failure rate, and k6
+    checks pass rate.
+  - Supports strict production blocking and non-strict staging warning mode.
+  - Writes `load-evidence.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/load-evidence/<run-id>/`.
+- Added operator shortcuts:
+  - `make load-evidence`
+  - `npm run load:evidence`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group load evidence as Operations evidence.
+  - Parse attached `load-evidence.json`.
+  - Add a Load Test Evidence section to `evidence-summary.md`.
+  - Add `load_reviews` into `release-readiness.json`.
+  - Treat failed load evidence as blockers and warning load evidence as
+    release warnings.
+  - Treat generic evidence `summary.md` warning statuses as warnings instead of
+    automatic blockers.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Strict passing load evidence export succeeds from a k6-style summary fixture.
+- Non-strict load evidence export succeeds with warning decision when k6 summary
+  and metrics are not attached.
+- Strict failing load evidence export exits non-zero with a p95 duration blocker.
+- `make load-evidence` passes and writes local warning evidence.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using passing load evidence.
+- Confirmed `release-readiness.json` decision is `ready`.
+- Confirmed `release-readiness.json` includes `load_reviews`.
+- Confirmed `evidence-summary.md` includes the Load Test Evidence section,
+  base URL, p95 duration, failure-rate, and checks-rate metrics.
+- Generated a warning load evidence sign-off package and confirmed
+  `decision=warning` with `ci_status=pass_with_warnings`.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_load_evidence.py scripts/generate_signoff_pack.py` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- Real load evidence still needs k6 execution against seeded staging and
+  production-like traffic profiles.
+- The staging operations harness still needs to export k6 summary JSON into the
+  structured load evidence exporter automatically.
+- Load targets, thresholds, VU counts, and durations still need production
+  release-owner approval per customer size and vertical.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Wire `scripts/run_staging_ops_checks.sh` load checks into
+  `scripts/export_load_evidence.py` so grouped operations evidence includes
+  structured load decisions automatically.
+- Add FBR provider response fixture smoke tests once certified-provider sample
+  responses are available.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.

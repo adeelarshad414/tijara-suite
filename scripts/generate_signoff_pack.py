@@ -369,6 +369,7 @@ def _normalize_group_name(name):
 
 def _evidence_group(entry):
     relative = entry["relative_path"].replace("\\", "/")
+    relative_lower = relative.lower()
     filename = Path(entry["path"]).name
     if "release-evidence/" in relative:
         return "Release Candidate"
@@ -377,19 +378,22 @@ def _evidence_group(entry):
     if (
         "ops-evidence/" in relative
         or "monitoring-evidence/" in relative
-        or "monitoring" in relative.lower()
-        or "incident-runbook" in relative.lower()
+        or "monitoring" in relative_lower
+        or "incident-runbook" in relative_lower
+        or "load-evidence/" in relative
+        or "load-evidence" in relative_lower
         or filename == "monitoring-evidence.json"
         or filename == "incident-runbook-evidence.json"
+        or filename == "load-evidence.json"
     ):
         return "Operations"
-    if "hardware" in relative.lower():
+    if "hardware" in relative_lower:
         return "Hardware"
-    if "fbr" in relative.lower():
+    if "fbr" in relative_lower:
         return "FBR"
-    if "psp" in relative.lower() or "settlement" in relative.lower():
+    if "psp" in relative_lower or "settlement" in relative_lower:
         return "PSP"
-    if "security" in relative.lower():
+    if "security" in relative_lower:
         return "Security"
     return "General"
 
@@ -583,6 +587,37 @@ def _incident_runbook_reviews(evidence_entries):
     return reviews
 
 
+def _load_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "load-evidence.json":
+            continue
+        payload = _read_json(path)
+        metrics = payload.get("metrics") or {}
+        profile = payload.get("load_profile") or {}
+        payload_context = payload.get("context") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "base_url": payload_context.get("base_url", ""),
+                "vus": profile.get("vus", ""),
+                "duration": profile.get("duration", ""),
+                "p95_ms": metrics.get("p95_ms"),
+                "fail_rate": metrics.get("fail_rate"),
+                "checks_rate": metrics.get("checks_rate"),
+                "max_p95_ms": metrics.get("max_p95_ms"),
+                "max_fail_rate": metrics.get("max_fail_rate"),
+                "min_checks_rate": metrics.get("min_checks_rate"),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -592,6 +627,7 @@ def _evidence_summary(context, evidence_entries):
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
+    load_reviews = _load_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -763,6 +799,34 @@ def _evidence_summary(context, evidence_entries):
     if not incident_lines:
         incident_lines = ["- No `incident-runbook-evidence.json` files were attached.", ""]
 
+    load_lines = []
+    for review in load_reviews:
+        load_lines.append("### `%s`" % review["path"])
+        load_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        load_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        load_lines.append(
+            "- Profile: vus=%s, duration=%s, base_url=%s"
+            % (
+                review["vus"] or "unset",
+                review["duration"] or "unset",
+                review["base_url"] or "unset",
+            )
+        )
+        load_lines.append(
+            "- Metrics: p95=%s/%s ms, fail_rate=%s/%s, checks_rate=%s/%s"
+            % (
+                review["p95_ms"],
+                review["max_p95_ms"],
+                review["fail_rate"],
+                review["max_fail_rate"],
+                review["checks_rate"],
+                review["min_checks_rate"],
+            )
+        )
+        load_lines.append("")
+    if not load_lines:
+        load_lines = ["- No `load-evidence.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -799,6 +863,9 @@ def _evidence_summary(context, evidence_entries):
 ## Incident Runbook Evidence
 
 {chr(10).join(incident_lines)}
+## Load Test Evidence
+
+{chr(10).join(load_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -819,6 +886,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
+    load_reviews = _load_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -847,7 +915,12 @@ def _release_readiness(context, evidence_entries, group_counts):
                 "scope": fields.get("Scope", ""),
             }
             summary_reviews.append(review)
-            if status and status not in {"passed", "approved"}:
+            if status in {"warning", "warn", "pass_with_warnings", "skipped"}:
+                warnings.append(
+                    "Summary %s has warning status %s"
+                    % (entry["relative_path"], fields.get("Status", "unknown"))
+                )
+            elif status and status not in {"passed", "ready", "approved"}:
                 blockers.append(
                     "Summary %s has non-passing status %s"
                     % (entry["relative_path"], fields.get("Status", "unknown"))
@@ -915,6 +988,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Incident runbook evidence %s is %s" % (review["path"], review["decision"]))
 
+    for review in load_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Load evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Load evidence %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -945,6 +1025,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "fbr_readiness_reviews": fbr_readiness_reviews,
         "monitoring_reviews": monitoring_reviews,
         "incident_runbook_reviews": incident_runbook_reviews,
+        "load_reviews": load_reviews,
     }
 
 
