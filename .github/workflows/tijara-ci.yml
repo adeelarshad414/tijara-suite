@@ -237,6 +237,11 @@ jobs:
       TIJARA_OPS_BUNDLE_CHECKS: ${{ vars.TIJARA_OPS_BUNDLE_CHECKS || 'load-matrix,load-enterprise,smoke,monitoring,incident,retention' }}
       TIJARA_OPS_BUNDLE_STRICT: ${{ vars.TIJARA_OPS_BUNDLE_STRICT || '0' }}
       TIJARA_OPS_BUNDLE_FAIL_ON_WARNING: ${{ vars.TIJARA_OPS_BUNDLE_FAIL_ON_WARNING || '0' }}
+      TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION: ${{ vars.TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION || '0' }}
+      TIJARA_PROD_OPS_WARNING_EXCEPTION_REF: ${{ vars.TIJARA_PROD_OPS_WARNING_EXCEPTION_REF }}
+      TIJARA_PROD_OPS_WARNING_EXCEPTION_APPROVED_BY: ${{ vars.TIJARA_PROD_OPS_WARNING_EXCEPTION_APPROVED_BY }}
+      TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON: ${{ vars.TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON }}
+      TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT: ${{ vars.TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT }}
       TIJARA_RESTORE_DRILL_BACKUP: ${{ vars.TIJARA_RESTORE_DRILL_BACKUP }}
       TIJARA_BACKUP_ARTIFACT_REF: ${{ vars.TIJARA_BACKUP_ARTIFACT_REF }}
       ODOO_IMAGE: ${{ vars.ODOO_IMAGE }}
@@ -711,6 +716,10 @@ jobs:
       - name: Protected production operations readiness
         continue-on-error: true
         run: |
+          PROD_OPS_ARGS=()
+          if [[ "${TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION:-0}" == "1" ]]; then
+            PROD_OPS_ARGS+=(--allow-warning-exception)
+          fi
           python3 scripts/export_production_ops_readiness.py \
             --run-id "$TIJARA_PROTECTED_RUN_ID" \
             --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
@@ -732,6 +741,7 @@ jobs:
             --security-audit-ref "deploy/runtime/ops-tool-raw/$TIJARA_PROTECTED_RUN_ID/security-audit.log" \
             --dependency-scan-ref "deploy/runtime/ops-tool-raw/$TIJARA_PROTECTED_RUN_ID/dependency-scan.log" \
             --container-scan-ref "deploy/runtime/ops-tool-raw/$TIJARA_PROTECTED_RUN_ID/container-scan.log" \
+            "${PROD_OPS_ARGS[@]}" \
             --strict \
             --fail-on-warning
       - name: Generate protected sign-off package

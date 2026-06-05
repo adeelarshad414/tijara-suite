@@ -858,6 +858,24 @@ The exporter writes `production-ops-readiness.json`, `status.tsv`,
 `production_ops_readiness_reviews`, and production readiness blocks when this
 gate is blocked or failed.
 
+Warnings remain release blockers in the protected workflow because
+`export_production_ops_readiness.py` is called with `--fail-on-warning`. To
+approve a temporary production-ops warning without weakening the default gate,
+set all of these protected GitHub Environment variables for that run:
+
+```bash
+TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION=1
+TIJARA_PROD_OPS_WARNING_EXCEPTION_REF=change:TIJARA-PROD-EXCEPTION-001
+TIJARA_PROD_OPS_WARNING_EXCEPTION_APPROVED_BY=ReleaseOwner
+TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON="Temporary approved exception for one monitored warning."
+TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT=2026-06-30
+```
+
+The exporter records the exception in `production-ops-readiness.json`,
+`summary.md`, and the sign-off package. The readiness decision remains
+`warning`/`pass_with_warnings`; missing, incomplete, or expired exception
+metadata still blocks when `--fail-on-warning` is active.
+
 ## Display Routes
 
 Public display routes are available for store screens:

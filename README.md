@@ -613,6 +613,10 @@ The detailed policy and dependency intake checklist are maintained in
   optional pip-audit and Trivy JSON plus `scripts/staging_monitoring_drill.py`
   output from the self-hosted runner when those tools and endpoints are
   available.
+- `scripts/export_production_ops_readiness.py` can record an explicit
+  release-owner warning exception with reference, approver, reason, and expiry.
+  The exception is off by default; without it, protected `--fail-on-warning`
+  behavior still blocks production operations readiness warnings.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, POS checkout, refund barcode, receipt print, and offline
   POS replay browser tests, then writes E2E seed evidence under

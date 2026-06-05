@@ -25,6 +25,66 @@ def _truthy(value):
     return str(value or "").strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
+def _present(value):
+    return bool(str(value or "").strip())
+
+
+def _parse_expiry(value):
+    text = str(value or "").strip()
+    if not text:
+        return None, "Expiry is missing."
+    normalized = text[:-1] + "+00:00" if text.endswith("Z") else text
+    try:
+        if "T" in normalized or "+" in normalized:
+            parsed = dt.datetime.fromisoformat(normalized)
+        else:
+            parsed_date = dt.date.fromisoformat(normalized)
+            parsed = dt.datetime.combine(parsed_date, dt.time.max, tzinfo=dt.timezone.utc)
+    except ValueError:
+        return None, "Expiry must use YYYY-MM-DD or ISO-8601 datetime."
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed.astimezone(dt.timezone.utc), ""
+
+
+def _warning_exception(args, warnings):
+    if not args.allow_warning_exception or not warnings:
+        return {
+            "requested": bool(args.allow_warning_exception),
+            "applied": False,
+            "valid": True,
+            "reference": args.warning_exception_ref,
+            "approved_by": args.warning_exception_approved_by,
+            "reason": args.warning_exception_reason,
+            "expires_at": args.warning_exception_expires_at,
+            "warning_count": len(warnings),
+            "issues": [],
+        }
+    issues = []
+    expires_at, expiry_error = _parse_expiry(args.warning_exception_expires_at)
+    if not _present(args.warning_exception_ref):
+        issues.append("Warning exception reference is required.")
+    if not _present(args.warning_exception_approved_by):
+        issues.append("Warning exception approver is required.")
+    if not _present(args.warning_exception_reason):
+        issues.append("Warning exception reason is required.")
+    if expiry_error:
+        issues.append(expiry_error)
+    elif expires_at and expires_at < dt.datetime.now(dt.timezone.utc):
+        issues.append("Warning exception is expired.")
+    return {
+        "requested": bool(args.allow_warning_exception),
+        "applied": bool(args.allow_warning_exception and warnings and not issues),
+        "valid": not issues,
+        "reference": args.warning_exception_ref,
+        "approved_by": args.warning_exception_approved_by,
+        "reason": args.warning_exception_reason,
+        "expires_at": args.warning_exception_expires_at,
+        "warning_count": len(warnings),
+        "issues": issues,
+    }
+
+
 def _csv_items(value):
     return [item.strip() for item in str(value or "").split(",") if item.strip()]
 
@@ -258,6 +318,17 @@ def _summary(context, components, ops_status_rows, blockers, warnings):
         "- %s: %s - %s" % (row["name"], row["status"], row["message"])
         for row in ops_status_rows
     ) or "- No operations status rows attached."
+    exception = context.get("warning_exception") or {}
+    exception_lines = "\n".join(
+        [
+            "- Requested: %s" % ("yes" if exception.get("requested") else "no"),
+            "- Applied: %s" % ("yes" if exception.get("applied") else "no"),
+            "- Reference: %s" % (exception.get("reference") or "<unset>"),
+            "- Approved by: %s" % (exception.get("approved_by") or "<unset>"),
+            "- Expires at: %s" % (exception.get("expires_at") or "<unset>"),
+            "- Reason: %s" % (exception.get("reason") or "<unset>"),
+        ]
+    )
     blocker_lines = "\n".join("- %s" % item for item in blockers) or "- None"
     warning_lines = "\n".join("- %s" % item for item in warnings) or "- None"
     return f"""
@@ -287,6 +358,10 @@ def _summary(context, components, ops_status_rows, blockers, warnings):
 ## Warnings
 
 {warning_lines}
+
+## Warning Exception
+
+{exception_lines}
 
 ## Evidence Files
 
@@ -326,6 +401,11 @@ def main():
     parser.add_argument("--require-release-readiness", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_REQUIRE_RELEASE_READINESS", "0")))
     parser.add_argument("--strict", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_STRICT", "0")))
     parser.add_argument("--fail-on-warning", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_FAIL_ON_WARNING", "0")))
+    parser.add_argument("--allow-warning-exception", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION", "0")))
+    parser.add_argument("--warning-exception-ref", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_REF", ""))
+    parser.add_argument("--warning-exception-approved-by", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_APPROVED_BY", ""))
+    parser.add_argument("--warning-exception-reason", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON", ""))
+    parser.add_argument("--warning-exception-expires-at", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT", ""))
     args = parser.parse_args()
 
     output = Path(args.output) if args.output else ROOT_DIR / "deploy/runtime/production-ops-readiness" / args.run_id
@@ -482,9 +562,21 @@ def main():
         elif component["status"] in {"warning", "skipped"}:
             warnings.append("%s: %s" % (component["name"], component["message"]))
 
+    warning_exception = _warning_exception(args, warnings)
     if args.fail_on_warning and warnings:
-        blockers.extend("warning-policy: %s" % warning for warning in warnings)
-        warnings = []
+        if warning_exception["applied"]:
+            warnings.append(
+                "warning-exception: %s approved by %s until %s"
+                % (
+                    args.warning_exception_ref,
+                    args.warning_exception_approved_by,
+                    args.warning_exception_expires_at,
+                )
+            )
+        else:
+            blockers.extend("warning-policy: %s" % warning for warning in warnings)
+            blockers.extend("warning-exception: %s" % issue for issue in warning_exception["issues"])
+            warnings = []
 
     if blockers:
         decision = "blocked"
@@ -510,6 +602,8 @@ def main():
         "require_tenant_ops": bool(args.require_tenant_ops),
         "require_secret_runtime": bool(args.require_secret_runtime),
         "require_release_readiness": bool(args.require_release_readiness),
+        "allow_warning_exception": bool(args.allow_warning_exception),
+        "warning_exception": warning_exception,
         "decision": decision,
         "ci_status": ci_status,
     }
@@ -528,6 +622,7 @@ def main():
             "dependency_scan_ref_present": bool(dependency_ref),
             "container_scan_ref_present": bool(container_ref),
         },
+        "warning_exception": warning_exception,
         "blockers": blockers,
         "warnings": warnings,
     }
@@ -537,6 +632,10 @@ def main():
             "target_environment=%s" % args.target_environment,
             "strict=%s" % int(args.strict),
             "fail_on_warning=%s" % int(args.fail_on_warning),
+            "allow_warning_exception=%s" % int(args.allow_warning_exception),
+            "warning_exception_ref=%s" % (args.warning_exception_ref or "<unset>"),
+            "warning_exception_approved_by=%s" % (args.warning_exception_approved_by or "<unset>"),
+            "warning_exception_expires_at=%s" % (args.warning_exception_expires_at or "<unset>"),
             "operations_bundle=%s" % (operations_bundle_path or "<unset>"),
             "monitoring_evidence=%s" % (monitoring_path or "<unset>"),
             "incident_runbook_evidence=%s" % (incident_path or "<unset>"),

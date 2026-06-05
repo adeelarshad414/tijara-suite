@@ -7587,3 +7587,81 @@ Status: Complete
   temporary approval without weakening default strict gates.
 - Continue PSP/FBR/hardware certification and live offline POS pilot proof once
   provider/device credentials and staging hardware are available.
+
+## Iteration 105: Production Ops Warning Exception Evidence
+
+Status: Complete
+
+### Scope
+
+- Add controlled release-owner warning exception evidence for protected
+  production operations readiness so temporary approved warnings can be
+  reviewed without weakening the default strict release gate.
+
+### Completed
+
+- Added warning exception arguments and environment variables to
+  `scripts/export_production_ops_readiness.py`:
+  `TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION`,
+  `TIJARA_PROD_OPS_WARNING_EXCEPTION_REF`,
+  `TIJARA_PROD_OPS_WARNING_EXCEPTION_APPROVED_BY`,
+  `TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON`, and
+  `TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT`.
+- Valid exceptions now require a reference, approver, reason, and non-expired
+  `YYYY-MM-DD` or ISO-8601 expiry.
+- Protected `--fail-on-warning` behavior still blocks warnings unless a valid
+  exception is explicitly enabled for the run.
+- Valid exceptions preserve the production operations decision as `warning`
+  with `ci_status=pass_with_warnings`, and record the exception in
+  `production-ops-readiness.json`, `summary.md`, and the sign-off package.
+- Invalid, missing, or expired exception metadata becomes a blocker when
+  `--fail-on-warning` is active.
+- Wired the protected GitHub workflow and
+  `deploy/config/github-protected-vars.example` with default-off exception
+  variables.
+- Updated `README.md` and `DEPLOY.md` with release-owner exception guidance.
+
+### Validation
+
+- No-exception fixture with `--fail-on-warning` exits blocked and converts
+  production-ops warnings to `warning-policy` blockers.
+- Future-dated exception fixture exits successfully with `decision=warning` and
+  `ci_status=pass_with_warnings`.
+- Expired exception fixture exits blocked and records
+  `warning-exception: Warning exception is expired.`
+- Sign-off pack generated from the allowed fixture includes
+  `Warning exception requested/applied/ref/approver/expires:
+  yes/yes/change:TIJARA-PROD-EXCEPTION-001/ReleaseOwner/2027-06-30`.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_production_ops_readiness.py scripts/generate_signoff_pack.py
+  scripts/export_github_step_summary.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and exposes
+  `TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION=0`.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- Exception metadata still needs a real protected GitHub Environment review
+  process and release-owner operating procedure in staging/production.
+- Live protected evidence still needs actual runner execution with Odoo,
+  hardware bridge, Prometheus, Alertmanager, Grafana, backup artifacts, k6,
+  Trivy, npm audit, optional pip-audit, and restore drill inputs.
+- PSP/FBR certification, physical hardware certification, live offline POS
+  pilot proof, payment provider settlement/refund/chargeback certification, and
+  full production monitoring remain blockers.
+
+### Next Iteration
+
+- Add protected-runner bootstrap documentation/scripts for installing k6, Trivy,
+  pip-audit, PostgreSQL clients, Docker/Compose, and GitHub runner prerequisites.
+- Add staging release-owner runbook steps for approving, expiring, and auditing
+  production-ops warning exceptions.
+- Continue provider/device certification and live offline POS pilot proof once
+  credentials and staging hardware are available.

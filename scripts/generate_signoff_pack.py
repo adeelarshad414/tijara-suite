@@ -991,6 +991,7 @@ def _production_ops_readiness_reviews(evidence_entries):
         payload = _read_json(path)
         payload_context = payload.get("context") or {}
         refs = payload.get("references") or {}
+        warning_exception = payload.get("warning_exception") or {}
         components = payload.get("components") or []
         status_counts = payload.get("status_counts") or {}
         component_statuses = {
@@ -1010,6 +1011,11 @@ def _production_ops_readiness_reviews(evidence_entries):
                 "target_environment": payload_context.get("target_environment", ""),
                 "strict": bool(payload_context.get("strict")),
                 "fail_on_warning": bool(payload_context.get("fail_on_warning")),
+                "warning_exception_requested": bool(warning_exception.get("requested")),
+                "warning_exception_applied": bool(warning_exception.get("applied")),
+                "warning_exception_ref": warning_exception.get("reference", ""),
+                "warning_exception_approved_by": warning_exception.get("approved_by", ""),
+                "warning_exception_expires_at": warning_exception.get("expires_at", ""),
                 "require_tenant_ops": bool(payload_context.get("require_tenant_ops")),
                 "require_secret_runtime": bool(payload_context.get("require_secret_runtime")),
                 "component_count": len(components),
@@ -1903,6 +1909,16 @@ def _evidence_summary(context, evidence_entries):
                 review["target_environment"] or "unset",
                 "yes" if review["strict"] else "no",
                 "yes" if review["fail_on_warning"] else "no",
+            )
+        )
+        production_ops_lines.append(
+            "- Warning exception requested/applied/ref/approver/expires: %s/%s/%s/%s/%s"
+            % (
+                "yes" if review["warning_exception_requested"] else "no",
+                "yes" if review["warning_exception_applied"] else "no",
+                review["warning_exception_ref"] or "unset",
+                review["warning_exception_approved_by"] or "unset",
+                review["warning_exception_expires_at"] or "unset",
             )
         )
         production_ops_lines.append(
