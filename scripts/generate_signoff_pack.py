@@ -369,11 +369,17 @@ def _normalize_group_name(name):
 
 def _evidence_group(entry):
     relative = entry["relative_path"].replace("\\", "/")
+    filename = Path(entry["path"]).name
     if "release-evidence/" in relative:
         return "Release Candidate"
     if "e2e-evidence/" in relative:
         return "Browser E2E"
-    if "ops-evidence/" in relative:
+    if (
+        "ops-evidence/" in relative
+        or "monitoring-evidence/" in relative
+        or "monitoring" in relative.lower()
+        or filename == "monitoring-evidence.json"
+    ):
         return "Operations"
     if "hardware" in relative.lower():
         return "Hardware"
@@ -528,6 +534,30 @@ def _fbr_readiness_reviews(evidence_entries):
     return reviews
 
 
+def _monitoring_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "monitoring-evidence.json":
+            continue
+        payload = _read_json(path)
+        refs = payload.get("evidence_refs") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "smoke_decision_attached": bool(refs.get("smoke_decision")),
+                "deployment_decision_attached": bool(refs.get("deployment_decision")),
+                "rollback_decision_attached": bool(refs.get("rollback_decision")),
+                "check_count": len(payload.get("checks") or []),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -535,6 +565,7 @@ def _evidence_summary(context, evidence_entries):
     environment_blocks = []
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
+    monitoring_reviews = _monitoring_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -656,6 +687,24 @@ def _evidence_summary(context, evidence_entries):
     if not fbr_lines:
         fbr_lines = ["- No `fbr-readiness.json` files were attached.", ""]
 
+    monitoring_lines = []
+    for review in monitoring_reviews:
+        monitoring_lines.append("### `%s`" % review["path"])
+        monitoring_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        monitoring_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        monitoring_lines.append(
+            "- Smoke/deployment/rollback refs: %s/%s/%s"
+            % (
+                "yes" if review["smoke_decision_attached"] else "no",
+                "yes" if review["deployment_decision_attached"] else "no",
+                "yes" if review["rollback_decision_attached"] else "no",
+            )
+        )
+        monitoring_lines.append("- Check count: %s" % review["check_count"])
+        monitoring_lines.append("")
+    if not monitoring_lines:
+        monitoring_lines = ["- No `monitoring-evidence.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -686,6 +735,9 @@ def _evidence_summary(context, evidence_entries):
 ## FBR Readiness Evidence
 
 {chr(10).join(fbr_lines)}
+## Monitoring Evidence
+
+{chr(10).join(monitoring_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -704,6 +756,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     check_rows = []
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
+    monitoring_reviews = _monitoring_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -786,6 +839,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("FBR readiness %s is %s" % (review["path"], review["decision"]))
 
+    for review in monitoring_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Monitoring evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Monitoring evidence %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -814,6 +874,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "check_rows": check_rows,
         "psp_readiness_reviews": psp_readiness_reviews,
         "fbr_readiness_reviews": fbr_readiness_reviews,
+        "monitoring_reviews": monitoring_reviews,
     }
 
 

@@ -125,6 +125,7 @@ make certification-evidence
 make psp-readiness-evidence
 make psp-fixture-smoke
 make fbr-readiness-evidence
+make monitoring-evidence
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make staging-release-signoff
@@ -393,6 +394,10 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_production_smoke.py` and `make production-smoke` capture
   post-deploy/post-rollback endpoint smoke evidence and a machine-readable
   smoke decision.
+- `scripts/export_monitoring_evidence.py` and `make monitoring-evidence`
+  collect post-deploy monitoring evidence from smoke, deployment, rollback, and
+  Prometheus/Alertmanager/Grafana endpoint probes under
+  `deploy/runtime/monitoring-evidence/`.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through

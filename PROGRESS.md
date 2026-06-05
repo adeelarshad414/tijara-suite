@@ -3276,3 +3276,77 @@ Date: 2026-06-05
   responses are available.
 - Add staging/live Odoo FBR transaction execution after database credentials are
   corrected.
+
+## Iteration 50: Monitoring Evidence Extraction
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_monitoring_evidence.py` for post-deploy/post-rollback
+  monitoring evidence.
+- The exporter:
+  - Consumes production smoke decision JSON.
+  - Consumes production deployment gate decision JSON.
+  - Consumes rollback decision JSON.
+  - Probes configured Prometheus, Alertmanager, Grafana, or custom monitoring
+    endpoints.
+  - Writes `monitoring-evidence.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/monitoring-evidence/<run-id>/`.
+  - Defaults to warnings when evidence references or monitoring endpoints are
+    not attached, and blocks on failed checks unless non-strict mode is enabled.
+- Added operator shortcuts:
+  - `make monitoring-evidence`
+  - `npm run monitoring:evidence`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group `monitoring-evidence.json` and monitoring-labeled evidence paths as
+    Operations evidence.
+  - Parse attached `monitoring-evidence.json`.
+  - Add `monitoring_reviews` into `release-readiness.json`.
+  - Add a Monitoring Evidence section to `evidence-summary.md`.
+  - Treat failed monitoring evidence as blockers and warning monitoring
+    evidence as warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Monitoring exporter passes with warnings when smoke/deployment/rollback refs
+  and monitoring endpoints are not attached.
+- Monitoring exporter passes with deterministic file-backed smoke/deployment/
+  rollback refs and endpoint probes.
+- `make monitoring-evidence` passes with warning decision.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using monitoring evidence.
+- Confirmed `release-readiness.json` decision is `ready`.
+- Confirmed `release-readiness.json` includes `monitoring_reviews`.
+- Confirmed `evidence-summary.md` includes the Monitoring Evidence section.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_monitoring_evidence.py scripts/generate_signoff_pack.py`
+  passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- Real monitoring evidence still needs live Prometheus, Alertmanager, Grafana,
+  smoke, deployment, and rollback decision artifacts from staging/production.
+- The exporter proves evidence wiring and endpoint availability; alert firing,
+  routing, and incident runbooks still need live drills.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Add alert/incident runbook evidence capture for Alertmanager routing and
+  backup/restore drill references.
+- Add FBR provider response fixture smoke tests once certified-provider sample
+  responses are available.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.

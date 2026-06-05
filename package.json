@@ -18,6 +18,7 @@
     "psp:readiness": "python3 scripts/export_psp_readiness.py",
     "psp:fixture-smoke": "python3 scripts/psp_settlement_fixture_smoke.py",
     "fbr:readiness": "python3 scripts/export_fbr_readiness.py",
+    "monitoring:evidence": "python3 scripts/export_monitoring_evidence.py",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },

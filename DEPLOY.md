@@ -850,14 +850,16 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `security-review-signoff.md` for scan results, RBAC, logs, rate limits,
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
-  status-table, PSP/FBR readiness, and non-secret environment summaries for
-  approvers.
+  status-table, PSP/FBR readiness, monitoring evidence, and non-secret
+  environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
   is attached, provider-level readiness reviews are included under
   `psp_readiness_reviews`; when FBR readiness evidence is attached,
-  certified-provider readiness is included under `fbr_readiness_reviews`.
+  certified-provider readiness is included under `fbr_readiness_reviews`; when
+  monitoring evidence is attached, observability reviews are included under
+  `monitoring_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 
@@ -938,6 +940,23 @@ with `smoke-decision.json`, `status.tsv`, `summary.md`, and
 `env-summary.txt`. HTTP 2xx/3xx responses pass; 4xx/5xx responses and
 unreachable endpoints block by default. Set `TIJARA_SMOKE_NON_STRICT=1` only
 for exploratory drills where endpoint failures should be warnings.
+
+Capture monitoring evidence after deployment or rollback:
+
+```bash
+python3 scripts/export_monitoring_evidence.py \
+  --run-id 2026-06-05-prod \
+  --smoke-decision deploy/runtime/production-smoke/2026-06-05-prod/smoke-decision.json \
+  --deployment-decision deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json \
+  --rollback-decision deploy/runtime/rollback-runs/2026-06-05-prod/rollback-decision.json \
+  --prometheus-url https://prometheus.example.com \
+  --alertmanager-url https://alertmanager.example.com \
+  --grafana-url https://grafana.example.com
+```
+
+Monitoring evidence is written under
+`deploy/runtime/monitoring-evidence/<run-id>/` and can be included in
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
 
 ## Rollback Baseline
 
