@@ -15,6 +15,7 @@ DEFAULT_ARTIFACTS = [
     "protected-runner-preflight",
     "protected-service-checks",
     "protected-provider-readiness",
+    "protected-offline-replay",
     "release-evidence",
     "protected-e2e",
     "ops-tool-evidence",

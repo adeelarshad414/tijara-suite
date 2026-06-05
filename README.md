@@ -368,11 +368,12 @@ The detailed policy and dependency intake checklist are maintained in
   certification manifest examples. The protected job now emits an operator
   handoff runbook, a first-run checklist, a redacted runner preflight evidence
   report, protected authenticated service checks, protected PSP/FBR provider
-  readiness, and a protected Browser E2E handoff report before executing
-  strict release gates. After the readiness gate, it verifies protected
-  post-run evidence, records GitHub artifact metadata, writes one protected
-  artifact summary for release-owner review, and uploads a post-upload metadata
-  sidecar with the artifact ID/URL when GitHub Actions returns those outputs.
+  readiness, a protected Browser E2E handoff report, and protected offline POS
+  replay evidence before executing strict release gates. After the readiness
+  gate, it verifies protected post-run evidence, records GitHub artifact
+  metadata, writes one protected artifact summary for release-owner review, and
+  uploads a post-upload metadata sidecar with the artifact ID/URL when GitHub
+  Actions returns those outputs.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
@@ -443,6 +444,13 @@ The detailed policy and dependency intake checklist are maintained in
   JazzCash, Easypaisa, Stripe, and certified FBR readiness exporters while
   preserving redacted status, provider certification, and warning/blocker
   decisions for protected sign-off.
+- `scripts/export_protected_offline_replay_evidence.py` and
+  `make protected-offline-replay-evidence` export protected offline POS replay
+  evidence under `deploy/runtime/protected-offline-replay/`, checking the
+  offline capture/replay/status routes, cashier localStorage replay frontend,
+  conflict review screens, Odoo transaction tests, Browser E2E spec coverage,
+  and correlated protected E2E/Playwright evidence when staging credentials are
+  available.
 - `scripts/export_protected_post_run_verification.py` and
   `make protected-post-run-verification` scan protected evidence folders after
   a run, verify required artifact presence, failed/warning `status.tsv` rows,

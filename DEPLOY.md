@@ -1063,7 +1063,8 @@ provider readiness under
 `deploy/runtime/protected-provider-readiness/<run-id>/`, runs the
 release-candidate gate, runs protected Browser E2E
 seed/profile/browser/execution evidence under
-`deploy/runtime/protected-e2e/<run-id>/`, captures raw
+`deploy/runtime/protected-e2e/<run-id>/`, exports protected offline POS replay
+evidence under `deploy/runtime/protected-offline-replay/<run-id>/`, captures raw
 restore, security, dependency, container, npm audit, and k6 outputs under
 `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
 evidence, collects strict PSP/FBR/hardware certification evidence when the
@@ -1296,10 +1297,30 @@ missing, it still writes `summary.md`, `status.tsv`, and `env-summary.txt` under
 `deploy/runtime/protected-e2e/<run-id>/`; strict failures then flow into the
 release sign-off package as Browser E2E blockers.
 
+Protected offline POS replay evidence is controlled with:
+
+```bash
+TIJARA_OFFLINE_REPLAY_REQUIRE_E2E=0
+TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS=0
+TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF=0
+TIJARA_OFFLINE_REPLAY_FAIL_ON_WARNING=0
+```
+
+The exporter checks the committed offline capture/replay/status routes, queue
+model, cashier localStorage replay frontend, conflict review/audit/pilot
+dashboard views, Odoo transaction tests, and enterprise Browser E2E spec. When
+staging credentials and seeded POS IDs are present, set
+`TIJARA_OFFLINE_REPLAY_REQUIRE_E2E=1`,
+`TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS=1`, and
+`TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF=1` so missing or failed offline
+replay browser evidence blocks release readiness. The evidence writes
+`protected-offline-replay-evidence.json`, `status.tsv`, `env-summary.txt`, and
+`summary.md` without printing Odoo passwords or secrets.
+
 After the protected readiness check, the workflow runs
 `scripts/export_protected_artifact_summary.py`. The generated `summary.md`
 points release owners at failed/warning rows across preflight, release,
-provider readiness, Browser E2E, operations, certification, retention,
+provider readiness, Browser E2E, offline replay, operations, certification, retention,
 secret-manager, production operations readiness, and sign-off artifacts. Use it
 as the first file to open inside
 `tijara-protected-release-evidence-<environment>-<run>`. In GitHub Actions, the

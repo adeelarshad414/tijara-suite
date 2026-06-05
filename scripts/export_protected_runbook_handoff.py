@@ -15,6 +15,7 @@ DEFAULT_REVIEW_ORDER = [
     "protected-runner-preflight",
     "protected-service-checks",
     "protected-provider-readiness",
+    "protected-offline-replay",
     "protected-artifact-summary",
     "release-evidence",
     "protected-e2e",
@@ -29,7 +30,7 @@ DEFAULT_REVIEW_ORDER = [
 DEFAULT_GO_NO_GO = [
     "First-run checklist has no failed rows.",
     "Protected runner preflight has no failed rows.",
-    "Protected service checks and provider readiness have no failed rows.",
+    "Protected service, provider, and offline replay evidence have no failed rows.",
     "Release-candidate gate passed or approved exception is recorded.",
     "Protected Browser E2E evidence is passed or approved exception is recorded.",
     "Operations tool evidence has no unapproved critical/high blockers.",

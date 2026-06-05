@@ -6997,3 +6997,102 @@ Date: 2026-06-05
   PSP sandbox credentials are available.
 - Continue hardening protected production operations drills for monitoring,
   alerting, backup restore, security scans, and incident response.
+
+## Iteration 98: Protected Offline Replay Evidence
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_offline_replay_evidence.py` to export
+  protected offline POS replay evidence under
+  `deploy/runtime/protected-offline-replay/`.
+- The exporter verifies committed offline capture/replay/status routes, queue
+  model replay and duplicate actions, cashier localStorage replay frontend,
+  conflict review/audit/pilot dashboard views, Odoo transaction tests, and the
+  enterprise Browser E2E replay spec.
+- The exporter correlates staging readiness evidence, E2E execution evidence,
+  Playwright JSON, Browser E2E summary, and protected E2E orchestration
+  `status.tsv` when those artifacts exist.
+- Added secret-safe required-env reporting for Odoo/POS E2E variables and
+  optional blocking flags for live staging:
+  `TIJARA_OFFLINE_REPLAY_REQUIRE_E2E`,
+  `TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS`,
+  `TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF`, and
+  `TIJARA_OFFLINE_REPLAY_FAIL_ON_WARNING`.
+- Added `make protected-offline-replay-evidence`.
+- Wired `.github/workflows/tijara-ci.yml` to run protected offline replay
+  evidence after protected Browser E2E and before operations tool capture.
+- Added `protected-offline-replay` to first-run expected artifacts, runbook
+  review order, post-run required artifacts, release-retention evidence paths,
+  sign-off evidence paths, protected artifact summary defaults, and protected
+  artifact uploads.
+- Classified `protected-offline-replay` as Operations evidence in
+  `scripts/generate_signoff_pack.py`.
+- Updated `deploy/config/github-protected-vars.example`, `README.md`, and
+  `DEPLOY.md` with protected offline replay controls and deployment guidance.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_offline_replay_evidence.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_post_run_verification.py
+  scripts/export_protected_runbook_handoff.py
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes `TIJARA_OFFLINE_REPLAY_REQUIRE_E2E`.
+- Default strict offline replay fixture writes `decision=warning` and
+  `ci_status=pass_with_warnings` when staging E2E evidence is not required.
+- Required offline replay fixture without E2E artifacts writes
+  `decision=failed` and `ci_status=fail`.
+- Secret-like metadata fixture with `api_token` is rejected.
+- Passing redacted offline replay fixture with readiness, execution,
+  Playwright, summary, and orchestration evidence writes `decision=passed` and
+  `ci_status=pass`.
+- Updated post-run verifier fixture requires and accepts
+  `protected-offline-replay`.
+- Protected artifact summary over offline replay evidence writes
+  `decision=passed`.
+- Updated first-run checklist fixture expects `protected-offline-replay`.
+- Protected runbook handoff fixture includes `protected-offline-replay` in the
+  review order and writes `decision=passed`.
+- `make protected-offline-replay-evidence` passes and writes warning evidence
+  when live staging E2E proof is not required.
+- Sign-off package with passing offline replay evidence classifies it as
+  Operations evidence and `scripts/check_release_readiness.py` returns
+  `decision=ready`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The new exporter proves source contracts and fixture correlation locally, but
+  a protected staging runner still needs real Odoo credentials, seeded POS
+  data, Playwright browsers, and a reachable staging URL to produce live
+  offline replay evidence.
+- Offline replay still needs pilot proof for network outage capture, duplicate
+  review, end-of-shift reconciliation, and payment terminal reference handling
+  on real store devices.
+- PSP/FBR live certification, physical hardware certification, monitoring
+  alerts, backup restore drills, load testing, and security testing remain
+  production-readiness blockers.
+
+### Next Iteration
+
+- Add payment provider webhook/refund/settlement/chargeback certification
+  evidence once PSP sandbox credentials or sample signed payloads are available.
+- Add protected production operations drill evidence for alert routing, backup
+  restore, load test summaries, and security scan outputs.
+- Continue hardening offline POS pilot runbooks with real-device outage,
+  duplicate, and reconciliation evidence once store hardware is available.
