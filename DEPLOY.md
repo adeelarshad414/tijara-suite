@@ -869,12 +869,20 @@ TIJARA_PROD_OPS_WARNING_EXCEPTION_REF=change:TIJARA-PROD-EXCEPTION-001
 TIJARA_PROD_OPS_WARNING_EXCEPTION_APPROVED_BY=ReleaseOwner
 TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON="Temporary approved exception for one monitored warning."
 TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT=2026-06-30
+TIJARA_PROD_OPS_WARNING_EXCEPTION_AUDIT_REF=audit:prod-ops-warning-2026-06-05
 ```
 
 The exporter records the exception in `production-ops-readiness.json`,
 `summary.md`, and the sign-off package. The readiness decision remains
 `warning`/`pass_with_warnings`; missing, incomplete, or expired exception
 metadata still blocks when `--fail-on-warning` is active.
+
+The protected operator handoff also records the exception operating procedure in
+`warning-exception-runbook.md`. When an exception is enabled, the strict handoff
+requires reference, approver, reason, future expiry, and audit reference before
+the release-owner go/no-go review can pass. The runbook includes approval,
+expiry, and audit steps so the exception is removed or re-approved before it
+expires.
 
 ## Display Routes
 

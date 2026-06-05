@@ -44,7 +44,7 @@ DEFAULT_GO_NO_GO = [
     "Monitoring, incident, deployment environment, tenant operations, and runtime secret evidence are attached.",
     "Certification evidence is present for every required PSP/FBR/hardware group.",
     "Release retention and secret-manager evidence passed.",
-    "Production operations readiness passed or approved exception is recorded.",
+    "Production operations readiness passed or approved exception is recorded with expiry and audit reference.",
     "Release-readiness JSON is ready/pass.",
     "Rollback owner and incident channel are staffed during the release window.",
 ]
@@ -64,6 +64,24 @@ def _truthy(value):
 
 def _present(value):
     return bool(str(value or "").strip())
+
+
+def _parse_expiry(value):
+    text = str(value or "").strip()
+    if not text:
+        return None, "Expiry is missing."
+    normalized = text[:-1] + "+00:00" if text.endswith("Z") else text
+    try:
+        if "T" in normalized or "+" in normalized:
+            parsed = dt.datetime.fromisoformat(normalized)
+        else:
+            parsed_date = dt.date.fromisoformat(normalized)
+            parsed = dt.datetime.combine(parsed_date, dt.time.max, tzinfo=dt.timezone.utc)
+    except ValueError:
+        return None, "Expiry must use YYYY-MM-DD or ISO-8601 datetime."
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed.astimezone(dt.timezone.utc), ""
 
 
 def _csv_items(value):
@@ -130,6 +148,69 @@ def _add_required(rows, blockers, warnings, strict, name, value, label):
         rows.append(_row(name, "warning", message))
 
 
+def _warning_exception(args):
+    enabled = bool(args.allow_warning_exception)
+    expires_at, expiry_error = _parse_expiry(args.warning_exception_expires_at) if enabled else (None, "")
+    issues = []
+    if enabled:
+        if not _present(args.warning_exception_ref):
+            issues.append("Warning exception reference is required.")
+        if not _present(args.warning_exception_approved_by):
+            issues.append("Warning exception approver is required.")
+        if not _present(args.warning_exception_reason):
+            issues.append("Warning exception reason is required.")
+        if not _present(args.warning_exception_audit_ref):
+            issues.append("Warning exception audit reference is required.")
+        if expiry_error:
+            issues.append(expiry_error)
+        elif expires_at and expires_at < dt.datetime.now(dt.timezone.utc):
+            issues.append("Warning exception is expired.")
+    status = "disabled"
+    if enabled and issues:
+        status = "invalid"
+    elif enabled:
+        status = "ready"
+    return {
+        "enabled": enabled,
+        "status": status,
+        "reference": args.warning_exception_ref,
+        "approved_by": args.warning_exception_approved_by,
+        "reason": args.warning_exception_reason,
+        "expires_at": args.warning_exception_expires_at,
+        "expires_at_utc": expires_at.strftime("%Y-%m-%dT%H:%M:%SZ") if expires_at else "",
+        "audit_ref": args.warning_exception_audit_ref,
+        "issues": issues,
+    }
+
+
+def _add_warning_exception_checks(rows, blockers, warnings, strict, exception):
+    if not exception["enabled"]:
+        rows.append(
+            _row(
+                "warning-exception-runbook",
+                "passed",
+                "Production-ops warning exception is disabled for this handoff.",
+            )
+        )
+        return
+    if exception["issues"]:
+        message = "Production-ops warning exception issue(s): %s" % "; ".join(exception["issues"])
+        if strict:
+            blockers.append(message)
+            rows.append(_row("warning-exception-runbook", "failed", message))
+        else:
+            warnings.append(message)
+            rows.append(_row("warning-exception-runbook", "warning", message))
+        return
+    rows.append(
+        _row(
+            "warning-exception-runbook",
+            "passed",
+            "Production-ops warning exception has reference, approver, reason, future expiry, and audit reference.",
+        )
+    )
+
+
 def _workflow_checks(workflow_file):
     checks = []
     path = Path(workflow_file)
@@ -146,7 +227,7 @@ def _workflow_checks(workflow_file):
 
 def _artifact_review_rows(review_order):
     files = {
-        "protected-runbook-handoff": "summary.md, operator-runbook.md",
+        "protected-runbook-handoff": "summary.md, operator-runbook.md, warning-exception-runbook.md",
         "protected-first-run": "protected-first-run-checklist.json, status.tsv",
         "protected-runner-preflight": "protected-runner-preflight.json, status.tsv",
         "protected-artifact-summary": "protected-artifact-summary.json, summary.md",
@@ -204,7 +285,38 @@ def _commands(context):
     }
 
 
-def _operator_runbook(context, commands, review_rows, go_no_go):
+def _warning_exception_operator_lines(exception):
+    if not exception["enabled"]:
+        return """
+- Exception enabled: no
+- Action: keep `TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION=0` for this run.
+- Audit: verify production operations readiness has no unapproved warnings before go/no-go.
+"""
+    issue_lines = "\n".join("- %s" % issue for issue in exception["issues"]) or "- None"
+    return f"""
+- Exception enabled: yes
+- Status: {exception["status"]}
+- Reference: {exception["reference"] or "<unset>"}
+- Approved by: {exception["approved_by"] or "<unset>"}
+- Expires at: {exception["expires_at"] or "<unset>"}
+- Audit reference: {exception["audit_ref"] or "<unset>"}
+- Reason: {exception["reason"] or "<unset>"}
+
+Exception validation issues:
+
+{issue_lines}
+
+Release-owner actions:
+
+- [ ] Confirm the warning is non-critical, bounded, and does not affect customer money, fiscal compliance, or data integrity.
+- [ ] Confirm the change/audit reference is visible in the protected GitHub Environment variables.
+- [ ] Confirm `production-ops-readiness.json`, `summary.md`, and `evidence-summary.md` record the exception.
+- [ ] Confirm a follow-up owner and due date exist before the expiry.
+- [ ] Remove or reset exception variables after the approved run, or before expiry if the issue is resolved.
+"""
+
+
+def _operator_runbook(context, commands, review_rows, go_no_go, warning_exception):
     review_lines = "\n".join(
         "%s. `%s` - %s" % (row["order"], row["artifact"], row["primary_files"])
         for row in review_rows
@@ -254,6 +366,10 @@ def _operator_runbook(context, commands, review_rows, go_no_go):
 
 {checklist_lines}
 
+## Production Ops Warning Exception
+
+{_warning_exception_operator_lines(warning_exception)}
+
 ## Decision Capture
 
 - [ ] Go
@@ -284,6 +400,50 @@ def _go_no_go_markdown(context, go_no_go):
     lines.append("- Target environment: %s" % context["target_environment"])
     lines.append("")
     lines.extend("- [ ] %s" % item for item in go_no_go)
+    return "\n".join(lines)
+
+
+def _warning_exception_markdown(context, exception):
+    lines = ["# Production Ops Warning Exception Runbook", ""]
+    lines.append("- Run ID: %s" % context["run_id"])
+    lines.append("- Target environment: %s" % context["target_environment"])
+    lines.append("- Enabled: %s" % ("yes" if exception["enabled"] else "no"))
+    lines.append("- Status: %s" % exception["status"])
+    lines.append("- Reference: %s" % (exception["reference"] or "<unset>"))
+    lines.append("- Approved by: %s" % (exception["approved_by"] or "<unset>"))
+    lines.append("- Expires at: %s" % (exception["expires_at"] or "<unset>"))
+    lines.append("- Expires at UTC: %s" % (exception["expires_at_utc"] or "<unset>"))
+    lines.append("- Audit reference: %s" % (exception["audit_ref"] or "<unset>"))
+    lines.append("- Reason: %s" % (exception["reason"] or "<unset>"))
+    lines.append("")
+    lines.append("## Approval Steps")
+    lines.append("")
+    lines.append("- [ ] Confirm the warning is not a blocker for payments, FBR, refunds, inventory integrity, security, or customer data.")
+    lines.append("- [ ] Confirm the release owner approved the exact warning and reference.")
+    lines.append("- [ ] Confirm the exception expiry is in the future and short enough for the risk.")
+    lines.append("- [ ] Confirm `TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION=1` is scoped to the protected environment and run.")
+    lines.append("- [ ] Confirm production operations readiness records the exception as `warning`/`pass_with_warnings`.")
+    lines.append("")
+    lines.append("## Expiry Steps")
+    lines.append("")
+    lines.append("- [ ] Open the follow-up work item before the expiry date.")
+    lines.append("- [ ] Remove or reset the protected exception variables once the warning is fixed.")
+    lines.append("- [ ] Re-run protected production operations readiness without the exception.")
+    lines.append("- [ ] If the exception must be extended, create a new reference, approver, reason, and expiry.")
+    lines.append("")
+    lines.append("## Audit Steps")
+    lines.append("")
+    lines.append("- [ ] Review `production-ops-readiness.json` warning_exception metadata.")
+    lines.append("- [ ] Review sign-off `evidence-summary.md` warning exception line.")
+    lines.append("- [ ] Confirm the audit reference links the release, warning, owner, expiry, and follow-up item.")
+    lines.append("- [ ] Confirm the exception was not reused for another production run without a new approval.")
+    lines.append("")
+    lines.append("## Validation Issues")
+    lines.append("")
+    if exception["issues"]:
+        lines.extend("- %s" % issue for issue in exception["issues"])
+    else:
+        lines.append("- None")
     return "\n".join(lines)
 
 
@@ -318,6 +478,7 @@ def _summary(context, rows, decision, blockers, warnings):
 
 - Runbook manifest: protected-runbook-handoff.json
 - Operator runbook: operator-runbook.md
+- Warning exception runbook: warning-exception-runbook.md
 - Artifact review order: artifact-review-order.md
 - Go/no-go checklist: go-no-go-checklist.md
 - Status table: status.tsv
@@ -344,6 +505,12 @@ def main():
     parser.add_argument("--business-owner", default=os.environ.get("TIJARA_FIRST_RUN_BUSINESS_OWNER", ""))
     parser.add_argument("--security-owner", default=os.environ.get("TIJARA_FIRST_RUN_SECURITY_OWNER", ""))
     parser.add_argument("--support-owner", default=os.environ.get("TIJARA_FIRST_RUN_SUPPORT_OWNER", ""))
+    parser.add_argument("--allow-warning-exception", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION", "0")))
+    parser.add_argument("--warning-exception-ref", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_REF", ""))
+    parser.add_argument("--warning-exception-approved-by", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_APPROVED_BY", ""))
+    parser.add_argument("--warning-exception-reason", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON", ""))
+    parser.add_argument("--warning-exception-expires-at", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT", ""))
+    parser.add_argument("--warning-exception-audit-ref", default=os.environ.get("TIJARA_PROD_OPS_WARNING_EXCEPTION_AUDIT_REF", ""))
     parser.add_argument("--artifact-review-order", default=os.environ.get("TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER", ",".join(DEFAULT_REVIEW_ORDER)))
     parser.add_argument("--artifact-review-item", action="append", default=[])
     parser.add_argument("--go-no-go-item", action="append", default=[])
@@ -411,6 +578,9 @@ def main():
     ]:
         _add_required(rows, blockers, warnings, strict, name, value, label)
 
+    warning_exception = _warning_exception(args)
+    _add_warning_exception_checks(rows, blockers, warnings, strict, warning_exception)
+
     required_artifacts = {"protected-runbook-handoff", "protected-first-run", "protected-artifact-summary", "signoff-packages"}
     missing_review = sorted(required_artifacts - set(review_order))
     if missing_review:
@@ -467,6 +637,7 @@ def main():
             "security": args.security_owner,
             "support": args.support_owner,
         },
+        "warning_exception": warning_exception,
     }
     commands = _commands(context)
     review_rows = _artifact_review_rows(review_order)
@@ -480,6 +651,7 @@ def main():
         "commands": commands,
         "artifact_review_order": review_rows,
         "go_no_go_checklist": go_no_go,
+        "warning_exception": warning_exception,
         "metadata": metadata,
     }
     env_summary = "\n".join(
@@ -490,6 +662,12 @@ def main():
             "workflow_file=%s" % workflow_path,
             "artifact_review_order=%s" % ",".join(review_order),
             "metadata_keys=%s" % (",".join(sorted(metadata)) or "<none>"),
+            "allow_warning_exception=%s" % int(warning_exception["enabled"]),
+            "warning_exception_status=%s" % warning_exception["status"],
+            "warning_exception_ref=%s" % (warning_exception["reference"] or "<unset>"),
+            "warning_exception_approved_by=%s" % (warning_exception["approved_by"] or "<unset>"),
+            "warning_exception_expires_at=%s" % (warning_exception["expires_at"] or "<unset>"),
+            "warning_exception_audit_ref=%s" % (warning_exception["audit_ref"] or "<unset>"),
             "strict=%s" % int(strict),
             "decision=%s" % decision,
             "ci_status=%s" % ci_status,
@@ -497,7 +675,8 @@ def main():
     )
 
     _write(output / "protected-runbook-handoff.json", json.dumps(manifest, indent=2, sort_keys=True))
-    _write(output / "operator-runbook.md", _operator_runbook(context, commands, review_rows, go_no_go))
+    _write(output / "operator-runbook.md", _operator_runbook(context, commands, review_rows, go_no_go, warning_exception))
+    _write(output / "warning-exception-runbook.md", _warning_exception_markdown(context, warning_exception))
     _write(output / "artifact-review-order.md", _artifact_review_markdown(context, review_rows))
     _write(output / "go-no-go-checklist.md", _go_no_go_markdown(context, go_no_go))
     _write(output / "status.tsv", _status_tsv(rows))

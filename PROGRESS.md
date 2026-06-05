@@ -7744,3 +7744,76 @@ Status: Complete
   bootstrap output with `protected-runner-preflight.json`.
 - Continue provider/device certification and live offline POS pilot proof once
   credentials and staging hardware are available.
+
+## Iteration 107: Production Ops Warning Exception Runbook
+
+Status: Complete
+
+### Scope
+
+- Make production-ops warning exceptions operationally auditable in the
+  protected release handoff, including approval, expiry, and audit steps before
+  release-owner go/no-go.
+
+### Completed
+
+- Enhanced `scripts/export_protected_runbook_handoff.py` with warning exception
+  validation using the same protected environment variables as production ops
+  readiness.
+- Added `TIJARA_PROD_OPS_WARNING_EXCEPTION_AUDIT_REF` to protected workflow
+  environment wiring and `deploy/config/github-protected-vars.example`.
+- Strict handoff now passes when exceptions are disabled, and requires
+  reference, approver, reason, future expiry, and audit reference when
+  exceptions are enabled.
+- The handoff now writes `warning-exception-runbook.md` with approval, expiry,
+  audit, and validation sections.
+- `operator-runbook.md`, `protected-runbook-handoff.json`, `summary.md`,
+  `status.tsv`, and `env-summary.txt` now carry the warning exception status.
+- Updated `README.md` and `DEPLOY.md` so operators know the exception runbook
+  exists and which protected GitHub Environment variables to set.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_runbook_handoff.py
+  scripts/export_production_ops_readiness.py scripts/generate_signoff_pack.py`
+  passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and exposes
+  `TIJARA_PROD_OPS_WARNING_EXCEPTION_AUDIT_REF`.
+- Strict no-exception handoff fixture writes `decision=passed` and
+  `ci_status=pass`.
+- Strict valid-exception handoff fixture writes `decision=passed`,
+  `ci_status=pass`, and includes `Status: ready`,
+  `audit:TIJARA-PROD-EXCEPTION-001`, approval steps, expiry steps, and audit
+  steps in generated markdown.
+- Strict expired-exception handoff fixture writes `decision=failed`,
+  `ci_status=fail`, and records `Warning exception is expired.`
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The runbook evidence still needs execution inside a real protected GitHub
+  Environment with a real release owner, audit/change reference, and reviewed
+  production-ops warning.
+- Live protected evidence still needs actual runner execution with Odoo,
+  hardware bridge, Prometheus, Alertmanager, Grafana, backup artifacts, k6,
+  Trivy, npm audit, optional pip-audit, and restore drill inputs.
+- PSP/FBR certification, physical hardware certification, payment provider
+  settlement/refund/chargeback certification, live offline POS pilot proof, and
+  full production monitoring remain blockers.
+
+### Next Iteration
+
+- Add protected-runner post-bootstrap verification evidence that correlates
+  bootstrap output with `protected-runner-preflight.json`.
+- Add live staging protected-run evidence once the self-hosted runner, URLs,
+  credentials, and artifacts are available.
+- Continue provider/device certification and live offline POS pilot proof once
+  credentials and staging hardware are available.

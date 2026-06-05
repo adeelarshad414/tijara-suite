@@ -428,6 +428,9 @@ The detailed policy and dependency intake checklist are maintained in
   `make protected-runbook-handoff` export a protected live staging/production
   operator handoff with exact dispatch commands, artifact review order, and
   go/no-go checklist files under `deploy/runtime/protected-runbook-handoff/`.
+  The handoff now also writes `warning-exception-runbook.md` for audited
+  production-ops warning exceptions with reference, approver, reason, expiry,
+  and audit reference checks.
 - `scripts/export_protected_first_run_checklist.py` and
   `make protected-first-run-checklist` export a protected staging/production
   first-run checklist for owner sign-offs, protected runner labels,
