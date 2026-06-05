@@ -2347,3 +2347,57 @@ Date: 2026-06-05
   staging stack.
 - Continue direct POS UI click-through selectors and external certification
   evidence workflows.
+
+## Iteration 34: Sign-Off Required Evidence Guardrails
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added required evidence group guardrails to
+  `scripts/generate_signoff_pack.py`.
+- Operators can now require sign-off evidence groups through:
+  - Repeated `--required-evidence-group` arguments.
+  - `TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS`, such as
+    `release,e2e,ops,security,hardware,fbr,psp`.
+- Added group alias normalization:
+  - `release`, `release-candidate`, and `rc` map to `Release Candidate`.
+  - `e2e`, `browser`, and `playwright` map to `Browser E2E`.
+  - `ops` maps to `Operations`.
+- Added `TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1` and
+  `--strict-required-evidence` so missing groups can fail the command after the
+  package is written.
+- The package README, `evidence-summary.md`, and `evidence-manifest.json` now
+  show required groups, missing groups, strict/warn mode, and group counts.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Local sign-off package smoke passes with required release/E2E/ops evidence
+  groups present.
+- Strict guardrail smoke exits non-zero when a required PSP group is missing,
+  after writing the package and missing-group metadata.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Required evidence group selection is operator-driven; production policy still
+  needs final owner decisions for exactly which groups are mandatory per release
+  type.
+- Guardrails verify attached evidence categories, not semantic certification
+  quality inside PSP/FBR/hardware documents.
+- Production sign-off still depends on live staging execution and real external
+  provider/device evidence.
+
+### Next Iteration
+
+- Add machine-readable release readiness decision output from the sign-off
+  package for CI/CD and release dashboards.
+- Execute full staging release-candidate and sign-off flows once staging
+  credentials, PSP/FBR samples, and hardware evidence are available.
+- Continue direct cashier POS UI selector coverage.

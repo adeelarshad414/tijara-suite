@@ -636,6 +636,7 @@ operations evidence:
 TIJARA_SIGNOFF_RUN_ID=2026-06-05-rc1 \
 TIJARA_SIGNOFF_ENVIRONMENT=staging \
 TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1 \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops \
 make signoff-pack
 ```
 
@@ -656,6 +657,13 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   status-table, and non-secret environment summaries for approvers.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
+
+Use `TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS` to require evidence groups by
+alias, such as `release,e2e,ops,security,hardware,fbr,psp`. By default, missing
+groups are written as warnings in the package. Set
+`TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1` for production release drills where
+missing required groups should make `make signoff-pack` exit non-zero after the
+package is written.
 
 ## Rollback Baseline
 

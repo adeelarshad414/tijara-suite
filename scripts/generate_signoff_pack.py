@@ -4,10 +4,30 @@ import datetime as dt
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+GROUP_ALIASES = {
+    "release": "Release Candidate",
+    "release candidate": "Release Candidate",
+    "release-candidate": "Release Candidate",
+    "rc": "Release Candidate",
+    "browser": "Browser E2E",
+    "browser e2e": "Browser E2E",
+    "browser-e2e": "Browser E2E",
+    "e2e": "Browser E2E",
+    "playwright": "Browser E2E",
+    "ops": "Operations",
+    "operations": "Operations",
+    "hardware": "Hardware",
+    "fbr": "FBR",
+    "psp": "PSP",
+    "settlement": "PSP",
+    "security": "Security",
+    "general": "General",
+}
 
 
 def _utc_now():
@@ -16,6 +36,14 @@ def _utc_now():
 
 def _default_run_id():
     return dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+
+def _truthy(value):
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _csv_items(value):
+    return [item.strip() for item in (value or "").split(",") if item.strip()]
 
 
 def _git_value(args):
@@ -334,6 +362,11 @@ def _security_review(context):
 """
 
 
+def _normalize_group_name(name):
+    cleaned = " ".join(str(name or "").replace("_", " ").split()).strip()
+    return GROUP_ALIASES.get(cleaned.lower(), cleaned)
+
+
 def _evidence_group(entry):
     relative = entry["relative_path"].replace("\\", "/")
     if "release-evidence/" in relative:
@@ -351,6 +384,14 @@ def _evidence_group(entry):
     if "security" in relative.lower():
         return "Security"
     return "General"
+
+
+def _group_counts(evidence_entries):
+    counts = {}
+    for entry in evidence_entries:
+        group = _evidence_group(entry)
+        counts[group] = counts.get(group, 0) + 1
+    return counts
 
 
 def _summary_fields(lines):
@@ -402,14 +443,12 @@ def _environment_lines(lines):
 
 
 def _evidence_summary(context, evidence_entries):
-    by_group = {}
+    by_group = _group_counts(evidence_entries)
     summary_blocks = []
     status_blocks = []
     environment_blocks = []
 
     for entry in evidence_entries:
-        group = _evidence_group(entry)
-        by_group[group] = by_group.get(group, 0) + 1
         path = Path(entry["path"])
         name = path.name
         lines = _read_lines(path)
@@ -428,6 +467,17 @@ def _evidence_summary(context, evidence_entries):
     )
     if not group_lines:
         group_lines = "- No evidence files were attached by this generator run."
+
+    required_groups = context.get("required_evidence_groups") or []
+    missing_groups = context.get("missing_evidence_groups") or []
+    if required_groups:
+        required_lines = [
+            "- Mode: %s" % ("strict" if context.get("strict_required_evidence") else "warn"),
+            "- Required groups: %s" % ", ".join(required_groups),
+            "- Missing groups: %s" % (", ".join(missing_groups) if missing_groups else "none"),
+        ]
+    else:
+        required_lines = ["- No required evidence groups configured for this run."]
 
     summary_lines = []
     for entry, fields in summary_blocks:
@@ -475,6 +525,10 @@ def _evidence_summary(context, evidence_entries):
 
 {group_lines}
 
+## Required Evidence Guardrails
+
+{chr(10).join(required_lines)}
+
 ## Run Summaries
 
 {chr(10).join(summary_lines)}
@@ -509,6 +563,18 @@ def _index(context, files, evidence_entries):
     if not evidence_lines:
         evidence_lines = "- No evidence files were attached by this generator run."
     template_lines = "\n".join("- [%s](%s)" % (title, path.name) for title, path in files)
+    required_groups = context.get("required_evidence_groups") or []
+    missing_groups = context.get("missing_evidence_groups") or []
+    if required_groups:
+        required_lines = "\n".join(
+            [
+                "- Mode: %s" % ("strict" if context.get("strict_required_evidence") else "warn"),
+                "- Required groups: %s" % ", ".join(required_groups),
+                "- Missing groups: %s" % (", ".join(missing_groups) if missing_groups else "none"),
+            ]
+        )
+    else:
+        required_lines = "- No required evidence groups configured for this run."
     return f"""
 # Tijara Release Sign-Off Package
 
@@ -529,6 +595,10 @@ def _index(context, files, evidence_entries):
 ## Evidence Summary
 
 - [Evidence Summary](evidence-summary.md)
+
+## Required Evidence Guardrails
+
+{required_lines}
 
 ## Usage
 
@@ -559,12 +629,35 @@ def main():
         default=[],
         help="Evidence file or directory to include in manifest. Can be repeated.",
     )
+    parser.add_argument(
+        "--required-evidence-group",
+        action="append",
+        default=[],
+        help=(
+            "Required evidence group for approval readiness. Examples: release, e2e, "
+            "ops, security, hardware, fbr, psp. Can be repeated."
+        ),
+    )
+    parser.add_argument(
+        "--strict-required-evidence",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE")),
+        help="Exit non-zero after writing the package when required evidence groups are missing.",
+    )
     args = parser.parse_args()
 
     evidence_paths = list(args.evidence_path)
     env_paths = os.environ.get("TIJARA_SIGNOFF_EVIDENCE_PATHS", "")
     if env_paths:
         evidence_paths.extend(path.strip() for path in env_paths.split(","))
+
+    required_groups = list(args.required_evidence_group)
+    required_groups.extend(_csv_items(os.environ.get("TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS")))
+    required_groups = [
+        group
+        for group in dict.fromkeys(_normalize_group_name(group) for group in required_groups)
+        if group
+    ]
 
     output = Path(args.output) if args.output else ROOT_DIR / "deploy/runtime/signoff-packages" / args.run_id
     output.mkdir(parents=True, exist_ok=True)
@@ -606,11 +699,24 @@ def main():
                 "sha256": _hash_file(evidence_file),
             }
         )
+    group_counts = _group_counts(evidence_entries)
+    missing_required_groups = [group for group in required_groups if group_counts.get(group, 0) < 1]
+    context.update(
+        {
+            "required_evidence_groups": required_groups,
+            "missing_evidence_groups": missing_required_groups,
+            "strict_required_evidence": bool(args.strict_required_evidence),
+        }
+    )
 
     manifest = {
         "context": context,
         "generated_templates": [path.name for _, path in written_templates],
         "evidence_summary": "evidence-summary.md",
+        "evidence_group_counts": group_counts,
+        "required_evidence_groups": required_groups,
+        "missing_evidence_groups": missing_required_groups,
+        "strict_required_evidence": bool(args.strict_required_evidence),
         "evidence": evidence_entries,
     }
     _write(output / "evidence-manifest.json", json.dumps(manifest, indent=2, sort_keys=True))
@@ -618,7 +724,14 @@ def main():
     _write(output / "README.md", _index(context, written_templates, evidence_entries))
 
     print("Sign-off package written to %s" % output)
+    if missing_required_groups:
+        message = "Missing required sign-off evidence groups: %s" % ", ".join(missing_required_groups)
+        if args.strict_required_evidence:
+            print(message, file=sys.stderr)
+            return 2
+        print("Warning: %s" % message)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
