@@ -7906,3 +7906,78 @@ Status: Complete
   credentials and physical devices are available.
 - Continue hardening monitoring, restore drills, load testing, security scans,
   and offline POS pilot proof against real staging infrastructure.
+
+## Iteration 109: Protected Certification Execution Hardening
+
+Status: Complete
+
+### Scope
+
+- Prevent required PSP/FBR/hardware certification groups from being silently
+  skipped during protected release execution, and add root certification
+  execution evidence for release reviewers.
+
+### Completed
+
+- Enhanced `scripts/run_protected_certification_evidence.sh`.
+- The protected certification runner now reads required groups from
+  `TIJARA_CERTIFICATION_REQUIRED_GROUPS` or
+  `TIJARA_PROTECTED_CERTIFICATION_GROUPS`.
+- Any required group that lacks matching `TIJARA_CERT_*` configuration now
+  records a failed category row and exits non-zero.
+- Unrequested categories are recorded as skipped optional groups.
+- The runner now writes root execution evidence under
+  `deploy/runtime/certification-evidence/<run-id>/`:
+  `certification-execution.json`, `status.tsv`, `env-summary.txt`,
+  `summary.md`, and `certification-evidence-paths.env`.
+- The protected workflow sign-off evidence paths now include the root
+  certification execution folder as well as the PSP/FBR/hardware category
+  folders.
+- Artifact summary and sign-off classification now recognize
+  `certification-execution.json`.
+- Updated `README.md` and `DEPLOY.md` with required-group failure behavior and
+  root execution evidence guidance.
+
+### Validation
+
+- `bash -n scripts/run_protected_certification_evidence.sh` passes.
+- No-required-groups fixture records PSP/FBR/hardware as skipped and exits `0`.
+- Required PSP missing-config fixture exits `1`, writes
+  `decision=failed`/`ci_status=fail`, and records PSP as failed in root
+  `status.tsv`.
+- Required PSP positive fixture with a real SHA-256 checked evidence file and
+  manifest writes PSP category `decision=passed`/`ci_status=pass`.
+- Root PSP positive execution writes `decision=passed`/`ci_status=pass`, lists
+  FBR and hardware under skipped optional groups, and keeps warnings empty.
+- Sign-off fixture with root certification execution plus PSP category evidence
+  generates a sign-off package successfully.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/collect_certification_evidence.py scripts/generate_signoff_pack.py
+  scripts/export_protected_artifact_summary.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- PSP/FBR/hardware certification still needs real provider credentials,
+  certified-provider API results, and physical device proof from staging or
+  production pilots.
+- The positive fixture validates runner behavior and SHA-256 handling, but it
+  is not a substitute for JazzCash/Easypaisa/Stripe/FBR/device certification.
+- Live protected run execution still needs a real self-hosted runner, URLs,
+  secrets, backup artifacts, monitoring endpoints, and hardware bridge access.
+
+### Next Iteration
+
+- Add live staging protected-run evidence once the self-hosted runner, URLs,
+  credentials, and artifacts are available.
+- Continue hardening monitoring, restore drills, load testing, security scans,
+  and offline POS pilot proof against real staging infrastructure.
+- Add provider/device-specific certification result mapping once real PSP, FBR,
+  and hardware evidence is available.

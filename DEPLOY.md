@@ -1206,6 +1206,14 @@ directories to `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the selected groups;
 missing, expired, unapproved, or hash-mismatched certification evidence becomes
 a release-readiness blocker.
 
+`make protected-certification-evidence` also writes root execution evidence at
+`deploy/runtime/certification-evidence/<run-id>/certification-execution.json`,
+`status.tsv`, `env-summary.txt`, and `summary.md`. Any group listed in
+`TIJARA_PROTECTED_CERTIFICATION_GROUPS` must be configured through its matching
+`TIJARA_CERT_*` variables; otherwise the protected certification runner exits
+failed instead of silently skipping it. Unrequested categories are recorded as
+skipped optional groups.
+
 Generate the protected operator handoff before the first live staging run so
 the release owner, DevOps, QA, support, security, and business reviewers have
 the exact commands and review order in one evidence folder:
@@ -1898,6 +1906,16 @@ Include the generated directories in the release sign-off package:
 ```bash
 TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-seed/2026-06-05-rc1,deploy/runtime/e2e-profile/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
 TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,psp,fbr,hardware \
+TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
+make signoff-pack
+```
+
+Also attach the root certification execution folder when reviewing operations
+evidence, because it records which categories were passed, failed, or skipped:
+
+```bash
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/certification-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=psp,fbr,hardware \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
 make signoff-pack
 ```

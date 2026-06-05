@@ -433,6 +433,7 @@ def _evidence_group(entry):
         or filename == "github-artifact-metadata.json"
         or filename == "protected-runner-preflight.json"
         or filename == "protected-runner-bootstrap-verification.json"
+        or filename == "certification-execution.json"
         or filename == "release-retention-evidence.json"
         or filename == "deployment-environment-evidence.json"
         or filename == "tenant-ops-evidence.json"

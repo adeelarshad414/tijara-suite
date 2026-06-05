@@ -33,6 +33,7 @@ INTERESTING_JSON_NAMES = {
     "deployment-environment-evidence.json",
     "tenant-ops-evidence.json",
     "certification-evidence.json",
+    "certification-execution.json",
     "release-retention-evidence.json",
     "secret-manager-evidence.json",
     "production-ops-readiness.json",

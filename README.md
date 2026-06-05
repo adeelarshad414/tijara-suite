@@ -520,7 +520,10 @@ The detailed policy and dependency intake checklist are maintained in
   `make protected-certification-evidence` collect strict PSP, FBR, and hardware
   certification evidence from protected-runner environment variables so
   staging/production sign-off packages can require external certification
-  groups without committing provider or device evidence.
+  groups without committing provider or device evidence. Required groups from
+  `TIJARA_PROTECTED_CERTIFICATION_GROUPS` now fail if unconfigured, and the
+  runner writes root `certification-execution.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` evidence.
 - `scripts/export_psp_readiness.py` and `make psp-readiness-evidence` export
   redacted PSP readiness evidence from the committed provider adapter matrix,
   including secret-presence status, certification status, event coverage, and
