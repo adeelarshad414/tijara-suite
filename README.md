@@ -135,6 +135,7 @@ make release-retention-evidence
 make secret-manager-evidence
 make secret-runtime-evidence
 make deployment-environment-evidence
+make tenant-ops-evidence
 make load-evidence
 make operations-release-bundle
 make signoff-pack
@@ -214,10 +215,12 @@ refund/chargeback/settlement audit records, provider fees/net amounts,
 settlement batch import/reconciliation records, refund/chargeback operator
 cases with evidence hashing and
 subscription impact actions, dunning, and suspension actions. Tenant database
-provisioning has an operator
-script for database-per-tenant module install plus DNS/ingress/admin/backup/
-monitoring operations manifests. The repo also includes Playwright browser E2E
-seed and checkout scaffolds, hardware certification records/profiles,
+provisioning has an operator script for database-per-tenant module install plus
+DNS/ingress/admin/backup/monitoring operations manifests, generated
+Kubernetes/Nginx/DNS/TLS/backup/admin/smoke-test artifacts, and tenant
+operations evidence that can be attached to release sign-off. The repo also
+includes Playwright browser E2E seed and checkout scaffolds, hardware
+certification records/profiles,
 Prometheus/Blackbox/Alertmanager/Grafana/Loki monitoring config, staging
 monitoring drill script, restore-drill scripts, and container/dependency scan
 hooks. Authenticated staging browser evidence now includes an integrated POS
@@ -304,7 +307,9 @@ The retail operations layer now includes:
 - SaaS subscription invoice-generation and external payment tracking
   foundation, including webhook event records and dunning/suspension actions.
 - Tenant database provisioning script plus operations manifest generation for
-  DNS, ingress, admin, backup, and monitoring rollout.
+  DNS, ingress, admin, backup, monitoring, Kubernetes ingress, external DNS,
+  cert-manager TLS, admin bootstrap, backup policy, and tenant smoke rollout,
+  with tenant operations evidence extraction for sign-off.
 - Hardware certification records for physical printer/scanner/scale/display
   model evidence capture.
 - Playwright E2E scaffolds and seed script for public display, kiosk checkout,

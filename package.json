@@ -26,6 +26,7 @@
     "secret-manager:evidence": "python3 scripts/export_secret_manager_evidence.py",
     "secret-runtime:evidence": "python3 scripts/export_secret_runtime_evidence.py",
     "deployment:environment": "python3 scripts/export_deployment_environment_evidence.py",
+    "tenant:ops-evidence": "python3 scripts/export_tenant_ops_evidence.py",
     "load:evidence": "python3 scripts/export_load_evidence.py",
     "load:profile": "bash scripts/run_load_profile.sh",
     "load:enterprise": "bash scripts/run_load_profile.sh enterprise-surfaces",

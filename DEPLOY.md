@@ -89,6 +89,7 @@ make release-retention-evidence
 make secret-manager-evidence
 make secret-runtime-evidence
 make deployment-environment-evidence
+make tenant-ops-evidence
 make load-evidence
 make operations-release-bundle
 make signoff-pack
@@ -280,11 +281,48 @@ Generate tenant operations artifacts after database provisioning:
 make provision-tenant-ops TENANT_DB=tijara_customer_001 TENANT_DOMAIN=customer.example.com ADMIN_EMAIL=admin@example.com
 ```
 
-This writes a tenant operations manifest, Nginx location snippet, and Prometheus
-Blackbox target under `deploy/runtime/tenants/<tenant_db>/`. The matching Odoo
-provisioning request can also generate an operations manifest from SaaS Admin.
-Production DNS changes, certificate issuance, admin-user creation, and smoke
-execution still need provider-specific automation.
+This writes a tenant operations bundle under
+`deploy/runtime/tenants/<tenant_db>/`:
+
+- `ops-manifest.json` with tenant, DNS, ingress, admin, backup, monitoring,
+  and smoke-check metadata.
+- `nginx-location.conf` for database isolation headers.
+- `k8s-ingress.yaml` for Kubernetes ingress rollout.
+- `external-dns-record.json` for DNS provider/manual record creation.
+- `cert-manager-certificate.yaml` for TLS certificate issuance.
+- `backup-policy.json` for backup retention and restore-drill linkage.
+- `prometheus-blackbox-target.json` for tenant uptime monitoring.
+- `admin-bootstrap.md` with non-secret admin bootstrap instructions.
+- `smoke-checklist.md` for tenant go-live checks.
+
+The matching Odoo provisioning request can also generate a compatible
+operations manifest from SaaS Admin. Production DNS changes, certificate
+issuance, admin-user creation, and smoke execution still need provider-specific
+automation, but the required rollout artifacts are now machine-checkable.
+
+Export tenant operations evidence before pilot, staging, or production
+sign-off:
+
+```bash
+python3 scripts/export_tenant_ops_evidence.py \
+  --run-id 2026-06-05-prod \
+  --target-environment production \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --minimum-tenants 1 \
+  --require-dns-provider \
+  --require-admin-email \
+  --require-restore-drill \
+  --require-monitoring \
+  --require-all-artifacts \
+  --strict
+```
+
+The exporter writes `tenant-ops-evidence.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/tenant-ops-evidence/<run-id>/`. Attach that directory to
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the `ops` evidence group for
+production sign-off; the sign-off package extracts tenant readiness under
+`tenant_ops_reviews`.
 
 ## Subscription Billing
 
@@ -930,6 +968,9 @@ production release sign-off; the sign-off package extracts it under
 
 Optional tools:
 
+- Run `make tenant-ops-evidence` after generating tenant artifacts to export
+  machine-checkable tenant DNS, ingress, admin, backup, monitoring, and smoke
+  readiness evidence.
 - Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.
 - Run `make load-evidence` after k6 to export structured load evidence for
   release sign-off.
@@ -1146,9 +1187,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
-  runbook, release retention, secret manager, secret runtime, deployment
-  environment, load evidence, load profile matrix evidence, and non-secret
-  environment summaries for approvers.
+  runbook, release retention, secret manager, secret runtime, tenant
+  operations, deployment environment, load evidence, load profile matrix
+  evidence, and non-secret environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -1172,10 +1213,12 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   startup guards, and committed-secret hygiene are included under
   `secret_manager_reviews`; when secret runtime evidence is attached, runtime
   secret probe source and resolution reviews are included under
-  `secret_runtime_reviews`; when deployment environment evidence is attached,
-  approver, branch-policy, promotion, rollback, deployment-gate, monitoring,
-  backup, change-ticket, and freeze-window reviews are included under
-  `deployment_environment_reviews`.
+  `secret_runtime_reviews`; when tenant operations evidence is attached,
+  per-tenant DNS, ingress, admin, backup, monitoring, smoke, and artifact
+  reviews are included under `tenant_ops_reviews`; when deployment environment
+  evidence is attached, approver, branch-policy, promotion, rollback,
+  deployment-gate, monitoring, backup, change-ticket, and freeze-window reviews
+  are included under `deployment_environment_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 

@@ -93,10 +93,16 @@ class TijaraTenantProvisionRequest(models.Model):
     def _tijara_operations_manifest(self):
         self.ensure_one()
         domain = self.primary_domain or "%s.example.com" % self.database_name.replace("_", "-")
+        tenant_slug = self.database_name.replace("_", "-")
         return {
+            "context": {
+                "generator": "addons/tijara_saas_control/models/tenant_provision_request.py",
+                "artifact_schema": "tenant-ops/v1",
+            },
             "tenant": {
                 "name": self.tenant_name,
                 "database": self.database_name,
+                "domain": domain,
                 "subscription": self.subscription_id.name,
                 "plan": self.plan_id.name,
                 "customer": self.customer_id.display_name or "",
@@ -110,24 +116,56 @@ class TijaraTenantProvisionRequest(models.Model):
                 "class": self.ingress_class or "nginx",
                 "host": domain,
                 "database_header": self.database_name,
-                "tls_secret": "%s-tls" % self.database_name.replace("_", "-"),
+                "namespace": "tijara",
+                "service_name": "odoo",
+                "service_port": "8069",
+                "tls_issuer": "letsencrypt-prod",
+                "tls_secret": "%s-tls" % tenant_slug,
             },
             "admin": {
                 "login": self.admin_login or "admin",
                 "email": self.admin_email or "",
+                "bootstrap_secret_ref": "secret-manager:%s/admin-bootstrap" % tenant_slug,
             },
             "backup": {
                 "policy": self.backup_policy,
                 "database": self.database_name,
+                "retention_days": 30,
                 "restore_drill_required": True,
+                "restore_drill_ref": "",
             },
             "monitoring": {
                 "enabled": self.monitoring_enabled,
                 "blackbox_url": "https://%s/web/login" % domain,
+                "alert_route": "",
+                "dashboard_ref": "",
                 "labels": {
                     "tenant_db": self.database_name,
                     "plan": self.plan_id.name,
                 },
+            },
+            "smoke_checks": [
+                "tenant-web-login",
+                "database-isolation-header",
+                "admin-login-created",
+                "module-install-complete",
+                "subscription-feature-flags-applied",
+                "pos-checkout-smoke",
+                "inventory-adjustment-smoke",
+                "receipt-render-smoke",
+                "display-route-smoke",
+                "backup-job-registered",
+                "monitoring-target-healthy",
+            ],
+            "artifacts": {
+                "nginx_location": "nginx-location.conf",
+                "kubernetes_ingress": "k8s-ingress.yaml",
+                "external_dns_record": "external-dns-record.json",
+                "cert_manager_certificate": "cert-manager-certificate.yaml",
+                "backup_policy": "backup-policy.json",
+                "prometheus_blackbox_target": "prometheus-blackbox-target.json",
+                "admin_bootstrap": "admin-bootstrap.md",
+                "smoke_checklist": "smoke-checklist.md",
             },
         }
 

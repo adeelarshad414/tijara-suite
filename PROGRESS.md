@@ -4455,3 +4455,101 @@ Date: 2026-06-05
   once the selected provider is available.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 65: Tenant Operations Evidence Automation
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/generate_tenant_ops_manifest.py` so tenant operations
+  generation now writes:
+  - `ops-manifest.json`
+  - `nginx-location.conf`
+  - `k8s-ingress.yaml`
+  - `external-dns-record.json`
+  - `cert-manager-certificate.yaml`
+  - `backup-policy.json`
+  - `prometheus-blackbox-target.json`
+  - `admin-bootstrap.md`
+  - `smoke-checklist.md`
+- Added database-name validation and reserved database protection for tenant
+  operations artifact generation.
+- Aligned the SaaS Admin provisioning request manifest with the
+  `tenant-ops/v1` artifact schema.
+- Added `scripts/export_tenant_ops_evidence.py`.
+- The tenant operations evidence exporter validates:
+  - Minimum tenant artifact count.
+  - Tenant database/domain readiness.
+  - DNS target/provider evidence.
+  - Ingress host and TLS secret reference.
+  - Admin bootstrap login/email evidence.
+  - Backup policy, retention, and restore-drill reference.
+  - Monitoring target readiness.
+  - Tenant smoke-check coverage.
+  - Presence and SHA-256 fingerprints for all expected tenant rollout
+    artifacts.
+- Added operator shortcuts:
+  - `make tenant-ops-evidence`
+  - `npm run tenant:ops-evidence`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group tenant operations evidence as Operations evidence.
+  - Parse attached `tenant-ops-evidence.json`.
+  - Add Tenant Operations Evidence to `evidence-summary.md`.
+  - Add `tenant_ops_reviews` into `release-readiness.json`.
+  - Treat failed tenant operations evidence as release blockers and warning
+    tenant evidence as release warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/generate_tenant_ops_manifest.py scripts/export_tenant_ops_evidence.py
+  scripts/generate_signoff_pack.py
+  addons/tijara_saas_control/models/tenant_provision_request.py` passes.
+- `bash -n scripts/provision_tenant_db.sh` passes.
+- `git diff --check` passes.
+- Generated a strict sample tenant operations bundle under
+  `/private/tmp/tijara-tenant-artifacts/tijara_customer_qa` with all nine
+  expected rollout artifacts.
+- Strict tenant operations evidence export passes:
+  `python3 scripts/export_tenant_ops_evidence.py --run-id tenant-ops-ready
+  --output /private/tmp/tijara-tenant-ops-ready --target-environment production
+  --tenant-artifact /private/tmp/tijara-tenant-artifacts/tijara_customer_qa
+  --minimum-tenants 1 --require-dns-provider --require-admin-email
+  --require-restore-drill --require-monitoring --require-all-artifacts
+  --strict`.
+- `make tenant-ops-evidence` passes in warning mode when tenant artifact paths
+  are not supplied.
+- `npm run tenant:ops-evidence` passes in warning mode.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using the strict tenant operations evidence directory.
+- Confirmed `evidence-summary.md` includes Tenant Operations Evidence.
+- Confirmed `release-readiness.json` includes `tenant_ops_reviews` and is
+  `ready` for the focused complete tenant operations evidence run.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-tenant-ops/release-readiness.json` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Tenant database creation still uses the Docker/Odoo operator script; cloud
+  database API creation is not automated yet.
+- DNS/provider API pushes, certificate issuance confirmation, admin-user
+  creation, smoke execution, and backup-job registration still need real
+  staging/production integration.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Wire tenant operations evidence into staging release sign-off orchestration.
+- Add provider-specific DNS/ingress automation once the deployment platform is
+  selected.
+- Continue staging/live FBR transaction execution when credentials are
+  available.
