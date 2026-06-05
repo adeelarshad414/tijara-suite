@@ -125,6 +125,7 @@ make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
+make production-rollback DEPLOYMENT_GATE=deploy/runtime/deployment-gates/<run-id>/deployment-decision.json
 ```
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
@@ -354,6 +355,9 @@ The detailed policy and dependency intake checklist are maintained in
   `make production-deployment-gate` generate deployment gate evidence from a
   staging sign-off package, including backup, rollback, monitoring, approver,
   pre-cutover, and rollback checklists.
+- `scripts/run_production_rollback.py` and `make production-rollback` provide
+  dry-run-first rollback hooks for manifest, Docker Compose, and Kubernetes
+  providers, with command logs and rollback decision evidence.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through

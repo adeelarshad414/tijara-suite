@@ -2667,3 +2667,63 @@ Date: 2026-06-05
 - Continue direct cashier POS UI selector coverage.
 - Execute staging and deployment gate flows with real evidence when external
   credentials and devices are available.
+
+## Iteration 40: Production Rollback Execution Hooks
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_production_rollback.py` to consume
+  `deployment-decision.json` from the production deployment gate.
+- Added dry-run-first rollback providers:
+  - `manifest` for manual/provider-specific rollback review.
+  - `docker-compose` for Compose service rollback command evidence with
+    `ODOO_IMAGE` rollback-reference injection by default.
+  - `kubernetes` for Kubernetes deployment image rollback command evidence.
+- Added safety controls:
+  - Rollback is dry-run unless `TIJARA_ROLLBACK_EXECUTE=1` is set.
+  - Live command execution also requires `CONFIRM_PRODUCTION_ROLLBACK=YES`.
+  - Missing rollback references block the rollback evidence run.
+- The rollback run writes:
+  - `rollback-decision.json`.
+  - `status.tsv`.
+  - `env-summary.txt`.
+  - `summary.md`.
+  - Per-step command logs.
+- Added operator shortcuts:
+  - `make production-rollback DEPLOYMENT_GATE=...`
+  - `npm run release:rollback -- <path>`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Manifest provider dry-run smoke exits `0` and writes rollback evidence.
+- Docker Compose provider dry-run smoke exits `0` and writes expected command
+  evidence.
+- Kubernetes provider dry-run smoke exits `0` and writes expected command
+  evidence.
+- Execute-mode smoke without `CONFIRM_PRODUCTION_ROLLBACK=YES` exits non-zero.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Rollback execution has provider hooks, but live provider execution still needs
+  a real deployment target, credentials, and production approval.
+- Docker Compose rollback assumes the deployment config has already been pointed
+  at the rollback image or package reference.
+- Kubernetes rollback covers image rollback; database restore and schema
+  rollback still require operator-controlled restore approval.
+
+### Next Iteration
+
+- Add direct cashier POS UI selector coverage for product search, cart,
+  payment, receipt print, refund form, and customer display.
+- Add deployment provider-specific production smoke commands after target
+  infrastructure is selected.
+- Run staging and rollback dry-run gates with real release evidence.

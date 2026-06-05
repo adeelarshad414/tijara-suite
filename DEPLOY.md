@@ -749,6 +749,25 @@ The gate writes `deployment-decision.json`, `status.tsv`, `summary.md`,
 `deploy/runtime/deployment-gates/<run-id>/`. It exits non-zero when deployment
 is blocked.
 
+Rollback commands are dry-run by default and consume the deployment gate
+decision:
+
+```bash
+make production-rollback DEPLOYMENT_GATE=deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json
+TIJARA_ROLLBACK_PROVIDER=docker-compose TIJARA_ROLLBACK_SERVICE=odoo TIJARA_ROLLBACK_COMPOSE_IMAGE_ENV=ODOO_IMAGE make production-rollback DEPLOYMENT_GATE=deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json
+TIJARA_ROLLBACK_PROVIDER=kubernetes TIJARA_ROLLBACK_NAMESPACE=tijara-prod TIJARA_ROLLBACK_DEPLOYMENT=tijara-odoo TIJARA_ROLLBACK_CONTAINER=odoo make production-rollback DEPLOYMENT_GATE=deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json
+```
+
+To execute provider commands instead of writing dry-run logs, set both
+`TIJARA_ROLLBACK_EXECUTE=1` and `CONFIRM_PRODUCTION_ROLLBACK=YES`. Rollback
+evidence is written under `deploy/runtime/rollback-runs/<run-id>/` with
+`rollback-decision.json`, `status.tsv`, `env-summary.txt`, `summary.md`, and
+per-step logs. The default `manifest` provider records a manual/provider
+specific review command; `docker-compose` and `kubernetes` generate concrete
+open-source runtime commands. The Docker Compose provider injects the rollback
+reference through `TIJARA_ROLLBACK_COMPOSE_IMAGE_ENV`, defaulting to
+`ODOO_IMAGE`, which matches `docker-compose.yml`.
+
 ## Rollback Baseline
 
 For every production release, keep:

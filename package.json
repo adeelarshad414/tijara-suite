@@ -12,6 +12,7 @@
     "release:readiness": "python3 scripts/check_release_readiness.py",
     "release:staging-signoff": "bash scripts/run_staging_release_signoff.sh",
     "release:deployment-gate": "python3 scripts/run_production_deployment_gate.py",
+    "release:rollback": "python3 scripts/run_production_rollback.py",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },
