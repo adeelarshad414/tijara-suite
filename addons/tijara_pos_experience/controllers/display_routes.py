@@ -735,7 +735,7 @@ setInterval(() => {{
 
     @http.route(
         "/tijara/customer-display/publish",
-        type="json",
+        type="jsonrpc",
         methods=["POST"],
         auth="user",
         csrf=False,

@@ -1726,3 +1726,103 @@ Date: 2026-06-05
 - Add staging offline POS pilot runbook and KPI collectors for pilot metrics.
 - Continue FBR certified-provider sandbox fixture support once credentials and
   contracts are available.
+
+## Iteration 24: Settlement Parser Profiles and Finance Closeout Controls
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added provider settlement parser controls:
+  - Settlement batches now support `statement_format` as JSON or CSV.
+  - Parser profile options are available for auto/generic, JazzCash merchant
+    statement, Easypaisa merchant statement, Stripe balance transaction, and
+    manual bank statement payloads.
+  - CSV statements are imported through `csv.DictReader`.
+  - JSON statements still support a list or an object with `lines`,
+    `transactions`, or `data`.
+  - Normalization now covers provider references, source/balance transaction
+    ids, bank references, invoice/subscription hints, gross amount, fee, net,
+    provider status, and timestamp/date parsing.
+- Added finance accounting action workflow:
+  - New model `tijara.saas.payment.accounting.action`.
+  - Actions cover payout clearing, provider fees, refund credit notes, refund
+    payments, chargeback receivables, chargeback fees, write-off review, and
+    manual review.
+  - Each accounting action tracks source settlement batch/line, dispute case,
+    webhook event, subscription, invoice, amount, approval state, approval user,
+    timestamps, raw context JSON, notes, and deterministic audit hash.
+- Added settlement closeout controls:
+  - Settlement batches now track finance approval required/status, approver, and
+    approval timestamp.
+  - Settlement lines generate finance actions from payment/refund/chargeback
+    event type and fee/net/gross amounts.
+  - Settlement batches cannot be marked reconciled while finance approval is
+    required and accounting actions are missing or unapproved.
+- Added dispute finance controls:
+  - Refund and chargeback cases now track finance approval status and generated
+    accounting actions.
+  - Lost chargebacks generate chargeback receivable, chargeback fee, and
+    write-off review actions.
+  - Refund cases generate refund credit-note/payment actions.
+  - Won dispute cases mark finance approval as not required.
+- Added Odoo UI:
+  - Payment Accounting Actions menu with list/form/search/pivot/graph views.
+  - Finance action tabs and buttons on settlement batches, settlement lines, and
+    refund/chargeback cases.
+- Removed Odoo 19 deprecation warning from customer-display publish route by
+  switching the controller route to `type="jsonrpc"`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 73 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes after generated `__pycache__`
+  artifacts were removed.
+- Isolated Docker/Odoo transaction suite passed with `0 failed, 0 error(s)` of
+  28 tests for `tijara_saas_control`, `tijara_retail_core`, `tijara_pos_pk`,
+  `tijara_pos_experience`, and `tijara_analytics`.
+- Odoo transaction tests now cover:
+  - Settlement finance action generation and approval gating before batch
+    reconciliation.
+  - Stripe CSV parser profile fixture normalization for amount/fee/net cents,
+    source transaction, subscription matching, and settlement date parsing.
+  - Refund settlement line accounting action generation.
+  - Chargeback dispute accounting actions, approval hashes, and finance
+    approval status.
+
+### Known Gaps
+
+- Parser profiles are implemented against normalized fixtures, but production
+  still needs real signed-off JazzCash, Easypaisa, Stripe, and bank statement
+  samples from provider contracts.
+- Accounting actions are auditable approval records, but automatic journal
+  entries, credit notes, refund payments, chargeback fee entries, payout
+  clearing moves, and write-offs still need configured accounts and finance
+  sign-off.
+- PSP settlement certification, FBR certified-provider sandbox/live sign-off,
+  and real hardware/store pilots remain pending.
+- Full staging browser E2E, monitoring drills, backup restore drills, load
+  testing, dependency/container scanning, and security review still need staged
+  execution.
+
+### Next Iteration
+
+- Build automatic accounting posting foundations behind explicit finance
+  configuration:
+  - Provider clearing journal/account settings.
+  - Provider fee expense account.
+  - Refund/credit-note account mapping.
+  - Chargeback receivable/fee/write-off account mapping.
+  - Draft journal entry or credit-note creation from approved accounting
+    actions.
+- Add Odoo tests that prove approved accounting actions create draft accounting
+  moves only when all finance configuration is present.
+- Add deployment documentation for finance account setup and month-end
+  settlement close SOP.
+- Continue toward staging execution: browser E2E, monitoring drill, restore
+  drill, load smoke, and security scan runs.

@@ -279,14 +279,21 @@ price or a billing override amount. Operators can:
   reconciliation records. Operators can mark matched events as reconciled or
   flag mismatches for PSP follow-up.
 - Import provider or bank settlement statements into Payment Settlements using
-  a JSON list or an object with `lines`, `transactions`, or `data`. The
-  settlement import normalizes JazzCash, Easypaisa, Stripe, manual bank, and
-  generic references into settlement lines, then matches each line to existing
-  webhook events, subscriptions, or invoices.
+  JSON or CSV with parser profiles for JazzCash, Easypaisa, Stripe balance
+  transactions, manual bank statements, or generic statements. The settlement
+  import normalizes provider references, transaction ids, invoice/subscription
+  hints, event type, gross amount, fee, net amount, settlement date, raw line
+  JSON, and deterministic line hash, then matches each line to existing webhook
+  events, subscriptions, or invoices.
 - Create refund/chargeback cases from webhook events or settlement lines. Cases
   track due date, provider reference, transaction id, amount, fee, reason,
   assigned operator, evidence summary/JSON/attachments, evidence hash, outcome,
   and the accounting action still required.
+- Generate finance accounting actions from settlement lines and dispute cases.
+  Actions cover payout clearing, provider fees, refund credit notes/refund
+  payments, chargeback receivables, chargeback fees, write-off review, and
+  manual review. Settlement batches cannot be marked reconciled while finance
+  approval is required and generated actions are missing or unapproved.
 
 Set `TIJARA_PAYMENT_WEBHOOK_SECRET` in the secret store or set the Odoo system
 parameter `tijara.saas.payment_webhook_secret`. Provider requests must include
@@ -312,13 +319,17 @@ Settlement import flow:
 1. Open SaaS Control > Payment Settlements.
 2. Create a batch with provider, provider batch reference, settlement date, and
    expected gross/fee/net amounts when available.
-3. Paste the provider settlement JSON in `Statement JSON`.
+3. Select statement format and parser profile, then paste the provider
+   statement payload in `Statement Payload`.
 4. Run `Import Statement`, then `Match Lines`.
 5. Review mismatches in Settlement Lines and correct references or mark
    mismatch for PSP follow-up.
 6. Run `Create Dispute Cases` for refund/chargeback lines.
-7. Mark the batch reconciled only after all lines are matched and no mismatch
-   remains.
+7. Run `Generate Finance Actions` and review payout clearing, fee, refund,
+   chargeback, write-off, or manual-review actions.
+8. Run `Approve Finance` after finance review.
+9. Mark the batch reconciled only after all lines are matched, no mismatch
+   remains, and finance approval status is approved.
 
 Refund and chargeback workflow:
 
@@ -330,10 +341,13 @@ Refund and chargeback workflow:
 - Winning a case restores the subscription to paid/active.
 - Losing a case or completing a refund keeps the subscription past due and
   records the accounting action required.
+- `Generate Finance Actions` creates auditable action rows for the required
+  refund, chargeback fee, chargeback receivable, and write-off workflow.
+- `Approve Finance` stamps the approval user/time and refreshes action hashes.
 
-Production still needs provider-specific settlement API/file parsers,
-accounting journal posting for refunds/fees/chargebacks, PSP certification, and
-formal finance reconciliation SOP sign-off.
+Production still needs real PSP statement samples for parser certification,
+automatic journal/credit-note/payment posting with configured accounts, PSP
+certification, and formal finance reconciliation SOP sign-off.
 
 ## SaaS Enforcement
 

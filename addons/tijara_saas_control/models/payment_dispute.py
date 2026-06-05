@@ -79,6 +79,30 @@ class TijaraSaasPaymentDispute(models.Model):
     )
     evidence_hash = fields.Char(copy=False, index=True)
     outcome_note = fields.Text()
+    finance_approval_status = fields.Selection(
+        [
+            ("missing", "Missing Actions"),
+            ("pending", "Pending Finance"),
+            ("approved", "Finance Approved"),
+            ("rejected", "Rejected"),
+            ("blocked", "Blocked"),
+            ("not_required", "Not Required"),
+        ],
+        default="missing",
+        required=True,
+    )
+    finance_approved_by_id = fields.Many2one("res.users")
+    finance_approved_at = fields.Datetime()
+    accounting_action_ids = fields.One2many(
+        "tijara.saas.payment.accounting.action",
+        "dispute_case_id",
+        string="Accounting Actions",
+    )
+    accounting_action_count = fields.Integer(compute="_compute_accounting_action_count")
+
+    def _compute_accounting_action_count(self):
+        for case in self:
+            case.accounting_action_count = len(case.accounting_action_ids)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -177,6 +201,7 @@ class TijaraSaasPaymentDispute(models.Model):
                         "suspension_reason": False,
                     }
                 )
+            case.finance_approval_status = "not_required"
 
     def action_mark_lost(self):
         for case in self:
@@ -194,6 +219,7 @@ class TijaraSaasPaymentDispute(models.Model):
             case._subscription_past_due(
                 _("Provider dispute lost: %s") % (case.provider_reference or case.name)
             )
+            case.action_generate_accounting_actions()
 
     def action_mark_refunded(self):
         for case in self:
@@ -209,6 +235,139 @@ class TijaraSaasPaymentDispute(models.Model):
             case._subscription_past_due(
                 _("Refund completed: %s") % (case.provider_reference or case.name)
             )
+            case.action_generate_accounting_actions()
 
     def action_close(self):
         self.write({"state": "closed", "resolved_at": fields.Datetime.now()})
+
+    def _refresh_finance_approval_status(self):
+        for case in self:
+            actions = case.accounting_action_ids
+            if case.state == "won" and not actions:
+                case.finance_approval_status = "not_required"
+                continue
+            if not actions:
+                case.finance_approval_status = "missing"
+                continue
+            statuses = set(actions.mapped("status"))
+            if "rejected" in statuses:
+                case.finance_approval_status = "rejected"
+            elif "blocked" in statuses:
+                case.finance_approval_status = "blocked"
+            elif statuses.issubset({"approved", "posted"}):
+                case.finance_approval_status = "approved"
+            else:
+                case.finance_approval_status = "pending"
+
+    def _accounting_action_specs(self):
+        self.ensure_one()
+        amount = abs(self.amount or 0.0)
+        fee = abs(self.provider_fee_amount or 0.0)
+        context = {
+            "case": self.name,
+            "case_type": self.case_type,
+            "provider_reference": self.provider_reference or "",
+            "transaction_id": self.transaction_id or "",
+            "amount": self.amount or 0.0,
+            "provider_fee_amount": self.provider_fee_amount or 0.0,
+            "state": self.state,
+            "accounting_action": self.accounting_action,
+        }
+        if self.case_type == "refund":
+            action_type = "refund_payment" if self.state == "refunded" else "refund_credit_note"
+            return [
+                {
+                    "action_type": action_type,
+                    "amount": amount,
+                    "notes": _("Prepare refund accounting for case %s.") % self.name,
+                    "raw_context_json": json.dumps(context, ensure_ascii=False, sort_keys=True),
+                }
+            ]
+        specs = [
+            {
+                "action_type": "chargeback_receivable",
+                "amount": amount,
+                "notes": _("Track chargeback reversal for case %s.") % self.name,
+                "raw_context_json": json.dumps(context, ensure_ascii=False, sort_keys=True),
+            }
+        ]
+        if fee:
+            specs.append(
+                {
+                    "action_type": "chargeback_fee",
+                    "amount": fee,
+                    "notes": _("Recognize chargeback provider fee for case %s.") % self.name,
+                    "raw_context_json": json.dumps(context, ensure_ascii=False, sort_keys=True),
+                }
+            )
+        if self.state == "lost":
+            specs.append(
+                {
+                    "action_type": "write_off",
+                    "amount": amount,
+                    "notes": _("Prepare write-off review for lost chargeback case %s.") % self.name,
+                    "raw_context_json": json.dumps(context, ensure_ascii=False, sort_keys=True),
+                }
+            )
+        return specs
+
+    def _ensure_accounting_action(self, spec):
+        self.ensure_one()
+        action_model = self.env["tijara.saas.payment.accounting.action"]
+        existing = action_model.search(
+            [
+                ("dispute_case_id", "=", self.id),
+                ("action_type", "=", spec["action_type"]),
+            ],
+            limit=1,
+        )
+        values = {
+            "dispute_case_id": self.id,
+            "settlement_batch_id": self.settlement_line_id.batch_id.id if self.settlement_line_id else False,
+            "settlement_line_id": self.settlement_line_id.id if self.settlement_line_id else False,
+            "webhook_event_id": self.webhook_event_id.id if self.webhook_event_id else False,
+            "subscription_id": self.subscription_id.id if self.subscription_id else False,
+            "invoice_id": self.invoice_id.id if self.invoice_id else False,
+            "provider": self.provider,
+            "company_id": self.company_id.id,
+            "amount": spec["amount"],
+            "notes": spec.get("notes"),
+            "raw_context_json": spec.get("raw_context_json"),
+        }
+        if existing:
+            if existing.status in ("draft", "pending_approval"):
+                existing.write(values)
+            action = existing
+        else:
+            action = action_model.create(dict(values, action_type=spec["action_type"]))
+        if action.status == "draft":
+            action.action_request_approval()
+        return action
+
+    def action_generate_accounting_actions(self):
+        actions = self.env["tijara.saas.payment.accounting.action"]
+        for case in self:
+            for spec in case._accounting_action_specs():
+                actions |= case._ensure_accounting_action(spec)
+            case._refresh_finance_approval_status()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Payment Accounting Actions"),
+            "res_model": "tijara.saas.payment.accounting.action",
+            "view_mode": "list,form",
+            "domain": [("id", "in", actions.ids)],
+        }
+
+    def action_approve_finance_actions(self):
+        for case in self:
+            if not case.accounting_action_ids:
+                case.action_generate_accounting_actions()
+            pending = case.accounting_action_ids.filtered(lambda action: action.status in ("draft", "pending_approval"))
+            pending.action_approve()
+            case.write(
+                {
+                    "finance_approved_by_id": self.env.user.id,
+                    "finance_approved_at": fields.Datetime.now(),
+                }
+            )
+            case._refresh_finance_approval_status()

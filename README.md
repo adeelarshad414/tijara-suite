@@ -238,6 +238,9 @@ The retail operations layer now includes:
   customer-facing screens plus best-effort POS frontend live publishing.
 - Provider-aware payment webhook normalization for JazzCash, Easypaisa, Stripe,
   and generic/manual payment flows.
+- Payment settlement parser profiles for JSON/CSV provider statements, finance
+  accounting action records, approval gates, and audit hashes for payout
+  clearing, provider fees, refunds, chargebacks, and write-off review.
 - FBR dry-run/live HTTP adapter foundation for queued invoices with certified
   provider metadata and compliance evidence fields.
 - Offline POS queue foundation with payload hashing, validation, duplicate

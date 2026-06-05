@@ -36,6 +36,7 @@
             <list decoration-success="reconciliation_status == 'reconciled'" decoration-danger="reconciliation_status == 'mismatch'" decoration-warning="reconciliation_status in ('imported', 'matched')">
                 <field name="name"/>
                 <field name="provider"/>
+                <field name="parser_profile"/>
                 <field name="provider_batch_reference"/>
                 <field name="settlement_date"/>
                 <field name="line_count"/>
@@ -47,6 +48,7 @@
                 <field name="actual_net_amount"/>
                 <field name="net_delta"/>
                 <field name="reconciliation_status"/>
+                <field name="finance_approval_status"/>
             </list>
         </field>
     </record>
@@ -60,6 +62,8 @@
                     <button name="action_import_statement_payload" type="object" string="Import Statement" class="btn-primary"/>
                     <button name="action_match_lines" type="object" string="Match Lines"/>
                     <button name="action_create_dispute_cases" type="object" string="Create Dispute Cases"/>
+                    <button name="action_generate_accounting_actions" type="object" string="Generate Finance Actions"/>
+                    <button name="action_approve_finance_actions" type="object" string="Approve Finance" invisible="finance_approval_status == 'approved'"/>
                     <button name="action_mark_reconciled" type="object" string="Mark Reconciled" invisible="reconciliation_status == 'reconciled'"/>
                     <button name="action_close" type="object" string="Close" invisible="reconciliation_status == 'closed'"/>
                     <field name="reconciliation_status" widget="statusbar"/>
@@ -69,6 +73,8 @@
                         <group>
                             <field name="name"/>
                             <field name="provider"/>
+                            <field name="parser_profile"/>
+                            <field name="statement_format"/>
                             <field name="provider_batch_reference"/>
                             <field name="company_id"/>
                             <field name="settlement_date"/>
@@ -88,6 +94,11 @@
                             <field name="expected_fee_amount"/>
                             <field name="expected_net_amount"/>
                             <field name="net_delta"/>
+                            <field name="finance_approval_required"/>
+                            <field name="finance_approval_status"/>
+                            <field name="finance_approved_by_id"/>
+                            <field name="finance_approved_at"/>
+                            <field name="accounting_action_count"/>
                         </group>
                     </group>
                     <notebook>
@@ -114,6 +125,19 @@
                         <page string="Reconciliation">
                             <field name="reconciliation_note"/>
                         </page>
+                        <page string="Finance Actions">
+                            <field name="accounting_action_ids">
+                                <list decoration-success="status in ('approved', 'posted')" decoration-danger="status in ('rejected', 'blocked')" decoration-warning="status == 'pending_approval'">
+                                    <field name="name"/>
+                                    <field name="action_type"/>
+                                    <field name="settlement_line_id"/>
+                                    <field name="dispute_case_id"/>
+                                    <field name="amount"/>
+                                    <field name="status"/>
+                                    <field name="approval_user_id"/>
+                                </list>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
@@ -135,6 +159,7 @@
                 <field name="fee_amount"/>
                 <field name="net_amount"/>
                 <field name="dispute_case_id"/>
+                <field name="accounting_action_count"/>
                 <field name="reconciliation_status"/>
             </list>
         </field>
@@ -147,6 +172,7 @@
             <form>
                 <header>
                     <button name="action_match_records" type="object" string="Match"/>
+                    <button name="action_generate_accounting_actions" type="object" string="Generate Finance Actions"/>
                     <button name="action_create_dispute_case" type="object" string="Create Dispute Case" invisible="payment_event_type not in ('refund', 'chargeback')"/>
                     <button name="action_mark_reconciled" type="object" string="Mark Reconciled" invisible="reconciliation_status == 'reconciled'"/>
                     <button name="action_mark_mismatch" type="object" string="Mark Mismatch" invisible="reconciliation_status == 'mismatch'"/>
@@ -174,6 +200,7 @@
                             <field name="net_amount"/>
                             <field name="settlement_date"/>
                             <field name="line_hash"/>
+                            <field name="accounting_action_count"/>
                         </group>
                     </group>
                     <group>
@@ -183,6 +210,15 @@
                         <field name="reconciliation_note"/>
                     </group>
                     <field name="raw_line_json"/>
+                    <field name="accounting_action_ids">
+                        <list decoration-success="status in ('approved', 'posted')" decoration-danger="status in ('rejected', 'blocked')" decoration-warning="status == 'pending_approval'">
+                            <field name="name"/>
+                            <field name="action_type"/>
+                            <field name="amount"/>
+                            <field name="status"/>
+                            <field name="approval_user_id"/>
+                        </list>
+                    </field>
                 </sheet>
             </form>
         </field>

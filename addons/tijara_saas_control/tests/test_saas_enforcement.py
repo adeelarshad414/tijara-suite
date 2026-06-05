@@ -4,6 +4,7 @@ import json
 import time
 
 from odoo import fields
+from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase, tagged
 
 
@@ -329,10 +330,54 @@ class TestTijaraSaasEnforcement(TransactionCase):
         self.assertTrue(batch.statement_hash)
         self.assertTrue(line.line_hash)
 
+        batch.action_generate_accounting_actions()
+
+        self.assertEqual(batch.finance_approval_status, "pending")
+        self.assertEqual(batch.accounting_action_count, 2)
+        self.assertIn("provider_fee", batch.accounting_action_ids.mapped("action_type"))
+        self.assertIn("payout_clearing", batch.accounting_action_ids.mapped("action_type"))
+
+        with self.assertRaises(UserError):
+            batch.action_mark_reconciled()
+
+        batch.action_approve_finance_actions()
+
+        self.assertEqual(batch.finance_approval_status, "approved")
+        self.assertTrue(all(action.audit_hash for action in batch.accounting_action_ids))
+
         batch.action_mark_reconciled()
 
         self.assertEqual(batch.reconciliation_status, "reconciled")
         self.assertEqual(line.reconciliation_status, "reconciled")
+
+    def test_settlement_parser_profile_normalizes_stripe_csv_fixture(self):
+        subscription = self._subscription(self.enterprise_plan, state="active")
+        batch = self.env["tijara.saas.payment.settlement.batch"].create(
+            {
+                "provider": "stripe",
+                "parser_profile": "stripe_balance_v1",
+                "statement_format": "csv",
+                "provider_batch_reference": "STRIPE-BALANCE-001",
+                "company_id": self.company.id,
+                "raw_statement_json": (
+                    "id,type,amount,fee,net,source,status,metadata_database_name,available_on\n"
+                    "txn_001,charge,250000,7500,242500,ch_001,available,tijara_test_tenant,1780617600\n"
+                ),
+            }
+        )
+
+        batch.action_import_statement_payload()
+        line = batch.line_ids
+
+        self.assertEqual(line.provider_event_reference, "txn_001")
+        self.assertEqual(line.provider_transaction_id, "ch_001")
+        self.assertEqual(line.payment_event_type, "payment")
+        self.assertEqual(line.gross_amount, 2500)
+        self.assertEqual(line.fee_amount, 75)
+        self.assertEqual(line.net_amount, 2425)
+        self.assertEqual(line.database_name, subscription.database_name)
+        self.assertEqual(line.subscription_id, subscription)
+        self.assertEqual(line.reconciliation_status, "matched")
 
     def test_settlement_refund_line_creates_dispute_case_with_evidence_flow(self):
         subscription = self._subscription(self.enterprise_plan, state="active")
@@ -387,6 +432,44 @@ class TestTijaraSaasEnforcement(TransactionCase):
         self.assertEqual(case.state, "won")
         self.assertEqual(subscription.payment_status, "paid")
         self.assertEqual(subscription.state, "active")
+
+        line.action_generate_accounting_actions()
+        self.assertIn("refund_credit_note", line.accounting_action_ids.mapped("action_type"))
+        self.assertEqual(batch.finance_approval_status, "pending")
+        batch.action_approve_finance_actions()
+        self.assertEqual(batch.finance_approval_status, "approved")
+
+    def test_dispute_case_generates_and_approves_chargeback_accounting_actions(self):
+        subscription = self._subscription(self.enterprise_plan, state="active")
+        subscription.write({"payment_status": "paid"})
+        case = self.env["tijara.saas.payment.dispute"].create(
+            {
+                "case_type": "chargeback",
+                "provider": "stripe",
+                "company_id": self.company.id,
+                "subscription_id": subscription.id,
+                "provider_reference": "dp_accounting_001",
+                "transaction_id": "ch_accounting_001",
+                "amount": 1500,
+                "provider_fee_amount": 50,
+                "reason": "fraudulent",
+            }
+        )
+
+        case.action_open()
+        case.action_mark_lost()
+
+        action_types = set(case.accounting_action_ids.mapped("action_type"))
+
+        self.assertIn("chargeback_receivable", action_types)
+        self.assertIn("chargeback_fee", action_types)
+        self.assertIn("write_off", action_types)
+        self.assertEqual(case.finance_approval_status, "pending")
+
+        case.action_approve_finance_actions()
+
+        self.assertEqual(case.finance_approval_status, "approved")
+        self.assertTrue(all(action.audit_hash for action in case.accounting_action_ids))
 
     def test_dunning_suspends_after_grace_period(self):
         subscription = self._subscription(self.enterprise_plan, state="active")
