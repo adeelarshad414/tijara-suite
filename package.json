@@ -24,6 +24,7 @@
     "incident:runbook": "python3 scripts/export_incident_runbook_evidence.py",
     "release:retention": "python3 scripts/export_release_retention_evidence.py",
     "secret-manager:evidence": "python3 scripts/export_secret_manager_evidence.py",
+    "secret-runtime:evidence": "python3 scripts/export_secret_runtime_evidence.py",
     "deployment:environment": "python3 scripts/export_deployment_environment_evidence.py",
     "load:evidence": "python3 scripts/export_load_evidence.py",
     "load:profile": "bash scripts/run_load_profile.sh",

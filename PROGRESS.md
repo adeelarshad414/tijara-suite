@@ -4376,3 +4376,82 @@ Date: 2026-06-05
   Environments or another deployment platform is selected.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 64: Runtime Secret Connectivity Evidence
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_secret_runtime_evidence.py`.
+- The runtime secret exporter:
+  - Validates runtime secret delivery from `env:`, `file:`, and `command:`
+    sources.
+  - Records provider/reference/access-review readiness.
+  - Validates expected secret probes and minimum resolved probe count.
+  - Rejects placeholder-looking resolved values by default.
+  - Rejects secret-like metadata keys.
+  - Redacts command probe references and never writes resolved secret values to
+    evidence.
+  - Writes `secret-runtime-evidence.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/secret-runtime-evidence/<run-id>/`.
+  - Supports strict production mode and local warning mode.
+- Added operator shortcuts:
+  - `make secret-runtime-evidence`
+  - `npm run secret-runtime:evidence`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group secret runtime evidence as Security evidence.
+  - Parse attached `secret-runtime-evidence.json`.
+  - Add a Secret Runtime Evidence section to `evidence-summary.md`.
+  - Add `secret_runtime_reviews` into `release-readiness.json`.
+  - Treat failed secret runtime evidence as release blockers and warning
+    evidence as release warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Strict runtime connectivity export passes with env, file, and command probes:
+  `env TIJARA_RUNTIME_ENV_SECRET=local-runtime-env-value python3
+  scripts/export_secret_runtime_evidence.py --run-id secret-runtime-ready
+  --output /private/tmp/tijara-secret-runtime-ready --target-environment
+  production --secret-manager-provider vault --secret-manager-reference
+  vault:tijara/production --secret-access-review-ref
+  review:2026-q2-production-secrets --probe
+  ODOO_DB_PASSWORD=env:TIJARA_RUNTIME_ENV_SECRET --probe
+  POSTGRES_PASSWORD=file:/private/tmp/tijara-secret-runtime/db-password.txt
+  --probe 'ODOO_MASTER_PASSWORD=command:printf local-runtime-command-value'
+  --expected-secret ODOO_DB_PASSWORD --expected-secret POSTGRES_PASSWORD
+  --expected-secret ODOO_MASTER_PASSWORD --minimum-probes 3 --strict`.
+- `make secret-runtime-evidence` passes in warning mode when probes are not
+  supplied.
+- `npm run secret-runtime:evidence` passes in warning mode.
+- Confirmed strict runtime evidence records resolved probe counts and
+  `<command-redacted>` without writing sample secret values.
+- Generated a sign-off package with Security evidence required in strict mode
+  using the strict runtime secret evidence directory.
+- Confirmed `evidence-summary.md` includes Secret Runtime Evidence.
+- Confirmed `release-readiness.json` includes `secret_runtime_reviews` and is
+  `ready` for the focused complete runtime secret evidence run.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_secret_runtime_evidence.py scripts/generate_signoff_pack.py`
+  passes.
+
+### Known Gaps
+
+- The exporter can prove runtime delivery once real provider probes are
+  configured, but local validation used harmless local env/file/command values.
+- CI does not yet require runtime secret delivery evidence because public-repo
+  CI cannot access production secrets.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add provider-specific deployment environment automation once GitHub
+  Environments or another deployment platform is selected.
+- Add production runtime secret probes to staging/production release sign-off
+  once the selected provider is available.
+- Continue staging/live FBR transaction execution when credentials are
+  available.

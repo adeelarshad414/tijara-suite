@@ -398,7 +398,12 @@ def _evidence_group(entry):
         return "Operations"
     if "hardware" in relative_lower:
         return "Hardware"
-    if "secret-manager-evidence" in relative_lower or filename == "secret-manager-evidence.json":
+    if (
+        "secret-manager-evidence" in relative_lower
+        or "secret-runtime-evidence" in relative_lower
+        or filename == "secret-manager-evidence.json"
+        or filename == "secret-runtime-evidence.json"
+    ):
         return "Security"
     if "fbr" in relative_lower:
         return "FBR"
@@ -821,6 +826,38 @@ def _secret_manager_reviews(evidence_entries):
     return reviews
 
 
+def _secret_runtime_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "secret-runtime-evidence.json":
+            continue
+        payload = _read_json(path)
+        secret_manager = payload.get("secret_manager") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "secret_manager_provider_present": bool(secret_manager.get("provider_present")),
+                "secret_manager_provider": secret_manager.get("provider", ""),
+                "secret_manager_reference_present": bool(secret_manager.get("reference_present")),
+                "secret_access_review_reference_present": bool(
+                    secret_manager.get("access_review_reference_present")
+                ),
+                "minimum_probes": payload.get("minimum_probes", 0),
+                "probe_count": payload.get("probe_count", 0),
+                "resolved_probe_count": payload.get("resolved_probe_count", 0),
+                "unresolved_probe_count": payload.get("unresolved_probe_count", 0),
+                "expected_secret_count": len(payload.get("expected_secrets") or []),
+                "sources": sorted({probe.get("source", "") for probe in payload.get("probes") or [] if probe.get("source")}),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _deployment_environment_reviews(evidence_entries):
     reviews = []
     for entry in evidence_entries:
@@ -871,6 +908,7 @@ def _evidence_summary(context, evidence_entries):
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
     secret_manager_reviews = _secret_manager_reviews(evidence_entries)
+    secret_runtime_reviews = _secret_runtime_reviews(evidence_entries)
     deployment_environment_reviews = _deployment_environment_reviews(evidence_entries)
 
     for entry in evidence_entries:
@@ -1228,6 +1266,38 @@ def _evidence_summary(context, evidence_entries):
     if not secret_manager_lines:
         secret_manager_lines = ["- No `secret-manager-evidence.json` files were attached.", ""]
 
+    secret_runtime_lines = []
+    for review in secret_runtime_reviews:
+        secret_runtime_lines.append("### `%s`" % review["path"])
+        secret_runtime_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        secret_runtime_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        secret_runtime_lines.append(
+            "- Secret manager/provider/reference/access review: %s/%s/%s"
+            % (
+                review["secret_manager_provider"] or (
+                    "yes" if review["secret_manager_provider_present"] else "no"
+                ),
+                "yes" if review["secret_manager_reference_present"] else "no",
+                "yes" if review["secret_access_review_reference_present"] else "no",
+            )
+        )
+        secret_runtime_lines.append(
+            "- Probes resolved/total/minimum/unresolved: %s/%s/%s/%s"
+            % (
+                review["resolved_probe_count"],
+                review["probe_count"],
+                review["minimum_probes"],
+                review["unresolved_probe_count"],
+            )
+        )
+        secret_runtime_lines.append(
+            "- Sources/expected secrets: %s/%s"
+            % (", ".join(review["sources"]) or "unset", review["expected_secret_count"])
+        )
+        secret_runtime_lines.append("")
+    if not secret_runtime_lines:
+        secret_runtime_lines = ["- No `secret-runtime-evidence.json` files were attached.", ""]
+
     deployment_environment_lines = []
     for review in deployment_environment_reviews:
         deployment_environment_lines.append("### `%s`" % review["path"])
@@ -1321,6 +1391,9 @@ def _evidence_summary(context, evidence_entries):
 ## Secret Manager Evidence
 
 {chr(10).join(secret_manager_lines)}
+## Secret Runtime Evidence
+
+{chr(10).join(secret_runtime_lines)}
 ## Deployment Environment Evidence
 
 {chr(10).join(deployment_environment_lines)}
@@ -1350,6 +1423,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
     secret_manager_reviews = _secret_manager_reviews(evidence_entries)
+    secret_runtime_reviews = _secret_runtime_reviews(evidence_entries)
     deployment_environment_reviews = _deployment_environment_reviews(evidence_entries)
     blockers = []
     warnings = []
@@ -1494,6 +1568,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Secret manager evidence %s is %s" % (review["path"], review["decision"]))
 
+    for review in secret_runtime_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Secret runtime evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Secret runtime evidence %s is %s" % (review["path"], review["decision"]))
+
     for review in deployment_environment_reviews:
         decision = str(review.get("decision") or "").lower()
         if decision in {"failed", "blocked"}:
@@ -1537,6 +1618,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "operations_bundle_reviews": operations_bundle_reviews,
         "release_retention_reviews": release_retention_reviews,
         "secret_manager_reviews": secret_manager_reviews,
+        "secret_runtime_reviews": secret_runtime_reviews,
         "deployment_environment_reviews": deployment_environment_reviews,
     }
 

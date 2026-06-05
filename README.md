@@ -133,6 +133,7 @@ make monitoring-evidence
 make incident-runbook-evidence
 make release-retention-evidence
 make secret-manager-evidence
+make secret-runtime-evidence
 make deployment-environment-evidence
 make load-evidence
 make operations-release-bundle
@@ -407,6 +408,10 @@ The detailed policy and dependency intake checklist are maintained in
   non-secret template safety, secret example placeholders, Compose secret
   guardrails, startup secret checks, and committed-secret-file hygiene under
   `deploy/runtime/secret-manager-evidence/`.
+- `scripts/export_secret_runtime_evidence.py` and
+  `make secret-runtime-evidence` validate runtime secret delivery probes from
+  `env:`, `file:`, and `command:` sources without writing secret values to
+  evidence under `deploy/runtime/secret-runtime-evidence/`.
 - `scripts/export_deployment_environment_evidence.py` and
   `make deployment-environment-evidence` validate deployment environment
   protection, required approvers, branch policy, promotion/rollback runbooks,
@@ -419,8 +424,8 @@ The detailed policy and dependency intake checklist are maintained in
   required-evidence group guardrails for release, E2E, operations, security,
   hardware, FBR, and PSP evidence. PSP/FBR readiness manifests, FBR fixture
   smoke evidence, monitoring, incident runbook, release retention, secret
-  manager, deployment environment, and load evidence are extracted into
-  readiness reviews for approvers and CI.
+  manager, secret runtime, deployment environment, and load evidence are
+  extracted into readiness reviews for approvers and CI.
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.

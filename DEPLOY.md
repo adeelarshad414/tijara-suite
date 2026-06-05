@@ -87,6 +87,7 @@ make monitoring-evidence
 make incident-runbook-evidence
 make release-retention-evidence
 make secret-manager-evidence
+make secret-runtime-evidence
 make deployment-environment-evidence
 make load-evidence
 make operations-release-bundle
@@ -867,6 +868,34 @@ present under `secrets/`. It writes `secret-manager-evidence.json`,
 production release sign-off; the sign-off package extracts it under
 `secret_manager_reviews`.
 
+Export runtime secret delivery evidence after selecting the production secret
+provider. The exporter supports `env:`, `file:`, and `command:` probes and
+never writes resolved secret values to evidence:
+
+```bash
+python3 scripts/export_secret_runtime_evidence.py \
+  --run-id 2026-06-05-prod \
+  --target-environment production \
+  --secret-manager-provider vault \
+  --secret-manager-reference vault:tijara/production \
+  --secret-access-review-ref review:2026-q2-production-secrets \
+  --probe ODOO_DB_PASSWORD=env:ODOO_DB_PASSWORD \
+  --probe POSTGRES_PASSWORD=file:/run/secrets/postgres-password \
+  --probe 'ODOO_MASTER_PASSWORD=command:vault kv get -field=value secret/tijara/odoo-master-password' \
+  --expected-secret ODOO_DB_PASSWORD \
+  --expected-secret POSTGRES_PASSWORD \
+  --expected-secret ODOO_MASTER_PASSWORD \
+  --minimum-probes 3 \
+  --strict
+```
+
+The exporter writes `secret-runtime-evidence.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/secret-runtime-evidence/<run-id>/`. Attach that directory to
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the `security` evidence group for
+production sign-off; the sign-off package extracts it under
+`secret_runtime_reviews`.
+
 Export deployment environment protection evidence before staging or production
 approval:
 
@@ -918,6 +947,8 @@ Optional tools:
 - Run `make secret-manager-evidence` to validate runtime secret-manager
   references, config-template separation, required secret placeholders, and
   committed-secret-file hygiene.
+- Run `make secret-runtime-evidence` to validate runtime secret delivery probes
+  after the selected provider is available.
 - Run `make deployment-environment-evidence` to validate required approvers,
   branch/deployment policy, promotion and rollback runbooks, deployment gate,
   monitoring, backup, change-ticket, and release-window references.
@@ -1115,9 +1146,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
-  runbook, release retention, secret manager, deployment environment, load
-  evidence, load profile matrix evidence, and non-secret environment summaries
-  for approvers.
+  runbook, release retention, secret manager, secret runtime, deployment
+  environment, load evidence, load profile matrix evidence, and non-secret
+  environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -1139,7 +1170,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   are included under `release_retention_reviews`; when secret-manager evidence
   is attached, runtime secret references, template separation, Compose guards,
   startup guards, and committed-secret hygiene are included under
-  `secret_manager_reviews`; when deployment environment evidence is attached,
+  `secret_manager_reviews`; when secret runtime evidence is attached, runtime
+  secret probe source and resolution reviews are included under
+  `secret_runtime_reviews`; when deployment environment evidence is attached,
   approver, branch-policy, promotion, rollback, deployment-gate, monitoring,
   backup, change-ticket, and freeze-window reviews are included under
   `deployment_environment_reviews`.
