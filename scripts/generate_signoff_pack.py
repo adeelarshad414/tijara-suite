@@ -603,6 +603,7 @@ def _load_reviews(evidence_entries):
                 "decision": payload.get("decision", ""),
                 "ci_status": payload.get("ci_status", ""),
                 "base_url": payload_context.get("base_url", ""),
+                "profile_name": profile.get("profile_name", ""),
                 "vus": profile.get("vus", ""),
                 "duration": profile.get("duration", ""),
                 "p95_ms": metrics.get("p95_ms"),
@@ -805,8 +806,9 @@ def _evidence_summary(context, evidence_entries):
         load_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
         load_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
         load_lines.append(
-            "- Profile: vus=%s, duration=%s, base_url=%s"
+            "- Profile: name=%s, vus=%s, duration=%s, base_url=%s"
             % (
+                review["profile_name"] or "unset",
                 review["vus"] or "unset",
                 review["duration"] or "unset",
                 review["base_url"] or "unset",

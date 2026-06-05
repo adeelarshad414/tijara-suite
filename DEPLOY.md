@@ -76,6 +76,7 @@ make provision-tenant-ops TENANT_DB=tijara_customer_001 TENANT_DOMAIN=customer.e
 make hardware-cert-smoke
 make monitoring-up
 make load-smoke
+make load-enterprise-surfaces
 make release-candidate
 make psp-readiness-evidence
 make psp-fixture-smoke
@@ -733,6 +734,9 @@ Optional tools:
 - Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.
 - Run `make load-evidence` after k6 to export structured load evidence for
   release sign-off.
+- Run `make load-enterprise-surfaces` for the reusable k6 profile covering the
+  POS shell, public display data, customer display data, kiosk data, and
+  optional kiosk checkout.
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
@@ -760,6 +764,24 @@ python3 scripts/export_load_evidence.py \
 
 Load evidence is written under `deploy/runtime/load-evidence/<run-id>/` and
 can be included in `TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
+
+Run the reusable enterprise surface profile when seeded display/kiosk/customer
+display slugs are available:
+
+```bash
+TIJARA_LOAD_RUN_ID=2026-06-05-rc1-surfaces \
+TIJARA_LOAD_VUS=5 \
+TIJARA_LOAD_DURATION=2m \
+TIJARA_BASE_URL=https://staging.example.com \
+TIJARA_DISPLAY_SLUG=tijara-e2e-menu \
+TIJARA_KIOSK_SLUG=tijara-e2e-kiosk \
+TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer \
+make load-enterprise-surfaces
+```
+
+The enterprise profile is read-heavy by default. Set
+`TIJARA_RUN_KIOSK_CHECKOUT_LOAD=1` only on a seeded staging tenant where kiosk
+checkout order creation is expected and safe.
 
 Release candidate evidence is written to
 `deploy/runtime/release-evidence/<run-id>/`. The default `local` scope runs

@@ -88,6 +88,7 @@ def _summary(context, rows, decision, blockers, warnings):
 - Status: {decision}
 - Run ID: {context["run_id"]}
 - Target environment: {context["target_environment"]}
+- Profile: {context["profile_name"]}
 - Base URL: {context["base_url"]}
 - Generated: {context["generated_at"]}
 - Output directory: {context["output"]}
@@ -118,6 +119,10 @@ def main():
     parser.add_argument("--target-environment", default=os.environ.get("TIJARA_LOAD_ENVIRONMENT", "staging"))
     parser.add_argument("--output", default=os.environ.get("TIJARA_LOAD_OUTPUT", ""))
     parser.add_argument("--summary-json", default=os.environ.get("TIJARA_LOAD_SUMMARY_JSON", ""))
+    parser.add_argument(
+        "--profile-name",
+        default=os.environ.get("TIJARA_LOAD_PROFILE_NAME", os.environ.get("TIJARA_LOAD_PROFILE", "load-smoke")),
+    )
     parser.add_argument("--base-url", default=os.environ.get("TIJARA_BASE_URL", ""))
     parser.add_argument("--vus", default=os.environ.get("TIJARA_LOAD_VUS", ""))
     parser.add_argument("--duration", default=os.environ.get("TIJARA_LOAD_DURATION", ""))
@@ -208,6 +213,7 @@ def main():
     context = {
         "run_id": args.run_id,
         "target_environment": args.target_environment,
+        "profile_name": args.profile_name or "load-smoke",
         "base_url": args.base_url or "<unset>",
         "generated_at": _utc_now(),
         "output": str(output),
@@ -218,6 +224,7 @@ def main():
         "ci_status": ci_status,
         "summary_json": summary_path,
         "load_profile": {
+            "profile_name": args.profile_name or "load-smoke",
             "vus": args.vus or "",
             "duration": args.duration or "",
         },
@@ -239,6 +246,7 @@ def main():
             "target_environment=%s" % args.target_environment,
             "base_url=%s" % (args.base_url or "<unset>"),
             "summary_json=%s" % (summary_path or "<unset>"),
+            "profile_name=%s" % (args.profile_name or "load-smoke"),
             "vus=%s" % (args.vus or "<unset>"),
             "duration=%s" % (args.duration or "<unset>"),
             "max_p95_ms=%s" % args.max_p95_ms,

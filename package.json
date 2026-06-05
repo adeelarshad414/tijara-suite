@@ -21,6 +21,8 @@
     "monitoring:evidence": "python3 scripts/export_monitoring_evidence.py",
     "incident:runbook": "python3 scripts/export_incident_runbook_evidence.py",
     "load:evidence": "python3 scripts/export_load_evidence.py",
+    "load:profile": "bash scripts/run_load_profile.sh",
+    "load:enterprise": "bash scripts/run_load_profile.sh enterprise-surfaces",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },

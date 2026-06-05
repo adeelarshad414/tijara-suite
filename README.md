@@ -121,6 +121,7 @@ make security-audit
 make hardware-cert-smoke
 make e2e
 make load-smoke
+make load-enterprise-surfaces
 make release-candidate
 make certification-evidence
 make psp-readiness-evidence
@@ -345,6 +346,10 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
   test evidence, threshold decisions, and non-secret load profiles under
   `deploy/runtime/load-evidence/`.
+- `scripts/run_load_profile.sh`, `scripts/load_smoke.k6.js`, and
+  `scripts/load_enterprise_surfaces.k6.js` run reusable k6 profiles for Odoo
+  smoke, POS shell, public display, customer display, kiosk data, and optional
+  kiosk checkout load evidence.
 - `scripts/run_odoo_tests.sh`, `tests/e2e/`, and `playwright.config.mjs`
   provide committed Odoo and browser regression scaffolds. The Odoo test
   runner performs a redacted database credential preflight before the module

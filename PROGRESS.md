@@ -3572,3 +3572,85 @@ Date: 2026-06-05
   responses are available.
 - Add staging/live Odoo FBR transaction execution after database credentials are
   corrected.
+
+## Iteration 54: Enterprise Surface Load Profiles
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/load_enterprise_surfaces.k6.js`.
+- The enterprise k6 profile:
+  - Loads the POS/Odoo shell through `TIJARA_POS_LOAD_URL` or `/odoo`.
+  - Loads public display shell and data when `TIJARA_DISPLAY_SLUG` is set.
+  - Loads kiosk shell and data when `TIJARA_KIOSK_SLUG` is set.
+  - Loads customer-display data when `TIJARA_CUSTOMER_DISPLAY_SLUG` is set.
+  - Supports authenticated cookies through `TIJARA_LOAD_AUTH_COOKIE` or
+    `TIJARA_LOAD_COOKIE` for staging-only protected URLs.
+  - Keeps kiosk checkout POST load disabled by default.
+  - Enables kiosk checkout order creation only when
+    `TIJARA_RUN_KIOSK_CHECKOUT_LOAD=1`.
+  - Uses open-source k6 thresholds from `TIJARA_LOAD_MAX_P95_MS`,
+    `TIJARA_LOAD_MAX_FAIL_RATE`, and `TIJARA_LOAD_MIN_CHECKS_RATE`.
+- Added `scripts/run_load_profile.sh` to run reusable load profiles, preserve
+  k6 summary JSON, and export structured load evidence even when k6 exits
+  non-zero.
+- Added operator shortcuts:
+  - `make load-profile`
+  - `make load-enterprise-surfaces`
+  - `npm run load:profile`
+  - `npm run load:enterprise`
+- Enhanced `scripts/export_load_evidence.py` and
+  `scripts/generate_signoff_pack.py` so load evidence carries
+  `profile_name`, and sign-off summaries show the profile name in
+  `load_reviews`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_load_profile.sh` passes.
+- `k6 inspect scripts/load_enterprise_surfaces.k6.js` passes.
+- `k6 inspect scripts/load_smoke.k6.js` passes.
+- Short `enterprise-surfaces` run against local Odoo passes outside the sandbox
+  with `TIJARA_LOAD_VUS=1` and `TIJARA_LOAD_DURATION=5s`.
+- Generated load evidence includes `profile_name=enterprise-surfaces`,
+  `decision=passed`, p95 duration, failure-rate, and checks-rate metrics.
+- Generated a sign-off package from the enterprise profile evidence with
+  Operations required in strict mode.
+- Confirmed `release-readiness.json` decision is `ready`.
+- Confirmed `release-readiness.json` includes `load_reviews` with
+  `profile_name=enterprise-surfaces`.
+- Confirmed `evidence-summary.md` includes the Load Test Evidence profile name
+  and metrics.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_load_evidence.py scripts/generate_signoff_pack.py` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- The enterprise profile is still a staging-safe surface profile; full POS
+  checkout load needs a seeded authenticated POS route/session and cashier test
+  policy.
+- Kiosk checkout load is intentionally opt-in because it creates real kiosk
+  orders and optional POS orders on the target tenant.
+- Vertical-specific load mixes for superstore, pharmacy, restaurant, grocery,
+  bakery, and cloth pilots still need production traffic assumptions.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Add a staging load-profile evidence matrix that records approved VU/duration
+  thresholds by tenant size and vertical.
+- Add FBR provider response fixture smoke tests once certified-provider sample
+  responses are available.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.
