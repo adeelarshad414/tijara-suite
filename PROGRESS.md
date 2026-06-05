@@ -6565,3 +6565,88 @@ Date: 2026-06-05
   Alertmanager, and Grafana credentials are available on the protected runner.
 - Continue hardening live PSP/FBR adapters and offline POS sync conflict
   handling when live provider/staging systems are available.
+
+## Iteration 93: Protected Operator Handoff Runbook
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_runbook_handoff.py` to export a protected
+  live staging/production operator handoff under
+  `deploy/runtime/protected-runbook-handoff/`.
+- The handoff writes `operator-runbook.md`, `artifact-review-order.md`,
+  `go-no-go-checklist.md`, `protected-runbook-handoff.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md`.
+- The exporter validates protected workflow dispatch surface, GitHub
+  environment, staging URL, change ticket, rollback plan, incident channel,
+  backup reference, release/DevOps/QA/business/security/support owners,
+  artifact review order, and metadata secret hygiene.
+- Added generated commands for local first-run checklist, local preflight,
+  GitHub workflow dispatch, release-readiness check, and artifact summary
+  review.
+- Added `make protected-runbook-handoff`.
+- Wired `.github/workflows/tijara-ci.yml` to generate handoff evidence before
+  first-run checklist evidence, include it in release-retention evidence,
+  sign-off package inputs, protected artifact summary defaults, and protected
+  artifact upload paths.
+- Updated `scripts/export_protected_first_run_checklist.py` so
+  `protected-runbook-handoff` is part of the expected protected artifact set.
+- Classified `protected-runbook-handoff` as Operations evidence in
+  `scripts/generate_signoff_pack.py`.
+- Updated `deploy/config/github-protected-vars.example`, `README.md`, and
+  `DEPLOY.md` with the operator handoff sequencing and public-safe variables.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_runbook_handoff.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_artifact_summary.py
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes `TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER`.
+- Strict ready handoff fixture writes `decision=passed` and `ci_status=pass`.
+- Strict missing handoff fixture writes `decision=failed` and `ci_status=fail`.
+- Secret-like metadata fixture with `client_secret` is rejected.
+- Generated handoff includes the GitHub dispatch command and starts artifact
+  review with `protected-runbook-handoff`.
+- Sign-off package with passing handoff evidence passes release readiness.
+- Sign-off package with missing handoff evidence blocks release readiness
+  through failed `status.tsv` rows.
+- Protected artifact summary over handoff evidence writes `decision=passed`.
+- `make protected-runbook-handoff` passes with protected handoff environment
+  variables and writes evidence to `/private/tmp/tijara-make-handoff`.
+- Updated first-run checklist fixture passes and expects
+  `protected-runbook-handoff`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` or probe server process remains running.
+
+### Known Gaps
+
+- The handoff creates the exact operator/review evidence package, but the
+  protected workflow still needs execution on a real self-hosted
+  `tijara-protected` runner.
+- GitHub artifact direct URLs and artifact IDs still require real GitHub
+  Actions run metadata after upload.
+- Live Odoo RBAC/login, hardware bridge signed jobs, monitoring alert routing,
+  PSP/FBR certification, physical hardware proof, offline POS sync, and
+  production operations drills remain external production blockers.
+
+### Next Iteration
+
+- Add a protected post-run evidence verifier that reads the uploaded protected
+  folders after a real run and confirms required artifacts, status rows, and
+  release-readiness decision in one machine-readable report.
+- Add deeper authenticated service checks once real Odoo, bridge, Prometheus,
+  Alertmanager, and Grafana credentials are available on the protected runner.
+- Continue hardening live PSP/FBR adapters and offline POS sync conflict
+  handling when live provider/staging systems are available.

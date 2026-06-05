@@ -364,10 +364,11 @@ The detailed policy and dependency intake checklist are maintained in
   tijara-protected]`; see `deploy/config/github-protected-vars.example` and
   `secrets/github-protected-secrets.example` for setup templates, plus
   `deploy/config/certification-manifests/` for PSP, FBR, and hardware
-  certification manifest examples. The protected job now emits a first-run
-  checklist, a redacted runner preflight evidence report, and a protected
-  Browser E2E handoff report before executing strict release gates, then writes
-  one protected artifact summary for release-owner review.
+  certification manifest examples. The protected job now emits an operator
+  handoff runbook, a first-run checklist, a redacted runner preflight evidence
+  report, and a protected Browser E2E handoff report before executing strict
+  release gates, then writes one protected artifact summary for release-owner
+  review.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
@@ -410,6 +411,10 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_release_candidate_gate.sh` and `make release-candidate` assemble
   local, Odoo, browser, and operations checks into a release-candidate evidence
   report under `deploy/runtime/release-evidence/`.
+- `scripts/export_protected_runbook_handoff.py` and
+  `make protected-runbook-handoff` export a protected live staging/production
+  operator handoff with exact dispatch commands, artifact review order, and
+  go/no-go checklist files under `deploy/runtime/protected-runbook-handoff/`.
 - `scripts/export_protected_first_run_checklist.py` and
   `make protected-first-run-checklist` export a protected staging/production
   first-run checklist for owner sign-offs, protected runner labels,

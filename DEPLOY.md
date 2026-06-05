@@ -1052,13 +1052,15 @@ the same workflow:
 3. Start the workflow manually with `protected_release=true`,
    `target_environment=staging` or `production`, and an optional `run_id`.
 
-The protected job first exports a first-run checklist under
-`deploy/runtime/protected-first-run/<run-id>/`, then exports redacted runner
-preflight evidence under `deploy/runtime/protected-runner-preflight/<run-id>/`,
-runs the release-candidate gate, runs protected Browser E2E seed/profile/
-browser/execution evidence under `deploy/runtime/protected-e2e/<run-id>/`,
-captures raw restore, security, dependency, container, npm audit, and k6 outputs
-under `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
+The protected job first exports an operator handoff runbook under
+`deploy/runtime/protected-runbook-handoff/<run-id>/`, then exports a first-run
+checklist under `deploy/runtime/protected-first-run/<run-id>/`, exports
+redacted runner preflight evidence under
+`deploy/runtime/protected-runner-preflight/<run-id>/`, runs the
+release-candidate gate, runs protected Browser E2E seed/profile/browser/
+execution evidence under `deploy/runtime/protected-e2e/<run-id>/`, captures raw
+restore, security, dependency, container, npm audit, and k6 outputs under
+`deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
 evidence, collects strict PSP/FBR/hardware certification evidence when the
 matching `TIJARA_CERT_*` variables are configured, exports retention and
 secret-manager evidence, runs strict production operations readiness, generates
@@ -1076,6 +1078,37 @@ release. The protected sign-off package will append certification evidence
 directories to `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the selected groups;
 missing, expired, unapproved, or hash-mismatched certification evidence becomes
 a release-readiness blocker.
+
+Generate the protected operator handoff before the first live staging run so
+the release owner, DevOps, QA, support, security, and business reviewers have
+the exact commands and review order in one evidence folder:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+TIJARA_FIRST_RUN_GITHUB_ENVIRONMENT=staging \
+TIJARA_FIRST_RUN_RUNNER_LABELS=self-hosted,tijara-protected \
+TIJARA_FIRST_RUN_RELEASE_OWNER=ReleaseOwner \
+TIJARA_FIRST_RUN_DEVOPS_OWNER=DevOpsOwner \
+TIJARA_FIRST_RUN_QA_OWNER=QAOwner \
+TIJARA_FIRST_RUN_BUSINESS_OWNER=BusinessOwner \
+TIJARA_FIRST_RUN_SECURITY_OWNER=SecurityOwner \
+TIJARA_FIRST_RUN_SUPPORT_OWNER=SupportOwner \
+TIJARA_FIRST_RUN_STAGING_URL=https://staging.example.com \
+TIJARA_FIRST_RUN_CHANGE_TICKET_REF=change:protected-staging-first-run \
+TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF=runbook:rollback-protected-staging \
+TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF=slack:tijara-incidents \
+TIJARA_FIRST_RUN_BACKUP_REF=backup:staging-latest \
+TIJARA_FIRST_RUN_PROTECTED_WORKFLOW_REF=workflow:tijara-ci/protected-release-evidence \
+python3 scripts/export_protected_runbook_handoff.py \
+  --output deploy/runtime/protected-runbook-handoff/2026-06-05-rc1 \
+  --strict
+```
+
+The handoff writes `operator-runbook.md`, `artifact-review-order.md`,
+`go-no-go-checklist.md`, `protected-runbook-handoff.json`, and `status.tsv`.
+Attach it to `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the protected workflow does this
+automatically.
 
 Run the first-run checklist locally before the first protected staging workflow
 to confirm the non-secret handoff is complete:

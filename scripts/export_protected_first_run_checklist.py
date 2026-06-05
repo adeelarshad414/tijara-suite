@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[1]
 SECRET_KEY_PARTS = {"password", "secret", "token", "api_key", "apikey", "client_secret"}
 DEFAULT_ARTIFACTS = [
+    "protected-runbook-handoff",
     "protected-first-run",
     "protected-runner-preflight",
     "release-evidence",
