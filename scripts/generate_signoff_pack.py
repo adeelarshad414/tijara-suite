@@ -57,6 +57,19 @@ def _write(path, content):
     path.write_text(content.strip() + "\n", encoding="utf-8")
 
 
+def _read_lines(path, limit=400):
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as handle:
+            lines = []
+            for index, line in enumerate(handle):
+                if index >= limit:
+                    break
+                lines.append(line.rstrip("\n"))
+            return lines
+    except OSError:
+        return []
+
+
 def _checklist(items):
     return "\n".join("- [ ] %s" % item for item in items)
 
@@ -321,6 +334,169 @@ def _security_review(context):
 """
 
 
+def _evidence_group(entry):
+    relative = entry["relative_path"].replace("\\", "/")
+    if "release-evidence/" in relative:
+        return "Release Candidate"
+    if "e2e-evidence/" in relative:
+        return "Browser E2E"
+    if "ops-evidence/" in relative:
+        return "Operations"
+    if "hardware" in relative.lower():
+        return "Hardware"
+    if "fbr" in relative.lower():
+        return "FBR"
+    if "psp" in relative.lower() or "settlement" in relative.lower():
+        return "PSP"
+    if "security" in relative.lower():
+        return "Security"
+    return "General"
+
+
+def _summary_fields(lines):
+    fields = {}
+    wanted = {
+        "Status",
+        "Exit code",
+        "Run ID",
+        "Scope",
+        "Base URL",
+        "Evidence directory",
+        "Started",
+        "Finished",
+    }
+    for line in lines:
+        text = line.strip()
+        if not text.startswith("- "):
+            continue
+        label, separator, value = text[2:].partition(":")
+        if separator and label in wanted:
+            fields[label] = value.strip()
+    return fields
+
+
+def _status_counts(lines):
+    counts = {}
+    rows = []
+    for line in lines:
+        parts = line.split("\t")
+        if len(parts) < 2 or parts[0] == "check":
+            continue
+        name, status = parts[0], parts[1]
+        counts[status] = counts.get(status, 0) + 1
+        message = parts[4] if len(parts) >= 5 else ""
+        rows.append({"name": name, "status": status, "message": message})
+    return counts, rows
+
+
+def _environment_lines(lines):
+    safe_lines = []
+    for line in lines:
+        if not line or "=" not in line:
+            continue
+        key = line.split("=", 1)[0].upper()
+        if "PASSWORD" in key or "SECRET" in key or "TOKEN" in key:
+            continue
+        safe_lines.append(line)
+    return safe_lines[:24]
+
+
+def _evidence_summary(context, evidence_entries):
+    by_group = {}
+    summary_blocks = []
+    status_blocks = []
+    environment_blocks = []
+
+    for entry in evidence_entries:
+        group = _evidence_group(entry)
+        by_group[group] = by_group.get(group, 0) + 1
+        path = Path(entry["path"])
+        name = path.name
+        lines = _read_lines(path)
+        if name == "summary.md":
+            fields = _summary_fields(lines)
+            summary_blocks.append((entry, fields))
+        elif name == "status.tsv":
+            counts, rows = _status_counts(lines)
+            status_blocks.append((entry, counts, rows))
+        elif name == "env-summary.txt":
+            safe_lines = _environment_lines(lines)
+            environment_blocks.append((entry, safe_lines))
+
+    group_lines = "\n".join(
+        "- %s: %s file(s)" % (group, count) for group, count in sorted(by_group.items())
+    )
+    if not group_lines:
+        group_lines = "- No evidence files were attached by this generator run."
+
+    summary_lines = []
+    for entry, fields in summary_blocks:
+        summary_lines.append("### `%s`" % entry["relative_path"])
+        if fields:
+            for label in sorted(fields):
+                summary_lines.append("- %s: %s" % (label, fields[label]))
+        else:
+            summary_lines.append("- No structured summary fields were found.")
+        summary_lines.append("")
+    if not summary_lines:
+        summary_lines = ["- No `summary.md` files were attached.", ""]
+
+    status_lines = []
+    for entry, counts, rows in status_blocks:
+        count_text = ", ".join("%s=%s" % (status, count) for status, count in sorted(counts.items()))
+        status_lines.append("### `%s`" % entry["relative_path"])
+        status_lines.append("- Counts: %s" % (count_text or "none"))
+        for row in rows[:20]:
+            message = " - %s" % row["message"] if row["message"] else ""
+            status_lines.append("- `%s`: %s%s" % (row["name"], row["status"], message))
+        status_lines.append("")
+    if not status_lines:
+        status_lines = ["- No `status.tsv` files were attached.", ""]
+
+    env_lines = []
+    for entry, safe_lines in environment_blocks:
+        env_lines.append("### `%s`" % entry["relative_path"])
+        if safe_lines:
+            env_lines.extend("- `%s`" % line for line in safe_lines)
+        else:
+            env_lines.append("- No non-secret environment lines were found.")
+        env_lines.append("")
+    if not env_lines:
+        env_lines = ["- No `env-summary.txt` files were attached.", ""]
+
+    return f"""
+# Evidence Summary
+
+- Package ID: {context["run_id"]}
+- Generated: {context["generated_at"]}
+- Target environment: {context["target_environment"]}
+
+## Evidence Groups
+
+{group_lines}
+
+## Run Summaries
+
+{chr(10).join(summary_lines)}
+## Check Status Tables
+
+{chr(10).join(status_lines)}
+## Environment Snapshots
+
+{chr(10).join(env_lines)}
+## Approver Focus
+
+{_checklist([
+    "Every attached summary has a passing or approved-exception status.",
+    "Every failed/skipped check has an owner, business impact, and due date.",
+    "Browser E2E evidence includes the enterprise POS journey result.",
+    "Operations evidence includes monitoring, load, dependency, restore, and container decisions.",
+    "Release evidence links back to the git head and staging environment under review.",
+    "No secret values are copied into this package.",
+])}
+"""
+
+
 def _index(context, files, evidence_entries):
     evidence_lines = "\n".join(
         "- `%s` (%s bytes) `%s`" % (
@@ -349,6 +525,10 @@ def _index(context, files, evidence_entries):
 ## Evidence Manifest
 
 {evidence_lines}
+
+## Evidence Summary
+
+- [Evidence Summary](evidence-summary.md)
 
 ## Usage
 
@@ -430,9 +610,11 @@ def main():
     manifest = {
         "context": context,
         "generated_templates": [path.name for _, path in written_templates],
+        "evidence_summary": "evidence-summary.md",
         "evidence": evidence_entries,
     }
     _write(output / "evidence-manifest.json", json.dumps(manifest, indent=2, sort_keys=True))
+    _write(output / "evidence-summary.md", _evidence_summary(context, evidence_entries))
     _write(output / "README.md", _index(context, written_templates, evidence_entries))
 
     print("Sign-off package written to %s" % output)

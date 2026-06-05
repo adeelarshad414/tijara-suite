@@ -652,6 +652,8 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   and tax policy approval.
 - `security-review-signoff.md` for scan results, RBAC, logs, rate limits,
   backup/restore, and exception handling.
+- `evidence-summary.md` with extracted release, browser E2E, operations,
+  status-table, and non-secret environment summaries for approvers.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 

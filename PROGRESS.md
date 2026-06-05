@@ -2294,3 +2294,56 @@ Date: 2026-06-05
   is available.
 - Continue PSP/FBR/hardware certification automation around real provider and
   device evidence.
+
+## Iteration 33: Sign-Off Evidence Summary Extraction
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/generate_signoff_pack.py` to generate
+  `evidence-summary.md` alongside the sign-off templates and manifest.
+- The evidence summary now:
+  - Groups attached evidence by release candidate, browser E2E, operations,
+    hardware, FBR, PSP, security, or general evidence.
+  - Extracts status, exit code, run ID, scope, base URL, evidence directory,
+    start time, and finish time from attached `summary.md` files.
+  - Parses `status.tsv` files and summarizes passed, failed, and skipped check
+    counts with per-check messages.
+  - Copies only non-secret lines from `env-summary.txt` files.
+  - Adds approver checklist focus items for release, browser E2E, operations,
+    and secret-handling review.
+- Added the generated `evidence-summary.md` reference to the sign-off package
+  README and `evidence-manifest.json`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Local sign-off package smoke run passes with temporary release/E2E/ops
+  evidence files.
+- Generated `evidence-summary.md` includes run summaries, status-table counts,
+  and non-secret environment snapshots.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- The summary extractor is ready, but real approver value depends on executing
+  release-candidate, E2E, and operations harnesses against live staging.
+- It summarizes text evidence only; screenshots, videos, PDFs, and hardware
+  attachments are fingerprinted but not visually summarized.
+- PSP/FBR and physical hardware certification still require real provider and
+  device evidence.
+
+### Next Iteration
+
+- Add release package guardrails that fail or warn when required evidence groups
+  are missing for a target environment.
+- Execute the full release-candidate gate and sign-off pack against a prepared
+  staging stack.
+- Continue direct POS UI click-through selectors and external certification
+  evidence workflows.
