@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "category": "hardware",
+    "device_type": "replace-with-device-type",
+    "device_model": "replace-with-manufacturer-and-model",
+    "store": "replace-with-store-or-branch",
+    "owner": "replace-with-operations-owner"
+  },
+  "artifacts": [
+    {
+      "path": "receipt-print-proof.txt",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    },
+    {
+      "path": "cash-drawer-proof.txt",
+      "sha256": "replace-with-64-character-sha256",
+      "required": false
+    },
+    {
+      "path": "scanner-proof.txt",
+      "sha256": "replace-with-64-character-sha256",
+      "required": false
+    },
+    {
+      "path": "scale-proof.txt",
+      "sha256": "replace-with-64-character-sha256",
+      "required": false
+    },
+    {
+      "path": "customer-display-proof.txt",
+      "sha256": "replace-with-64-character-sha256",
+      "required": false
+    }
+  ]
+}

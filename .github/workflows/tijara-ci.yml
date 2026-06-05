@@ -128,6 +128,8 @@ jobs:
     env:
       TIJARA_TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
       TIJARA_PROTECTED_RELEASE_CHECKS: ${{ vars.TIJARA_PROTECTED_RELEASE_CHECKS || 'full' }}
+      TIJARA_PROTECTED_REQUIRED_EVIDENCE_GROUPS: ${{ vars.TIJARA_PROTECTED_REQUIRED_EVIDENCE_GROUPS || 'release,e2e,ops,security' }}
+      TIJARA_PROTECTED_CERTIFICATION_GROUPS: ${{ vars.TIJARA_PROTECTED_CERTIFICATION_GROUPS || '' }}
       TIJARA_ARTIFACT_STORE_REFERENCE: ${{ vars.TIJARA_ARTIFACT_STORE_REFERENCE }}
       TIJARA_ARTIFACT_RETENTION_POLICY_REF: ${{ vars.TIJARA_ARTIFACT_RETENTION_POLICY_REF }}
       TIJARA_CERTIFICATION_RETENTION_POLICY_REF: ${{ vars.TIJARA_CERTIFICATION_RETENTION_POLICY_REF }}
@@ -139,6 +141,40 @@ jobs:
       TIJARA_BACKUP_ARTIFACT_REF: ${{ vars.TIJARA_BACKUP_ARTIFACT_REF }}
       ODOO_IMAGE: ${{ vars.ODOO_IMAGE }}
       POSTGRES_IMAGE: ${{ vars.POSTGRES_IMAGE }}
+      TIJARA_CERT_PSP_PROVIDER: ${{ vars.TIJARA_CERT_PSP_PROVIDER }}
+      TIJARA_CERT_PSP_REFERENCE: ${{ vars.TIJARA_CERT_PSP_REFERENCE }}
+      TIJARA_CERT_PSP_OWNER: ${{ vars.TIJARA_CERT_PSP_OWNER }}
+      TIJARA_CERT_PSP_EVIDENCE_FILES: ${{ vars.TIJARA_CERT_PSP_EVIDENCE_FILES }}
+      TIJARA_CERT_PSP_ARTIFACT_MANIFEST: ${{ vars.TIJARA_CERT_PSP_ARTIFACT_MANIFEST }}
+      TIJARA_CERT_PSP_EXPECTED_SHA256: ${{ vars.TIJARA_CERT_PSP_EXPECTED_SHA256 }}
+      TIJARA_CERT_PSP_MINIMUM_EVIDENCE_FILES: ${{ vars.TIJARA_CERT_PSP_MINIMUM_EVIDENCE_FILES }}
+      TIJARA_CERT_PSP_APPROVED_BY: ${{ vars.TIJARA_CERT_PSP_APPROVED_BY }}
+      TIJARA_CERT_PSP_APPROVAL_REFERENCE: ${{ vars.TIJARA_CERT_PSP_APPROVAL_REFERENCE }}
+      TIJARA_CERT_PSP_VALID_UNTIL: ${{ vars.TIJARA_CERT_PSP_VALID_UNTIL }}
+      TIJARA_CERT_PSP_METADATA: ${{ vars.TIJARA_CERT_PSP_METADATA }}
+      TIJARA_CERT_FBR_PROVIDER: ${{ vars.TIJARA_CERT_FBR_PROVIDER }}
+      TIJARA_CERT_FBR_REFERENCE: ${{ vars.TIJARA_CERT_FBR_REFERENCE }}
+      TIJARA_CERT_FBR_OWNER: ${{ vars.TIJARA_CERT_FBR_OWNER }}
+      TIJARA_CERT_FBR_EVIDENCE_FILES: ${{ vars.TIJARA_CERT_FBR_EVIDENCE_FILES }}
+      TIJARA_CERT_FBR_ARTIFACT_MANIFEST: ${{ vars.TIJARA_CERT_FBR_ARTIFACT_MANIFEST }}
+      TIJARA_CERT_FBR_EXPECTED_SHA256: ${{ vars.TIJARA_CERT_FBR_EXPECTED_SHA256 }}
+      TIJARA_CERT_FBR_MINIMUM_EVIDENCE_FILES: ${{ vars.TIJARA_CERT_FBR_MINIMUM_EVIDENCE_FILES }}
+      TIJARA_CERT_FBR_APPROVED_BY: ${{ vars.TIJARA_CERT_FBR_APPROVED_BY }}
+      TIJARA_CERT_FBR_APPROVAL_REFERENCE: ${{ vars.TIJARA_CERT_FBR_APPROVAL_REFERENCE }}
+      TIJARA_CERT_FBR_VALID_UNTIL: ${{ vars.TIJARA_CERT_FBR_VALID_UNTIL }}
+      TIJARA_CERT_FBR_METADATA: ${{ vars.TIJARA_CERT_FBR_METADATA }}
+      TIJARA_CERT_HARDWARE_OWNER: ${{ vars.TIJARA_CERT_HARDWARE_OWNER }}
+      TIJARA_CERT_HARDWARE_STORE: ${{ vars.TIJARA_CERT_HARDWARE_STORE }}
+      TIJARA_CERT_HARDWARE_DEVICE_MODEL: ${{ vars.TIJARA_CERT_HARDWARE_DEVICE_MODEL }}
+      TIJARA_CERT_HARDWARE_DEVICE_SERIAL: ${{ vars.TIJARA_CERT_HARDWARE_DEVICE_SERIAL }}
+      TIJARA_CERT_HARDWARE_EVIDENCE_FILES: ${{ vars.TIJARA_CERT_HARDWARE_EVIDENCE_FILES }}
+      TIJARA_CERT_HARDWARE_ARTIFACT_MANIFEST: ${{ vars.TIJARA_CERT_HARDWARE_ARTIFACT_MANIFEST }}
+      TIJARA_CERT_HARDWARE_EXPECTED_SHA256: ${{ vars.TIJARA_CERT_HARDWARE_EXPECTED_SHA256 }}
+      TIJARA_CERT_HARDWARE_MINIMUM_EVIDENCE_FILES: ${{ vars.TIJARA_CERT_HARDWARE_MINIMUM_EVIDENCE_FILES }}
+      TIJARA_CERT_HARDWARE_APPROVED_BY: ${{ vars.TIJARA_CERT_HARDWARE_APPROVED_BY }}
+      TIJARA_CERT_HARDWARE_APPROVAL_REFERENCE: ${{ vars.TIJARA_CERT_HARDWARE_APPROVAL_REFERENCE }}
+      TIJARA_CERT_HARDWARE_VALID_UNTIL: ${{ vars.TIJARA_CERT_HARDWARE_VALID_UNTIL }}
+      TIJARA_CERT_HARDWARE_METADATA: ${{ vars.TIJARA_CERT_HARDWARE_METADATA }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -223,6 +259,9 @@ jobs:
             --k6-summary-json "$TIJARA_OPS_TOOL_RAW_DIR/k6-summary.json" \
             --strict \
             --fail-on-warning
+      - name: Protected certification evidence
+        continue-on-error: true
+        run: make protected-certification-evidence
       - name: Protected release retention evidence
         run: |
           python3 scripts/export_release_retention_evidence.py \
@@ -242,6 +281,7 @@ jobs:
             --backup-retention-days 30 \
             --evidence-path "deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --strict
       - name: Protected secret manager evidence
         run: |
@@ -271,10 +311,14 @@ jobs:
             --fail-on-warning
       - name: Generate protected sign-off package
         run: |
+          REQUIRED_GROUPS="$TIJARA_PROTECTED_REQUIRED_EVIDENCE_GROUPS"
+          if [[ -n "${TIJARA_PROTECTED_CERTIFICATION_GROUPS:-}" ]]; then
+            REQUIRED_GROUPS="${REQUIRED_GROUPS:+$REQUIRED_GROUPS,}$TIJARA_PROTECTED_CERTIFICATION_GROUPS"
+          fi
           TIJARA_SIGNOFF_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_ENVIRONMENT="$TIJARA_TARGET_ENVIRONMENT" \
-          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
-          TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,security \
+          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
+          TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS="$REQUIRED_GROUPS" \
           TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
           make signoff-pack
       - name: Check protected release readiness
@@ -295,6 +339,7 @@ jobs:
             deploy/runtime/ops-tool-raw/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/ops-tool-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/operations-release-bundle/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/certification-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/release-retention-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/secret-manager-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/production-ops-readiness/${{ env.TIJARA_PROTECTED_RUN_ID }}

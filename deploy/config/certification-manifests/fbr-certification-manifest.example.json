@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "category": "fbr",
+    "provider": "replace-with-certified-provider-name",
+    "reference": "replace-with-fbr-sandbox-or-live-reference",
+    "owner": "replace-with-tax-owner"
+  },
+  "artifacts": [
+    {
+      "path": "provider-certification-letter.pdf",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    },
+    {
+      "path": "sandbox-accepted-response.json",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    },
+    {
+      "path": "sandbox-rejected-response.json",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    },
+    {
+      "path": "receipt-qr-proof.png",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    }
+  ]
+}

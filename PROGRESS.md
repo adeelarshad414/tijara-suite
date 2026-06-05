@@ -6016,3 +6016,77 @@ Date: 2026-06-05
 - Continue toward live staging E2E execution once Odoo URL, credentials, seeded
   POS config, Playwright browser dependencies, and hardware bridge are
   available.
+
+## Iteration 85: Protected Certification Evidence Automation
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_protected_certification_evidence.sh` to collect strict
+  PSP, FBR, and hardware certification evidence from protected-runner
+  environment variables.
+- Added `make protected-certification-evidence` so DevOps can run the same
+  protected certification collection path locally or in GitHub Actions.
+- Added public-safe artifact manifest templates under
+  `deploy/config/certification-manifests/` for PSP, FBR, and hardware
+  certification bundles.
+- Extended `.github/workflows/tijara-ci.yml` protected release evidence job
+  with certification environment variables for PSP, FBR, and hardware.
+- Added a protected workflow step that runs strict certification evidence
+  collection and continues to final sign-off packaging even when certification
+  evidence fails.
+- Added certification evidence paths to protected release retention evidence,
+  protected sign-off package inputs, and protected artifact uploads.
+- Added `TIJARA_PROTECTED_REQUIRED_EVIDENCE_GROUPS` and
+  `TIJARA_PROTECTED_CERTIFICATION_GROUPS` so staging can choose warning/partial
+  certification posture while production can require `psp,fbr,hardware`.
+- Updated `deploy/config/github-protected-vars.example` with non-secret
+  certification file paths, manifest paths, expected hash variables, approval
+  references, validity dates, and metadata examples.
+- Updated `README.md` and `DEPLOY.md` with protected certification runner
+  setup guidance and manifest template references.
+
+### Validation
+
+- `bash -n scripts/run_protected_certification_evidence.sh` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- All JSON files under `deploy/config/certification-manifests/` parse
+  successfully.
+- No-config protected certification runner smoke skips PSP, FBR, and hardware
+  without failing.
+- Configured PSP protected certification runner smoke writes strict evidence
+  with `decision=passed`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- Protected certification automation is wired, but it still needs a real
+  protected runner with mounted or downloaded PSP, FBR, and hardware evidence
+  bundles.
+- The manifest templates intentionally contain placeholders; production release
+  owners must replace paths, hashes, approvals, and validity dates with real
+  provider/device artifacts.
+- Live FBR provider API compliance, PSP settlement/refund/chargeback
+  certification, and physical hardware certification still need external
+  systems and signed evidence.
+- Live browser POS checkout/refund/print evidence still depends on staging Odoo
+  access, seeded POS data, Playwright dependencies, and hardware bridge access.
+
+### Next Iteration
+
+- Add a protected-runner release checklist/report that summarizes certification
+  variables before execution without printing secret values.
+- Add a live staging E2E readiness/collection handoff that can consume protected
+  Odoo credentials and attach Browser E2E execution evidence to the same
+  protected sign-off package.
+- Continue tightening PSP/FBR live adapter certification once real provider
+  sandbox/live credentials and compliance documents are available.

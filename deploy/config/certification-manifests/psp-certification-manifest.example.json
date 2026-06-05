@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "category": "psp",
+    "provider": "replace-with-provider-name",
+    "reference": "replace-with-provider-certification-reference",
+    "owner": "replace-with-finance-owner"
+  },
+  "artifacts": [
+    {
+      "path": "psp-certification-letter.pdf",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    },
+    {
+      "path": "settlement-sample.csv",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    },
+    {
+      "path": "webhook-signature-proof.json",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    },
+    {
+      "path": "refund-chargeback-proof.json",
+      "sha256": "replace-with-64-character-sha256",
+      "required": true
+    }
+  ]
+}

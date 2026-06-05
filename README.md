@@ -362,7 +362,9 @@ The detailed policy and dependency intake checklist are maintained in
   explicit 30-day CI retention setting. A manual protected-runner job is also
   available for strict staging/production evidence on `[self-hosted,
   tijara-protected]`; see `deploy/config/github-protected-vars.example` and
-  `secrets/github-protected-secrets.example` for setup templates.
+  `secrets/github-protected-secrets.example` for setup templates, plus
+  `deploy/config/certification-manifests/` for PSP, FBR, and hardware
+  certification manifest examples.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
@@ -407,6 +409,11 @@ The detailed policy and dependency intake checklist are maintained in
   minimum evidence counts, approvals, validity dates, and required manifests,
   and write sign-off-ready summaries under
   `deploy/runtime/certification-evidence/`.
+- `scripts/run_protected_certification_evidence.sh` and
+  `make protected-certification-evidence` collect strict PSP, FBR, and hardware
+  certification evidence from protected-runner environment variables so
+  staging/production sign-off packages can require external certification
+  groups without committing provider or device evidence.
 - `scripts/export_psp_readiness.py` and `make psp-readiness-evidence` export
   redacted PSP readiness evidence from the committed provider adapter matrix,
   including secret-presence status, certification status, event coverage, and

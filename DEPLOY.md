@@ -1042,23 +1042,34 @@ the same workflow:
    `tijara-protected`.
 2. Configure the GitHub environment named `staging` or `production` with the
    required secrets and variables for Odoo, Playwright, backup restore drills,
-   artifact storage, secret manager references, Trivy, k6, npm, and optional
-   pip-audit.
+   artifact storage, secret manager references, PSP/FBR/hardware certification
+   evidence paths, Trivy, k6, npm, and optional pip-audit.
    Use `deploy/config/github-protected-vars.example` for non-secret environment
    variables and `secrets/github-protected-secrets.example` for the required
-   secret names.
+   secret names. Use the JSON templates under
+   `deploy/config/certification-manifests/` as starting points for PSP, FBR,
+   and hardware evidence bundles.
 3. Start the workflow manually with `protected_release=true`,
    `target_environment=staging` or `production`, and an optional `run_id`.
 
 The protected job runs the release-candidate gate, captures raw restore,
 security, dependency, container, npm audit, and k6 outputs under
 `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
-evidence, exports retention and secret-manager evidence, runs strict production
-operations readiness, generates the protected sign-off package, and checks
-`release-readiness.json`. Evidence is uploaded as
+evidence, collects strict PSP/FBR/hardware certification evidence when the
+matching `TIJARA_CERT_*` variables are configured, exports retention and
+secret-manager evidence, runs strict production operations readiness, generates
+the protected sign-off package, and checks `release-readiness.json`. Evidence is
+uploaded as
 `tijara-protected-release-evidence-<environment>-<run>`. If a strict evidence
 step fails, the job still tries to build the final sign-off package so the
 release-readiness JSON explains the blocker.
+
+Set `TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware` in the protected
+GitHub environment when external certification must be mandatory for the
+release. The protected sign-off package will append certification evidence
+directories to `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the selected groups;
+missing, expired, unapproved, or hash-mismatched certification evidence becomes
+a release-readiness blocker.
 
 Export release retention and secret-manager evidence before production
 approval:
@@ -1403,6 +1414,13 @@ manifest file so provider/export bundles can stay portable:
   ]
 }
 ```
+
+Copy the starter templates in `deploy/config/certification-manifests/` into a
+secure evidence bundle outside the repo, replace the placeholder file names and
+hashes, and point the protected runner variables such as
+`TIJARA_CERT_PSP_ARTIFACT_MANIFEST`,
+`TIJARA_CERT_FBR_ARTIFACT_MANIFEST`, and
+`TIJARA_CERT_HARDWARE_ARTIFACT_MANIFEST` at those real manifest files.
 
 PSP evidence example:
 
