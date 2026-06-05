@@ -4220,3 +4220,92 @@ Date: 2026-06-05
   provider is selected.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 62: Deployment Environment Protection Evidence
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_deployment_environment_evidence.py`.
+- The deployment environment exporter:
+  - Records target environment and deployment platform.
+  - Validates environment name, branch/deployment policy, approver group,
+    required approver count, promotion runbook, rollback runbook, deployment
+    gate reference, incident runbook, backup policy, monitoring reference,
+    change ticket, and release/freeze window.
+  - Rejects secret-like metadata keys.
+  - Writes `deployment-environment-evidence.json`, `status.tsv`,
+    `env-summary.txt`, and `summary.md` under
+    `deploy/runtime/deployment-environments/<run-id>/`.
+  - Supports strict production mode and local warning mode.
+- Added operator shortcuts:
+  - `make deployment-environment-evidence`
+  - `npm run deployment:environment`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group deployment environment evidence as Operations evidence.
+  - Parse attached `deployment-environment-evidence.json`.
+  - Add a Deployment Environment Evidence section to `evidence-summary.md`.
+  - Add `deployment_environment_reviews` into `release-readiness.json`.
+  - Treat failed deployment environment evidence as release blockers and
+    warning evidence as release warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Strict complete deployment environment export passes:
+  `python3 scripts/export_deployment_environment_evidence.py --run-id
+  env-protection-ready --output /private/tmp/tijara-env-protection-ready
+  --target-environment production --platform github-actions
+  --environment-name production --branch-policy-ref
+  github:protected-branches/main --approver ReleaseOwner --approver
+  DevOpsOwner --approver-group-ref github:tijara-release-approvers
+  --minimum-approvers 2 --promotion-runbook-ref
+  docs:DEPLOY.md#production-deployment-gate --rollback-runbook-ref
+  docs:DEPLOY.md#production-rollback --deployment-gate-ref
+  deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json
+  --incident-runbook-ref
+  docs:DEPLOY.md#monitoring-alerting-and-incident-readiness
+  --backup-policy-ref deploy/postgres/README.md --monitoring-ref
+  deploy/monitoring/README.md --change-ticket-ref change:TIJARA-PROD-001
+  --freeze-window-ref calendar:prod-freeze-window --strict`.
+- `make deployment-environment-evidence` passes in warning mode when production
+  references are not supplied.
+- `npm run deployment:environment` passes in warning mode.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using the strict deployment environment evidence directory.
+- Confirmed `evidence-summary.md` includes Deployment Environment Evidence.
+- Confirmed `release-readiness.json` includes `deployment_environment_reviews`
+  and is `ready` for the focused complete deployment-environment evidence run.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_deployment_environment_evidence.py
+  scripts/generate_signoff_pack.py` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- The exporter records environment protection references; it does not configure
+  GitHub Environments, Kubernetes admission policies, or cloud deployment
+  approvals by itself.
+- Production still needs real environment protection rules, protected branches,
+  release approver groups, deployment windows, change tickets, and external
+  artifact-store wiring.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Wire deployment environment evidence into staging/production release sign-off
+  orchestration.
+- Add production runtime secret-manager connectivity checks after the target
+  provider is selected.
+- Continue staging/live FBR transaction execution when credentials are
+  available.

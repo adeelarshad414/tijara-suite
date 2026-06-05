@@ -87,6 +87,7 @@ make monitoring-evidence
 make incident-runbook-evidence
 make release-retention-evidence
 make secret-manager-evidence
+make deployment-environment-evidence
 make load-evidence
 make operations-release-bundle
 make signoff-pack
@@ -866,6 +867,38 @@ present under `secrets/`. It writes `secret-manager-evidence.json`,
 production release sign-off; the sign-off package extracts it under
 `secret_manager_reviews`.
 
+Export deployment environment protection evidence before staging or production
+approval:
+
+```bash
+python3 scripts/export_deployment_environment_evidence.py \
+  --run-id 2026-06-05-prod \
+  --target-environment production \
+  --platform github-actions \
+  --environment-name production \
+  --branch-policy-ref github:protected-branches/main \
+  --approver "Release Owner" \
+  --approver "DevOps Owner" \
+  --approver-group-ref github:tijara-release-approvers \
+  --minimum-approvers 2 \
+  --promotion-runbook-ref docs:DEPLOY.md#production-deployment-gate \
+  --rollback-runbook-ref docs:DEPLOY.md#production-rollback \
+  --deployment-gate-ref deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json \
+  --incident-runbook-ref docs:DEPLOY.md#monitoring-alerting-and-incident-readiness \
+  --backup-policy-ref deploy/postgres/README.md \
+  --monitoring-ref deploy/monitoring/README.md \
+  --change-ticket-ref change:TIJARA-PROD-001 \
+  --freeze-window-ref calendar:prod-freeze-window \
+  --strict
+```
+
+The exporter writes `deployment-environment-evidence.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/deployment-environments/<run-id>/`. Include that directory in
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the `ops` evidence group for
+production release sign-off; the sign-off package extracts it under
+`deployment_environment_reviews`.
+
 Optional tools:
 
 - Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.
@@ -885,6 +918,9 @@ Optional tools:
 - Run `make secret-manager-evidence` to validate runtime secret-manager
   references, config-template separation, required secret placeholders, and
   committed-secret-file hygiene.
+- Run `make deployment-environment-evidence` to validate required approvers,
+  branch/deployment policy, promotion and rollback runbooks, deployment gate,
+  monitoring, backup, change-ticket, and release-window references.
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
@@ -1064,8 +1100,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
-  runbook, release retention, secret manager, load evidence, load profile
-  matrix evidence, and non-secret environment summaries for approvers.
+  runbook, release retention, secret manager, deployment environment, load
+  evidence, load profile matrix evidence, and non-secret environment summaries
+  for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -1087,7 +1124,10 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   are included under `release_retention_reviews`; when secret-manager evidence
   is attached, runtime secret references, template separation, Compose guards,
   startup guards, and committed-secret hygiene are included under
-  `secret_manager_reviews`.
+  `secret_manager_reviews`; when deployment environment evidence is attached,
+  approver, branch-policy, promotion, rollback, deployment-gate, monitoring,
+  backup, change-ticket, and freeze-window reviews are included under
+  `deployment_environment_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 

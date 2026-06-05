@@ -385,12 +385,15 @@ def _evidence_group(entry):
         or "load-profile-matrix" in relative_lower
         or "operations-release-bundle" in relative_lower
         or "release-retention-evidence" in relative_lower
+        or "deployment-environment-evidence" in relative_lower
+        or "deployment-environments" in relative_lower
         or filename == "monitoring-evidence.json"
         or filename == "incident-runbook-evidence.json"
         or filename == "load-evidence.json"
         or filename == "load-profile-matrix.json"
         or filename == "operations-release-bundle.json"
         or filename == "release-retention-evidence.json"
+        or filename == "deployment-environment-evidence.json"
     ):
         return "Operations"
     if "hardware" in relative_lower:
@@ -818,6 +821,41 @@ def _secret_manager_reviews(evidence_entries):
     return reviews
 
 
+def _deployment_environment_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "deployment-environment-evidence.json":
+            continue
+        payload = _read_json(path)
+        environment = payload.get("environment") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "target_environment": (payload.get("context") or {}).get("target_environment", ""),
+                "platform": environment.get("platform", ""),
+                "environment_name": environment.get("name", ""),
+                "branch_policy_ref_present": bool(environment.get("branch_policy_ref_present")),
+                "approver_group_ref_present": bool(environment.get("approver_group_ref_present")),
+                "minimum_approvers": environment.get("minimum_approvers", 0),
+                "approver_count": environment.get("approver_count", 0),
+                "promotion_runbook_ref_present": bool(environment.get("promotion_runbook_ref_present")),
+                "rollback_runbook_ref_present": bool(environment.get("rollback_runbook_ref_present")),
+                "deployment_gate_ref_present": bool(environment.get("deployment_gate_ref_present")),
+                "incident_runbook_ref_present": bool(environment.get("incident_runbook_ref_present")),
+                "backup_policy_ref_present": bool(environment.get("backup_policy_ref_present")),
+                "monitoring_ref_present": bool(environment.get("monitoring_ref_present")),
+                "change_ticket_ref_present": bool(environment.get("change_ticket_ref_present")),
+                "freeze_window_ref_present": bool(environment.get("freeze_window_ref_present")),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -833,6 +871,7 @@ def _evidence_summary(context, evidence_entries):
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
     secret_manager_reviews = _secret_manager_reviews(evidence_entries)
+    deployment_environment_reviews = _deployment_environment_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -1189,6 +1228,45 @@ def _evidence_summary(context, evidence_entries):
     if not secret_manager_lines:
         secret_manager_lines = ["- No `secret-manager-evidence.json` files were attached.", ""]
 
+    deployment_environment_lines = []
+    for review in deployment_environment_reviews:
+        deployment_environment_lines.append("### `%s`" % review["path"])
+        deployment_environment_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        deployment_environment_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        deployment_environment_lines.append(
+            "- Environment/platform/name: %s/%s/%s"
+            % (
+                review["target_environment"] or "unset",
+                review["platform"] or "unset",
+                review["environment_name"] or "unset",
+            )
+        )
+        deployment_environment_lines.append(
+            "- Policy/approvers: branch=%s, group=%s, approvers=%s/%s"
+            % (
+                "yes" if review["branch_policy_ref_present"] else "no",
+                "yes" if review["approver_group_ref_present"] else "no",
+                review["approver_count"],
+                review["minimum_approvers"],
+            )
+        )
+        deployment_environment_lines.append(
+            "- Runbooks promotion/rollback/gate/incident/backup/monitoring/change/window: %s/%s/%s/%s/%s/%s/%s/%s"
+            % (
+                "yes" if review["promotion_runbook_ref_present"] else "no",
+                "yes" if review["rollback_runbook_ref_present"] else "no",
+                "yes" if review["deployment_gate_ref_present"] else "no",
+                "yes" if review["incident_runbook_ref_present"] else "no",
+                "yes" if review["backup_policy_ref_present"] else "no",
+                "yes" if review["monitoring_ref_present"] else "no",
+                "yes" if review["change_ticket_ref_present"] else "no",
+                "yes" if review["freeze_window_ref_present"] else "no",
+            )
+        )
+        deployment_environment_lines.append("")
+    if not deployment_environment_lines:
+        deployment_environment_lines = ["- No `deployment-environment-evidence.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -1243,6 +1321,9 @@ def _evidence_summary(context, evidence_entries):
 ## Secret Manager Evidence
 
 {chr(10).join(secret_manager_lines)}
+## Deployment Environment Evidence
+
+{chr(10).join(deployment_environment_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -1269,6 +1350,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
     secret_manager_reviews = _secret_manager_reviews(evidence_entries)
+    deployment_environment_reviews = _deployment_environment_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -1412,6 +1494,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Secret manager evidence %s is %s" % (review["path"], review["decision"]))
 
+    for review in deployment_environment_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Deployment environment evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Deployment environment evidence %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -1448,6 +1537,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "operations_bundle_reviews": operations_bundle_reviews,
         "release_retention_reviews": release_retention_reviews,
         "secret_manager_reviews": secret_manager_reviews,
+        "deployment_environment_reviews": deployment_environment_reviews,
     }
 
 
