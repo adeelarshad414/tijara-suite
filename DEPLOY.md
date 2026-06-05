@@ -776,6 +776,23 @@ open-source runtime commands. The Docker Compose provider injects the rollback
 reference through `TIJARA_ROLLBACK_COMPOSE_IMAGE_ENV`, defaulting to
 `ODOO_IMAGE`, which matches `docker-compose.yml`.
 
+After deployment or rollback, capture production smoke evidence:
+
+```bash
+TIJARA_SMOKE_RUN_ID=2026-06-05-prod \
+TIJARA_SMOKE_BASE_URL=https://pos.example.com \
+python3 scripts/run_production_smoke.py \
+  --deployment-decision deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json \
+  --url login=https://pos.example.com/web/login \
+  --url display=https://pos.example.com/tijara/display/main/data
+```
+
+Smoke evidence is written under `deploy/runtime/production-smoke/<run-id>/`
+with `smoke-decision.json`, `status.tsv`, `summary.md`, and
+`env-summary.txt`. HTTP 2xx/3xx responses pass; 4xx/5xx responses and
+unreachable endpoints block by default. Set `TIJARA_SMOKE_NON_STRICT=1` only
+for exploratory drills where endpoint failures should be warnings.
+
 ## Rollback Baseline
 
 For every production release, keep:

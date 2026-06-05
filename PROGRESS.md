@@ -2783,3 +2783,52 @@ Date: 2026-06-05
   infrastructure is selected.
 - Continue PSP/FBR/hardware certification evidence work with real provider and
   device inputs.
+
+## Iteration 42: Production Smoke Evidence Hooks
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_production_smoke.py` for post-deploy and post-rollback
+  smoke evidence.
+- The smoke runner:
+  - Checks `TIJARA_SMOKE_BASE_URL` root and `/web/login` when supplied.
+  - Accepts repeated named endpoints with `--url name=url`.
+  - Optionally consumes deployment and rollback decision JSON files.
+  - Treats HTTP 2xx/3xx as pass and 4xx/5xx/unreachable endpoints as blockers
+    unless non-strict mode is enabled.
+  - Writes `smoke-decision.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md`.
+- Added operator shortcuts:
+  - `make production-smoke`
+  - `npm run release:smoke`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Production smoke passes against temporary `file://` endpoints.
+- Production smoke exits non-zero for an unreachable strict endpoint.
+- Production smoke records warnings instead of blockers in non-strict mode.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Real production smoke execution still needs live production/staging URLs,
+  display slugs, customer-display slugs, and operator-approved smoke endpoints.
+- The runner checks endpoint availability; workflow-level functional assertions
+  still come from Playwright staging E2E and Odoo transaction tests.
+- Production monitoring and alert confirmation still need real Grafana,
+  Prometheus, Alertmanager, and log evidence.
+
+### Next Iteration
+
+- Execute staging/deployment/smoke flows against real staging infrastructure.
+- Tighten direct POS UI selectors based on real Playwright traces.
+- Continue PSP/FBR/hardware certification evidence work with real provider and
+  device inputs.
