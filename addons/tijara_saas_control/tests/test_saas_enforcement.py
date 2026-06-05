@@ -336,6 +336,69 @@ class TestTijaraSaasEnforcement(TransactionCase):
 
         self.assertEqual(jazzcash_verification["signature_status"], "valid")
 
+    def test_provider_adapter_readiness_matrix_and_payload_validation(self):
+        adapter = self.env["tijara.saas.payment.provider.adapter"]
+        config = self.env["ir.config_parameter"].sudo()
+        config.set_param("tijara.saas.payment_require_native_signatures", "1")
+        config.set_param("tijara.saas.stripe_webhook_secret", "whsec_adapter_test")
+        config.set_param("tijara.saas.stripe_certification_reference", "STRIPE-UAT-001")
+        config.set_param("tijara.saas.stripe_certification_status", "approved")
+
+        stripe_readiness = adapter.tijara_provider_readiness("stripe")
+
+        self.assertEqual(stripe_readiness["decision"], "passed")
+        self.assertEqual(stripe_readiness["signature"]["configured"], True)
+        self.assertNotIn("whsec_adapter_test", json.dumps(stripe_readiness))
+        self.assertIn("refund", stripe_readiness["contract"]["event_types"])
+        self.assertIn("chargeback", stripe_readiness["contract"]["event_types"])
+        self.assertEqual(adapter.tijara_settlement_parser_profile("easypaisa"), "easypaisa_merchant_v1")
+
+        stripe_payload = {
+            "id": "evt_adapter_refund_001",
+            "type": "refund.created",
+            "data": {
+                "object": {
+                    "id": "re_adapter_001",
+                    "amount": 125000,
+                    "metadata": {"database_name": "tijara_test_tenant"},
+                }
+            },
+        }
+        raw_body = json.dumps(stripe_payload, separators=(",", ":"))
+        timestamp = str(int(time.time()))
+        stripe_signature = hmac.new(
+            b"whsec_adapter_test",
+            ("%s.%s" % (timestamp, raw_body)).encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        normalized = adapter.tijara_validate_webhook_payload(
+            "stripe",
+            stripe_payload,
+            raw_body=raw_body,
+            headers={"Stripe-Signature": "t=%s,v1=%s" % (timestamp, stripe_signature)},
+        )
+
+        self.assertEqual(normalized["signature"]["signature_status"], "valid")
+        self.assertEqual(normalized["provider_values"]["payment_event_type"], "refund")
+        self.assertEqual(normalized["provider_values"]["refund_reference"], "re_adapter_001")
+        self.assertEqual(normalized["provider_values"]["amount"], 1250)
+
+        jazzcash_readiness = adapter.tijara_provider_readiness("jazzcash")
+
+        self.assertEqual(jazzcash_readiness["decision"], "failed")
+        self.assertIn("provider secret is not configured", " ".join(jazzcash_readiness["blockers"]))
+
+    def test_provider_adapter_sets_default_settlement_parser_profile(self):
+        batch = self.env["tijara.saas.payment.settlement.batch"].create(
+            {
+                "provider": "easypaisa",
+                "provider_batch_reference": "EP-BATCH-DEFAULT-PARSER",
+                "company_id": self.company.id,
+            }
+        )
+
+        self.assertEqual(batch.parser_profile, "easypaisa_merchant_v1")
+
     def test_refund_chargeback_and_settlement_events_are_auditable(self):
         subscription = self._subscription(self.enterprise_plan, state="active")
         subscription.write({"payment_status": "paid"})

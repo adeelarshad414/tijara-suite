@@ -323,11 +323,38 @@ validated in staging. When enabled, webhooks with unchecked or invalid native
 provider signatures are rejected. Production still needs PSP certification,
 exact settlement-file mapping, refund/chargeback SLAs, and tax configuration.
 
+The provider adapter service
+`tijara.saas.payment.provider.adapter` exposes redacted readiness reports for
+manual/bank, JazzCash, Easypaisa, Stripe, and other PSP profiles. It checks the
+webhook route, native signature secret presence, refund/chargeback/settlement
+event coverage, provider-specific settlement parser profile, and certification
+reference/status without returning secret values. It also validates a webhook
+payload against the provider signature verifier and normalized payload mapping
+before the payload is applied.
+
+Provider certification references can be recorded through system parameters or
+environment variables:
+
+```text
+tijara.saas.stripe_certification_reference / TIJARA_STRIPE_CERTIFICATION_REFERENCE
+tijara.saas.stripe_certification_status / TIJARA_STRIPE_CERTIFICATION_STATUS
+tijara.saas.jazzcash_certification_reference / TIJARA_JAZZCASH_CERTIFICATION_REFERENCE
+tijara.saas.jazzcash_certification_status / TIJARA_JAZZCASH_CERTIFICATION_STATUS
+tijara.saas.easypaisa_certification_reference / TIJARA_EASYPAISA_CERTIFICATION_REFERENCE
+tijara.saas.easypaisa_certification_status / TIJARA_EASYPAISA_CERTIFICATION_STATUS
+```
+
+Use `approved`, `passed`, or `certified` for approved certification status.
+Provider readiness reports should be captured in staging evidence before
+including PSP certification folders in the final sign-off package.
+
 Settlement import flow:
 
 1. Open SaaS Control > Payment Settlements.
 2. Create a batch with provider, provider batch reference, settlement date, and
-   expected gross/fee/net amounts when available.
+   expected gross/fee/net amounts when available. The selected provider sets
+   the default parser profile for JazzCash, Easypaisa, Stripe, or manual bank
+   statements.
 3. Select statement format and parser profile, then paste the provider
    statement payload in `Statement Payload`.
 4. Run `Import Statement`, then `Match Lines`.

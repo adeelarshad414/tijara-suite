@@ -164,8 +164,27 @@ class TijaraSaasPaymentSettlementBatch(models.Model):
         for batch in self:
             batch.accounting_action_count = len(batch.accounting_action_ids)
 
+    @api.onchange("provider")
+    def _onchange_provider_parser_profile(self):
+        adapter = self.env["tijara.saas.payment.provider.adapter"]
+        known_profiles = adapter.tijara_provider_parser_profiles()
+        for batch in self:
+            suggested = adapter.tijara_settlement_parser_profile(batch.provider)
+            if suggested and (
+                not batch.parser_profile
+                or batch.parser_profile == "auto"
+                or batch.parser_profile in known_profiles
+            ):
+                batch.parser_profile = suggested
+
     @api.model_create_multi
     def create(self, vals_list):
+        adapter = self.env["tijara.saas.payment.provider.adapter"]
+        for values in vals_list:
+            provider = values.get("provider")
+            parser_profile = values.get("parser_profile")
+            if provider and parser_profile in (None, "", "auto"):
+                values["parser_profile"] = adapter.tijara_settlement_parser_profile(provider)
         records = super().create(vals_list)
         for batch in records:
             if batch.name == "New":

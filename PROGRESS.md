@@ -2895,3 +2895,67 @@ Date: 2026-06-05
   endpoint and credentials are available.
 - Add device-profile certification records for real printer, drawer, scanner,
   scale, and display models.
+
+## Iteration 44: PSP Provider Readiness Adapter Matrix
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `tijara.saas.payment.provider.adapter` as a reusable provider adapter
+  service for manual/bank, JazzCash, Easypaisa, Stripe, and generic PSP flows.
+- The adapter exposes:
+  - Redacted provider readiness reports with webhook route, native signature
+    requirement, secret-presence status, settlement parser profile, event
+    coverage, and certification status.
+  - Provider contract metadata for payment, settlement, refund, and chargeback
+    fields.
+  - Signature-aware payload validation that returns normalized provider values
+    before webhook application.
+  - Provider-specific settlement parser profile lookup.
+- Payment settlement batches now auto-select provider-specific parser profiles
+  for JazzCash, Easypaisa, Stripe, manual bank, and generic provider statements.
+- Added Odoo transaction-test coverage for:
+  - Redacted Stripe provider readiness with native signatures required.
+  - Signed Stripe refund payload validation through the adapter.
+  - Missing JazzCash native signature secret as a failed readiness condition
+    when native signatures are required.
+  - Easypaisa default settlement parser selection.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  addons/tijara_saas_control/models/payment_provider_adapter.py
+  addons/tijara_saas_control/models/payment_settlement.py
+  addons/tijara_saas_control/tests/test_saas_enforcement.py` passes.
+- `make test-odoo` was attempted in the sandbox and failed on Docker socket
+  permissions.
+- Escalated `make test-odoo` reached Odoo/Postgres, but the local Docker
+  environment failed with Postgres password authentication for user `odoo`.
+
+### Known Gaps
+
+- Odoo transaction tests still need a correctly configured local/staging
+  Docker secret set before they can provide final execution evidence for this
+  adapter iteration.
+- PSP readiness reports still need real provider certification references and
+  approved status values for JazzCash, Easypaisa, Stripe, or the selected bank
+  provider.
+- Provider adapters still need real settlement-file fixtures from contracted
+  PSPs to confirm exact field mapping and reconciliation tolerances.
+
+### Next Iteration
+
+- Fix the local/staging Odoo test environment credential mismatch and rerun the
+  SaaS/PSP transaction tests.
+- Add provider settlement fixture smoke tests for JazzCash, Easypaisa, and
+  Stripe statement imports.
+- Extend sign-off evidence packaging to include provider readiness JSON from
+  staging.

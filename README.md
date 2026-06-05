@@ -194,9 +194,10 @@ payment webhook application, and dunning
 suspension. Subscription billing now has an Odoo invoice-generation foundation,
 signed/secret-guarded payment webhook event records, provider-aware JazzCash,
 Easypaisa, and Stripe normalization, external payment status tracking, billing
-sync, native signature verification hooks, refund/chargeback/settlement audit
-records, provider fees/net amounts, settlement batch import/reconciliation
-records, refund/chargeback operator cases with evidence hashing and
+sync, native signature verification hooks, provider-readiness adapter reports,
+refund/chargeback/settlement audit records, provider fees/net amounts,
+settlement batch import/reconciliation records, refund/chargeback operator
+cases with evidence hashing and
 subscription impact actions, dunning, and suspension actions. Tenant database
 provisioning has an operator
 script for database-per-tenant module install plus DNS/ingress/admin/backup/
@@ -260,6 +261,9 @@ The retail operations layer now includes:
   customer-facing screens plus best-effort POS frontend live publishing.
 - Provider-aware payment webhook normalization for JazzCash, Easypaisa, Stripe,
   and generic/manual payment flows.
+- PSP provider adapter readiness matrix for native signature configuration,
+  secret-presence checks, certification references, refund/chargeback mapping,
+  and provider-specific settlement parser defaults.
 - Payment settlement parser profiles for JSON/CSV provider statements, finance
   accounting action records, approval gates, and audit hashes for payout
   clearing, provider fees, refunds, chargebacks, and write-off review.

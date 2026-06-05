@@ -5,6 +5,7 @@ from . import res_company
 from . import tenant_provision_request
 from . import account_move
 from . import payment_settlement
+from . import payment_provider_adapter
 from . import payment_accounting_action
 from . import payment_dispute
 from . import payment_webhook_event
