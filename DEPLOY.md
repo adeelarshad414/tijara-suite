@@ -1113,6 +1113,23 @@ The probes use redacted URLs and no credentials. Default endpoints are
 blockers. Missing URL probe targets are warnings unless
 `TIJARA_PREFLIGHT_REQUIRE_URLS=1`.
 
+For protected endpoints that require a header, keep header names and value-env
+names in GitHub Environment variables and the actual values in GitHub
+Environment secrets:
+
+```bash
+TIJARA_PREFLIGHT_AUTH_PROBES=1
+TIJARA_PREFLIGHT_REQUIRE_AUTH=1
+TIJARA_PREFLIGHT_BRIDGE_AUTH_HEADER=X-Tijara-Bridge-Secret
+TIJARA_PREFLIGHT_BRIDGE_AUTH_VALUE_ENV=TIJARA_BRIDGE_SHARED_SECRET
+TIJARA_PREFLIGHT_GRAFANA_AUTH_HEADER=Authorization
+TIJARA_PREFLIGHT_GRAFANA_AUTH_VALUE_ENV=TIJARA_PREFLIGHT_GRAFANA_AUTH_VALUE
+```
+
+The exporter records only whether the auth value was present and which env var
+name supplied it. Header values such as `TIJARA_BRIDGE_SHARED_SECRET` and
+`TIJARA_PREFLIGHT_GRAFANA_AUTH_VALUE` remain redacted.
+
 Protected Browser E2E handoff is controlled with:
 
 ```bash

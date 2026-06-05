@@ -20,6 +20,8 @@ SECRET_KEY_PARTS = {
     "client_secret",
     "integrity_salt",
     "encryption_key",
+    "auth_value",
+    "credential",
 }
 PLACEHOLDER_MARKERS = ("replace-with", "change-me", "example", "dummy")
 
@@ -59,6 +61,16 @@ OBSERVED_VARIABLES = [
     "TIJARA_LOAD_MAX_P95_MS",
     "TIJARA_LOAD_MAX_FAIL_RATE",
     "TIJARA_LOAD_MIN_CHECKS_RATE",
+    "TIJARA_PREFLIGHT_ODOO_AUTH_HEADER",
+    "TIJARA_PREFLIGHT_ODOO_AUTH_VALUE_ENV",
+    "TIJARA_PREFLIGHT_BRIDGE_AUTH_HEADER",
+    "TIJARA_PREFLIGHT_BRIDGE_AUTH_VALUE_ENV",
+    "TIJARA_PREFLIGHT_PROMETHEUS_AUTH_HEADER",
+    "TIJARA_PREFLIGHT_PROMETHEUS_AUTH_VALUE_ENV",
+    "TIJARA_PREFLIGHT_ALERTMANAGER_AUTH_HEADER",
+    "TIJARA_PREFLIGHT_ALERTMANAGER_AUTH_VALUE_ENV",
+    "TIJARA_PREFLIGHT_GRAFANA_AUTH_HEADER",
+    "TIJARA_PREFLIGHT_GRAFANA_AUTH_VALUE_ENV",
 ]
 
 CERTIFICATION_REQUIREMENTS = {
@@ -120,30 +132,37 @@ URL_PROBE_SPECS = [
         "fallback_env": "TIJARA_BASE_URL",
         "path": "/web/login",
         "label": "Odoo login",
+        "auth_prefix": "TIJARA_PREFLIGHT_ODOO",
     },
     {
         "name": "hardware-bridge-health",
         "env": "TIJARA_HARDWARE_BRIDGE_URL",
         "path": "/health",
         "label": "Hardware bridge health",
+        "auth_prefix": "TIJARA_PREFLIGHT_BRIDGE",
+        "default_auth_header": "X-Tijara-Bridge-Secret",
+        "default_auth_value_env": "TIJARA_BRIDGE_SHARED_SECRET",
     },
     {
         "name": "prometheus-ready",
         "env": "TIJARA_PROMETHEUS_URL",
         "path": "/-/ready",
         "label": "Prometheus readiness",
+        "auth_prefix": "TIJARA_PREFLIGHT_PROMETHEUS",
     },
     {
         "name": "alertmanager-ready",
         "env": "TIJARA_ALERTMANAGER_URL",
         "path": "/-/ready",
         "label": "Alertmanager readiness",
+        "auth_prefix": "TIJARA_PREFLIGHT_ALERTMANAGER",
     },
     {
         "name": "grafana-health",
         "env": "TIJARA_GRAFANA_URL",
         "path": "/api/health",
         "label": "Grafana health",
+        "auth_prefix": "TIJARA_PREFLIGHT_GRAFANA",
     },
 ]
 
@@ -205,7 +224,37 @@ def _redact_url(value):
     return urlunsplit((parsed.scheme, netloc, parsed.path or "", "", ""))
 
 
-def _probe_url(base_url, path, timeout):
+def _auth_probe_config(spec, env, enabled):
+    if not enabled:
+        return {
+            "enabled": False,
+            "configured": False,
+            "header": "",
+            "value_env": "",
+            "value_present": False,
+        }, {}
+    prefix = spec.get("auth_prefix") or ""
+    header = ""
+    value_env = ""
+    if prefix:
+        header = env.get("%s_AUTH_HEADER" % prefix, "")
+        value_env = env.get("%s_AUTH_VALUE_ENV" % prefix, "")
+    header = header or spec.get("default_auth_header", "")
+    value_env = value_env or spec.get("default_auth_value_env", "")
+    value = env.get(value_env, "") if value_env else ""
+    configured = _present(header) and _present(value_env) and _present(value) and not _is_placeholder(value)
+    auth = {
+        "enabled": True,
+        "configured": configured,
+        "header": header,
+        "value_env": value_env,
+        "value_present": _present(value) and not _is_placeholder(value),
+    }
+    headers = {header: value} if configured else {}
+    return auth, headers
+
+
+def _probe_url(base_url, path, timeout, headers=None):
     if not _present(base_url) or _is_placeholder(base_url):
         return None, "missing"
     try:
@@ -218,7 +267,9 @@ def _probe_url(base_url, path, timeout):
     if path:
         normalized_path = normalized_path + "/" + path.lstrip("/")
     target = urlunsplit((parsed.scheme, parsed.netloc, normalized_path or "/", "", ""))
-    request = urllib.request.Request(target, headers={"User-Agent": "tijara-preflight/1"})
+    request_headers = {"User-Agent": "tijara-preflight/1"}
+    request_headers.update(headers or {})
+    request = urllib.request.Request(target, headers=request_headers)
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             status_code = int(getattr(response, "status", 0) or response.getcode() or 0)
@@ -350,6 +401,18 @@ def main():
         help="Treat missing URL probe targets as blockers in strict mode.",
     )
     parser.add_argument(
+        "--auth-probes",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_PREFLIGHT_AUTH_PROBES")),
+        help="Attach configured secret-backed auth headers to URL probes.",
+    )
+    parser.add_argument(
+        "--require-auth-probes",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_PREFLIGHT_REQUIRE_AUTH")),
+        help="Treat missing configured auth header values as blockers in strict mode.",
+    )
+    parser.add_argument(
         "--probe-timeout",
         type=float,
         default=float(os.environ.get("TIJARA_PREFLIGHT_PROBE_TIMEOUT", "5")),
@@ -400,7 +463,26 @@ def main():
             if not _present(value) and fallback_env:
                 value = effective_env.get(fallback_env, "")
                 source_env = fallback_env
-            probe, probe_state = _probe_url(value, spec["path"], max(args.probe_timeout, 0.1))
+            auth, headers = _auth_probe_config(spec, effective_env, args.auth_probes)
+            auth_expected = bool(auth.get("header") or auth.get("value_env"))
+            if args.auth_probes and auth_expected and not auth.get("configured"):
+                message = "%s auth header/value is not configured for probing." % spec["label"]
+                if strict and args.require_auth_probes:
+                    blockers.append(message)
+                    rows.append(_row("url-probe-auth-%s" % spec["name"], "failed", message))
+                else:
+                    warnings.append(message)
+                    rows.append(_row("url-probe-auth-%s" % spec["name"], "warning", message))
+            elif args.auth_probes and auth.get("configured"):
+                rows.append(
+                    _row(
+                        "url-probe-auth-%s" % spec["name"],
+                        "passed",
+                        "%s auth header is configured from %s."
+                        % (spec["label"], auth.get("value_env") or "environment"),
+                    )
+                )
+            probe, probe_state = _probe_url(value, spec["path"], max(args.probe_timeout, 0.1), headers)
             entry = {
                 "name": spec["name"],
                 "label": spec["label"],
@@ -408,6 +490,7 @@ def main():
                 "configured": _present(value) and not _is_placeholder(value),
                 "required": bool(args.require_url_probes),
                 "path": spec["path"],
+                "auth": auth,
                 "result": probe or {},
             }
             url_probes.append(entry)
@@ -493,6 +576,8 @@ def main():
         "include_values": bool(args.include_values),
         "probe_urls": bool(args.probe_urls),
         "require_url_probes": bool(args.require_url_probes),
+        "auth_probes": bool(args.auth_probes),
+        "require_auth_probes": bool(args.require_auth_probes),
         "probe_timeout": args.probe_timeout,
     }
     manifest = {
@@ -515,6 +600,8 @@ def main():
             "include_values=%s" % int(args.include_values),
             "probe_urls=%s" % int(args.probe_urls),
             "require_url_probes=%s" % int(args.require_url_probes),
+            "auth_probes=%s" % int(args.auth_probes),
+            "require_auth_probes=%s" % int(args.require_auth_probes),
             "probe_timeout=%s" % args.probe_timeout,
             "decision=%s" % decision,
             "ci_status=%s" % ci_status,

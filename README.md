@@ -413,8 +413,9 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/export_protected_runner_preflight.py` and
   `make protected-runner-preflight` export a redacted protected-runner
   configuration report for release variables, evidence groups, URLs, load/E2E
-  toggles, optional Odoo/bridge/monitoring reachability probes, and mandatory
-  PSP/FBR/hardware certification inputs under
+  toggles, optional Odoo/bridge/monitoring reachability probes with
+  secret-backed auth headers, and mandatory PSP/FBR/hardware certification
+  inputs under
   `deploy/runtime/protected-runner-preflight/`.
 - `scripts/export_protected_artifact_summary.py` and
   `make protected-artifact-summary` scan protected evidence folders and write a

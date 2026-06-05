@@ -6421,3 +6421,70 @@ Date: 2026-06-05
   including expected artifacts and owner sign-offs.
 - Continue hardening live PSP/FBR adapters and offline POS sync conflict
   handling when live provider/staging systems are available.
+
+## Iteration 91: Authenticated Protected Preflight Probes
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Extended `scripts/export_protected_runner_preflight.py` with optional
+  secret-backed auth headers for protected URL probes.
+- Added `--auth-probes` and `--require-auth-probes` controls with matching
+  `TIJARA_PREFLIGHT_AUTH_PROBES` and `TIJARA_PREFLIGHT_REQUIRE_AUTH`
+  environment variables.
+- Added per-endpoint non-secret auth header configuration for Odoo, hardware
+  bridge, Prometheus, Alertmanager, and Grafana.
+- Added default hardware bridge auth header support using
+  `X-Tijara-Bridge-Secret` and `TIJARA_BRIDGE_SHARED_SECRET`.
+- Auth probe evidence records header names, value environment variable names,
+  and value presence only; actual header values are never written to evidence.
+- Wired protected workflow secrets for Odoo E2E credentials, hardware bridge
+  secret, and optional preflight auth values.
+- Updated `deploy/config/github-protected-vars.example` with non-secret auth
+  header/value-env configuration.
+- Updated `secrets/github-protected-secrets.example` with optional preflight
+  auth value placeholders.
+- Updated `README.md` and `DEPLOY.md` with authenticated probe behavior and
+  secret separation guidance.
+
+### Validation
+
+- Authenticated probe fixture against a temporary localhost server requiring
+  `X-Test-Auth=good` passes with `decision=passed`.
+- Missing auth value fixture against the same protected endpoint fails with
+  `decision=failed`.
+- Confirmed generated evidence records `value_env` and `value_present`, but not
+  the actual header value.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_runner_preflight.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` or auth probe server process remains running.
+
+### Known Gaps
+
+- Authenticated probes prove header-based reachability only; they do not prove
+  full login/session behavior, RBAC, dashboard correctness, alert routing, or
+  hardware bridge signed job execution.
+- Protected workflow execution still needs a real self-hosted runner and
+  staging/production GitHub environment setup.
+- Live Browser E2E, PSP/FBR certification, physical hardware proof, offline POS
+  sync, and production operations drills remain external production blockers.
+
+### Next Iteration
+
+- Add a protected workflow execution checklist for the first real staging run,
+  including expected artifacts, owner sign-offs, and go/no-go steps.
+- Add deeper authenticated service checks once real Odoo, bridge, Prometheus,
+  Alertmanager, and Grafana credentials are available on the protected runner.
+- Continue hardening live PSP/FBR adapters and offline POS sync conflict
+  handling when live provider/staging systems are available.
