@@ -368,7 +368,9 @@ The detailed policy and dependency intake checklist are maintained in
   handoff runbook, a first-run checklist, a redacted runner preflight evidence
   report, and a protected Browser E2E handoff report before executing strict
   release gates. After the readiness gate, it verifies protected post-run
-  evidence and writes one protected artifact summary for release-owner review.
+  evidence, records GitHub artifact metadata, writes one protected artifact
+  summary for release-owner review, and uploads a post-upload metadata sidecar
+  with the artifact ID/URL when GitHub Actions returns those outputs.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
@@ -432,6 +434,11 @@ The detailed policy and dependency intake checklist are maintained in
   a run, verify required artifact presence, failed/warning `status.tsv` rows,
   JSON decisions, and `release-readiness.json`, and write a final artifact
   health report under `deploy/runtime/protected-post-run-verification/`.
+- `scripts/export_github_artifact_metadata.py` and
+  `make github-artifact-metadata` export public-safe GitHub Actions artifact
+  metadata for protected evidence bundles, including artifact name, ID, URL,
+  digest, retention days, expiry, workflow run URL, and optional parsed
+  `gh api` artifact JSON under `deploy/runtime/github-artifact-metadata/`.
 - `scripts/export_protected_artifact_summary.py` and
   `make protected-artifact-summary` scan protected evidence folders and write a
   release-owner index of failed/warning status rows, decisions, and artifact

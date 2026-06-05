@@ -9,7 +9,11 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 INTERESTING_JSON_NAMES = {
+    "github-artifact-metadata.json",
+    "protected-runbook-handoff.json",
+    "protected-first-run-checklist.json",
     "protected-runner-preflight.json",
+    "protected-post-run-verification.json",
     "e2e-execution-evidence.json",
     "e2e-readiness.json",
     "e2e-seed-evidence.json",
@@ -268,6 +272,7 @@ def main():
             "deploy/runtime/production-ops-readiness/%s" % args.run_id,
             "deploy/runtime/signoff-packages/%s" % args.run_id,
             "deploy/runtime/protected-post-run-verification/%s" % args.run_id,
+            "deploy/runtime/github-artifact-metadata/%s" % args.run_id,
         ]
 
     labels = {}

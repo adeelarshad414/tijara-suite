@@ -1066,13 +1066,16 @@ matching `TIJARA_CERT_*` variables are configured, exports retention and
 secret-manager evidence, runs strict production operations readiness, generates
 the protected sign-off package, checks `release-readiness.json`, and exports a
 post-run evidence verifier under
-`deploy/runtime/protected-post-run-verification/<run-id>/`. Evidence is
-uploaded as
-`tijara-protected-release-evidence-<environment>-<run>`. If a strict evidence
+`deploy/runtime/protected-post-run-verification/<run-id>/`. It then prepares a
+pre-upload GitHub artifact metadata placeholder under
+`deploy/runtime/github-artifact-metadata/<run-id>/`, writes the final protected
+artifact summary, and uploads the main evidence bundle as
+`tijara-protected-release-evidence-<environment>-<run>`. After that upload, the
+workflow records the real upload action outputs such as artifact ID, artifact
+URL, digest, and retention metadata, then uploads a sidecar artifact named
+`tijara-protected-artifact-metadata-<environment>-<run>`. If a strict evidence
 step fails, the job still tries to build the final sign-off package so the
-release-readiness JSON explains the blocker. The final protected artifact
-summary is written under `deploy/runtime/protected-artifact-summary/<run-id>/`
-and uploaded with the evidence bundle.
+release-readiness JSON explains the blocker.
 
 Set `TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware` in the protected
 GitHub environment when external certification must be mandatory for the
@@ -1159,6 +1162,26 @@ rows, JSON `decision`/`ci_status` values, and
 `deploy/runtime/signoff-packages/<run-id>/release-readiness.json`. It writes
 `protected-post-run-verification.json`, `evidence-overview.md`, `status.tsv`,
 `env-summary.txt`, and `summary.md`.
+
+Capture GitHub artifact metadata locally or in a protected runner:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_github_artifact_metadata.py \
+  --artifact-name tijara-protected-release-evidence-staging-123456 \
+  --artifact-id 123456789 \
+  --artifact-url https://github.com/org/repo/actions/runs/123456/artifacts/123456789 \
+  --retention-days 30 \
+  --stage post_upload \
+  --output deploy/runtime/github-artifact-metadata/2026-06-05-rc1 \
+  --strict
+```
+
+When a `gh api repos/<owner>/<repo>/actions/runs/<run-id>/artifacts` response
+is available, pass it with `--artifacts-json` and the exporter will match by
+artifact name and record ID, API URL, archive download URL, size, expiry, and
+workflow context without writing token values.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:

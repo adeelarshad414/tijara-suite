@@ -20,6 +20,7 @@ DEFAULT_REQUIRED_ARTIFACTS = [
     "secret-manager-evidence",
     "production-ops-readiness",
     "signoff-packages",
+    "github-artifact-metadata",
 ]
 ARTIFACT_PATHS = {
     "protected-runbook-handoff": "protected-runbook-handoff/{run_id}",
@@ -38,6 +39,7 @@ ARTIFACT_PATHS = {
     "secret-manager-evidence": "secret-manager-evidence/{run_id}",
     "production-ops-readiness": "production-ops-readiness/{run_id}",
     "signoff-packages": "signoff-packages/{run_id}",
+    "github-artifact-metadata": "github-artifact-metadata/{run_id}",
     "protected-artifact-summary": "protected-artifact-summary/{run_id}",
 }
 FAILING_STATUSES = {"fail", "failed", "error", "blocked"}

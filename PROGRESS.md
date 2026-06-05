@@ -6733,3 +6733,91 @@ Date: 2026-06-05
   Alertmanager, and Grafana credentials are available on the protected runner.
 - Continue hardening live PSP/FBR adapters and offline POS sync conflict
   handling when live provider/staging systems are available.
+
+## Iteration 95: GitHub Artifact Metadata Enrichment
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_github_artifact_metadata.py` to export public-safe
+  GitHub Actions artifact metadata under
+  `deploy/runtime/github-artifact-metadata/`.
+- The exporter supports pre-upload placeholder evidence and post-upload
+  metadata enrichment with artifact name, artifact ID, artifact URL, digest,
+  repository/run context, retention days, expiry, and optional parsed GitHub
+  artifacts API JSON.
+- The exporter rejects secret-like metadata keys and never requires token
+  values in evidence.
+- Added `make github-artifact-metadata`.
+- Wired `.github/workflows/tijara-ci.yml` to generate pre-upload artifact
+  metadata before post-run verification, include it in protected post-run
+  verification and the main protected evidence bundle, then update metadata
+  after `actions/upload-artifact` with upload output ID/URL/digest.
+- Added a sidecar upload named
+  `tijara-protected-artifact-metadata-<environment>-<run>` for the enriched
+  post-upload metadata.
+- Updated first-run expected artifacts, post-run required artifacts, protected
+  artifact summary defaults, and sign-off Operations classification for
+  `github-artifact-metadata`.
+- Updated `deploy/config/github-protected-vars.example`, `README.md`, and
+  `DEPLOY.md` with metadata controls and two-phase protected upload behavior.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_github_artifact_metadata.py
+  scripts/export_protected_post_run_verification.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes `TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS`.
+- Strict pre-upload metadata fixture writes `decision=passed` and
+  `ci_status=pass`.
+- Strict post-upload direct-output fixture writes `decision=passed` and
+  `ci_status=pass`.
+- GitHub artifacts API-style JSON fixture matches the protected artifact name
+  and records artifact ID, API URL, archive URL, size, and expiry.
+- Strict post-upload fixture with no artifact ID/URL writes `decision=failed`
+  and `ci_status=fail`.
+- Secret-like metadata fixture with `api_token` is rejected.
+- Updated post-run verifier fixture requires and accepts
+  `github-artifact-metadata`.
+- Protected artifact summary over GitHub artifact metadata writes
+  `decision=passed`.
+- Updated first-run checklist fixture expects `github-artifact-metadata`.
+- `make github-artifact-metadata` passes in post-upload mode with fixture
+  artifact ID/URL values.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` or probe server process remains running.
+
+### Known Gaps
+
+- The metadata enrichment is wired for GitHub Actions outputs and API-style
+  JSON, but artifact IDs/URLs still need a real protected workflow run to
+  prove live upload behavior.
+- The main protected evidence bundle contains the pre-upload metadata
+  placeholder; the real upload ID/URL is uploaded as a sidecar artifact because
+  GitHub only returns those values after the first upload completes.
+- Live Odoo RBAC/login, hardware bridge signed jobs, monitoring alert routing,
+  PSP/FBR certification, physical hardware proof, offline POS sync, and
+  production operations drills remain external production blockers.
+
+### Next Iteration
+
+- Add deeper authenticated service checks for Odoo login/RBAC, bridge signed
+  print job health, Grafana, Prometheus, and Alertmanager once credentials are
+  present on the protected runner.
+- Add FBR/PSP live adapter certification evidence once provider sandbox/live
+  credentials are available.
+- Continue hardening offline POS sync conflict handling against live staging
+  order/payment replay.

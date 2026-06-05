@@ -22,6 +22,7 @@ DEFAULT_ARTIFACTS = [
     "production-ops-readiness",
     "signoff-packages",
     "protected-post-run-verification",
+    "github-artifact-metadata",
     "protected-artifact-summary",
 ]
 

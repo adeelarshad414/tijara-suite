@@ -148,10 +148,11 @@ jobs:
       TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF: ${{ vars.TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF }}
       TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF: ${{ vars.TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF }}
       TIJARA_FIRST_RUN_BACKUP_REF: ${{ vars.TIJARA_FIRST_RUN_BACKUP_REF || vars.TIJARA_BACKUP_ARTIFACT_REF }}
-      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,protected-artifact-summary' }}
+      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary' }}
       TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS: ${{ vars.TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS || '0' }}
       TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-artifact-summary,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
-      TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,release-evidence,protected-e2e,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
+      TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,release-evidence,protected-e2e,ops-tool-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata' }}
+      TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS: ${{ vars.TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS || '30' }}
       TIJARA_PREFLIGHT_PROBE_URLS: ${{ vars.TIJARA_PREFLIGHT_PROBE_URLS || '0' }}
       TIJARA_PREFLIGHT_REQUIRE_URLS: ${{ vars.TIJARA_PREFLIGHT_REQUIRE_URLS || '0' }}
       TIJARA_PREFLIGHT_PROBE_TIMEOUT: ${{ vars.TIJARA_PREFLIGHT_PROBE_TIMEOUT || '5' }}
@@ -437,6 +438,18 @@ jobs:
           make signoff-pack
       - name: Check protected release readiness
         run: make check-release-readiness READINESS="deploy/runtime/signoff-packages/$TIJARA_PROTECTED_RUN_ID/release-readiness.json"
+      - name: Prepare protected GitHub artifact metadata
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 scripts/export_github_artifact_metadata.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/github-artifact-metadata/$TIJARA_PROTECTED_RUN_ID" \
+            --artifact-name "tijara-protected-release-evidence-${{ inputs.target_environment }}-${{ github.run_id }}" \
+            --retention-days "$TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS" \
+            --stage pre_upload \
+            --strict
       - name: Verify protected post-run evidence
         if: always()
         continue-on-error: true
@@ -456,6 +469,7 @@ jobs:
             --output "deploy/runtime/protected-artifact-summary/$TIJARA_PROTECTED_RUN_ID" \
             --artifact-reference "tijara-protected-release-evidence-${{ inputs.target_environment }}-${{ github.run_id }}"
       - name: Upload protected release evidence
+        id: upload_protected_release_evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -467,6 +481,7 @@ jobs:
             deploy/runtime/protected-first-run/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-runner-preflight/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-post-run-verification/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/github-artifact-metadata/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-artifact-summary/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/release-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-e2e/${{ env.TIJARA_PROTECTED_RUN_ID }}
@@ -482,3 +497,28 @@ jobs:
             deploy/runtime/secret-manager-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/production-ops-readiness/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/signoff-packages/${{ env.TIJARA_PROTECTED_RUN_ID }}
+      - name: Record protected artifact upload metadata
+        if: always()
+        continue-on-error: true
+        env:
+          TIJARA_UPLOADED_ARTIFACT_NAME: tijara-protected-release-evidence-${{ inputs.target_environment }}-${{ github.run_id }}
+          TIJARA_UPLOADED_ARTIFACT_ID: ${{ steps.upload_protected_release_evidence.outputs.artifact-id }}
+          TIJARA_UPLOADED_ARTIFACT_URL: ${{ steps.upload_protected_release_evidence.outputs.artifact-url }}
+          TIJARA_UPLOADED_ARTIFACT_DIGEST: ${{ steps.upload_protected_release_evidence.outputs.artifact-digest }}
+        run: |
+          python3 scripts/export_github_artifact_metadata.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/github-artifact-metadata/$TIJARA_PROTECTED_RUN_ID" \
+            --retention-days "$TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS" \
+            --stage post_upload \
+            --strict
+      - name: Upload protected artifact metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tijara-protected-artifact-metadata-${{ inputs.target_environment }}-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            deploy/runtime/github-artifact-metadata/${{ env.TIJARA_PROTECTED_RUN_ID }}
