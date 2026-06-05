@@ -1,0 +1,245 @@
+<odoo>
+    <record id="action_tijara_saas_payment_settlement_batch" model="ir.actions.act_window">
+        <field name="name">Payment Settlements</field>
+        <field name="res_model">tijara.saas.payment.settlement.batch</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+    </record>
+
+    <record id="action_tijara_saas_payment_settlement_line" model="ir.actions.act_window">
+        <field name="name">Settlement Lines</field>
+        <field name="res_model">tijara.saas.payment.settlement.line</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_batch_search" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.batch.search</field>
+        <field name="model">tijara.saas.payment.settlement.batch</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="provider_batch_reference"/>
+                <filter name="mismatch" string="Mismatch" domain="[('reconciliation_status', '=', 'mismatch')]"/>
+                <filter name="reconciled" string="Reconciled" domain="[('reconciliation_status', '=', 'reconciled')]"/>
+                <group>
+                    <filter name="group_by_provider" string="Provider" context="{'group_by': 'provider'}"/>
+                    <filter name="group_by_status" string="Status" context="{'group_by': 'reconciliation_status'}"/>
+                    <filter name="group_by_settlement_date" string="Settlement Date" context="{'group_by': 'settlement_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_batch_list" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.batch.list</field>
+        <field name="model">tijara.saas.payment.settlement.batch</field>
+        <field name="arch" type="xml">
+            <list decoration-success="reconciliation_status == 'reconciled'" decoration-danger="reconciliation_status == 'mismatch'" decoration-warning="reconciliation_status in ('imported', 'matched')">
+                <field name="name"/>
+                <field name="provider"/>
+                <field name="provider_batch_reference"/>
+                <field name="settlement_date"/>
+                <field name="line_count"/>
+                <field name="matched_line_count"/>
+                <field name="mismatch_line_count"/>
+                <field name="dispute_line_count"/>
+                <field name="actual_gross_amount"/>
+                <field name="actual_fee_amount"/>
+                <field name="actual_net_amount"/>
+                <field name="net_delta"/>
+                <field name="reconciliation_status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_batch_form" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.batch.form</field>
+        <field name="model">tijara.saas.payment.settlement.batch</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_import_statement_payload" type="object" string="Import Statement" class="btn-primary"/>
+                    <button name="action_match_lines" type="object" string="Match Lines"/>
+                    <button name="action_create_dispute_cases" type="object" string="Create Dispute Cases"/>
+                    <button name="action_mark_reconciled" type="object" string="Mark Reconciled" invisible="reconciliation_status == 'reconciled'"/>
+                    <button name="action_close" type="object" string="Close" invisible="reconciliation_status == 'closed'"/>
+                    <field name="reconciliation_status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="provider"/>
+                            <field name="provider_batch_reference"/>
+                            <field name="company_id"/>
+                            <field name="settlement_date"/>
+                            <field name="imported_by_id"/>
+                            <field name="imported_at"/>
+                            <field name="statement_hash"/>
+                        </group>
+                        <group>
+                            <field name="line_count"/>
+                            <field name="matched_line_count"/>
+                            <field name="mismatch_line_count"/>
+                            <field name="dispute_line_count"/>
+                            <field name="actual_gross_amount"/>
+                            <field name="actual_fee_amount"/>
+                            <field name="actual_net_amount"/>
+                            <field name="expected_gross_amount"/>
+                            <field name="expected_fee_amount"/>
+                            <field name="expected_net_amount"/>
+                            <field name="net_delta"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Statement">
+                            <field name="raw_statement_json" nolabel="1"/>
+                        </page>
+                        <page string="Lines">
+                            <field name="line_ids">
+                                <list decoration-success="reconciliation_status == 'reconciled'" decoration-danger="reconciliation_status == 'mismatch'" decoration-warning="payment_event_type in ('refund', 'chargeback')">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="payment_event_type"/>
+                                    <field name="provider_event_reference"/>
+                                    <field name="provider_transaction_id"/>
+                                    <field name="subscription_id"/>
+                                    <field name="invoice_id"/>
+                                    <field name="gross_amount"/>
+                                    <field name="fee_amount"/>
+                                    <field name="net_amount"/>
+                                    <field name="dispute_case_id"/>
+                                    <field name="reconciliation_status"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Reconciliation">
+                            <field name="reconciliation_note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_line_list" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.line.list</field>
+        <field name="model">tijara.saas.payment.settlement.line</field>
+        <field name="arch" type="xml">
+            <list decoration-success="reconciliation_status == 'reconciled'" decoration-danger="reconciliation_status == 'mismatch'" decoration-warning="payment_event_type in ('refund', 'chargeback')">
+                <field name="batch_id"/>
+                <field name="payment_event_type"/>
+                <field name="provider_event_reference"/>
+                <field name="provider_transaction_id"/>
+                <field name="subscription_id"/>
+                <field name="webhook_event_id"/>
+                <field name="gross_amount"/>
+                <field name="fee_amount"/>
+                <field name="net_amount"/>
+                <field name="dispute_case_id"/>
+                <field name="reconciliation_status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_line_form" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.line.form</field>
+        <field name="model">tijara.saas.payment.settlement.line</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_match_records" type="object" string="Match"/>
+                    <button name="action_create_dispute_case" type="object" string="Create Dispute Case" invisible="payment_event_type not in ('refund', 'chargeback')"/>
+                    <button name="action_mark_reconciled" type="object" string="Mark Reconciled" invisible="reconciliation_status == 'reconciled'"/>
+                    <button name="action_mark_mismatch" type="object" string="Mark Mismatch" invisible="reconciliation_status == 'mismatch'"/>
+                    <field name="reconciliation_status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="batch_id"/>
+                            <field name="provider"/>
+                            <field name="payment_event_type"/>
+                            <field name="provider_status"/>
+                            <field name="provider_event_reference"/>
+                            <field name="provider_transaction_id"/>
+                            <field name="provider_reference"/>
+                        </group>
+                        <group>
+                            <field name="subscription_id"/>
+                            <field name="invoice_id"/>
+                            <field name="webhook_event_id"/>
+                            <field name="dispute_case_id"/>
+                            <field name="gross_amount"/>
+                            <field name="fee_amount"/>
+                            <field name="net_amount"/>
+                            <field name="settlement_date"/>
+                            <field name="line_hash"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="database_name"/>
+                        <field name="invoice_ref"/>
+                        <field name="external_payment_reference"/>
+                        <field name="reconciliation_note"/>
+                    </group>
+                    <field name="raw_line_json"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_batch_pivot" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.batch.pivot</field>
+        <field name="model">tijara.saas.payment.settlement.batch</field>
+        <field name="arch" type="xml">
+            <pivot string="Payment Settlement Batches">
+                <field name="provider" type="row"/>
+                <field name="reconciliation_status" type="col"/>
+                <field name="actual_gross_amount" type="measure"/>
+                <field name="actual_fee_amount" type="measure"/>
+                <field name="actual_net_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_batch_graph" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.batch.graph</field>
+        <field name="model">tijara.saas.payment.settlement.batch</field>
+        <field name="arch" type="xml">
+            <graph string="Payment Settlement Batches" type="bar">
+                <field name="provider"/>
+                <field name="reconciliation_status"/>
+                <field name="actual_net_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_line_pivot" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.line.pivot</field>
+        <field name="model">tijara.saas.payment.settlement.line</field>
+        <field name="arch" type="xml">
+            <pivot string="Settlement Lines">
+                <field name="payment_event_type" type="row"/>
+                <field name="reconciliation_status" type="col"/>
+                <field name="gross_amount" type="measure"/>
+                <field name="fee_amount" type="measure"/>
+                <field name="net_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_settlement_line_graph" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.settlement.line.graph</field>
+        <field name="model">tijara.saas.payment.settlement.line</field>
+        <field name="arch" type="xml">
+            <graph string="Settlement Lines" type="bar">
+                <field name="payment_event_type"/>
+                <field name="reconciliation_status"/>
+                <field name="net_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_saas_payment_settlement_batch" name="Payment Settlements" parent="menu_tijara_saas" action="action_tijara_saas_payment_settlement_batch" sequence="55"/>
+    <menuitem id="menu_tijara_saas_payment_settlement_line" name="Settlement Lines" parent="menu_tijara_saas" action="action_tijara_saas_payment_settlement_line" sequence="56"/>
+</odoo>

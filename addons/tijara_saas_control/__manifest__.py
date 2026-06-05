@@ -16,6 +16,8 @@
         "views/saas_subscription_views.xml",
         "views/tenant_provision_request_views.xml",
         "views/payment_webhook_event_views.xml",
+        "views/payment_settlement_views.xml",
+        "views/payment_dispute_views.xml",
     ],
     "installable": True,
     "application": False,

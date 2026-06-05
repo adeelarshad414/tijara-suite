@@ -278,6 +278,15 @@ price or a billing override amount. Operators can:
 - Keep settlement batch, refund, and chargeback events as auditable
   reconciliation records. Operators can mark matched events as reconciled or
   flag mismatches for PSP follow-up.
+- Import provider or bank settlement statements into Payment Settlements using
+  a JSON list or an object with `lines`, `transactions`, or `data`. The
+  settlement import normalizes JazzCash, Easypaisa, Stripe, manual bank, and
+  generic references into settlement lines, then matches each line to existing
+  webhook events, subscriptions, or invoices.
+- Create refund/chargeback cases from webhook events or settlement lines. Cases
+  track due date, provider reference, transaction id, amount, fee, reason,
+  assigned operator, evidence summary/JSON/attachments, evidence hash, outcome,
+  and the accounting action still required.
 
 Set `TIJARA_PAYMENT_WEBHOOK_SECRET` in the secret store or set the Odoo system
 parameter `tijara.saas.payment_webhook_secret`. Provider requests must include
@@ -297,6 +306,34 @@ Set `TIJARA_PAYMENT_REQUIRE_NATIVE_SIGNATURES=True` or system parameter
 validated in staging. When enabled, webhooks with unchecked or invalid native
 provider signatures are rejected. Production still needs PSP certification,
 exact settlement-file mapping, refund/chargeback SLAs, and tax configuration.
+
+Settlement import flow:
+
+1. Open SaaS Control > Payment Settlements.
+2. Create a batch with provider, provider batch reference, settlement date, and
+   expected gross/fee/net amounts when available.
+3. Paste the provider settlement JSON in `Statement JSON`.
+4. Run `Import Statement`, then `Match Lines`.
+5. Review mismatches in Settlement Lines and correct references or mark
+   mismatch for PSP follow-up.
+6. Run `Create Dispute Cases` for refund/chargeback lines.
+7. Mark the batch reconciled only after all lines are matched and no mismatch
+   remains.
+
+Refund and chargeback workflow:
+
+- Webhook refund/chargeback events can create cases automatically when applied.
+- Settlement refund/chargeback lines can create cases during settlement review.
+- Open cases move the subscription to past due so a disputed/refunded tenant is
+  not treated as cleanly paid.
+- Evidence submission refreshes a deterministic evidence hash for audit.
+- Winning a case restores the subscription to paid/active.
+- Losing a case or completing a refund keeps the subscription past due and
+  records the accounting action required.
+
+Production still needs provider-specific settlement API/file parsers,
+accounting journal posting for refunds/fees/chargebacks, PSP certification, and
+formal finance reconciliation SOP sign-off.
 
 ## SaaS Enforcement
 

@@ -64,6 +64,7 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
     refund_reference = fields.Char()
     chargeback_reference = fields.Char()
     chargeback_reason = fields.Char()
+    dispute_case_id = fields.Many2one("tijara.saas.payment.dispute")
     payment_status = fields.Selection(
         [
             ("paid", "Paid"),
@@ -704,6 +705,8 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                 else:
                     raise UserError(_("Unsupported or unknown payment webhook status."))
                 subscription.write(values)
+                if event.payment_event_type in ("refund", "chargeback"):
+                    event._ensure_dispute_case(subscription)
                 event.write(
                     {
                         "subscription_id": subscription.id,
@@ -724,6 +727,50 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                         "error_message": str(error),
                     }
                 )
+
+    def _ensure_dispute_case(self, subscription=False):
+        self.ensure_one()
+        if self.payment_event_type not in ("refund", "chargeback"):
+            return self.env["tijara.saas.payment.dispute"]
+        if self.dispute_case_id:
+            return self.dispute_case_id
+        dispute_model = self.env["tijara.saas.payment.dispute"].sudo()
+        existing = dispute_model.search(
+            [("webhook_event_id", "=", self.id)],
+            limit=1,
+        )
+        if existing:
+            self.dispute_case_id = existing.id
+            return existing
+        case = dispute_model.create(
+            {
+                "name": "New",
+                "case_type": self.payment_event_type,
+                "provider": self.provider,
+                "company_id": self.company_id.id,
+                "subscription_id": (subscription or self.subscription_id).id
+                if (subscription or self.subscription_id)
+                else False,
+                "invoice_id": self.invoice_id.id if self.invoice_id else False,
+                "webhook_event_id": self.id,
+                "provider_reference": self.refund_reference
+                or self.chargeback_reference
+                or self.event_reference
+                or self.transaction_id,
+                "transaction_id": self.transaction_id,
+                "amount": abs(self.amount or 0.0),
+                "provider_fee_amount": abs(self.provider_fee_amount or 0.0),
+                "reason": self.chargeback_reason or self.provider_event_type or self.reconciliation_note or "",
+                "due_date": fields.Date.context_today(self),
+            }
+        )
+        self.dispute_case_id = case.id
+        case.action_open()
+        return case
+
+    def action_create_dispute_case(self):
+        for event in self:
+            event._ensure_dispute_case(event.subscription_id)
 
     def action_mark_reconciled(self):
         self.write(

@@ -236,6 +236,8 @@ class TestTijaraSaasEnforcement(TransactionCase):
         self.assertEqual(subscription.payment_status, "failed")
         self.assertEqual(subscription.state, "past_due")
         self.assertTrue(refund_event.provider_audit_hash)
+        self.assertTrue(refund_event.dispute_case_id)
+        self.assertEqual(refund_event.dispute_case_id.case_type, "refund")
 
         chargeback_event = self.env["tijara.saas.payment.webhook.event"].tijara_from_payload(
             "stripe",
@@ -257,6 +259,8 @@ class TestTijaraSaasEnforcement(TransactionCase):
 
         self.assertEqual(chargeback_event.payment_event_type, "chargeback")
         self.assertEqual(chargeback_event.chargeback_reference, "dp_test_001")
+        self.assertTrue(chargeback_event.dispute_case_id)
+        self.assertEqual(chargeback_event.dispute_case_id.case_type, "chargeback")
         self.assertIn("fraudulent", subscription.suspension_reason)
 
         settlement_event = self.env["tijara.saas.payment.webhook.event"].tijara_from_payload(
@@ -273,6 +277,116 @@ class TestTijaraSaasEnforcement(TransactionCase):
         self.assertEqual(settlement_event.payment_event_type, "settlement")
         self.assertEqual(settlement_event.status, "applied")
         self.assertEqual(settlement_event.reconciliation_status, "pending")
+
+    def test_settlement_batch_import_matches_and_reconciles_provider_lines(self):
+        subscription = self._subscription(self.enterprise_plan, state="past_due")
+        event = self.env["tijara.saas.payment.webhook.event"].tijara_from_payload(
+            "jazzcash",
+            {
+                "event_reference": "JC-SETTLE-001",
+                "pp_TxnRefNo": "JC-SETTLE-001",
+                "database_name": subscription.database_name,
+                "status": "succeeded",
+                "amount": 15000,
+            },
+        )
+        batch = self.env["tijara.saas.payment.settlement.batch"].create(
+            {
+                "provider": "jazzcash",
+                "provider_batch_reference": "JC-BATCH-001",
+                "company_id": self.company.id,
+                "expected_gross_amount": 15000,
+                "expected_fee_amount": 150,
+                "expected_net_amount": 14850,
+                "raw_statement_json": json.dumps(
+                    {
+                        "lines": [
+                            {
+                                "event_reference": "JC-SETTLE-001",
+                                "pp_TxnRefNo": "JC-SETTLE-001",
+                                "pp_Amount": "15000",
+                                "pp_FeeAmount": "150",
+                                "event_type": "payment",
+                                "database_name": subscription.database_name,
+                            }
+                        ]
+                    }
+                ),
+            }
+        )
+
+        batch.action_import_statement_payload()
+        line = batch.line_ids
+
+        self.assertEqual(batch.reconciliation_status, "matched")
+        self.assertEqual(batch.line_count, 1)
+        self.assertEqual(batch.actual_gross_amount, 15000)
+        self.assertEqual(batch.actual_fee_amount, 150)
+        self.assertEqual(batch.actual_net_amount, 14850)
+        self.assertEqual(line.webhook_event_id, event)
+        self.assertEqual(line.subscription_id, subscription)
+        self.assertEqual(line.reconciliation_status, "matched")
+        self.assertTrue(batch.statement_hash)
+        self.assertTrue(line.line_hash)
+
+        batch.action_mark_reconciled()
+
+        self.assertEqual(batch.reconciliation_status, "reconciled")
+        self.assertEqual(line.reconciliation_status, "reconciled")
+
+    def test_settlement_refund_line_creates_dispute_case_with_evidence_flow(self):
+        subscription = self._subscription(self.enterprise_plan, state="active")
+        subscription.write({"payment_status": "paid"})
+        batch = self.env["tijara.saas.payment.settlement.batch"].create(
+            {
+                "provider": "stripe",
+                "provider_batch_reference": "STRIPE-BATCH-REFUND-001",
+                "company_id": self.company.id,
+                "raw_statement_json": json.dumps(
+                    [
+                        {
+                            "id": "re_settlement_001",
+                            "type": "refund",
+                            "amount": 150000,
+                            "fee": 0,
+                            "database_name": subscription.database_name,
+                            "status": "refunded",
+                        }
+                    ]
+                ),
+            }
+        )
+
+        batch.action_import_statement_payload()
+        line = batch.line_ids
+        line.action_create_dispute_case()
+        case = line.dispute_case_id
+
+        self.assertEqual(line.payment_event_type, "refund")
+        self.assertEqual(line.gross_amount, 1500)
+        self.assertEqual(line.subscription_id, subscription)
+        self.assertEqual(case.case_type, "refund")
+        self.assertEqual(case.amount, 1500)
+        self.assertEqual(case.state, "open")
+        self.assertEqual(subscription.payment_status, "failed")
+        self.assertEqual(subscription.state, "past_due")
+
+        case.write(
+            {
+                "evidence_summary": "Refund reviewed with provider statement.",
+                "evidence_json": '{"settlement":"STRIPE-BATCH-REFUND-001"}',
+            }
+        )
+        case.action_submit_evidence()
+
+        self.assertEqual(case.state, "evidence")
+        self.assertTrue(case.evidence_hash)
+
+        case.action_mark_won()
+
+        self.assertEqual(case.state, "won")
+        self.assertEqual(subscription.payment_status, "paid")
+        self.assertEqual(subscription.state, "active")
 
     def test_dunning_suspends_after_grace_period(self):
         subscription = self._subscription(self.enterprise_plan, state="active")

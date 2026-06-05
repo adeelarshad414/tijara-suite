@@ -1629,3 +1629,100 @@ Date: 2026-06-05
   contracts/credentials are available.
 - Run monitoring, backup restore, load, and security drills against a prepared
   staging environment.
+
+## Iteration 23: Provider Settlement Reconciliation and Dispute Workflows
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Committed Iteration 22 as local milestone:
+  - Commit `4d3d077 Add payment hardening and pilot readiness`.
+- Added provider settlement import and reconciliation models:
+  - `tijara.saas.payment.settlement.batch`.
+  - `tijara.saas.payment.settlement.line`.
+  - Provider support for manual bank, JazzCash, Easypaisa, Stripe, and generic
+    other providers.
+  - Settlement JSON import supports a list or an object with `lines`,
+    `transactions`, or `data`.
+  - Statement line normalization captures provider event reference,
+    transaction id, invoice/subscription hints, event type, gross amount, fee,
+    net amount, settlement date, raw line JSON, and deterministic line hash.
+  - Settlement lines match to existing payment webhooks, subscriptions, and
+    SaaS invoices.
+  - Settlement batches compute line count, matched count, mismatch count,
+    dispute line count, actual gross/fee/net, expected gross/fee/net, and
+    deltas.
+  - Operators can import statements, match lines, create dispute cases, mark
+    reconciled, mark mismatch, and close batches.
+- Added refund and chargeback operator workflow:
+  - `tijara.saas.payment.dispute`.
+  - Cases support refund and chargeback types with provider reference,
+    transaction id, amount, fee, due date, assigned operator, reason, evidence,
+    outcome, and accounting action required.
+  - Evidence hash includes summary, evidence JSON, attachments, amount, provider
+    reference, transaction id, and reason.
+  - Open cases move subscriptions to past due.
+  - Evidence submission moves cases to evidence-submitted state.
+  - Won cases restore subscriptions to paid/active.
+  - Lost/refunded cases keep subscriptions past due and record the accounting
+    action required.
+- Connected existing payment webhooks to dispute cases:
+  - Refund/chargeback webhook events now create or link operator dispute cases.
+  - Webhook form has a Create Dispute Case action and dispute case link.
+- Added settlement/dispute UI:
+  - Payment Settlements menu.
+  - Settlement Lines menu.
+  - Refunds and Chargebacks menu.
+  - List/form/pivot/graph views for settlement batches, settlement lines, and
+    dispute cases.
+- Updated default Odoo test tags to include `tijara_retail_core` from the
+  previous iteration and kept the wider enterprise test scope.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes after implementation.
+- 72 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes after removing generated
+  `__pycache__` build artifacts from the isolated Odoo run.
+- Isolated Docker/Odoo transaction suite passed with `0 failed, 0 error(s)` of
+  26 tests for `tijara_saas_control`, `tijara_retail_core`, `tijara_pos_pk`,
+  `tijara_pos_experience`, and `tijara_analytics`.
+- Odoo transaction tests were extended for:
+  - Settlement batch import, matching, gross/fee/net totals, line hashes, and
+    reconciled status.
+  - Settlement refund line creating a dispute case, moving subscription past
+    due, submitting evidence, hashing evidence, and winning the case to restore
+    paid/active status.
+  - Refund and chargeback webhook events creating dispute cases.
+
+### Known Gaps
+
+- Settlement import supports JSON payloads, but production still needs
+  provider-specific CSV/API/file parsers and exact field mapping from each PSP
+  contract.
+- Accounting impact is tracked as required action, but automatic journal
+  entries, credit notes, refund payments, chargeback fees, and payout clearing
+  still need implementation with finance sign-off.
+- PSP settlement/reconciliation needs certification with real JazzCash,
+  Easypaisa, Stripe, and bank statement samples.
+- FBR certified-provider sandbox/live compliance remains pending.
+- Hardware and offline POS still need real store/device pilots.
+- Monitoring, load, security, and restore drills still need execution against a
+  prepared staging environment.
+
+### Next Iteration
+
+- Add provider-specific settlement parser fixtures for JazzCash, Easypaisa,
+  Stripe, and manual bank transfer statements.
+- Build accounting posting workflow for refunds, credit notes, provider fees,
+  chargeback fees, payout clearing, and reconciliation write-off policy.
+- Add finance approval controls for dispute outcomes and settlement batch
+  closeout.
+- Add staging offline POS pilot runbook and KPI collectors for pilot metrics.
+- Continue FBR certified-provider sandbox fixture support once credentials and
+  contracts are available.

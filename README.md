@@ -180,8 +180,10 @@ suspension. Subscription billing now has an Odoo invoice-generation foundation,
 signed/secret-guarded payment webhook event records, provider-aware JazzCash,
 Easypaisa, and Stripe normalization, external payment status tracking, billing
 sync, native signature verification hooks, refund/chargeback/settlement audit
-records, provider fees/net amounts, reconciliation actions, dunning, and
-suspension actions. Tenant database provisioning has an operator
+records, provider fees/net amounts, settlement batch import/reconciliation
+records, refund/chargeback operator cases with evidence hashing and
+subscription impact actions, dunning, and suspension actions. Tenant database
+provisioning has an operator
 script for database-per-tenant module install plus DNS/ingress/admin/backup/
 monitoring operations manifests. The repo also includes Playwright browser E2E
 seed and checkout scaffolds, hardware certification records/profiles,
@@ -191,8 +193,9 @@ hooks.
 Remaining enterprise phases include real target-hardware certification, full
 authenticated browser POS click-through coverage in staging, production FBR
 provider certification, secret-manager rollout, offline POS pilot
-certification, PSP certification/settlement-file sign-off for real gateways,
-and deeper receipt line/tax/payment layout controls.
+certification, PSP certification/settlement-file API sign-off for real
+gateways, automated payout/accounting posting, and deeper receipt
+line/tax/payment layout controls.
 
 Odoo 19 compatibility has been handled for this scaffold, including security
 group privileges, product form inheritance, and `list` view declarations.

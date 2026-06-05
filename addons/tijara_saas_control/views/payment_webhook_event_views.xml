@@ -63,6 +63,7 @@
             <form>
                 <header>
                     <button name="action_apply" type="object" string="Apply Event" class="btn-primary" invisible="status == 'applied'"/>
+                    <button name="action_create_dispute_case" type="object" string="Create Dispute Case" invisible="payment_event_type not in ('refund', 'chargeback')"/>
                     <button name="action_mark_reconciled" type="object" string="Mark Reconciled" invisible="reconciliation_status == 'reconciled'"/>
                     <button name="action_mark_mismatch" type="object" string="Mark Mismatch" invisible="reconciliation_status == 'mismatch'"/>
                     <field name="status" widget="statusbar"/>
@@ -81,6 +82,7 @@
                             <field name="refund_reference"/>
                             <field name="chargeback_reference"/>
                             <field name="chargeback_reason"/>
+                            <field name="dispute_case_id"/>
                             <field name="payment_status"/>
                             <field name="amount"/>
                             <field name="provider_fee_amount"/>
