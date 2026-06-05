@@ -79,6 +79,7 @@ make load-smoke
 make release-candidate
 make psp-readiness-evidence
 make psp-fixture-smoke
+make fbr-readiness-evidence
 make signoff-pack
 ```
 
@@ -499,6 +500,29 @@ validating the adapter endpoint in staging.
 Set `FBR_ALLOW_INSECURE_ENDPOINT=True` only for local/staging mock adapters.
 Production certified adapters must use HTTPS.
 
+Export redacted FBR readiness evidence before sign-off:
+
+```bash
+python3 scripts/export_fbr_readiness.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment production \
+  --adapter-mode live \
+  --certification-environment production \
+  --provider-name CertifiedFBRProvider \
+  --endpoint https://fbr-provider.example/api/invoices \
+  --client-id client-001 \
+  --credential-reference vault:fbr/client-secret \
+  --sandbox-reference FBR-SANDBOX-001 \
+  --fbr-pos-id POS-123 \
+  --branch-code KHI-01 \
+  --payload-hash <signed-payload-hash>
+```
+
+The exporter writes `fbr-readiness.json`, `status.tsv`, `env-summary.txt`, and
+`summary.md` under `deploy/runtime/fbr-readiness/<run-id>/`. Include this
+directory in `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the `fbr` evidence
+group for production release sign-off.
+
 ## Kiosk POS Sync and Offline Queue
 
 Kiosk profiles can optionally create linked Odoo POS orders when checkout is
@@ -826,13 +850,14 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `security-review-signoff.md` for scan results, RBAC, logs, rate limits,
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
-  status-table, PSP readiness, and non-secret environment summaries for
+  status-table, PSP/FBR readiness, and non-secret environment summaries for
   approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
   is attached, provider-level readiness reviews are included under
-  `psp_readiness_reviews`.
+  `psp_readiness_reviews`; when FBR readiness evidence is attached,
+  certified-provider readiness is included under `fbr_readiness_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 

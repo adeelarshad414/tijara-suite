@@ -493,12 +493,48 @@ def _psp_readiness_reviews(evidence_entries):
     return reviews
 
 
+def _fbr_readiness_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "fbr-readiness.json":
+            continue
+        payload = _read_json(path)
+        adapter = payload.get("adapter") or {}
+        certification = payload.get("certification") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "adapter_mode": adapter.get("mode", ""),
+                "provider_name_present": bool(adapter.get("provider_name_present")),
+                "endpoint_present": bool(adapter.get("endpoint_present")),
+                "endpoint_https": bool(adapter.get("endpoint_https")),
+                "client_id_present": bool(adapter.get("client_id_present")),
+                "credential_present": bool(
+                    adapter.get("credential_reference_present")
+                    or adapter.get("client_secret_present")
+                ),
+                "certification_environment": certification.get("environment", ""),
+                "sandbox_reference_present": bool(certification.get("sandbox_reference_present")),
+                "fbr_pos_id_present": bool(certification.get("fbr_pos_id_present")),
+                "branch_code_present": bool(certification.get("branch_code_present")),
+                "payload_hash_present": bool(certification.get("payload_hash_present")),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
     status_blocks = []
     environment_blocks = []
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
+    fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -591,6 +627,35 @@ def _evidence_summary(context, evidence_entries):
     if not psp_lines:
         psp_lines = ["- No `psp-readiness.json` files were attached.", ""]
 
+    fbr_lines = []
+    for review in fbr_readiness_reviews:
+        fbr_lines.append("### `%s`" % review["path"])
+        fbr_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        fbr_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        fbr_lines.append("- Adapter mode: %s" % (review["adapter_mode"] or "unknown"))
+        fbr_lines.append(
+            "- Provider/endpoint/client/credential: %s/%s/%s/%s"
+            % (
+                "yes" if review["provider_name_present"] else "no",
+                "https" if review["endpoint_https"] else "no",
+                "yes" if review["client_id_present"] else "no",
+                "yes" if review["credential_present"] else "no",
+            )
+        )
+        fbr_lines.append(
+            "- Certification: environment=%s, reference=%s, pos_id=%s, branch=%s, payload_hash=%s"
+            % (
+                review["certification_environment"] or "unset",
+                "yes" if review["sandbox_reference_present"] else "no",
+                "yes" if review["fbr_pos_id_present"] else "no",
+                "yes" if review["branch_code_present"] else "no",
+                "yes" if review["payload_hash_present"] else "no",
+            )
+        )
+        fbr_lines.append("")
+    if not fbr_lines:
+        fbr_lines = ["- No `fbr-readiness.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -618,6 +683,9 @@ def _evidence_summary(context, evidence_entries):
 ## PSP Readiness Evidence
 
 {chr(10).join(psp_lines)}
+## FBR Readiness Evidence
+
+{chr(10).join(fbr_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -635,6 +703,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     summary_reviews = []
     check_rows = []
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
+    fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -710,6 +779,13 @@ def _release_readiness(context, evidence_entries, group_counts):
                     % (label, review["path"], provider.get("decision"))
                 )
 
+    for review in fbr_readiness_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("FBR readiness %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("FBR readiness %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -737,6 +813,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "summary_reviews": summary_reviews,
         "check_rows": check_rows,
         "psp_readiness_reviews": psp_readiness_reviews,
+        "fbr_readiness_reviews": fbr_readiness_reviews,
     }
 
 

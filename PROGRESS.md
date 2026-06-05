@@ -3202,3 +3202,77 @@ Date: 2026-06-05
 - Add staging/live PSP provider fixture imports after database credentials are
   corrected.
 - Add monitoring evidence extraction for production smoke and rollback packages.
+
+## Iteration 49: FBR Readiness Evidence and Sign-Off Extraction
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_fbr_readiness.py` for redacted FBR certified-provider
+  readiness evidence.
+- The exporter:
+  - Supports dry-run and live FBR adapter modes.
+  - Records certification environment, certified-provider presence, HTTPS
+    endpoint readiness, client-id presence, credential-reference or secret
+    presence, sandbox/live reference presence, FBR POS ID, branch code, and
+    signed payload hash presence.
+  - Hashes endpoint values instead of exposing endpoint-sensitive detail in the
+    machine-readable manifest.
+  - Fails strict live/production readiness when HTTPS endpoint, provider name,
+    client id, credential presence, or sandbox/live reference is missing.
+  - Writes `fbr-readiness.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/fbr-readiness/<run-id>/`.
+- Added operator shortcuts:
+  - `make fbr-readiness-evidence`
+  - `npm run fbr:readiness`
+- Enhanced `scripts/generate_signoff_pack.py` to parse attached
+  `fbr-readiness.json` evidence.
+- `evidence-summary.md` now includes a dedicated FBR Readiness Evidence section.
+- `release-readiness.json` now includes `fbr_readiness_reviews`.
+- Release readiness decisions now treat failed FBR readiness as blockers and
+  warning FBR readiness as warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Default FBR readiness export passes with warnings for dry-run/staging
+  evidence without real certified-provider data.
+- Live-ready FBR sample passes with HTTPS endpoint, provider, client id,
+  credential reference, sandbox reference, POS ID, branch code, and payload hash.
+- Strict live FBR sample fails when endpoint/credentials/provider/reference are
+  missing.
+- `make fbr-readiness-evidence` passes with warning decision.
+- Generated a sign-off package with FBR evidence required in strict mode.
+- Confirmed `release-readiness.json` decision is `ready`.
+- Confirmed `release-readiness.json` includes `fbr_readiness_reviews`.
+- Confirmed `evidence-summary.md` includes the FBR Readiness Evidence section.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_fbr_readiness.py scripts/generate_signoff_pack.py` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- FBR readiness evidence still needs real certified-provider endpoint,
+  credentials, sandbox/live response reference, POS ID, branch code, and signed
+  payload hash from staging/UAT.
+- FBR live compliance still requires certified-provider API contract validation
+  and tax-owner sign-off.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Add monitoring evidence extraction for production smoke and rollback packages.
+- Add FBR provider response fixture smoke tests once certified-provider sample
+  responses are available.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.
