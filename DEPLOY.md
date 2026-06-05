@@ -340,12 +340,14 @@ python3 scripts/run_tenant_rollout.py \
 The runner reads `ops-manifest.json` and the generated tenant artifacts, builds
 Kubernetes ingress/cert-manager, Nginx, external-dns, monitoring, and backup
 rollout actions, and writes `tenant-rollout-evidence.json`, `status.tsv`,
-`summary.md`, and `env-summary.txt` under
+`rollback-plan.md`, `summary.md`, and `env-summary.txt` under
 `deploy/runtime/tenant-rollouts/<run-id>/`. It is dry-run-first; real
 infrastructure commands require both `--execute` and
 `CONFIRM_TENANT_ROLLOUT=YES`. Attach this directory to
 `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package extracts it under
-`tenant_rollout_reviews`.
+`tenant_rollout_reviews`. Keep `rollback-plan.md` with the deployment gate so
+operators can reverse DNS, ingress, TLS, Nginx, monitoring, and backup-policy
+changes with named release-owner approval.
 
 ## Subscription Billing
 

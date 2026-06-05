@@ -126,13 +126,28 @@ def _command_text(command):
     return " ".join(command)
 
 
-def _action(name, tenant_db, provider, command, artifact, message, execute):
+def _action(
+    name,
+    tenant_db,
+    provider,
+    command,
+    artifact,
+    message,
+    execute,
+    rollback_command=None,
+    rollback_message="",
+):
+    rollback_command = rollback_command or []
     return {
         "name": name,
         "tenant_db": tenant_db,
         "provider": provider,
         "command": command,
         "command_text": _command_text(command) if command else "",
+        "rollback_command": rollback_command,
+        "rollback_command_text": _command_text(rollback_command) if rollback_command else "",
+        "rollback_message": rollback_message,
+        "rollback_required": bool(rollback_command or rollback_message),
         "artifact": _safe_relative(artifact) if artifact else "",
         "artifact_sha256": _hash_file(artifact) if artifact and artifact.is_file() else "",
         "status": "pending" if execute else "dry-run",
@@ -166,6 +181,8 @@ def _tenant_actions(args, tenant_dir, manifest):
                 artifacts["ingress"],
                 "Apply tenant Kubernetes ingress.",
                 execute,
+                rollback_command=[args.kubectl, "delete", "-f", str(artifacts["ingress"]), "--ignore-not-found=true"],
+                rollback_message="Delete tenant Kubernetes ingress if cutover is aborted.",
             )
         )
         actions.append(
@@ -177,12 +194,17 @@ def _tenant_actions(args, tenant_dir, manifest):
                 artifacts["certificate"],
                 "Apply tenant cert-manager certificate.",
                 execute,
+                rollback_command=[args.kubectl, "delete", "-f", str(artifacts["certificate"]), "--ignore-not-found=true"],
+                rollback_message="Delete tenant cert-manager certificate if TLS cutover is reverted.",
             )
         )
     if provider in {"manifest", "nginx"}:
         command = []
+        rollback_command = []
         if args.nginx_available_dir:
-            command = ["cp", str(artifacts["nginx"]), str(Path(args.nginx_available_dir) / ("%s.conf" % tenant_db))]
+            target = Path(args.nginx_available_dir) / ("%s.conf" % tenant_db)
+            command = ["cp", str(artifacts["nginx"]), str(target)]
+            rollback_command = ["rm", "-f", str(target)]
         actions.append(
             _action(
                 "nginx-tenant-location",
@@ -192,13 +214,17 @@ def _tenant_actions(args, tenant_dir, manifest):
                 artifacts["nginx"],
                 "Install or review tenant Nginx database-isolation location snippet.",
                 execute and bool(command),
+                rollback_command=rollback_command,
+                rollback_message="Remove tenant Nginx location snippet and reload Nginx after review.",
             )
         )
         enable_command = []
+        enable_rollback_command = []
         if args.nginx_available_dir and args.nginx_enabled_dir:
             available = Path(args.nginx_available_dir) / ("%s.conf" % tenant_db)
             enabled = Path(args.nginx_enabled_dir) / ("%s.conf" % tenant_db)
             enable_command = ["ln", "-sf", str(available), str(enabled)]
+            enable_rollback_command = ["rm", "-f", str(enabled)]
         actions.append(
             _action(
                 "nginx-enable-location",
@@ -208,6 +234,8 @@ def _tenant_actions(args, tenant_dir, manifest):
                 artifacts["nginx"],
                 "Enable tenant Nginx snippet after operator review.",
                 execute and bool(enable_command),
+                rollback_command=enable_rollback_command,
+                rollback_message="Remove enabled tenant Nginx snippet symlink and reload Nginx after review.",
             )
         )
     if provider in {"manifest", "external-dns", "kubernetes"}:
@@ -224,12 +252,17 @@ def _tenant_actions(args, tenant_dir, manifest):
                 artifacts["dns"],
                 message,
                 False,
+                rollback_message="Remove or revert DNS record %s and wait for TTL propagation." % (
+                    dns.get("hostname") or tenant.get("domain") or "<unset>"
+                ),
             )
         )
     if provider in {"manifest", "monitoring"}:
         command = []
+        rollback_command = []
         if args.prometheus_target_dir:
             command = _copy_command(artifacts["monitoring"], args.prometheus_target_dir, tenant_db)
+            rollback_command = ["rm", "-f", str(Path(args.prometheus_target_dir) / ("%s.json" % tenant_db))]
         actions.append(
             _action(
                 "prometheus-blackbox-target",
@@ -239,6 +272,8 @@ def _tenant_actions(args, tenant_dir, manifest):
                 artifacts["monitoring"],
                 "Install or review tenant Blackbox target %s." % (monitoring.get("blackbox_url") or "<unset>"),
                 execute and bool(command),
+                rollback_command=rollback_command,
+                rollback_message="Remove tenant Prometheus Blackbox target and reload monitoring config.",
             )
         )
     if provider in {"manifest", "backup"}:
@@ -251,6 +286,7 @@ def _tenant_actions(args, tenant_dir, manifest):
                 artifacts["backup"],
                 "Register or review tenant backup policy.",
                 False,
+                rollback_message="Keep existing backup restore point; pause new tenant backup policy if cutover is cancelled.",
             )
         )
     return actions
@@ -327,13 +363,14 @@ def _summary(context, tenant_reviews, decision, ci_status, blockers, warnings):
     tenant_lines = []
     for review in tenant_reviews:
         tenant_lines.append(
-            "- %s: %s, actions dry-run/executed/failed=%s/%s/%s"
+            "- %s: %s, actions dry-run/executed/failed=%s/%s/%s, rollback actions=%s"
             % (
                 review.get("tenant_db") or "unknown",
                 review.get("decision") or "unknown",
                 review.get("dry_run_count", 0),
                 review.get("executed_count", 0),
                 review.get("failed_count", 0),
+                review.get("rollback_action_count", 0),
             )
         )
     blocker_lines = "\n".join("- %s" % item for item in blockers) or "- None"
@@ -368,9 +405,50 @@ def _summary(context, tenant_reviews, decision, ci_status, blockers, warnings):
 ## Evidence Files
 
 - Tenant rollout evidence: tenant-rollout-evidence.json
+- Rollback plan: rollback-plan.md
 - Status table: status.tsv
 - Environment summary: env-summary.txt
 """
+
+
+def _rollback_plan(context, tenant_reviews):
+    lines = [
+        "# Tenant Rollout Rollback Plan",
+        "",
+        "- Run ID: %s" % context["run_id"],
+        "- Target environment: %s" % context["target_environment"],
+        "- Platform: %s" % context["platform"],
+        "- Generated: %s" % context["generated_at"],
+        "",
+        "## Rollback Actions",
+        "",
+    ]
+    action_count = 0
+    for review in tenant_reviews:
+        lines.append("### `%s`" % (review.get("tenant_db") or "unknown"))
+        for action in review.get("actions") or []:
+            if not action.get("rollback_required"):
+                continue
+            action_count += 1
+            lines.append("- `%s` (%s)" % (action.get("name") or "unknown", action.get("provider") or "unknown"))
+            if action.get("rollback_command_text"):
+                lines.append("  - Command: `%s`" % action["rollback_command_text"])
+            if action.get("rollback_message"):
+                lines.append("  - Review: %s" % action["rollback_message"])
+        lines.append("")
+    if action_count < 1:
+        lines.append("- No rollback actions were generated.")
+        lines.append("")
+    lines.extend(
+        [
+            "## Operator Notes",
+            "",
+            "- Run rollback commands only after release-owner approval.",
+            "- Capture command logs and updated monitoring status in the production rollback package.",
+            "- Keep DNS, TLS, Nginx, and monitoring rollback evidence with the deployment gate package.",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def main():
@@ -468,6 +546,7 @@ def main():
         failed_actions = [action for action in actions if action["status"] == "failed"]
         dry_run_count = sum(1 for action in actions if action["status"] == "dry-run")
         executed_count = sum(1 for action in actions if action["status"] == "executed")
+        rollback_action_count = sum(1 for action in actions if action.get("rollback_required"))
         tenant_blockers = ["%s failed." % action["name"] for action in failed_actions]
         blockers.extend("tenant:%s: %s" % (tenant_db, item) for item in tenant_blockers)
         tenant_decision = "failed" if tenant_blockers else "executed" if executed_count else "dry-run"
@@ -483,6 +562,7 @@ def main():
                 "dry_run_count": dry_run_count,
                 "executed_count": executed_count,
                 "failed_count": len(failed_actions),
+                "rollback_action_count": rollback_action_count,
                 "actions": actions,
                 "blockers": tenant_blockers,
                 "warnings": [],
@@ -512,6 +592,7 @@ def main():
         "require_all_artifacts": bool(strict or args.require_all_artifacts),
         "minimum_tenants": max(args.minimum_tenants, 0),
         "tenant_count": len(tenant_reviews),
+        "rollback_action_count": sum(1 for action in all_actions if action.get("rollback_required")),
         "generated_at": _utc_now(),
         "output": str(output),
     }
@@ -522,6 +603,7 @@ def main():
         "metadata": metadata,
         "tenants": tenant_reviews,
         "actions": all_actions,
+        "rollback_action_count": sum(1 for action in all_actions if action.get("rollback_required")),
         "blockers": blockers,
         "warnings": warnings,
     }
@@ -535,6 +617,7 @@ def main():
             "require_all_artifacts=%s" % int(strict or args.require_all_artifacts),
             "minimum_tenants=%s" % max(args.minimum_tenants, 0),
             "tenant_count=%s" % len(tenant_reviews),
+            "rollback_action_count=%s" % sum(1 for action in all_actions if action.get("rollback_required")),
             "nginx_available_dir=%s" % (args.nginx_available_dir or "<unset>"),
             "nginx_enabled_dir=%s" % (args.nginx_enabled_dir or "<unset>"),
             "prometheus_target_dir=%s" % (args.prometheus_target_dir or "<unset>"),
@@ -542,6 +625,7 @@ def main():
     )
 
     _write(output / "tenant-rollout-evidence.json", json.dumps(payload, indent=2, sort_keys=True))
+    _write(output / "rollback-plan.md", _rollback_plan(context, tenant_reviews))
     _write(output / "status.tsv", _status_tsv(status_rows, all_actions))
     _write(output / "env-summary.txt", env_summary)
     _write(output / "summary.md", _summary(context, tenant_reviews, decision, ci_status, blockers, warnings))

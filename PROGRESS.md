@@ -4975,3 +4975,74 @@ Date: 2026-06-05
   rollout run exists.
 - Continue authenticated POS checkout/refund/print E2E and real FBR/provider
   execution when staging credentials are available.
+
+## Iteration 71: Tenant Rollout Rollback Evidence
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/run_tenant_rollout.py` so every rollout action can carry a
+  rollback command, rollback review note, and rollback-required flag.
+- Added rollback planning for Kubernetes ingress deletion, cert-manager
+  certificate deletion, Nginx snippet removal, Nginx symlink removal,
+  external-dns/manual DNS record reversal, Prometheus Blackbox target removal,
+  and backup policy pause/review.
+- Added `rollback-plan.md` to tenant rollout evidence output, alongside
+  `tenant-rollout-evidence.json`, `status.tsv`, `summary.md`, and
+  `env-summary.txt`.
+- Added `rollback_action_count` to rollout evidence context, tenant reviews,
+  and top-level JSON.
+- Enhanced `scripts/generate_signoff_pack.py` so Tenant Rollout Evidence shows
+  action counts and rollback action counts for approvers.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/run_tenant_rollout.py scripts/generate_signoff_pack.py` passes.
+- Full manifest tenant rollout dry-run passes:
+  `/private/tmp/tijara-tenant-rollout-rollback-ready/tenant-rollout-evidence.json`
+  records `decision=dry-run`, `ci_status=pass`, and
+  `rollback_action_count=7`.
+- Confirmed `rollback-plan.md` includes Kubernetes delete, Nginx removal,
+  DNS reversal, Prometheus target removal, and backup policy review actions.
+- Generated a sign-off package at
+  `/private/tmp/tijara-signoff-tenant-rollout-rollback`.
+- Confirmed `evidence-summary.md` shows `actions/rollback-actions` as `7/7`.
+- Confirmed `release-readiness.json` includes `rollback_action_count=7` under
+  `tenant_rollout_reviews`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-tenant-rollout-rollback/release-readiness.json`
+  passes with `decision=ready` and `ci_status=pass`.
+- `make tenant-rollout` passes in warning mode when tenant artifacts are not
+  supplied and still writes rollback-capable evidence.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- Rollback planning is now attached to rollout evidence, but production proof
+  still needs executed rollback drills against real Kubernetes/Nginx/DNS/TLS
+  and monitoring targets.
+- DNS rollback remains provider/manual review text until a certified DNS
+  provider API is configured.
+- Authenticated POS checkout/refund browser E2E still requires a staging POS
+  user and seeded POS register.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add monitoring evidence linkage for tenant rollout execution and rollback
+  plan presence.
+- Add provider-specific DNS rollback adapters once the DNS provider is selected.
+- Continue authenticated POS checkout/refund/print E2E and real FBR/provider
+  execution when staging credentials are available.

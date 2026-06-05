@@ -1027,6 +1027,7 @@ def _tenant_rollout_reviews(evidence_entries):
                     "dry_run_count": tenant.get("dry_run_count", action_statuses.get("dry-run", 0)),
                     "executed_count": tenant.get("executed_count", action_statuses.get("executed", 0)),
                     "failed_count": tenant.get("failed_count", action_statuses.get("failed", 0)),
+                    "rollback_action_count": tenant.get("rollback_action_count", 0),
                     "action_statuses": action_statuses,
                     "blockers": tenant.get("blockers") or [],
                     "warnings": tenant.get("warnings") or [],
@@ -1046,6 +1047,7 @@ def _tenant_rollout_reviews(evidence_entries):
                 "minimum_tenants": context.get("minimum_tenants", 0),
                 "tenants": tenant_reviews,
                 "action_count": len(payload.get("actions") or []),
+                "rollback_action_count": payload.get("rollback_action_count", 0),
                 "blockers": payload.get("blockers") or [],
                 "warnings": payload.get("warnings") or [],
             }
@@ -1540,7 +1542,7 @@ def _evidence_summary(context, evidence_entries):
         tenant_rollout_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
         tenant_rollout_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
         tenant_rollout_lines.append(
-            "- Target/platform/strict/execute/tenants/minimum/actions: %s/%s/%s/%s/%s/%s/%s"
+            "- Target/platform/strict/execute/tenants/minimum/actions/rollback-actions: %s/%s/%s/%s/%s/%s/%s/%s"
             % (
                 review["target_environment"] or "unset",
                 review["platform"] or "unset",
@@ -1549,11 +1551,12 @@ def _evidence_summary(context, evidence_entries):
                 review["tenant_count"],
                 review["minimum_tenants"],
                 review["action_count"],
+                review["rollback_action_count"],
             )
         )
         for tenant in review["tenants"]:
             tenant_rollout_lines.append(
-                "- `%s`: decision=%s, domain=%s, dry-run/executed/failed=%s/%s/%s"
+                "- `%s`: decision=%s, domain=%s, dry-run/executed/failed=%s/%s/%s, rollback-actions=%s"
                 % (
                     tenant["tenant_db"] or "unknown",
                     tenant["decision"] or "unknown",
@@ -1561,6 +1564,7 @@ def _evidence_summary(context, evidence_entries):
                     tenant["dry_run_count"],
                     tenant["executed_count"],
                     tenant["failed_count"],
+                    tenant["rollback_action_count"],
                 )
             )
         tenant_rollout_lines.append("")
