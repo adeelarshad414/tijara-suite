@@ -85,6 +85,7 @@ make fbr-readiness-evidence
 make monitoring-evidence
 make incident-runbook-evidence
 make load-evidence
+make operations-release-bundle
 make signoff-pack
 ```
 
@@ -635,6 +636,37 @@ When `load` is included, the harness writes `k6-load-summary.json`, runs
 `deploy/runtime/ops-evidence/<run-id>/load-evidence/` so release sign-off can
 extract `load_reviews` without a separate manual step.
 
+For release-owner review, generate a combined operations bundle after the
+staging target, slugs, monitoring URLs, and owner references are configured:
+
+```bash
+TIJARA_OPS_BUNDLE_RUN_ID=2026-06-05-rc1 \
+TIJARA_BASE_URL=https://staging.example.com \
+TIJARA_DISPLAY_SLUG=tijara-e2e-menu \
+TIJARA_KIOSK_SLUG=tijara-e2e-kiosk \
+TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer \
+TIJARA_LOAD_MATRIX_APPROVED_BY="Release Owner" \
+TIJARA_LOAD_MATRIX_APPROVAL_REF=LOAD-MATRIX-UAT-001 \
+TIJARA_RELEASE_OWNER="Release Owner" \
+TIJARA_DEVOPS_OWNER="DevOps Owner" \
+TIJARA_SUPPORT_OWNER="Support Owner" \
+TIJARA_BUSINESS_OWNER="Business Owner" \
+TIJARA_ONCALL_CONTACT=oncall@example.com \
+TIJARA_ALERT_ROUTE=alertmanager:tijara-staging \
+TIJARA_INCIDENT_RUNBOOK_URL=https://runbooks.example.com/tijara/incident \
+TIJARA_INCIDENT_BACKUP_REF=backup-2026-06-05 \
+TIJARA_INCIDENT_RESTORE_DRILL_REF=restore-2026-06-05 \
+TIJARA_INCIDENT_ROLLBACK_REF=odoo:previous \
+make operations-release-bundle
+```
+
+The bundle writes `operations-release-bundle.json`, nested evidence
+directories, logs, `status.tsv`, `env-summary.txt`, and `summary.md` under
+`deploy/runtime/operations-release-bundle/<run-id>/`. Attach that directory to
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence. Use
+`TIJARA_OPS_BUNDLE_STRICT=1` and `TIJARA_OPS_BUNDLE_FAIL_ON_WARNING=1` for
+production release drills where missing evidence or warnings must block.
+
 ## Display Routes
 
 Public display routes are available for store screens:
@@ -740,6 +772,9 @@ Optional tools:
   optional kiosk checkout.
 - Run `make load-profile-matrix-evidence` to export the approved load profile
   matrix for release sign-off.
+- Run `make operations-release-bundle` to collect matrix, enterprise load,
+  smoke, monitoring, and incident runbook evidence under one Operations
+  evidence directory.
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
@@ -897,7 +932,7 @@ operations evidence:
 ```bash
 TIJARA_SIGNOFF_RUN_ID=2026-06-05-rc1 \
 TIJARA_SIGNOFF_ENVIRONMENT=staging \
-TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1 \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/operations-release-bundle/2026-06-05-rc1 \
 TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops \
 make signoff-pack
 ```
@@ -931,7 +966,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   load evidence is attached, threshold and profile reviews are included under
   `load_reviews`; when load profile matrix evidence is attached, approved
   tenant-size and vertical profile reviews are included under
-  `load_matrix_reviews`.
+  `load_matrix_reviews`; when operations release bundle evidence is attached,
+  bundle step status and evidence references are included under
+  `operations_bundle_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 

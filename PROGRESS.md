@@ -3739,3 +3739,91 @@ Date: 2026-06-05
 - Add a release evidence bundle that combines load profile matrix, enterprise
   surface load evidence, monitoring, incident runbook, and production smoke
   evidence under one operations run ID.
+
+## Iteration 56: Operations Release Evidence Bundle
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_operations_release_bundle.py`.
+- The bundle runner:
+  - Uses one operations run ID across nested evidence generators.
+  - Runs load profile matrix evidence.
+  - Runs enterprise surface load evidence.
+  - Runs production smoke evidence.
+  - Runs monitoring evidence and attaches the smoke decision reference.
+  - Runs incident runbook evidence and attaches the monitoring evidence
+    reference.
+  - Continues after child evidence failures so release owners receive a full
+    bundle instead of a partial log.
+  - Writes per-step logs, nested evidence directories, `status.tsv`,
+    `env-summary.txt`, `summary.md`, and `operations-release-bundle.json`
+    under `deploy/runtime/operations-release-bundle/<run-id>/`.
+  - Supports strict production mode through `TIJARA_OPS_BUNDLE_STRICT=1`.
+  - Supports release-blocking warnings through
+    `TIJARA_OPS_BUNDLE_FAIL_ON_WARNING=1`.
+  - Normalizes check order so smoke runs before monitoring and monitoring runs
+    before incident evidence even if the operator lists checks out of order.
+- Added operator shortcuts:
+  - `make operations-release-bundle`
+  - `npm run ops:release-bundle`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group `operations-release-bundle.json` as Operations evidence.
+  - Parse attached operations bundle evidence.
+  - Add an Operations Release Bundle Evidence section to
+    `evidence-summary.md`.
+  - Add `operations_bundle_reviews` into `release-readiness.json`.
+  - Treat failed bundle evidence as blockers and warning bundle evidence as
+    release warnings.
+  - Parse six-column `status.tsv` files so bundle messages show the actual
+    decision text instead of the log-file column.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/run_operations_release_bundle.py scripts/generate_signoff_pack.py`
+  passes.
+- Warning-mode operations bundle run succeeds with all five lanes present:
+  load matrix, enterprise load, smoke, monitoring, and incident runbook.
+- The warning-mode bundle writes `operations-release-bundle.json`,
+  `status.tsv`, `summary.md`, nested evidence directories, and per-step logs.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using the operations bundle directory.
+- Confirmed `evidence-summary.md` includes Operations Release Bundle Evidence.
+- Confirmed `release-readiness.json` includes `operations_bundle_reviews`.
+- Confirmed bundle evidence references load matrix, load enterprise, smoke,
+  monitoring, and incident manifests.
+- `make operations-release-bundle` passes in warning mode and writes the full
+  bundle under a temporary output directory.
+- A deliberately out-of-order bundle check list is normalized before execution.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- A production-ready bundle still needs live staging URLs, k6 network access,
+  monitoring endpoints, release-owner matrix approval, incident owners,
+  backup/restore/rollback references, and production smoke endpoints.
+- The local dry-run intentionally produced warnings because k6 was hidden and
+  owner/endpoint references were not supplied.
+- Full production release should run with strict and fail-on-warning enabled.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Add FBR provider response fixture smoke tests once certified-provider sample
+  responses are available.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.
+- Add CI/CD artifact upload and retention guidance for operations release
+  bundles.

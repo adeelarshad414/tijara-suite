@@ -131,6 +131,7 @@ make fbr-readiness-evidence
 make monitoring-evidence
 make incident-runbook-evidence
 make load-evidence
+make operations-release-bundle
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make staging-release-signoff
@@ -420,6 +421,10 @@ The detailed policy and dependency intake checklist are maintained in
   `make incident-runbook-evidence` collect release owner, DevOps, support,
   business, on-call, alert-route, runbook, backup, restore, rollback, and
   monitoring references under `deploy/runtime/incident-runbooks/`.
+- `scripts/run_operations_release_bundle.py` and
+  `make operations-release-bundle` combine load profile matrix, enterprise load,
+  production smoke, monitoring, and incident runbook evidence under one
+  operations run ID for release sign-off.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through

@@ -383,10 +383,12 @@ def _evidence_group(entry):
         or "load-evidence/" in relative
         or "load-evidence" in relative_lower
         or "load-profile-matrix" in relative_lower
+        or "operations-release-bundle" in relative_lower
         or filename == "monitoring-evidence.json"
         or filename == "incident-runbook-evidence.json"
         or filename == "load-evidence.json"
         or filename == "load-profile-matrix.json"
+        or filename == "operations-release-bundle.json"
     ):
         return "Operations"
     if "hardware" in relative_lower:
@@ -439,7 +441,7 @@ def _status_counts(lines):
             continue
         name, status = parts[0], parts[1]
         counts[status] = counts.get(status, 0) + 1
-        message = parts[4] if len(parts) >= 5 else parts[2] if len(parts) >= 3 else ""
+        message = parts[5] if len(parts) >= 6 else parts[4] if len(parts) >= 5 else parts[2] if len(parts) >= 3 else ""
         rows.append({"name": name, "status": status, "message": message})
     return counts, rows
 
@@ -653,6 +655,39 @@ def _load_matrix_reviews(evidence_entries):
     return reviews
 
 
+def _operations_bundle_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "operations-release-bundle.json":
+            continue
+        payload = _read_json(path)
+        payload_context = payload.get("context") or {}
+        steps = payload.get("steps") or []
+        status_counts = {}
+        step_refs = {}
+        for step in steps:
+            status = step.get("status") or "unknown"
+            status_counts[status] = status_counts.get(status, 0) + 1
+            step_refs[step.get("name") or step.get("label") or "unknown"] = bool(step.get("manifest"))
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "target_environment": payload_context.get("target_environment", ""),
+                "strict": bool(payload_context.get("strict")),
+                "fail_on_warning": bool(payload_context.get("fail_on_warning")),
+                "step_count": len(steps),
+                "status_counts": status_counts,
+                "step_refs": step_refs,
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -664,6 +699,7 @@ def _evidence_summary(context, evidence_entries):
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
+    operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -882,6 +918,39 @@ def _evidence_summary(context, evidence_entries):
     if not load_matrix_lines:
         load_matrix_lines = ["- No `load-profile-matrix.json` files were attached.", ""]
 
+    operations_bundle_lines = []
+    for review in operations_bundle_reviews:
+        counts = ", ".join(
+            "%s=%s" % (status, count)
+            for status, count in sorted((review["status_counts"] or {}).items())
+        )
+        refs = review["step_refs"] or {}
+        operations_bundle_lines.append("### `%s`" % review["path"])
+        operations_bundle_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        operations_bundle_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        operations_bundle_lines.append(
+            "- Target/strict/fail-on-warning: %s/%s/%s"
+            % (
+                review["target_environment"] or "unset",
+                "yes" if review["strict"] else "no",
+                "yes" if review["fail_on_warning"] else "no",
+            )
+        )
+        operations_bundle_lines.append("- Step count/statuses: %s/%s" % (review["step_count"], counts or "none"))
+        operations_bundle_lines.append(
+            "- Evidence refs load-matrix/load-enterprise/smoke/monitoring/incident: %s/%s/%s/%s/%s"
+            % (
+                "yes" if refs.get("load-matrix") else "no",
+                "yes" if refs.get("load-enterprise") else "no",
+                "yes" if refs.get("smoke") else "no",
+                "yes" if refs.get("monitoring") else "no",
+                "yes" if refs.get("incident") else "no",
+            )
+        )
+        operations_bundle_lines.append("")
+    if not operations_bundle_lines:
+        operations_bundle_lines = ["- No `operations-release-bundle.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -924,6 +993,9 @@ def _evidence_summary(context, evidence_entries):
 ## Load Profile Matrix Evidence
 
 {chr(10).join(load_matrix_lines)}
+## Operations Release Bundle Evidence
+
+{chr(10).join(operations_bundle_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -946,6 +1018,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
+    operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -1061,6 +1134,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Load profile matrix %s is %s" % (review["path"], review["decision"]))
 
+    for review in operations_bundle_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Operations release bundle %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Operations release bundle %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -1093,6 +1173,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "incident_runbook_reviews": incident_runbook_reviews,
         "load_reviews": load_reviews,
         "load_matrix_reviews": load_matrix_reviews,
+        "operations_bundle_reviews": operations_bundle_reviews,
     }
 
 
