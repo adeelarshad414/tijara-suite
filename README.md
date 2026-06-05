@@ -128,6 +128,7 @@ make certification-evidence
 make psp-readiness-evidence
 make psp-fixture-smoke
 make fbr-readiness-evidence
+make fbr-fixture-smoke
 make monitoring-evidence
 make incident-runbook-evidence
 make load-evidence
@@ -384,6 +385,11 @@ The detailed policy and dependency intake checklist are maintained in
   redacted FBR readiness evidence for certified-provider endpoint, credential,
   sandbox/reference, POS ID, branch code, and payload-hash checks under
   `deploy/runtime/fbr-readiness/`.
+- `scripts/fbr_provider_fixture_smoke.py` and `make fbr-fixture-smoke`
+  validate committed certified-provider response fixtures without requiring a
+  live Odoo database, including accepted/rejected response coverage, invoice
+  number, QR payload, certification reference, secret-like key checks, and
+  fixture/response hashes.
 - `scripts/psp_settlement_fixture_smoke.py` and `make psp-fixture-smoke`
   validate committed JazzCash, Easypaisa, and Stripe settlement fixtures without
   requiring a live Odoo database, including event coverage, secret-like key
@@ -393,9 +399,9 @@ The detailed policy and dependency intake checklist are maintained in
   an evidence manifest for PSP, FBR, hardware, finance, security, and go/no-go
   review under `deploy/runtime/signoff-packages/`, with optional
   required-evidence group guardrails for release, E2E, operations, security,
-  hardware, FBR, and PSP evidence. PSP/FBR readiness manifests plus monitoring,
-  incident runbook, and load evidence are extracted into readiness reviews for
-  approvers and CI.
+  hardware, FBR, and PSP evidence. PSP/FBR readiness manifests, FBR fixture
+  smoke evidence, monitoring, incident runbook, and load evidence are extracted
+  into readiness reviews for approvers and CI.
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.

@@ -3827,3 +3827,81 @@ Date: 2026-06-05
   corrected.
 - Add CI/CD artifact upload and retention guidance for operations release
   bundles.
+
+## Iteration 57: FBR Provider Response Fixture Smoke
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added committed generic certified-provider FBR response fixtures under
+  `tests/fixtures/fbr_provider_responses/`.
+- Added `scripts/fbr_provider_fixture_smoke.py`.
+- The FBR fixture smoke:
+  - Loads committed provider response fixtures without requiring a live Odoo
+    database.
+  - Validates accepted provider responses for success status, FBR invoice
+    number, QR payload, provider invoice UUID, and certification reference.
+  - Validates rejected provider responses for rejection/non-success status,
+    actionable error text, and no unexpected invoice number.
+  - Rejects secret-like keys in committed fixtures.
+  - Writes `fbr-fixture-smoke.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/fbr-fixture-smoke/<run-id>/`.
+  - Records provider, environment, fixture hashes, response hashes, accepted
+    response count, and rejected response count.
+- Added operator shortcuts:
+  - `make fbr-fixture-smoke`
+  - `npm run fbr:fixture-smoke`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Parse attached `fbr-fixture-smoke.json` evidence.
+  - Add an FBR Fixture Evidence section to `evidence-summary.md`.
+  - Add `fbr_fixture_reviews` into `release-readiness.json`.
+  - Treat failed fixture smoke evidence as release blockers and warning fixture
+    smoke evidence as release warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `python3 scripts/fbr_provider_fixture_smoke.py --run-id fbr-fixture --output
+  /private/tmp/tijara-fbr-fixture-smoke` passes with `decision=passed`.
+- `make fbr-fixture-smoke` passes.
+- `npm run fbr:fixture-smoke` passes.
+- `python3 scripts/generate_signoff_pack.py --run-id signoff-fbr-fixture
+  --output /private/tmp/tijara-signoff-fbr-fixture --evidence-path
+  /private/tmp/tijara-fbr-fixture-smoke --required-evidence-group fbr
+  --strict-required-evidence` passes.
+- Confirmed `evidence-summary.md` includes FBR Fixture Evidence with two
+  accepted and two rejected generic certified-provider responses.
+- Confirmed `release-readiness.json` includes `fbr_fixture_reviews` and is
+  `ready` for the focused FBR fixture evidence run.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/fbr_provider_fixture_smoke.py scripts/generate_signoff_pack.py`
+  passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- Generic response fixtures are not a substitute for certified-provider
+  sandbox/live payloads.
+- FBR production readiness still needs real provider credentials, sandbox
+  compliance sign-off, live endpoint validation, and tax/compliance owner
+  approval.
+- Local Odoo FBR transaction tests remain blocked until database credentials are
+  corrected.
+
+### Next Iteration
+
+- Add CI/CD artifact upload and retention guidance for operations and
+  certification evidence bundles.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.
+- Add production-grade secret-manager and evidence-retention checks into the
+  release gate.

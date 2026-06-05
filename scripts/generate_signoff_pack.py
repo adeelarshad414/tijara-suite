@@ -544,6 +544,45 @@ def _fbr_readiness_reviews(evidence_entries):
     return reviews
 
 
+def _fbr_fixture_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "fbr-fixture-smoke.json":
+            continue
+        payload = _read_json(path)
+        fixtures = payload.get("fixtures") or []
+        providers = sorted({fixture.get("provider", "") for fixture in fixtures if fixture.get("provider")})
+        environments = sorted(
+            {fixture.get("environment", "") for fixture in fixtures if fixture.get("environment")}
+        )
+        accepted_count = 0
+        rejected_count = 0
+        for fixture in fixtures:
+            for response in fixture.get("responses") or []:
+                expected = str(response.get("expected_result") or "").lower()
+                if expected == "accepted":
+                    accepted_count += 1
+                elif expected == "rejected":
+                    rejected_count += 1
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "fixture_count": payload.get("fixture_count", len(fixtures)),
+                "response_count": payload.get("response_count", accepted_count + rejected_count),
+                "accepted_response_count": payload.get("accepted_response_count", accepted_count),
+                "rejected_response_count": payload.get("rejected_response_count", rejected_count),
+                "providers": providers,
+                "environments": environments,
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _monitoring_reviews(evidence_entries):
     reviews = []
     for entry in evidence_entries:
@@ -695,6 +734,7 @@ def _evidence_summary(context, evidence_entries):
     environment_blocks = []
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
+    fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
@@ -820,6 +860,30 @@ def _evidence_summary(context, evidence_entries):
         fbr_lines.append("")
     if not fbr_lines:
         fbr_lines = ["- No `fbr-readiness.json` files were attached.", ""]
+
+    fbr_fixture_lines = []
+    for review in fbr_fixture_reviews:
+        fbr_fixture_lines.append("### `%s`" % review["path"])
+        fbr_fixture_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        fbr_fixture_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        fbr_fixture_lines.append(
+            "- Fixtures/responses: %s/%s"
+            % (review["fixture_count"], review["response_count"])
+        )
+        fbr_fixture_lines.append(
+            "- Accepted/rejected responses: %s/%s"
+            % (review["accepted_response_count"], review["rejected_response_count"])
+        )
+        fbr_fixture_lines.append(
+            "- Providers/environments: %s/%s"
+            % (
+                ", ".join(review["providers"]) or "unset",
+                ", ".join(review["environments"]) or "unset",
+            )
+        )
+        fbr_fixture_lines.append("")
+    if not fbr_fixture_lines:
+        fbr_fixture_lines = ["- No `fbr-fixture-smoke.json` files were attached.", ""]
 
     monitoring_lines = []
     for review in monitoring_reviews:
@@ -981,6 +1045,9 @@ def _evidence_summary(context, evidence_entries):
 ## FBR Readiness Evidence
 
 {chr(10).join(fbr_lines)}
+## FBR Fixture Evidence
+
+{chr(10).join(fbr_fixture_lines)}
 ## Monitoring Evidence
 
 {chr(10).join(monitoring_lines)}
@@ -1014,6 +1081,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     check_rows = []
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
+    fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
@@ -1106,6 +1174,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("FBR readiness %s is %s" % (review["path"], review["decision"]))
 
+    for review in fbr_fixture_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("FBR fixture smoke %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("FBR fixture smoke %s is %s" % (review["path"], review["decision"]))
+
     for review in monitoring_reviews:
         decision = str(review.get("decision") or "").lower()
         if decision in {"failed", "blocked"}:
@@ -1169,6 +1244,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "check_rows": check_rows,
         "psp_readiness_reviews": psp_readiness_reviews,
         "fbr_readiness_reviews": fbr_readiness_reviews,
+        "fbr_fixture_reviews": fbr_fixture_reviews,
         "monitoring_reviews": monitoring_reviews,
         "incident_runbook_reviews": incident_runbook_reviews,
         "load_reviews": load_reviews,

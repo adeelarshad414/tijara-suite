@@ -1,0 +1,25 @@
+{
+  "provider": "generic-certified-adapter",
+  "environment": "sandbox",
+  "profile": "generic_sandbox_rejection_v1",
+  "responses": [
+    {
+      "name": "rejected-missing-registration",
+      "expected_result": "rejected",
+      "response": {
+        "status": "rejected",
+        "error_code": "FBR_REGISTRATION_REQUIRED",
+        "message": "POS registration or branch code is not approved for this sandbox."
+      }
+    },
+    {
+      "name": "failed-validation",
+      "expected_result": "rejected",
+      "response": {
+        "Result": "failed",
+        "error": "Invalid invoice payload",
+        "detail": "Line tax amount does not match total tax amount."
+      }
+    }
+  ]
+}

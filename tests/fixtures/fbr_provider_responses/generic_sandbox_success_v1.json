@@ -1,0 +1,31 @@
+{
+  "provider": "generic-certified-adapter",
+  "environment": "sandbox",
+  "profile": "generic_sandbox_success_v1",
+  "responses": [
+    {
+      "name": "snake-case-success",
+      "expected_result": "accepted",
+      "response": {
+        "status": "accepted",
+        "fbr_invoice_number": "FBR-SBX-000001",
+        "qr_payload": "FBR:POS-123:FBR-SBX-000001",
+        "provider_invoice_uuid": "7adf9c43-5734-4b57-81d5-e8161f1c213a",
+        "sandbox_reference": "FBR-SANDBOX-001",
+        "message": "Invoice accepted in sandbox."
+      }
+    },
+    {
+      "name": "camel-case-success",
+      "expected_result": "accepted",
+      "response": {
+        "result": "success",
+        "invoiceNumber": "FBR-SBX-000002",
+        "qrCode": "FBR:POS-123:FBR-SBX-000002",
+        "invoice_uuid": "67fedc13-2349-4ba5-97aa-141c748d8439",
+        "certification_reference": "FBR-SANDBOX-001",
+        "message": "Invoice submitted successfully."
+      }
+    }
+  ]
+}

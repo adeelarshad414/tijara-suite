@@ -82,6 +82,7 @@ make release-candidate
 make psp-readiness-evidence
 make psp-fixture-smoke
 make fbr-readiness-evidence
+make fbr-fixture-smoke
 make monitoring-evidence
 make incident-runbook-evidence
 make load-evidence
@@ -529,6 +530,23 @@ The exporter writes `fbr-readiness.json`, `status.tsv`, `env-summary.txt`, and
 directory in `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the `fbr` evidence
 group for production release sign-off.
 
+Validate committed and sandbox certified-provider response fixtures before
+FBR release sign-off:
+
+```bash
+python3 scripts/fbr_provider_fixture_smoke.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment production
+```
+
+The fixture smoke writes `fbr-fixture-smoke.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/fbr-fixture-smoke/<run-id>/`. Include this directory in
+`TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package extracts it under
+`fbr_fixture_reviews` so approvers can see accepted/rejected fixture coverage,
+provider names, sandbox/live environments, QR payload presence, and fixture
+hashes.
+
 ## Kiosk POS Sync and Offline Queue
 
 Kiosk profiles can optionally create linked Odoo POS orders when checkout is
@@ -951,16 +969,18 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `security-review-signoff.md` for scan results, RBAC, logs, rate limits,
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
-  status-table, PSP/FBR readiness, monitoring, incident runbook, load evidence,
-  load profile matrix evidence, and non-secret environment summaries for
-  approvers.
+  status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
+  runbook, load evidence, load profile matrix evidence, and non-secret
+  environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
   is attached, provider-level readiness reviews are included under
   `psp_readiness_reviews`; when FBR readiness evidence is attached,
   certified-provider readiness is included under `fbr_readiness_reviews`; when
-  monitoring evidence is attached, observability reviews are included under
+  FBR fixture smoke evidence is attached, response fixture coverage is included
+  under `fbr_fixture_reviews`; when monitoring evidence is attached,
+  observability reviews are included under
   `monitoring_reviews`; when incident runbook evidence is attached, ownership
   and response references are included under `incident_runbook_reviews`; when
   load evidence is attached, threshold and profile reviews are included under

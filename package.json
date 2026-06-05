@@ -19,6 +19,7 @@
     "psp:readiness": "python3 scripts/export_psp_readiness.py",
     "psp:fixture-smoke": "python3 scripts/psp_settlement_fixture_smoke.py",
     "fbr:readiness": "python3 scripts/export_fbr_readiness.py",
+    "fbr:fixture-smoke": "python3 scripts/fbr_provider_fixture_smoke.py",
     "monitoring:evidence": "python3 scripts/export_monitoring_evidence.py",
     "incident:runbook": "python3 scripts/export_incident_runbook_evidence.py",
     "load:evidence": "python3 scripts/export_load_evidence.py",
