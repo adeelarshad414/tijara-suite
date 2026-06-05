@@ -1054,8 +1054,9 @@ the same workflow:
 
 The protected job first exports redacted runner preflight evidence under
 `deploy/runtime/protected-runner-preflight/<run-id>/`, then runs the
-release-candidate gate, captures raw restore, security, dependency, container,
-npm audit, and k6 outputs under
+release-candidate gate, runs protected Browser E2E seed/profile/browser/
+execution evidence under `deploy/runtime/protected-e2e/<run-id>/`, captures raw
+restore, security, dependency, container, npm audit, and k6 outputs under
 `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
 evidence, collects strict PSP/FBR/hardware certification evidence when the
 matching `TIJARA_CERT_*` variables are configured, exports retention and
@@ -1091,6 +1092,23 @@ certification groups, URL/load/E2E toggles, and required PSP/FBR/hardware
 evidence fields. Attach that directory to `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the
 sign-off package reads `summary.md` and `status.tsv`, so strict preflight
 failures appear as release-readiness blockers.
+
+Protected Browser E2E handoff is controlled with:
+
+```bash
+TIJARA_PROTECTED_E2E_SEED=0
+TIJARA_PROTECTED_E2E_PROFILE=1
+TIJARA_PROTECTED_E2E_RUN_BROWSER=1
+TIJARA_PROTECTED_E2E_EXECUTION_EVIDENCE=1
+TIJARA_PROTECTED_E2E_STRICT=1
+```
+
+The protected handoff calls the existing `seed-e2e`, `staging-e2e-profile`,
+`e2e-staging`, and `e2e-execution-evidence` targets as requested. When Odoo
+credentials, seeded POS data, Playwright browsers, or the staging URL are
+missing, it still writes `summary.md`, `status.tsv`, and `env-summary.txt` under
+`deploy/runtime/protected-e2e/<run-id>/`; strict failures then flow into the
+release sign-off package as Browser E2E blockers.
 
 Export release retention and secret-manager evidence before production
 approval:

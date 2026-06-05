@@ -365,7 +365,8 @@ The detailed policy and dependency intake checklist are maintained in
   `secrets/github-protected-secrets.example` for setup templates, plus
   `deploy/config/certification-manifests/` for PSP, FBR, and hardware
   certification manifest examples. The protected job now emits a redacted
-  runner preflight evidence report before executing strict release gates.
+  runner preflight evidence report and a protected Browser E2E handoff report
+  before executing strict release gates.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
@@ -387,6 +388,11 @@ The detailed policy and dependency intake checklist are maintained in
   browser evidence runs for POS, refund, print, customer display, offline
   replay, kiosk, public display coverage, and the authenticated enterprise POS
   journey spec.
+- `scripts/run_protected_browser_e2e_evidence.sh` and
+  `make protected-browser-e2e` orchestrate protected-runner Browser E2E seed,
+  profile, browser, and execution evidence under
+  `deploy/runtime/protected-e2e/`, preserving a status report when credentials
+  or live staging prerequisites are missing.
 - `scripts/export_e2e_execution_evidence.py`, `make e2e-execution-evidence`,
   and `npm run test:e2e:execution` correlate seed, profile, readiness,
   Playwright JSON, E2E summary, sign-off readiness, and staging orchestration

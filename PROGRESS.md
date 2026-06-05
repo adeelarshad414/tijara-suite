@@ -6163,3 +6163,72 @@ Date: 2026-06-05
   bridge, Prometheus, Alertmanager, and Grafana without exposing credentials.
 - Continue hardening PSP/FBR live adapters when certified provider sandbox/live
   credentials become available.
+
+## Iteration 87: Protected Browser E2E Handoff
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_protected_browser_e2e_evidence.sh` to orchestrate
+  protected-runner Browser E2E seed, staging profile, browser execution, and
+  E2E execution evidence.
+- Added `make protected-browser-e2e` for protected runner and local handoff
+  execution.
+- Wired the protected GitHub workflow with configurable E2E controls:
+  `TIJARA_PROTECTED_E2E_SEED`, `TIJARA_PROTECTED_E2E_PROFILE`,
+  `TIJARA_PROTECTED_E2E_RUN_BROWSER`,
+  `TIJARA_PROTECTED_E2E_EXECUTION_EVIDENCE`, and
+  `TIJARA_PROTECTED_E2E_STRICT`.
+- Added protected Browser E2E evidence to protected release retention evidence,
+  protected sign-off package inputs, and protected artifact uploads.
+- Classified `protected-e2e` artifacts as Browser E2E evidence in
+  `scripts/generate_signoff_pack.py`.
+- Updated `deploy/config/github-protected-vars.example` with protected E2E
+  handoff controls.
+- Updated `README.md` and `DEPLOY.md` with protected Browser E2E handoff
+  guidance.
+
+### Validation
+
+- `bash -n scripts/run_protected_browser_e2e_evidence.sh` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Disabled protected Browser E2E handoff writes status evidence with
+  `status=warning`.
+- Strict protected Browser E2E handoff with missing live prerequisites writes
+  status evidence with `status=failed`.
+- Sign-off package with disabled protected E2E evidence satisfies the Browser
+  E2E group and produces `decision=warning`.
+- Sign-off package with failed protected E2E evidence produces
+  `decision=blocked`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- Protected Browser E2E handoff is wired, but real checkout/refund/print proof
+  still needs staging Odoo URL, credentials, seeded POS data, Playwright browser
+  dependencies, and hardware bridge access.
+- The protected workflow has not yet run on a real self-hosted protected
+  runner.
+- Offline POS, PSP/FBR live certification, and physical hardware certification
+  still require external systems and signed evidence.
+
+### Next Iteration
+
+- Add optional protected preflight reachability probes for Odoo login, hardware
+  bridge health, Prometheus, Alertmanager, and Grafana without exposing
+  credentials.
+- Add protected workflow artifact summaries that point release owners directly
+  to failed preflight, E2E, certification, and operations evidence.
+- Continue live adapter hardening once PSP/FBR sandbox/live credentials and
+  provider documents are available.

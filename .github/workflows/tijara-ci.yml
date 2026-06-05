@@ -153,6 +153,11 @@ jobs:
       TIJARA_RUN_DIRECT_POS_VALIDATE_E2E: ${{ vars.TIJARA_RUN_DIRECT_POS_VALIDATE_E2E }}
       TIJARA_RUN_DIRECT_REFUND_FORM_E2E: ${{ vars.TIJARA_RUN_DIRECT_REFUND_FORM_E2E }}
       TIJARA_RUN_MOBILE_OFFLINE_E2E: ${{ vars.TIJARA_RUN_MOBILE_OFFLINE_E2E }}
+      TIJARA_PROTECTED_E2E_SEED: ${{ vars.TIJARA_PROTECTED_E2E_SEED || '0' }}
+      TIJARA_PROTECTED_E2E_PROFILE: ${{ vars.TIJARA_PROTECTED_E2E_PROFILE || '1' }}
+      TIJARA_PROTECTED_E2E_RUN_BROWSER: ${{ vars.TIJARA_PROTECTED_E2E_RUN_BROWSER || '1' }}
+      TIJARA_PROTECTED_E2E_EXECUTION_EVIDENCE: ${{ vars.TIJARA_PROTECTED_E2E_EXECUTION_EVIDENCE || '1' }}
+      TIJARA_PROTECTED_E2E_STRICT: ${{ vars.TIJARA_PROTECTED_E2E_STRICT || '1' }}
       TIJARA_LOAD_VUS: ${{ vars.TIJARA_LOAD_VUS }}
       TIJARA_LOAD_DURATION: ${{ vars.TIJARA_LOAD_DURATION }}
       TIJARA_LOAD_MAX_P95_MS: ${{ vars.TIJARA_LOAD_MAX_P95_MS }}
@@ -220,6 +225,9 @@ jobs:
           TIJARA_RELEASE_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_RELEASE_CHECKS="$TIJARA_PROTECTED_RELEASE_CHECKS" \
           make release-candidate
+      - name: Protected Browser E2E evidence
+        continue-on-error: true
+        run: make protected-browser-e2e
       - name: Capture protected operations tool outputs
         shell: bash
         run: |
@@ -306,6 +314,7 @@ jobs:
             --backup-retention-days 30 \
             --evidence-path "deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/protected-e2e/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --strict
@@ -343,7 +352,7 @@ jobs:
           fi
           TIJARA_SIGNOFF_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_ENVIRONMENT="$TIJARA_TARGET_ENVIRONMENT" \
-          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
+          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-e2e/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS="$REQUIRED_GROUPS" \
           TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
           make signoff-pack
@@ -359,6 +368,7 @@ jobs:
           path: |
             deploy/runtime/protected-runner-preflight/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/release-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/protected-e2e/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/e2e-seed/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/e2e-profile/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/e2e-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}

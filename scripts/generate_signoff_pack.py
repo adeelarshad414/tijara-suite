@@ -378,6 +378,7 @@ def _evidence_group(entry):
         or "e2e-seed/" in relative_lower
         or "e2e-profile/" in relative_lower
         or "e2e-execution/" in relative_lower
+        or "protected-e2e" in relative_lower
         or filename in {
             "e2e-readiness.json",
             "e2e-seed-evidence.json",
