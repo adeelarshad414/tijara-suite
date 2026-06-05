@@ -228,6 +228,10 @@ firmware, connection type, paper/label size, Urdu rendering, barcode/QR scan
 success, cash drawer pulse, scale readings, and customer-display behavior.
 Use Hardware Certifications in Retail Configuration to store evidence per
 physical printer, scanner, scale, drawer, and display model.
+Use `Prepare Checks` on each Hardware Certification to create execution checks
+for the device type, then run or manually pass each check with observed bridge
+job id, response code, duration, and evidence hash. A certification with
+execution checks cannot be marked passed until every check is passed.
 
 ## Tenant Provisioning
 
@@ -267,15 +271,32 @@ price or a billing override amount. Operators can:
 - Receive signed/secret-guarded provider webhook payloads at
   `/tijara/saas/payment/webhook/<provider>`.
 - Store webhook events, normalize JazzCash/Easypaisa/Stripe/manual payloads,
-  track provider reference, transaction id, settlement batch, signature status,
-  reconciliation status, and run dunning/suspension actions from the
-  subscription form.
+  track provider reference, transaction id, settlement batch, provider event
+  type, refund reference, chargeback reference, signature status, audit hash,
+  provider fee, net amount, reconciliation status, and run dunning/suspension
+  actions from the subscription form.
+- Keep settlement batch, refund, and chargeback events as auditable
+  reconciliation records. Operators can mark matched events as reconciled or
+  flag mismatches for PSP follow-up.
 
 Set `TIJARA_PAYMENT_WEBHOOK_SECRET` in the secret store or set the Odoo system
 parameter `tijara.saas.payment_webhook_secret`. Provider requests must include
-`X-Tijara-Webhook-Secret`. Production still needs exact provider payload
-contract validation, provider-native signature validation, settlement
-reconciliation policy, and tax configuration.
+`X-Tijara-Webhook-Secret`.
+
+Native provider signature secrets can be supplied through the secret manager or
+matching Odoo system parameters:
+
+```text
+TIJARA_STRIPE_WEBHOOK_SECRET / tijara.saas.stripe_webhook_secret
+TIJARA_JAZZCASH_INTEGRITY_SALT / tijara.saas.jazzcash_integrity_salt
+TIJARA_EASYPAISA_WEBHOOK_SECRET / tijara.saas.easypaisa_webhook_secret
+```
+
+Set `TIJARA_PAYMENT_REQUIRE_NATIVE_SIGNATURES=True` or system parameter
+`tijara.saas.payment_require_native_signatures = 1` after provider contracts are
+validated in staging. When enabled, webhooks with unchecked or invalid native
+provider signatures are rejected. Production still needs PSP certification,
+exact settlement-file mapping, refund/chargeback SLAs, and tax configuration.
 
 ## SaaS Enforcement
 
@@ -355,6 +376,8 @@ Offline POS browser capture now has three layers:
   - Reviewer, reviewed time, review note, duplicate/merge target, payload line
     count, payment count, total delta, replay attempts, and replay latency.
   - Offline Replay Audit pivot/graph views for operational reporting.
+  - Offline Pilot Dashboard for queue age, attention state, failure bucket,
+    outage reference, recovery owner, and cashier runbook notes.
 
 The `Tijara Replay Offline POS Orders` cron is installed inactive by default.
 Enable it only after staging proves product, payment-method, tax, stock-picking,
@@ -364,6 +387,12 @@ certification, load testing, and signed operational runbooks. The default
 Playwright offline replay smoke runs on desktop; set
 `TIJARA_RUN_MOBILE_OFFLINE_E2E=1` only for staging environments prepared to test
 concurrent replay into the same POS register.
+
+Before each offline pilot shift, assign a recovery owner and outage reference
+for the target store/register. During drills, refresh pilot metrics and review
+blocked/watch queues by failure bucket. Use the runbook note to record cashier
+recovery actions such as paper receipt fallback, terminal reference capture,
+manual duplicate review, and end-of-shift reconciliation.
 
 ## Monitoring and Logging
 
@@ -381,6 +410,19 @@ Logging guidance is in `deploy/logging/README.md`. Production should centralize
 Odoo, PostgreSQL, Nginx/ingress, hardware bridge, FBR adapter, and backup job
 logs with searchable retention. Loki is included as the first open-source log
 aggregation baseline; production still needs log shippers and retention tuning.
+
+Run the staging monitoring drill after bringing up Odoo, the hardware bridge,
+monitoring services, and a backup artifact:
+
+```bash
+make monitoring-drill
+```
+
+The drill checks Odoo web, offline POS status, hardware bridge health,
+Prometheus readiness, Alertmanager readiness, Grafana health, and the optional
+`TIJARA_BACKUP_DRILL_FILE`. Override URLs with `TIJARA_STAGING_BASE_URL`,
+`TIJARA_HARDWARE_BRIDGE_URL`, `TIJARA_PROMETHEUS_URL`,
+`TIJARA_ALERTMANAGER_URL`, and `TIJARA_GRAFANA_URL`.
 
 ## Display Routes
 

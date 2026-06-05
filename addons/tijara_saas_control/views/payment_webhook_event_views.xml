@@ -2,23 +2,54 @@
     <record id="action_tijara_saas_payment_webhook_event" model="ir.actions.act_window">
         <field name="name">Payment Webhooks</field>
         <field name="res_model">tijara.saas.payment.webhook.event</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+    </record>
+
+    <record id="view_tijara_saas_payment_webhook_event_search" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.webhook.event.search</field>
+        <field name="model">tijara.saas.payment.webhook.event</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="event_reference"/>
+                <field name="transaction_id"/>
+                <field name="settlement_batch"/>
+                <field name="subscription_id"/>
+                <field name="database_name"/>
+                <filter name="signature_invalid" string="Invalid Signature" domain="[('signature_status', '=', 'invalid')]"/>
+                <filter name="refunds" string="Refunds" domain="[('payment_event_type', '=', 'refund')]"/>
+                <filter name="chargebacks" string="Chargebacks" domain="[('payment_event_type', '=', 'chargeback')]"/>
+                <filter name="settlements" string="Settlements" domain="[('payment_event_type', '=', 'settlement')]"/>
+                <filter name="mismatches" string="Reconciliation Mismatch" domain="[('reconciliation_status', '=', 'mismatch')]"/>
+                <group>
+                    <filter name="group_by_provider" string="Provider" context="{'group_by': 'provider'}"/>
+                    <filter name="group_by_event_type" string="Event Type" context="{'group_by': 'payment_event_type'}"/>
+                    <filter name="group_by_signature" string="Signature" context="{'group_by': 'signature_status'}"/>
+                    <filter name="group_by_reconciliation" string="Reconciliation" context="{'group_by': 'reconciliation_status'}"/>
+                </group>
+            </search>
+        </field>
     </record>
 
     <record id="view_tijara_saas_payment_webhook_event_list" model="ir.ui.view">
         <field name="name">tijara.saas.payment.webhook.event.list</field>
         <field name="model">tijara.saas.payment.webhook.event</field>
         <field name="arch" type="xml">
-            <list decoration-success="status == 'applied'" decoration-danger="status == 'failed'">
+            <list decoration-success="status == 'applied'" decoration-danger="status == 'failed' or signature_status == 'invalid'" decoration-warning="reconciliation_status in ('pending', 'mismatch')">
                 <field name="name"/>
                 <field name="provider"/>
+                <field name="payment_event_type"/>
                 <field name="event_reference"/>
                 <field name="transaction_id"/>
+                <field name="settlement_batch"/>
                 <field name="subscription_id"/>
                 <field name="database_name"/>
                 <field name="payment_status"/>
+                <field name="signature_status"/>
                 <field name="reconciliation_status"/>
                 <field name="amount"/>
+                <field name="provider_fee_amount"/>
+                <field name="net_amount"/>
                 <field name="received_at"/>
                 <field name="status"/>
             </list>
@@ -32,6 +63,8 @@
             <form>
                 <header>
                     <button name="action_apply" type="object" string="Apply Event" class="btn-primary" invisible="status == 'applied'"/>
+                    <button name="action_mark_reconciled" type="object" string="Mark Reconciled" invisible="reconciliation_status == 'reconciled'"/>
+                    <button name="action_mark_mismatch" type="object" string="Mark Mismatch" invisible="reconciliation_status == 'mismatch'"/>
                     <field name="status" widget="statusbar"/>
                 </header>
                 <sheet>
@@ -39,12 +72,19 @@
                         <group>
                             <field name="name"/>
                             <field name="provider"/>
+                            <field name="payment_event_type"/>
+                            <field name="provider_event_type"/>
                             <field name="event_reference"/>
                             <field name="provider_reference"/>
                             <field name="transaction_id"/>
                             <field name="settlement_batch"/>
+                            <field name="refund_reference"/>
+                            <field name="chargeback_reference"/>
+                            <field name="chargeback_reason"/>
                             <field name="payment_status"/>
                             <field name="amount"/>
+                            <field name="provider_fee_amount"/>
+                            <field name="net_amount"/>
                         </group>
                         <group>
                             <field name="subscription_id"/>
@@ -58,13 +98,43 @@
                     </group>
                     <group>
                         <field name="signature"/>
+                        <field name="signature_algorithm"/>
                         <field name="signature_status"/>
+                        <field name="signature_checked_at"/>
                         <field name="reconciliation_status"/>
+                        <field name="provider_audit_hash"/>
+                        <field name="reconciliation_note"/>
                         <field name="error_message"/>
                     </group>
                     <field name="raw_payload"/>
                 </sheet>
             </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_webhook_event_pivot" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.webhook.event.pivot</field>
+        <field name="model">tijara.saas.payment.webhook.event</field>
+        <field name="arch" type="xml">
+            <pivot string="Payment Reconciliation">
+                <field name="provider" type="row"/>
+                <field name="payment_event_type" type="col"/>
+                <field name="amount" type="measure"/>
+                <field name="provider_fee_amount" type="measure"/>
+                <field name="net_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_tijara_saas_payment_webhook_event_graph" model="ir.ui.view">
+        <field name="name">tijara.saas.payment.webhook.event.graph</field>
+        <field name="model">tijara.saas.payment.webhook.event</field>
+        <field name="arch" type="xml">
+            <graph string="Payment Provider Events" type="bar">
+                <field name="provider"/>
+                <field name="payment_event_type"/>
+                <field name="amount" type="measure"/>
+            </graph>
         </field>
     </record>
 

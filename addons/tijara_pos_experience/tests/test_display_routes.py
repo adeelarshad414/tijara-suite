@@ -418,6 +418,25 @@ class TestTijaraDisplayRoutes(TransactionCase):
         self.assertEqual(failed.state, "cancelled")
         self.assertEqual(failed.review_action, "cancel")
         self.assertEqual(failed.reviewed_by_id, self.env.user)
+        self.assertEqual(failed.pilot_attention_state, "resolved")
+
+    def test_offline_pos_pilot_metrics_bucket_failed_payloads(self):
+        queue = self.env["tijara.offline.pos.queue"].create(
+            {
+                "source_device_id": "pilot-tablet",
+                "source_order_uid": "pilot-invalid-payload",
+                "payload_json": json.dumps({"lines": [], "amount_total": 0}),
+                "company_id": self.env.company.id,
+            }
+        )
+
+        queue.action_validate_payload()
+
+        self.assertEqual(queue.state, "failed")
+        self.assertEqual(queue.pilot_attention_state, "blocked")
+        self.assertEqual(queue.pilot_failure_bucket, "validation")
+        self.assertGreaterEqual(queue.pilot_queue_age_minutes, 0)
+        self.assertTrue(queue.pilot_metric_refreshed_at)
 
     def test_offline_pos_retry_replays_failed_valid_order(self):
         company = self.env.company

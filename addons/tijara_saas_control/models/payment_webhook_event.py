@@ -1,4 +1,8 @@
+import hashlib
+import hmac
 import json
+import os
+import time
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
@@ -39,6 +43,27 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
         store=True,
     )
     amount = fields.Monetary(currency_field="currency_id")
+    provider_fee_amount = fields.Monetary(currency_field="currency_id")
+    net_amount = fields.Monetary(
+        currency_field="currency_id",
+        compute="_compute_net_amount",
+        store=True,
+    )
+    payment_event_type = fields.Selection(
+        [
+            ("payment", "Payment"),
+            ("settlement", "Settlement"),
+            ("refund", "Refund"),
+            ("chargeback", "Chargeback"),
+            ("unknown", "Unknown"),
+        ],
+        default="payment",
+        required=True,
+    )
+    provider_event_type = fields.Char()
+    refund_reference = fields.Char()
+    chargeback_reference = fields.Char()
+    chargeback_reason = fields.Char()
     payment_status = fields.Selection(
         [
             ("paid", "Paid"),
@@ -61,6 +86,7 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
     )
     raw_payload = fields.Text()
     signature = fields.Char()
+    signature_algorithm = fields.Char()
     signature_status = fields.Selection(
         [
             ("unchecked", "Unchecked"),
@@ -70,6 +96,7 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
         default="unchecked",
         required=True,
     )
+    signature_checked_at = fields.Datetime()
     reconciliation_status = fields.Selection(
         [
             ("pending", "Pending"),
@@ -81,9 +108,16 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
         required=True,
     )
     reconciled_at = fields.Datetime()
+    provider_audit_hash = fields.Char(copy=False, index=True)
+    reconciliation_note = fields.Text()
     error_message = fields.Text()
     received_at = fields.Datetime(default=fields.Datetime.now)
     processed_at = fields.Datetime()
+
+    @api.depends("amount", "provider_fee_amount")
+    def _compute_net_amount(self):
+        for event in self:
+            event.net_amount = (event.amount or 0.0) - (event.provider_fee_amount or 0.0)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -102,16 +136,25 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
             return "failed"
         if normalized in {"past_due", "overdue", "expired"}:
             return "past_due"
-        if normalized in {"refunded", "reversed"}:
+        if normalized in {"refunded", "reversed", "refund"}:
             return "refunded"
+        if normalized in {"chargeback", "charged_back", "dispute", "disputed"}:
+            return "failed"
         return "unknown"
+
+    @api.model
+    def _payload_float(self, value):
+        try:
+            return float(value or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
 
     @api.model
     def _payload_amount(self, provider, payload, provider_payload):
         if payload.get("amount") is not None:
-            return float(payload.get("amount") or 0.0)
+            return self._payload_float(payload.get("amount"))
         if payload.get("amount_total") is not None:
-            return float(payload.get("amount_total") or 0.0)
+            return self._payload_float(payload.get("amount_total"))
         if provider == "stripe":
             value = (
                 provider_payload.get("amount_paid")
@@ -120,14 +163,34 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                 or provider_payload.get("amount")
                 or 0
             )
-            return float(value or 0.0) / 100.0
+            return self._payload_float(value) / 100.0
         value = (
             provider_payload.get("pp_Amount")
             or provider_payload.get("amount")
             or provider_payload.get("Amount")
             or 0
         )
-        return float(value or 0.0)
+        return self._payload_float(value)
+
+    @api.model
+    def _payload_fee_amount(self, provider, payload, provider_payload):
+        if payload.get("provider_fee_amount") is not None:
+            return self._payload_float(payload.get("provider_fee_amount"))
+        if provider == "stripe":
+            value = (
+                provider_payload.get("application_fee_amount")
+                or provider_payload.get("fee")
+                or payload.get("fee")
+                or 0
+            )
+            return self._payload_float(value) / 100.0
+        value = (
+            provider_payload.get("pp_FeeAmount")
+            or provider_payload.get("feeAmount")
+            or provider_payload.get("fee")
+            or 0
+        )
+        return self._payload_float(value)
 
     @api.model
     def _provider_payload(self, provider, payload):
@@ -137,12 +200,19 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
             obj = (payload.get("data") or {}).get("object") or payload
             metadata = obj.get("metadata") or {}
             status = obj.get("payment_status") or obj.get("status") or event_type
+            payment_event_type = "payment"
             if event_type in {"invoice.payment_succeeded", "checkout.session.completed"}:
                 status = "paid"
             if event_type in {"invoice.payment_failed", "payment_intent.payment_failed"}:
                 status = "failed"
             if event_type in {"charge.refunded", "refund.created"}:
                 status = "refunded"
+                payment_event_type = "refund"
+            if event_type in {"charge.dispute.created", "charge.dispute.closed"}:
+                status = "chargeback"
+                payment_event_type = "chargeback"
+            if event_type in {"payout.paid", "payout.failed"}:
+                payment_event_type = "settlement"
             return {
                 "event_reference": payload.get("id") or obj.get("id"),
                 "provider_reference": obj.get("id"),
@@ -156,11 +226,27 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                 or payload.get("external_payment_reference"),
                 "status": status,
                 "amount": self._payload_amount(provider, payload, obj),
+                "fee_amount": self._payload_fee_amount(provider, payload, obj),
                 "settlement_batch": obj.get("balance_transaction") or "",
+                "payment_event_type": payment_event_type,
+                "provider_event_type": event_type,
+                "refund_reference": obj.get("refund") or obj.get("id") if payment_event_type == "refund" else "",
+                "chargeback_reference": obj.get("id") if payment_event_type == "chargeback" else "",
+                "chargeback_reason": obj.get("reason") or obj.get("evidence_details", {}).get("due_by") or "",
             }
         if provider == "jazzcash":
             response_code = str(payload.get("pp_ResponseCode") or payload.get("response_code") or "")
             status = "paid" if response_code == "000" else payload.get("status")
+            event_type = str(payload.get("event_type") or payload.get("pp_TxnType") or "").lower()
+            payment_event_type = "payment"
+            if "refund" in event_type or "reversal" in event_type:
+                payment_event_type = "refund"
+                status = "refunded"
+            if "chargeback" in event_type or "dispute" in event_type:
+                payment_event_type = "chargeback"
+                status = "chargeback"
+            if "settlement" in event_type:
+                payment_event_type = "settlement"
             return {
                 "event_reference": payload.get("event_reference")
                 or payload.get("pp_TxnRefNo")
@@ -175,7 +261,13 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                 or payload.get("pp_TxnRefNo"),
                 "status": status,
                 "amount": self._payload_amount(provider, payload, payload),
+                "fee_amount": self._payload_fee_amount(provider, payload, payload),
                 "settlement_batch": payload.get("pp_SettlementExpiry") or "",
+                "payment_event_type": payment_event_type,
+                "provider_event_type": event_type or response_code,
+                "refund_reference": payload.get("refund_reference") or payload.get("pp_RefundRefNo") or "",
+                "chargeback_reference": payload.get("chargeback_reference") or "",
+                "chargeback_reason": payload.get("chargeback_reason") or "",
             }
         if provider == "easypaisa":
             status = (
@@ -183,6 +275,16 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                 or payload.get("status")
                 or payload.get("payment_status")
             )
+            event_type = str(payload.get("eventType") or payload.get("event_type") or "").lower()
+            payment_event_type = "payment"
+            if "refund" in event_type or "reversal" in event_type:
+                payment_event_type = "refund"
+                status = "refunded"
+            if "chargeback" in event_type or "dispute" in event_type:
+                payment_event_type = "chargeback"
+                status = "chargeback"
+            if "settlement" in event_type:
+                payment_event_type = "settlement"
             return {
                 "event_reference": payload.get("event_reference")
                 or payload.get("transactionId")
@@ -195,8 +297,21 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                 or payload.get("orderId"),
                 "status": status,
                 "amount": self._payload_amount(provider, payload, payload),
+                "fee_amount": self._payload_fee_amount(provider, payload, payload),
                 "settlement_batch": payload.get("settlementBatch") or "",
+                "payment_event_type": payment_event_type,
+                "provider_event_type": event_type or status,
+                "refund_reference": payload.get("refundReference") or payload.get("refund_reference") or "",
+                "chargeback_reference": payload.get("chargebackReference")
+                or payload.get("chargeback_reference")
+                or "",
+                "chargeback_reason": payload.get("chargebackReason")
+                or payload.get("chargeback_reason")
+                or "",
             }
+        payment_event_type = payload.get("payment_event_type") or payload.get("event_type") or "payment"
+        if payment_event_type not in {"payment", "settlement", "refund", "chargeback"}:
+            payment_event_type = "unknown"
         return {
             "event_reference": payload.get("event_reference")
             or payload.get("event_id")
@@ -211,11 +326,38 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
             or payload.get("reference"),
             "status": payload.get("payment_status") or payload.get("status"),
             "amount": self._payload_amount(provider, payload, payload),
+            "fee_amount": self._payload_fee_amount(provider, payload, payload),
             "settlement_batch": payload.get("settlement_batch") or "",
+            "payment_event_type": payment_event_type,
+            "provider_event_type": payload.get("provider_event_type") or payload.get("event_type"),
+            "refund_reference": payload.get("refund_reference") or "",
+            "chargeback_reference": payload.get("chargeback_reference") or "",
+            "chargeback_reason": payload.get("chargeback_reason") or "",
         }
 
     @api.model
-    def tijara_from_payload(self, provider, payload, signature=False, signature_status="unchecked"):
+    def _audit_hash(self, provider, payload, event_reference):
+        raw = json.dumps(
+            {
+                "provider": provider,
+                "event_reference": event_reference or "",
+                "payload": payload,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    @api.model
+    def tijara_from_payload(
+        self,
+        provider,
+        payload,
+        signature=False,
+        signature_status="unchecked",
+        signature_algorithm=False,
+    ):
         if not isinstance(payload, dict):
             raise UserError(_("Payment webhook payload must be a JSON object."))
         provider_values = self._provider_payload(provider, payload)
@@ -246,14 +388,212 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                 "invoice_id": invoice.id if invoice else False,
                 "company_id": company.id,
                 "amount": provider_values.get("amount") or 0.0,
+                "provider_fee_amount": provider_values.get("fee_amount") or 0.0,
+                "payment_event_type": provider_values.get("payment_event_type") or "payment",
+                "provider_event_type": provider_values.get("provider_event_type") or "",
+                "refund_reference": provider_values.get("refund_reference") or "",
+                "chargeback_reference": provider_values.get("chargeback_reference") or "",
+                "chargeback_reason": provider_values.get("chargeback_reason") or "",
                 "payment_status": self._normalize_payment_status(provider_values.get("status")),
                 "raw_payload": json.dumps(payload, ensure_ascii=False, sort_keys=True),
                 "signature": signature or "",
                 "signature_status": signature_status,
+                "signature_algorithm": signature_algorithm or "",
+                "signature_checked_at": fields.Datetime.now()
+                if signature_status in ("valid", "invalid")
+                else False,
+                "provider_audit_hash": self._audit_hash(provider, payload, event_reference),
             }
         )
+        if event.signature_status == "invalid":
+            event.write(
+                {
+                    "status": "failed",
+                    "reconciliation_status": "mismatch",
+                    "processed_at": fields.Datetime.now(),
+                    "error_message": _("Provider signature verification failed."),
+                }
+            )
+            return event
         event.action_apply()
         return event
+
+    @api.model
+    def _header_value(self, headers, name):
+        headers = headers or {}
+        lowered = {str(key).lower(): value for key, value in headers.items()}
+        return lowered.get(name.lower()) or ""
+
+    @api.model
+    def _config_or_env(self, param_name, env_name):
+        return (
+            self.env["ir.config_parameter"].sudo().get_param(param_name)
+            or os.environ.get(env_name)
+            or ""
+        )
+
+    @api.model
+    def _strip_signature_prefix(self, signature):
+        signature = str(signature or "").strip()
+        if signature.startswith("sha256="):
+            return signature.split("=", 1)[1]
+        return signature
+
+    @api.model
+    def _verify_digest(self, expected, supplied):
+        return hmac.compare_digest(
+            str(expected or "").strip().lower(),
+            self._strip_signature_prefix(supplied).strip().lower(),
+        )
+
+    @api.model
+    def _jazzcash_signature_candidates(self, payload, secret):
+        filtered = {
+            key: value
+            for key, value in (payload or {}).items()
+            if key not in {"pp_SecureHash", "secure_hash", "signature"} and value not in (None, "")
+        }
+        values = [str(filtered[key]) for key in sorted(filtered)]
+        plain_string = "&".join([secret] + values)
+        hmac_string = "&".join(values)
+        return {
+            hashlib.sha256(plain_string.encode("utf-8")).hexdigest().upper(),
+            hmac.new(secret.encode("utf-8"), hmac_string.encode("utf-8"), hashlib.sha256)
+            .hexdigest()
+            .upper(),
+        }
+
+    @api.model
+    def _sorted_payload_hmac(self, payload, secret, excluded_keys):
+        filtered = {
+            key: value
+            for key, value in (payload or {}).items()
+            if key not in excluded_keys and value not in (None, "")
+        }
+        message = "&".join("%s=%s" % (key, filtered[key]) for key in sorted(filtered))
+        return hmac.new(secret.encode("utf-8"), message.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    @api.model
+    def tijara_verify_provider_signature(self, provider, payload, raw_body="", headers=None):
+        provider = provider or "other"
+        headers = headers or {}
+        raw_body = raw_body or json.dumps(
+            payload or {},
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        if provider == "stripe":
+            secret = self._config_or_env(
+                "tijara.saas.stripe_webhook_secret",
+                "TIJARA_STRIPE_WEBHOOK_SECRET",
+            )
+            supplied = self._header_value(headers, "Stripe-Signature")
+            if not secret or not supplied:
+                return {
+                    "signature": supplied,
+                    "signature_status": "unchecked",
+                    "signature_algorithm": "stripe-hmac-sha256",
+                }
+            parts = {}
+            for chunk in supplied.split(","):
+                if "=" in chunk:
+                    key, value = chunk.split("=", 1)
+                    parts.setdefault(key.strip(), []).append(value.strip())
+            timestamp = (parts.get("t") or [""])[0]
+            signed_payload = ("%s.%s" % (timestamp, raw_body)).encode("utf-8")
+            expected = hmac.new(secret.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
+            status = "valid" if any(self._verify_digest(expected, candidate) for candidate in parts.get("v1", [])) else "invalid"
+            tolerance = int(
+                self.env["ir.config_parameter"]
+                .sudo()
+                .get_param("tijara.saas.stripe_signature_tolerance_seconds", "300")
+            )
+            try:
+                if status == "valid" and abs(time.time() - int(timestamp)) > tolerance:
+                    status = "invalid"
+            except (TypeError, ValueError):
+                status = "invalid"
+            return {
+                "signature": supplied,
+                "signature_status": status,
+                "signature_algorithm": "stripe-hmac-sha256",
+            }
+        if provider == "jazzcash":
+            secret = self._config_or_env(
+                "tijara.saas.jazzcash_integrity_salt",
+                "TIJARA_JAZZCASH_INTEGRITY_SALT",
+            )
+            supplied = (
+                payload.get("pp_SecureHash")
+                or payload.get("secure_hash")
+                or self._header_value(headers, "X-JazzCash-Signature")
+            )
+            if not secret or not supplied:
+                return {
+                    "signature": supplied or "",
+                    "signature_status": "unchecked",
+                    "signature_algorithm": "jazzcash-secure-hash",
+                }
+            candidates = self._jazzcash_signature_candidates(payload, secret)
+            return {
+                "signature": supplied,
+                "signature_status": "valid"
+                if any(self._verify_digest(candidate, supplied) for candidate in candidates)
+                else "invalid",
+                "signature_algorithm": "jazzcash-secure-hash",
+            }
+        if provider == "easypaisa":
+            secret = self._config_or_env(
+                "tijara.saas.easypaisa_webhook_secret",
+                "TIJARA_EASYPAISA_WEBHOOK_SECRET",
+            )
+            supplied = (
+                payload.get("signature")
+                or payload.get("secureHash")
+                or self._header_value(headers, "X-Easypaisa-Signature")
+            )
+            if not secret or not supplied:
+                return {
+                    "signature": supplied or "",
+                    "signature_status": "unchecked",
+                    "signature_algorithm": "easypaisa-hmac-sha256",
+                }
+            raw_expected = hmac.new(
+                secret.encode("utf-8"),
+                raw_body.encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+            sorted_expected = self._sorted_payload_hmac(
+                payload,
+                secret,
+                {"signature", "secureHash"},
+            )
+            return {
+                "signature": supplied,
+                "signature_status": "valid"
+                if self._verify_digest(raw_expected, supplied)
+                or self._verify_digest(sorted_expected, supplied)
+                else "invalid",
+                "signature_algorithm": "easypaisa-hmac-sha256",
+            }
+        secret = self._config_or_env(
+            "tijara.saas.payment_webhook_secret",
+            "TIJARA_PAYMENT_WEBHOOK_SECRET",
+        )
+        supplied = self._header_value(headers, "X-Tijara-Signature")
+        if not secret or not supplied:
+            return {
+                "signature": supplied or "",
+                "signature_status": "unchecked",
+                "signature_algorithm": "generic-hmac-sha256",
+            }
+        expected = hmac.new(secret.encode("utf-8"), raw_body.encode("utf-8"), hashlib.sha256).hexdigest()
+        return {
+            "signature": supplied,
+            "signature_status": "valid" if self._verify_digest(expected, supplied) else "invalid",
+            "signature_algorithm": "generic-hmac-sha256",
+        }
 
     @api.model
     def _match_subscription(self, payload):
@@ -299,6 +639,21 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
     def action_apply(self):
         for event in self:
             try:
+                if event.signature_status == "invalid":
+                    raise UserError(_("Provider signature verification failed."))
+                if event.payment_event_type == "settlement":
+                    event.write(
+                        {
+                            "status": "applied",
+                            "reconciliation_status": "pending",
+                            "processed_at": fields.Datetime.now(),
+                            "reconciliation_note": _(
+                                "Settlement batch received without a matched subscription; reconcile against the PSP settlement report."
+                            ),
+                            "error_message": False,
+                        }
+                    )
+                    continue
                 subscription = event.subscription_id
                 if not subscription and event.database_name:
                     subscription = self.env["tijara.saas.subscription"].sudo().search(
@@ -325,6 +680,17 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                             "suspension_reason": False,
                         }
                     )
+                elif event.payment_event_type == "chargeback":
+                    values.update(
+                        {
+                            "payment_status": "failed",
+                            "state": "past_due",
+                            "suspension_reason": _(
+                                "Provider chargeback received: %s"
+                            )
+                            % (event.chargeback_reason or event.chargeback_reference or event.name),
+                        }
+                    )
                 elif event.payment_status == "failed":
                     values.update({"payment_status": "failed"})
                     if subscription.state == "active":
@@ -345,6 +711,7 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                         "reconciliation_status": "matched",
                         "reconciled_at": fields.Datetime.now(),
                         "processed_at": fields.Datetime.now(),
+                        "reconciliation_note": _("Matched to subscription %s.") % subscription.name,
                         "error_message": False,
                     }
                 )
@@ -357,3 +724,20 @@ class TijaraSaasPaymentWebhookEvent(models.Model):
                         "error_message": str(error),
                     }
                 )
+
+    def action_mark_reconciled(self):
+        self.write(
+            {
+                "reconciliation_status": "reconciled",
+                "reconciled_at": fields.Datetime.now(),
+                "reconciliation_note": _("Manually reconciled by %s.") % self.env.user.display_name,
+            }
+        )
+
+    def action_mark_mismatch(self):
+        self.write(
+            {
+                "reconciliation_status": "mismatch",
+                "reconciliation_note": _("Marked as reconciliation mismatch by %s.") % self.env.user.display_name,
+            }
+        )

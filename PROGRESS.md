@@ -1517,3 +1517,115 @@ Date: 2026-06-04
   path for each target printer/scanner/scale/display model.
 - Add staging monitoring drills for POS/offline endpoints, hardware bridge
   health, backup restore, and alert routing.
+
+## Iteration 22: Payment Hardening, Offline Pilot Dashboards, Hardware Execution Checks, and Monitoring Drills
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Hardened SaaS payment webhooks:
+  - Added native Stripe webhook HMAC verification.
+  - Added JazzCash secure-hash verification candidates for provider-contract
+    validation.
+  - Added Easypaisa HMAC verification support using raw-body or sorted-field
+    payload signatures.
+  - Added `TIJARA_PAYMENT_REQUIRE_NATIVE_SIGNATURES` /
+    `tijara.saas.payment_require_native_signatures` enforcement switch.
+  - Added provider event type, signature algorithm, signature checked time,
+    provider audit hash, fee amount, net amount, refund reference, chargeback
+    reference, and chargeback reason fields.
+  - Added explicit payment, settlement, refund, chargeback, and unknown event
+    types.
+  - Added reconciliation actions for manually reconciled and mismatch states.
+- Improved payment event behavior:
+  - Refund events move subscriptions back to past due.
+  - Chargeback events record the provider reason/reference and move the
+    subscription to past due with a suspension reason.
+  - Settlement events remain auditable reconciliation records without
+    accidentally changing subscription state.
+- Added offline POS pilot operations metrics:
+  - Queue age minutes.
+  - Pilot attention state: OK, watch, blocked, resolved.
+  - Failure bucket: validation, duplicate, payment, stock/picking,
+    device/network, unknown.
+  - Outage reference, recovery owner, and cashier runbook notes.
+  - Automatic metric refresh after capture, validation, replay, retry, cancel,
+    duplicate, merge, and manual replay actions.
+  - Added Offline Pilot Dashboard action/menu and graph/pivot/list fields.
+- Added physical hardware certification execution records:
+  - `tijara.hardware.certification.check` model.
+  - Per-device check templates for receipt printer, label printer, scanner, QR
+    scanner, cash drawer, scale, customer display, and fiscal device.
+  - Bridge execution action with observed response, bridge job id, response
+    code, duration, operator, execution time, and evidence hash.
+  - Certification pass gate now requires all execution checks to pass when
+    checks exist.
+  - Added list/form/pivot/graph views and access rules.
+- Added staging monitoring drill tooling:
+  - `scripts/staging_monitoring_drill.py`.
+  - `make monitoring-drill`.
+  - Checks Odoo web, offline POS status, hardware bridge health, Prometheus,
+    Alertmanager, Grafana, and optional backup artifact presence.
+- Updated deployment/config/docs:
+  - `.env.example`
+  - `secrets/.env.secrets.example`
+  - `README.md`
+  - `DEPLOY.md`
+  - `PROGRESS.md`
+
+### Validation
+
+- `make validate` passes.
+- 70 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes after generated cache cleanup.
+- `scripts/staging_monitoring_drill.py` smoke passes with blank endpoints and
+  reports skipped checks instead of crashing.
+- Isolated Docker Compose Odoo test run passed on database
+  `tijara_test_iter22b`:
+  - 24 post-install tests.
+  - 0 failures.
+  - 0 errors.
+  - Covered `tijara_saas_control`, `tijara_retail_core`, `tijara_pos_pk`,
+    `tijara_pos_experience`, and `tijara_analytics`.
+- Initial Odoo test run found and fixed one offline pilot metric bug:
+  invalid payloads were marked failed but skipped metric refresh before the
+  early `continue`.
+- Temporary isolated Docker Compose project and volumes were removed.
+- Final generated-artifact scan is empty.
+
+### Known Gaps
+
+- Provider-native signature implementations still need PSP contract validation
+  and certification with JazzCash, Easypaisa, and Stripe production/sandbox
+  payloads.
+- Settlement reconciliation is now modeled and auditable, but real settlement
+  file/API import, payout matching, refunds, chargeback deadlines, and PSP
+  dispute workflows still need provider-specific automation.
+- Offline pilot dashboards are available, but real store-network drills,
+  cashier training, payment-terminal behavior, load testing, and signed runbooks
+  are still required.
+- Hardware execution records exist, but real physical devices still need
+  certification evidence for each printer, scanner, scale, drawer, label
+  printer, and customer-display model.
+- FBR still needs certified-provider credentials, sandbox sign-off, and live
+  compliance tests.
+- Monitoring drill tooling exists, but staging/production alert routing,
+  backup restore drills, log retention, load testing, and security scanning must
+  be executed against the actual environment.
+
+### Next Iteration
+
+- Build provider settlement import/reconciliation records for JazzCash,
+  Easypaisa, Stripe, and manual bank transfers.
+- Add refund and chargeback operator workflows with due dates, evidence,
+  partial/full amount handling, and subscription/accounting impacts.
+- Add a staging offline POS pilot runbook document and KPI snapshots for queue
+  age, blocked queues, duplicate rate, replay latency, and failed retry trends.
+- Add certified-provider FBR sandbox fixture support once real provider
+  contracts/credentials are available.
+- Run monitoring, backup restore, load, and security drills against a prepared
+  staging environment.

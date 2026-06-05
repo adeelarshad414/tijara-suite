@@ -20,6 +20,13 @@
         <field name="context">{'search_default_group_by_state': 1, 'search_default_group_by_source_app': 1}</field>
     </record>
 
+    <record id="action_tijara_offline_pos_pilot_dashboard" model="ir.actions.act_window">
+        <field name="name">Offline Pilot Dashboard</field>
+        <field name="res_model">tijara.offline.pos.queue</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+        <field name="context">{'search_default_group_by_attention': 1, 'search_default_group_by_pos_config': 1}</field>
+    </record>
+
     <record id="view_tijara_offline_pos_queue_search" model="ir.ui.view">
         <field name="name">tijara.offline.pos.queue.search</field>
         <field name="model">tijara.offline.pos.queue</field>
@@ -35,10 +42,15 @@
                 <filter name="failed" string="Failed" domain="[('state', '=', 'failed')]"/>
                 <filter name="replayed" string="Replayed" domain="[('state', '=', 'replayed')]"/>
                 <filter name="resolved" string="Resolved" domain="[('state', 'in', ['replayed', 'duplicate', 'merged', 'cancelled'])]"/>
+                <filter name="pilot_blocked" string="Pilot Blocked" domain="[('pilot_attention_state', '=', 'blocked')]"/>
+                <filter name="pilot_watch" string="Pilot Watch" domain="[('pilot_attention_state', '=', 'watch')]"/>
+                <filter name="pilot_resolved" string="Pilot Resolved" domain="[('pilot_attention_state', '=', 'resolved')]"/>
                 <group>
                     <filter name="group_by_state" string="State" context="{'group_by': 'state'}"/>
                     <filter name="group_by_source_app" string="Source App" context="{'group_by': 'source_app'}"/>
                     <filter name="group_by_pos_config" string="POS Register" context="{'group_by': 'pos_config_id'}"/>
+                    <filter name="group_by_attention" string="Pilot Attention" context="{'group_by': 'pilot_attention_state'}"/>
+                    <filter name="group_by_failure_bucket" string="Failure Bucket" context="{'group_by': 'pilot_failure_bucket'}"/>
                     <filter name="group_by_reviewed_by" string="Reviewed By" context="{'group_by': 'reviewed_by_id'}"/>
                 </group>
             </search>
@@ -52,11 +64,14 @@
             <list decoration-success="state == 'replayed'" decoration-warning="state in ('queued', 'validated')" decoration-danger="state in ('failed', 'conflict')" decoration-muted="state in ('duplicate', 'merged', 'cancelled')">
                 <field name="name"/>
                 <field name="pos_config_id"/>
+                <field name="pilot_attention_state"/>
+                <field name="pilot_failure_bucket"/>
                 <field name="source_app"/>
                 <field name="source_device_id"/>
                 <field name="source_order_uid"/>
                 <field name="order_reference"/>
                 <field name="amount_total"/>
+                <field name="pilot_queue_age_minutes"/>
                 <field name="payload_line_count"/>
                 <field name="payload_payment_count"/>
                 <field name="payload_total_delta"/>
@@ -78,6 +93,7 @@
                 <header>
                     <button name="action_validate_payload" type="object" string="Validate" class="btn-primary" invisible="state not in ('queued', 'failed', 'conflict')"/>
                     <button name="action_replay_to_pos" type="object" string="Replay to POS" class="btn-primary" invisible="state not in ('queued', 'validated', 'failed')"/>
+                    <button name="action_refresh_pilot_metrics" type="object" string="Refresh Pilot Metrics"/>
                     <button name="action_retry_replay" type="object" string="Retry" invisible="state not in ('queued', 'failed', 'cancelled')"/>
                     <button name="action_mark_duplicate" type="object" string="Mark Duplicate" invisible="state not in ('conflict', 'failed')"/>
                     <button name="action_merge_duplicate" type="object" string="Merge" invisible="state not in ('conflict', 'duplicate')"/>
@@ -147,6 +163,21 @@
                                 <field name="replayed_pos_order_id"/>
                             </group>
                         </page>
+                        <page string="Pilot Operations">
+                            <group>
+                                <group>
+                                    <field name="pilot_attention_state"/>
+                                    <field name="pilot_failure_bucket"/>
+                                    <field name="pilot_queue_age_minutes"/>
+                                    <field name="pilot_metric_refreshed_at"/>
+                                </group>
+                                <group>
+                                    <field name="pilot_outage_reference"/>
+                                    <field name="pilot_recovery_owner_id"/>
+                                </group>
+                            </group>
+                            <field name="pilot_runbook_note"/>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
@@ -161,6 +192,7 @@
                 <field name="state" type="row"/>
                 <field name="source_app" type="col"/>
                 <field name="amount_total" type="measure"/>
+                <field name="pilot_queue_age_minutes" type="measure"/>
                 <field name="replay_attempts" type="measure"/>
                 <field name="payload_line_count" type="measure"/>
                 <field name="payload_payment_count" type="measure"/>
@@ -181,7 +213,20 @@
         </field>
     </record>
 
+    <record id="view_tijara_offline_pos_pilot_graph" model="ir.ui.view">
+        <field name="name">tijara.offline.pos.queue.pilot.graph</field>
+        <field name="model">tijara.offline.pos.queue</field>
+        <field name="arch" type="xml">
+            <graph string="Offline Pilot Operations" type="bar">
+                <field name="pilot_attention_state"/>
+                <field name="pilot_failure_bucket"/>
+                <field name="pilot_queue_age_minutes" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
     <menuitem id="menu_tijara_offline_pos_queue" name="Offline POS Queue" parent="menu_tijara_pos_experience" action="action_tijara_offline_pos_queue" sequence="18"/>
     <menuitem id="menu_tijara_offline_pos_review" name="Offline Conflict Review" parent="menu_tijara_pos_experience" action="action_tijara_offline_pos_review" sequence="19"/>
     <menuitem id="menu_tijara_offline_pos_audit" name="Offline Replay Audit" parent="menu_tijara_pos_experience" action="action_tijara_offline_pos_audit" sequence="20"/>
+    <menuitem id="menu_tijara_offline_pos_pilot_dashboard" name="Offline Pilot Dashboard" parent="menu_tijara_pos_experience" action="action_tijara_offline_pos_pilot_dashboard" sequence="21"/>
 </odoo>

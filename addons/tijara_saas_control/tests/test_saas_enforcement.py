@@ -1,3 +1,8 @@
+import hashlib
+import hmac
+import json
+import time
+
 from odoo import fields
 from odoo.tests.common import TransactionCase, tagged
 
@@ -144,6 +149,130 @@ class TestTijaraSaasEnforcement(TransactionCase):
 
         self.assertEqual(easypaisa_event.transaction_id, "EP-TXN-001")
         self.assertEqual(easypaisa_event.payment_status, "paid")
+
+    def test_native_payment_signature_verification(self):
+        event_model = self.env["tijara.saas.payment.webhook.event"]
+        self.env["ir.config_parameter"].sudo().set_param(
+            "tijara.saas.stripe_webhook_secret",
+            "whsec_tijara_test",
+        )
+        stripe_payload = {
+            "id": "evt_sig_001",
+            "type": "checkout.session.completed",
+            "data": {"object": {"id": "cs_sig_001", "amount_total": 100000}},
+        }
+        raw_body = json.dumps(stripe_payload, separators=(",", ":"))
+        timestamp = str(int(time.time()))
+        stripe_signature = hmac.new(
+            b"whsec_tijara_test",
+            ("%s.%s" % (timestamp, raw_body)).encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+        verification = event_model.tijara_verify_provider_signature(
+            "stripe",
+            stripe_payload,
+            raw_body=raw_body,
+            headers={"Stripe-Signature": "t=%s,v1=%s" % (timestamp, stripe_signature)},
+        )
+
+        self.assertEqual(verification["signature_status"], "valid")
+
+        invalid = event_model.tijara_verify_provider_signature(
+            "stripe",
+            stripe_payload,
+            raw_body=raw_body,
+            headers={"Stripe-Signature": "t=%s,v1=bad" % timestamp},
+        )
+
+        self.assertEqual(invalid["signature_status"], "invalid")
+
+        self.env["ir.config_parameter"].sudo().set_param(
+            "tijara.saas.jazzcash_integrity_salt",
+            "jazzcash-test-salt",
+        )
+        jazzcash_payload = {
+            "pp_Amount": "15000",
+            "pp_BillReference": "tijara_test_tenant",
+            "pp_ResponseCode": "000",
+            "pp_TxnRefNo": "JC-SIG-001",
+        }
+        signature = next(
+            iter(event_model._jazzcash_signature_candidates(jazzcash_payload, "jazzcash-test-salt"))
+        )
+        jazzcash_payload["pp_SecureHash"] = signature
+
+        jazzcash_verification = event_model.tijara_verify_provider_signature(
+            "jazzcash",
+            jazzcash_payload,
+            raw_body=json.dumps(jazzcash_payload, separators=(",", ":")),
+        )
+
+        self.assertEqual(jazzcash_verification["signature_status"], "valid")
+
+    def test_refund_chargeback_and_settlement_events_are_auditable(self):
+        subscription = self._subscription(self.enterprise_plan, state="active")
+        subscription.write({"payment_status": "paid"})
+
+        refund_event = self.env["tijara.saas.payment.webhook.event"].tijara_from_payload(
+            "stripe",
+            {
+                "id": "evt_refund_001",
+                "type": "refund.created",
+                "data": {
+                    "object": {
+                        "id": "re_test_001",
+                        "amount": 150000,
+                        "metadata": {"database_name": subscription.database_name},
+                    }
+                },
+            },
+            signature_status="valid",
+            signature_algorithm="stripe-hmac-sha256",
+        )
+
+        self.assertEqual(refund_event.payment_event_type, "refund")
+        self.assertEqual(refund_event.status, "applied")
+        self.assertEqual(subscription.payment_status, "failed")
+        self.assertEqual(subscription.state, "past_due")
+        self.assertTrue(refund_event.provider_audit_hash)
+
+        chargeback_event = self.env["tijara.saas.payment.webhook.event"].tijara_from_payload(
+            "stripe",
+            {
+                "id": "evt_dispute_001",
+                "type": "charge.dispute.created",
+                "data": {
+                    "object": {
+                        "id": "dp_test_001",
+                        "reason": "fraudulent",
+                        "amount": 150000,
+                        "metadata": {"database_name": subscription.database_name},
+                    }
+                },
+            },
+            signature_status="valid",
+            signature_algorithm="stripe-hmac-sha256",
+        )
+
+        self.assertEqual(chargeback_event.payment_event_type, "chargeback")
+        self.assertEqual(chargeback_event.chargeback_reference, "dp_test_001")
+        self.assertIn("fraudulent", subscription.suspension_reason)
+
+        settlement_event = self.env["tijara.saas.payment.webhook.event"].tijara_from_payload(
+            "stripe",
+            {
+                "id": "evt_payout_001",
+                "type": "payout.paid",
+                "data": {"object": {"id": "po_test_001", "amount": 150000}},
+            },
+            signature_status="valid",
+            signature_algorithm="stripe-hmac-sha256",
+        )
+
+        self.assertEqual(settlement_event.payment_event_type, "settlement")
+        self.assertEqual(settlement_event.status, "applied")
+        self.assertEqual(settlement_event.reconciliation_status, "pending")
 
     def test_dunning_suspends_after_grace_period(self):
         subscription = self._subscription(self.enterprise_plan, state="active")

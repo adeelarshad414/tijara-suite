@@ -24,8 +24,7 @@ class TijaraSaasPaymentWebhookController(http.Controller):
             or ""
         )
 
-    def _payload(self):
-        body = request.httprequest.get_data(as_text=True) or "{}"
+    def _payload(self, body):
         try:
             payload = json.loads(body)
         except json.JSONDecodeError as error:
@@ -33,6 +32,16 @@ class TijaraSaasPaymentWebhookController(http.Controller):
         if not isinstance(payload, dict):
             raise UserError("Payment webhook payload must be a JSON object.")
         return payload
+
+    def _require_native_signature(self):
+        value = (
+            request.env["ir.config_parameter"]
+            .sudo()
+            .get_param("tijara.saas.payment_require_native_signatures")
+            or os.environ.get("TIJARA_PAYMENT_REQUIRE_NATIVE_SIGNATURES")
+            or ""
+        )
+        return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
     @http.route(
         "/tijara/saas/payment/webhook/<string:provider>",
@@ -46,16 +55,34 @@ class TijaraSaasPaymentWebhookController(http.Controller):
         provided = request.httprequest.headers.get("X-Tijara-Webhook-Secret", "")
         if not secret or not hmac.compare_digest(secret, provided):
             return self._json_response({"status": "forbidden"}, status=403)
-        signature = request.httprequest.headers.get("X-Tijara-Signature", "")
+        raw_body = request.httprequest.get_data(as_text=True) or "{}"
+        event_model = request.env["tijara.saas.payment.webhook.event"].sudo()
         try:
+            payload = self._payload(raw_body)
+            verification = event_model.tijara_verify_provider_signature(
+                provider,
+                payload,
+                raw_body=raw_body,
+                headers=dict(request.httprequest.headers),
+            )
+            if verification["signature_status"] == "invalid" or (
+                self._require_native_signature()
+                and verification["signature_status"] != "valid"
+            ):
+                return self._json_response(
+                    {
+                        "status": "forbidden",
+                        "message": "Provider signature verification failed.",
+                    },
+                    status=403,
+                )
             event = (
-                request.env["tijara.saas.payment.webhook.event"]
-                .sudo()
-                .tijara_from_payload(
+                event_model.tijara_from_payload(
                     provider,
-                    self._payload(),
-                    signature=signature,
-                    signature_status="valid",
+                    payload,
+                    signature=verification["signature"],
+                    signature_status=verification["signature_status"],
+                    signature_algorithm=verification["signature_algorithm"],
                 )
             )
         except UserError as error:

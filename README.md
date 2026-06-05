@@ -151,7 +151,8 @@ adapter paths for ESC/POS receipt bytes, CUPS/raw TCP/file delivery, ZPL labels,
 cash-drawer pulses, scale readings, scanner event persistence, and customer
 display state output, while hardware certifications now keep physical evidence
 attachments, observed serials, driver/firmware versions, operator signatures,
-and reproducible evidence hashes. SaaS runtime enforcement can block B2B,
+execution checks, bridge job ids, response codes, durations, and reproducible
+evidence hashes. SaaS runtime enforcement can block B2B,
 queue, promotion display, and customer display features when enabled. Public kiosk/display routes
 serve menu, deal, promotion, customer-display, and queue screen payloads. The
 kiosk route now includes a real self-ordering cart and checkout foundation that
@@ -166,8 +167,9 @@ Analytics can collect daily KPI snapshots from POS, inventory alerts, queue
 tickets, and promotions.
 Offline POS now includes a cashier-facing queue button, back-office conflict
 review workbench, retry/cancel/duplicate/merge resolution actions, replay audit
-pivots/graphs, and seeded staging exports for POS UI, receipt report, refund
-barcode scan, offline review, and print-to-bridge browser harnesses.
+pivots/graphs, pilot attention metrics for queue age/failure buckets/recovery
+owners/runbook notes, and seeded staging exports for POS UI, receipt report,
+refund barcode scan, offline review, and print-to-bridge browser harnesses.
 Committed Odoo transaction/HTTP tests now cover SaaS enforcement, tenant
 provisioning state flow, FBR dry-run/live guard behavior, analytics collectors,
 public display route entitlement/data behavior, kiosk checkout, customer-display
@@ -177,17 +179,20 @@ payment webhook application, and dunning
 suspension. Subscription billing now has an Odoo invoice-generation foundation,
 signed/secret-guarded payment webhook event records, provider-aware JazzCash,
 Easypaisa, and Stripe normalization, external payment status tracking, billing
-sync, dunning, and suspension actions. Tenant database provisioning has an operator
+sync, native signature verification hooks, refund/chargeback/settlement audit
+records, provider fees/net amounts, reconciliation actions, dunning, and
+suspension actions. Tenant database provisioning has an operator
 script for database-per-tenant module install plus DNS/ingress/admin/backup/
 monitoring operations manifests. The repo also includes Playwright browser E2E
 seed and checkout scaffolds, hardware certification records/profiles,
-Prometheus/Blackbox/Alertmanager/Grafana/Loki monitoring config, restore-drill
-scripts, and container/dependency scan hooks.
+Prometheus/Blackbox/Alertmanager/Grafana/Loki monitoring config, staging
+monitoring drill script, restore-drill scripts, and container/dependency scan
+hooks.
 Remaining enterprise phases include real target-hardware certification, full
 authenticated browser POS click-through coverage in staging, production FBR
-provider certification, secret-manager rollout, offline POS pilot certification,
-payment-provider settlement reconciliation for real gateways, and deeper receipt
-line/tax/payment layout controls.
+provider certification, secret-manager rollout, offline POS pilot
+certification, PSP certification/settlement-file sign-off for real gateways,
+and deeper receipt line/tax/payment layout controls.
 
 Odoo 19 compatibility has been handled for this scaffold, including security
 group privileges, product form inheritance, and `list` view declarations.

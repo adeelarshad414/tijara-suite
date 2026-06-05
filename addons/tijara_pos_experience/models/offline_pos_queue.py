@@ -80,6 +80,35 @@ class TijaraOfflinePosQueue(models.Model):
         store=True,
     )
     replay_latency_minutes = fields.Float(compute="_compute_replay_latency", store=True)
+    pilot_metric_refreshed_at = fields.Datetime(copy=False)
+    pilot_queue_age_minutes = fields.Float(copy=False)
+    pilot_attention_state = fields.Selection(
+        [
+            ("ok", "OK"),
+            ("watch", "Watch"),
+            ("blocked", "Blocked"),
+            ("resolved", "Resolved"),
+        ],
+        default="watch",
+        copy=False,
+        index=True,
+    )
+    pilot_failure_bucket = fields.Selection(
+        [
+            ("none", "None"),
+            ("validation", "Validation"),
+            ("duplicate", "Duplicate"),
+            ("payment", "Payment"),
+            ("stock", "Stock/Picking"),
+            ("device", "Device/Network"),
+            ("unknown", "Unknown"),
+        ],
+        default="none",
+        copy=False,
+    )
+    pilot_outage_reference = fields.Char(copy=False)
+    pilot_recovery_owner_id = fields.Many2one("res.users", string="Recovery Owner", copy=False)
+    pilot_runbook_note = fields.Text(copy=False)
     duplicate_of_queue_id = fields.Many2one(
         "tijara.offline.pos.queue",
         string="Duplicate Of",
@@ -145,6 +174,59 @@ class TijaraOfflinePosQueue(models.Model):
                 record.replay_latency_minutes = max(delta.total_seconds() / 60.0, 0.0)
             else:
                 record.replay_latency_minutes = 0.0
+
+    def _pilot_threshold_minutes(self):
+        value = self.env["ir.config_parameter"].sudo().get_param(
+            "tijara.offline_pos.pilot_watch_minutes",
+            "15",
+        )
+        try:
+            return max(float(value or 15), 1.0)
+        except (TypeError, ValueError):
+            return 15.0
+
+    def _pilot_failure_bucket(self):
+        self.ensure_one()
+        message = (self.error_message or "").lower()
+        if self.state in ("duplicate", "merged") or self.duplicate_of_queue_id:
+            return "duplicate"
+        if "payment" in message or "method" in message or "paid" in message:
+            return "payment"
+        if "stock" in message or "picking" in message or "product" in message:
+            return "stock"
+        if "offline pos payload" in message or "payload" in message or "json" in message:
+            return "validation"
+        if "lock" in message or "network" in message or "unreachable" in message:
+            return "device"
+        return "unknown" if self.state in ("failed", "conflict") else "none"
+
+    def _pilot_metric_values(self, now=False):
+        self.ensure_one()
+        now = fields.Datetime.to_datetime(now or fields.Datetime.now())
+        queued_at = fields.Datetime.to_datetime(self.queued_at) if self.queued_at else now
+        end = self.replayed_at or self.reviewed_at or self.last_replay_at or now
+        end = fields.Datetime.to_datetime(end)
+        age_minutes = max((end - queued_at).total_seconds() / 60.0, 0.0)
+        threshold = self._pilot_threshold_minutes()
+        resolved_states = {"replayed", "duplicate", "merged", "cancelled"}
+        if self.state in resolved_states:
+            attention = "resolved"
+        elif self.state in {"failed", "conflict"} or self.replay_attempts >= 3:
+            attention = "blocked"
+        elif age_minutes >= threshold:
+            attention = "watch"
+        else:
+            attention = "ok"
+        return {
+            "pilot_metric_refreshed_at": now,
+            "pilot_queue_age_minutes": age_minutes,
+            "pilot_attention_state": attention,
+            "pilot_failure_bucket": self._pilot_failure_bucket(),
+        }
+
+    def action_refresh_pilot_metrics(self):
+        for record in self:
+            record.write(record._pilot_metric_values())
 
     @api.model
     def _hash_payload(self, payload_json):
@@ -312,6 +394,7 @@ class TijaraOfflinePosQueue(models.Model):
         queue.action_validate_payload()
         if replay and queue.state == "validated":
             queue.action_replay_to_pos()
+        queue.action_refresh_pilot_metrics()
         return queue._capture_response()
 
     def action_validate_payload(self):
@@ -324,6 +407,7 @@ class TijaraOfflinePosQueue(models.Model):
                         "error_message": _("Offline POS payload must include order lines."),
                     }
                 )
+                record.action_refresh_pilot_metrics()
                 continue
             duplicate = self.search(
                 [
@@ -345,6 +429,7 @@ class TijaraOfflinePosQueue(models.Model):
                     else False,
                 }
             )
+            record.action_refresh_pilot_metrics()
 
     def _offline_pos_session(self):
         self.ensure_one()
@@ -595,6 +680,7 @@ class TijaraOfflinePosQueue(models.Model):
                                     "error_message": record.error_message or False,
                                 }
                             )
+                            record.action_refresh_pilot_metrics()
                     break
                 except Exception as error:
                     message = str(error)
@@ -613,6 +699,7 @@ class TijaraOfflinePosQueue(models.Model):
                             "error_message": message,
                         }
                     )
+                    record.action_refresh_pilot_metrics()
                     break
 
     @api.model
@@ -644,9 +731,11 @@ class TijaraOfflinePosQueue(models.Model):
                 "error_message": False,
             },
         )
+        self.action_refresh_pilot_metrics()
 
     def action_fail(self):
         self._review_write("fail", {"state": "failed"})
+        self.action_refresh_pilot_metrics()
 
     def action_retry_replay(self):
         for record in self:
@@ -658,6 +747,7 @@ class TijaraOfflinePosQueue(models.Model):
                 },
             )
             record.action_replay_to_pos()
+            record.action_refresh_pilot_metrics()
 
     def action_cancel(self):
         self._review_write(
@@ -667,6 +757,7 @@ class TijaraOfflinePosQueue(models.Model):
                 "error_message": False,
             },
         )
+        self.action_refresh_pilot_metrics()
 
     def action_mark_duplicate(self):
         for record in self:
@@ -681,6 +772,7 @@ class TijaraOfflinePosQueue(models.Model):
                     "error_message": _("Marked as duplicate of %s.") % duplicate.name,
                 },
             )
+            record.action_refresh_pilot_metrics()
 
     def action_merge_duplicate(self):
         for record in self:
@@ -696,3 +788,4 @@ class TijaraOfflinePosQueue(models.Model):
                     "error_message": _("Merged into offline queue %s.") % target.name,
                 },
             )
+            record.action_refresh_pilot_metrics()
