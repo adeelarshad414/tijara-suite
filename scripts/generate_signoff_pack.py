@@ -378,7 +378,9 @@ def _evidence_group(entry):
         "ops-evidence/" in relative
         or "monitoring-evidence/" in relative
         or "monitoring" in relative.lower()
+        or "incident-runbook" in relative.lower()
         or filename == "monitoring-evidence.json"
+        or filename == "incident-runbook-evidence.json"
     ):
         return "Operations"
     if "hardware" in relative.lower():
@@ -558,6 +560,29 @@ def _monitoring_reviews(evidence_entries):
     return reviews
 
 
+def _incident_runbook_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "incident-runbook-evidence.json":
+            continue
+        payload = _read_json(path)
+        owners = payload.get("owners") or {}
+        refs = payload.get("references") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "owners": owners,
+                "references": refs,
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -566,6 +591,7 @@ def _evidence_summary(context, evidence_entries):
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
+    incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -705,6 +731,38 @@ def _evidence_summary(context, evidence_entries):
     if not monitoring_lines:
         monitoring_lines = ["- No `monitoring-evidence.json` files were attached.", ""]
 
+    incident_lines = []
+    for review in incident_runbook_reviews:
+        owners = review["owners"]
+        refs = review["references"]
+        incident_lines.append("### `%s`" % review["path"])
+        incident_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        incident_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        incident_lines.append(
+            "- Owners release/devops/support/business/oncall: %s/%s/%s/%s/%s"
+            % (
+                "yes" if owners.get("release_owner_present") else "no",
+                "yes" if owners.get("devops_owner_present") else "no",
+                "yes" if owners.get("support_owner_present") else "no",
+                "yes" if owners.get("business_owner_present") else "no",
+                "yes" if owners.get("oncall_contact_present") else "no",
+            )
+        )
+        incident_lines.append(
+            "- References alert/runbook/backup/restore/rollback/monitoring: %s/%s/%s/%s/%s/%s"
+            % (
+                "yes" if refs.get("alert_route_present") else "no",
+                "yes" if refs.get("runbook_url_present") else "no",
+                "yes" if refs.get("backup_reference_present") else "no",
+                "yes" if refs.get("restore_drill_reference_present") else "no",
+                "yes" if refs.get("rollback_reference_present") else "no",
+                "yes" if refs.get("monitoring_reference_present") else "no",
+            )
+        )
+        incident_lines.append("")
+    if not incident_lines:
+        incident_lines = ["- No `incident-runbook-evidence.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -738,6 +796,9 @@ def _evidence_summary(context, evidence_entries):
 ## Monitoring Evidence
 
 {chr(10).join(monitoring_lines)}
+## Incident Runbook Evidence
+
+{chr(10).join(incident_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -757,6 +818,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
+    incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -846,6 +908,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Monitoring evidence %s is %s" % (review["path"], review["decision"]))
 
+    for review in incident_runbook_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Incident runbook evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Incident runbook evidence %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -875,6 +944,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "psp_readiness_reviews": psp_readiness_reviews,
         "fbr_readiness_reviews": fbr_readiness_reviews,
         "monitoring_reviews": monitoring_reviews,
+        "incident_runbook_reviews": incident_runbook_reviews,
     }
 
 

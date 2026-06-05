@@ -3350,3 +3350,75 @@ Date: 2026-06-05
   responses are available.
 - Add staging/live Odoo FBR transaction execution after database credentials are
   corrected.
+
+## Iteration 51: Incident Runbook Evidence Extraction
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_incident_runbook_evidence.py` for production incident
+  runbook readiness evidence.
+- The exporter:
+  - Records release, DevOps, support, business, and on-call owner presence.
+  - Records alert route, incident runbook URL, backup reference, restore-drill
+    reference, rollback reference, and monitoring evidence reference presence.
+  - Rejects secret-like metadata keys.
+  - Defaults to non-strict warning mode for local/staging evidence and supports
+    `--strict` for production gates.
+  - Writes `incident-runbook-evidence.json`, `status.tsv`,
+    `env-summary.txt`, and `summary.md` under
+    `deploy/runtime/incident-runbooks/<run-id>/`.
+- Added operator shortcuts:
+  - `make incident-runbook-evidence`
+  - `npm run incident:runbook`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group incident runbook evidence as Operations evidence.
+  - Parse attached `incident-runbook-evidence.json`.
+  - Add `incident_runbook_reviews` into `release-readiness.json`.
+  - Add an Incident Runbook Evidence section to `evidence-summary.md`.
+  - Treat failed incident runbook evidence as blockers and warning evidence as
+    warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Strict empty incident runbook export fails with required owner/reference
+  blockers.
+- Non-strict empty incident runbook export writes warning evidence.
+- Strict supplied incident runbook export passes.
+- `make incident-runbook-evidence` passes with warning decision.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using incident runbook evidence.
+- Confirmed `release-readiness.json` includes `incident_runbook_reviews`.
+- Confirmed `evidence-summary.md` includes the Incident Runbook Evidence
+  section.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_incident_runbook_evidence.py scripts/generate_signoff_pack.py`
+  passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- Real incident readiness still needs named production owners, real on-call
+  contacts, Alertmanager route, runbook URL, backup, restore-drill, rollback,
+  and monitoring evidence references.
+- Alert firing/routing and incident communications still need live drills.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Add FBR provider response fixture smoke tests once certified-provider sample
+  responses are available.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.
+- Add load-test evidence extraction and sign-off parsing.

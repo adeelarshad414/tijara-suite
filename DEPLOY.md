@@ -80,6 +80,8 @@ make release-candidate
 make psp-readiness-evidence
 make psp-fixture-smoke
 make fbr-readiness-evidence
+make monitoring-evidence
+make incident-runbook-evidence
 make signoff-pack
 ```
 
@@ -859,7 +861,8 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   `psp_readiness_reviews`; when FBR readiness evidence is attached,
   certified-provider readiness is included under `fbr_readiness_reviews`; when
   monitoring evidence is attached, observability reviews are included under
-  `monitoring_reviews`.
+  `monitoring_reviews`; when incident runbook evidence is attached, ownership
+  and response references are included under `incident_runbook_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 
@@ -956,6 +959,28 @@ python3 scripts/export_monitoring_evidence.py \
 
 Monitoring evidence is written under
 `deploy/runtime/monitoring-evidence/<run-id>/` and can be included in
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
+
+Capture incident runbook evidence before production cutover:
+
+```bash
+python3 scripts/export_incident_runbook_evidence.py \
+  --run-id 2026-06-05-prod \
+  --release-owner "Release Owner" \
+  --devops-owner "DevOps Owner" \
+  --support-owner "Support Owner" \
+  --business-owner "Business Owner" \
+  --oncall-contact oncall@example.com \
+  --alert-route alertmanager:tijara-prod \
+  --runbook-url https://runbooks.example.com/tijara/incident \
+  --backup-reference backup-2026-06-05 \
+  --restore-drill-reference restore-2026-06-05 \
+  --rollback-reference odoo:previous \
+  --monitoring-reference deploy/runtime/monitoring-evidence/2026-06-05-prod/monitoring-evidence.json
+```
+
+Incident runbook evidence is written under
+`deploy/runtime/incident-runbooks/<run-id>/` and can be included in
 `TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
 
 ## Rollback Baseline
