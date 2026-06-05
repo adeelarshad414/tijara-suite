@@ -7317,3 +7317,77 @@ Status: Complete
   release owners can see blockers without downloading artifacts.
 - Continue PSP/FBR/hardware certification and live offline POS pilot proof once
   provider/device credentials and staging hardware are available.
+
+## Iteration 101: Protected GitHub Release Summary
+
+Status: Complete
+
+### Scope
+
+- Surface protected release blockers, warnings, production-ops component status,
+  and uploaded artifact naming directly in the GitHub Actions run summary.
+- Provide local operator entry points for rendering the same Markdown summary
+  outside GitHub Actions.
+
+### Completed
+
+- Added `scripts/export_github_step_summary.py` to render a compact Markdown
+  summary from release-readiness, production-ops readiness, protected post-run
+  verification, and protected artifact-summary JSON.
+- The summary includes verdict rows, blockers, warnings, production operations
+  component status, and artifact name/URL when available.
+- Wired `.github/workflows/tijara-ci.yml` to publish the protected release
+  summary to `$GITHUB_STEP_SUMMARY` after protected artifact summary generation
+  and before the main evidence upload.
+- The workflow also saves the generated Markdown as
+  `deploy/runtime/protected-artifact-summary/<run-id>/github-step-summary.md`,
+  so it is included in the protected evidence bundle.
+- Added `make github-step-summary` and `npm run release:github-summary`.
+- Updated `README.md` and `DEPLOY.md` with the summary exporter and protected
+  workflow behavior.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_github_step_summary.py
+  scripts/export_production_ops_readiness.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_post_run_verification.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `scripts/export_github_step_summary.py` renders the protected production ops
+  fixture with `Release readiness=ready`, `Production operations
+  readiness=ready`, no blockers, no warnings, and production-ops component
+  rows.
+- `make github-step-summary` passes against the protected fixture and writes
+  `/private/tmp/tijara-prod-ops-correlated/make-github-step-summary.md`.
+- `npm run release:github-summary` passes against the protected fixture and
+  writes `/private/tmp/tijara-prod-ops-correlated/npm-github-step-summary.md`.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The summary renderer is wired locally and in workflow YAML, but it still needs
+  a real protected GitHub Actions run to prove final `GITHUB_STEP_SUMMARY`
+  rendering, artifact URL population, and release-owner UX.
+- Post-upload artifact URL/digest still becomes available only after the main
+  upload step; the pre-upload summary records the artifact name and uploaded
+  evidence path, while post-upload metadata remains in the sidecar artifact.
+- Live monitoring/alert drills, backup restore proof, k6 load execution,
+  dependency/container scans, PSP/FBR certification, hardware certification, and
+  live offline POS pilot evidence remain production-readiness blockers.
+
+### Next Iteration
+
+- Add a post-upload GitHub summary refresh or sidecar-summary step that includes
+  the artifact ID, URL, digest, and retention metadata after upload completes.
+- Add protected-runner live drill documentation and evidence fixtures for
+  monitoring alerts, restore drills, k6, Trivy, npm audit, and optional
+  pip-audit.
+- Continue PSP/FBR/hardware certification and live offline POS pilot proof once
+  provider/device credentials and staging hardware are available.

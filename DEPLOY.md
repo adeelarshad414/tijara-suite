@@ -95,6 +95,7 @@ make operations-release-bundle
 make production-ops-readiness
 make ops-tool-evidence
 make signoff-pack
+make github-step-summary
 ```
 
 Direct Compose usage should include both env files:
@@ -1088,7 +1089,9 @@ exports a post-run evidence verifier under
 `deploy/runtime/protected-post-run-verification/<run-id>/`. It then prepares a
 pre-upload GitHub artifact metadata placeholder under
 `deploy/runtime/github-artifact-metadata/<run-id>/`, writes the final protected
-artifact summary, and uploads the main evidence bundle as
+artifact summary, publishes a compact GitHub Actions step summary with
+release-readiness, production-ops, post-run, artifact-summary, blocker,
+warning, and component status, and uploads the main evidence bundle as
 `tijara-protected-release-evidence-<environment>-<run>`. After that upload, the
 workflow records the real upload action outputs such as artifact ID, artifact
 URL, digest, and retention metadata, then uploads a sidecar artifact named
@@ -1507,6 +1510,10 @@ Optional tools:
   after the supporting evidence is attached to create one release-blocking
   operations verdict for monitoring, restore drills, load, secrets, deployment
   protection, tenant operations, and security scan references.
+- Run `make github-step-summary` or `scripts/export_github_step_summary.py`
+  after production ops, post-run verification, artifact summary, and sign-off
+  evidence exist to render the same Markdown summary that the protected GitHub
+  workflow appends to `GITHUB_STEP_SUMMARY`.
 - Run `make release-retention-evidence` to export artifact-store,
   secret-manager, retention policy, and evidence-fingerprint readiness without
   running the full operations bundle.

@@ -724,6 +724,16 @@ jobs:
             --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
             --output "deploy/runtime/protected-artifact-summary/$TIJARA_PROTECTED_RUN_ID" \
             --artifact-reference "tijara-protected-release-evidence-${{ inputs.target_environment }}-${{ github.run_id }}"
+      - name: Publish protected release GitHub summary
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 scripts/export_github_step_summary.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --artifact-name "tijara-protected-release-evidence-${{ inputs.target_environment }}-${{ github.run_id }}" \
+            --output "deploy/runtime/protected-artifact-summary/$TIJARA_PROTECTED_RUN_ID/github-step-summary.md" \
+            >> "$GITHUB_STEP_SUMMARY"
       - name: Upload protected release evidence
         id: upload_protected_release_evidence
         if: always()
