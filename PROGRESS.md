@@ -4158,3 +4158,65 @@ Date: 2026-06-05
   production approval gates.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 61: CI Secret Manager Evidence Enforcement
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `.github/workflows/tijara-ci.yml` so CI now:
+  - Generates strict secret-manager evidence after release retention evidence.
+  - Requires Release, Operations, and Security evidence groups in the CI sign-off
+    package.
+  - Includes `deploy/runtime/secret-manager-evidence/ci-local` in the uploaded
+    release evidence artifact.
+- Updated `README.md`, `DEPLOY.md`, `docs/QA_SECURITY_DEVOPS.md`, and
+  `PROGRESS.md`.
+
+### Validation
+
+- Local CI-equivalent release gate passes with:
+  `TIJARA_RELEASE_RUN_ID=ci-secret-manager TIJARA_RELEASE_CHECKS=local make
+  release-candidate`.
+- Strict CI-equivalent retention export passes for
+  `deploy/runtime/release-evidence/ci-secret-manager`.
+- Strict CI-equivalent secret-manager evidence export passes for
+  `deploy/runtime/secret-manager-evidence/ci-secret-manager`.
+- CI-equivalent sign-off package generation passes with:
+  `TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-secret-manager,deploy/runtime/release-retention-evidence/ci-secret-manager,deploy/runtime/secret-manager-evidence/ci-secret-manager`
+  and `TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,ops,security`.
+- `make check-release-readiness
+  READINESS=deploy/runtime/signoff-packages/ci-secret-manager/release-readiness.json`
+  exits `0` with `decision=ready` and `ci_status=pass`.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Confirmed the workflow includes the local secret manager evidence step, the
+  `release,ops,security` required group list, and the secret-manager evidence
+  upload path.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- CI still proves only committed config hygiene and reference readiness; it does
+  not connect to a live production secret manager.
+- Production deployment still needs environment protection, approval gates,
+  promotion/rollback runbooks, and real object-store/secret-manager wiring.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add deployment environment protection/runbook evidence for staging and
+  production approval gates.
+- Add production runtime secret-manager connectivity checks after the target
+  provider is selected.
+- Continue staging/live FBR transaction execution when credentials are
+  available.

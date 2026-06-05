@@ -344,7 +344,7 @@ The detailed policy and dependency intake checklist are maintained in
 - `.github/workflows/tijara-ci.yml`, `scripts/security_audit.sh`, and
   `scripts/js_check.sh` provide the first public-repo CI and security baseline.
   CI now also runs the local release-candidate gate, generates a strict
-  CI sign-off package with release retention evidence, checks
+  CI sign-off package with release retention and secret-manager evidence, checks
   `release-readiness.json`, and uploads release evidence artifacts with an
   explicit 30-day CI retention setting.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and

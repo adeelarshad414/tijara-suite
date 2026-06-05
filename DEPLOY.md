@@ -784,22 +784,33 @@ python3 scripts/export_release_retention_evidence.py \
   --backup-retention-days 30 \
   --evidence-path deploy/runtime/release-evidence/ci-local \
   --strict
+python3 scripts/export_secret_manager_evidence.py \
+  --run-id ci-local \
+  --target-environment ci \
+  --output deploy/runtime/secret-manager-evidence/ci-local \
+  --secret-manager-provider github-actions-secrets \
+  --secret-manager-reference github-actions:tijara-ci \
+  --secret-rotation-policy-ref docs:DEPLOY.md#secret-handling \
+  --secret-access-review-ref docs:DEPLOY.md#secret-handling \
+  --strict
 TIJARA_SIGNOFF_RUN_ID=ci-local \
 TIJARA_SIGNOFF_ENVIRONMENT=ci \
-TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local,deploy/runtime/release-retention-evidence/ci-local \
-TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,ops \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local,deploy/runtime/release-retention-evidence/ci-local,deploy/runtime/secret-manager-evidence/ci-local \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,ops,security \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/ci-local/release-readiness.json
 ```
 
 The workflow uploads `deploy/runtime/release-evidence/ci-local`,
-`deploy/runtime/release-retention-evidence/ci-local`, and
+`deploy/runtime/release-retention-evidence/ci-local`,
+`deploy/runtime/secret-manager-evidence/ci-local`, and
 `deploy/runtime/signoff-packages/ci-local` as the
 `tijara-ci-release-evidence` artifact with `retention-days: 30` and
 `if-no-files-found: error`. This is not a substitute for staging release
 evidence, but it prevents PRs from merging with a broken local release gate,
-malformed readiness package, or missing CI artifact retention evidence.
+malformed readiness package, missing CI artifact retention evidence, or missing
+runtime secret-manager evidence.
 
 Export release retention and secret-manager evidence before production
 approval:
