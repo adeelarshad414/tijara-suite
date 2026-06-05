@@ -138,6 +138,7 @@ make deployment-environment-evidence
 make tenant-ops-evidence
 make load-evidence
 make operations-release-bundle
+make production-ops-readiness
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make staging-release-signoff
@@ -492,6 +493,11 @@ The detailed policy and dependency intake checklist are maintained in
   `make operations-release-bundle` combine load profile matrix, enterprise load,
   production smoke, optional tenant rollout, optional tenant smoke, monitoring,
   and incident runbook evidence under one operations run ID for release sign-off.
+- `scripts/export_production_ops_readiness.py` and
+  `make production-ops-readiness` combine operations bundle, monitoring,
+  incident, load, retention, secret-manager/runtime, deployment environment,
+  tenant operations, backup/restore, and scan references into one production
+  operations verdict under `deploy/runtime/production-ops-readiness/`.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, POS checkout, refund barcode, receipt print, and offline
   POS replay browser tests, then writes E2E seed evidence under

@@ -11,7 +11,7 @@ DB ?= tijara_dev
 TIJARA_MODULES := tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery
 DEMO_MODULES := tijara_demo_pos
 
-.PHONY: up down logs shell restart ps validate js-check security-audit config install-suite seed-pos-demo seed-e2e staging-e2e-profile e2e-execution-evidence test-odoo e2e e2e-staging ops-staging operations-release-bundle release-candidate signoff-pack check-release-readiness staging-release-signoff production-deployment-gate production-rollback production-smoke tenant-smoke tenant-rollout certification-evidence psp-readiness-evidence psp-fixture-smoke fbr-readiness-evidence fbr-fixture-smoke monitoring-evidence incident-runbook-evidence release-retention-evidence secret-manager-evidence secret-runtime-evidence deployment-environment-evidence tenant-ops-evidence load-evidence load-profile load-enterprise-surfaces load-profile-matrix-evidence bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill
+.PHONY: up down logs shell restart ps validate js-check security-audit config install-suite seed-pos-demo seed-e2e staging-e2e-profile e2e-execution-evidence test-odoo e2e e2e-staging ops-staging operations-release-bundle production-ops-readiness release-candidate signoff-pack check-release-readiness staging-release-signoff production-deployment-gate production-rollback production-smoke tenant-smoke tenant-rollout certification-evidence psp-readiness-evidence psp-fixture-smoke fbr-readiness-evidence fbr-fixture-smoke monitoring-evidence incident-runbook-evidence release-retention-evidence secret-manager-evidence secret-runtime-evidence deployment-environment-evidence tenant-ops-evidence load-evidence load-profile load-enterprise-surfaces load-profile-matrix-evidence bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill
 
 up:
 	$(COMPOSE) up -d
@@ -72,6 +72,9 @@ ops-staging:
 
 operations-release-bundle:
 	python3 scripts/run_operations_release_bundle.py
+
+production-ops-readiness:
+	python3 scripts/export_production_ops_readiness.py
 
 release-candidate:
 	bash scripts/run_release_candidate_gate.sh

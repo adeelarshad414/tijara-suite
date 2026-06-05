@@ -5583,3 +5583,93 @@ Date: 2026-06-05
   and offline replay browser results into the execution evidence chain.
 - Continue production hardening with observability, restore-drill, load-test,
   and security-scan evidence gates.
+
+## Iteration 79: Production Operations Readiness Gate
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_production_ops_readiness.py` to combine operations
+  bundle, monitoring, incident runbook, load, load profile matrix, release
+  retention, secret-manager, secret-runtime, deployment environment, tenant
+  operations, backup/restore, dependency scan, container scan, and security
+  audit references into one production operations verdict.
+- The exporter writes `production-ops-readiness.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/production-ops-readiness/<run-id>/`.
+- Added `make production-ops-readiness` and
+  `npm run ops:production-readiness` entry points.
+- Enhanced `scripts/generate_signoff_pack.py` to classify
+  `production-ops-readiness.json` as Operations evidence.
+- Sign-off evidence summaries now include `## Production Operations Readiness
+  Evidence`.
+- `release-readiness.json` now includes
+  `production_ops_readiness_reviews` and blocks or warns from the production
+  operations readiness decision.
+- Updated `README.md` and `DEPLOY.md` with the production operations readiness
+  workflow and strict release-gate command.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_production_ops_readiness.py scripts/generate_signoff_pack.py`
+  passes.
+- `env TIJARA_PROD_OPS_RUN_ID=prod-ops-local
+  TIJARA_PROD_OPS_OUTPUT=/private/tmp/tijara-prod-ops-local make
+  production-ops-readiness` passes in warning mode with
+  `decision=warning` and `ci_status=pass_with_warnings`.
+- Strict missing production operations evidence blocks at
+  `/private/tmp/tijara-prod-ops-missing` with `decision=blocked` and
+  `ci_status=fail`.
+- Strict synthetic complete production operations evidence passes at
+  `/private/tmp/tijara-prod-ops-ready` with `decision=ready` and
+  `ci_status=pass`.
+- Generated sign-off packages at
+  `/private/tmp/tijara-signoff-prod-ops-ready` and
+  `/private/tmp/tijara-signoff-prod-ops-blocked`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-prod-ops-ready/release-readiness.json` passes
+  with `decision=ready` and `ci_status=pass`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-prod-ops-blocked/release-readiness.json` blocks
+  as expected because production operations readiness is blocked.
+- Confirmed `evidence-summary.md` includes `Production Operations Readiness
+  Evidence` and `release-readiness.json` includes
+  `production_ops_readiness_reviews`.
+- `env TIJARA_PROD_OPS_RUN_ID=prod-ops-npm
+  TIJARA_PROD_OPS_OUTPUT=/private/tmp/tijara-prod-ops-npm npm run
+  ops:production-readiness` passes in warning mode.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The production operations readiness gate evaluates evidence; it does not run
+  live Prometheus, Alertmanager, Grafana, k6, restore-drill, dependency,
+  container, or penetration-test tooling by itself.
+- Real production readiness still needs actual staging/production URLs,
+  platform environment protection, object-store backup artifacts, restore-drill
+  execution, production secret-manager probes, Trivy/container scanning, load
+  execution, and signed operations owner references.
+- FBR certified-provider validation, PSP certification, physical hardware
+  certification, and live authenticated browser POS flows remain external
+  production blockers.
+
+### Next Iteration
+
+- Add CI/CD workflow wiring so release, E2E, operations, production ops
+  readiness, and release-readiness checks can run together in a reproducible
+  pipeline.
+- Add security/load/restore evidence adapters for real tool outputs once the
+  staging or production runner has Trivy, k6, backup artifacts, and secret
+  manager access.
+- Continue toward live staging E2E execution when Odoo URL, credentials,
+  seeded POS config, and hardware bridge are available.

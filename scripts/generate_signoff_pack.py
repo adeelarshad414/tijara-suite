@@ -395,6 +395,7 @@ def _evidence_group(entry):
         or "load-evidence" in relative_lower
         or "load-profile-matrix" in relative_lower
         or "operations-release-bundle" in relative_lower
+        or "production-ops-readiness" in relative_lower
         or "release-retention-evidence" in relative_lower
         or "deployment-environment-evidence" in relative_lower
         or "deployment-environments" in relative_lower
@@ -408,6 +409,7 @@ def _evidence_group(entry):
         or filename == "load-evidence.json"
         or filename == "load-profile-matrix.json"
         or filename == "operations-release-bundle.json"
+        or filename == "production-ops-readiness.json"
         or filename == "release-retention-evidence.json"
         or filename == "deployment-environment-evidence.json"
         or filename == "tenant-ops-evidence.json"
@@ -910,6 +912,53 @@ def _operations_bundle_reviews(evidence_entries):
     return reviews
 
 
+def _production_ops_readiness_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "production-ops-readiness.json":
+            continue
+        payload = _read_json(path)
+        payload_context = payload.get("context") or {}
+        refs = payload.get("references") or {}
+        components = payload.get("components") or []
+        status_counts = payload.get("status_counts") or {}
+        component_statuses = {
+            component.get("name") or "unknown": component.get("status") or "unknown"
+            for component in components
+        }
+        required_missing = [
+            component.get("name") or "unknown"
+            for component in components
+            if component.get("required") and component.get("status") in {"failed", "warning"}
+        ]
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "target_environment": payload_context.get("target_environment", ""),
+                "strict": bool(payload_context.get("strict")),
+                "fail_on_warning": bool(payload_context.get("fail_on_warning")),
+                "require_tenant_ops": bool(payload_context.get("require_tenant_ops")),
+                "require_secret_runtime": bool(payload_context.get("require_secret_runtime")),
+                "component_count": len(components),
+                "component_statuses": component_statuses,
+                "status_counts": status_counts,
+                "required_missing": required_missing,
+                "backup_artifact_ref_present": bool(refs.get("backup_artifact_ref_present")),
+                "restore_drill_ref_present": bool(refs.get("restore_drill_ref_present")),
+                "security_audit_ref_present": bool(refs.get("security_audit_ref_present")),
+                "dependency_scan_ref_present": bool(refs.get("dependency_scan_ref_present")),
+                "container_scan_ref_present": bool(refs.get("container_scan_ref_present")),
+                "ops_status_row_count": len(payload.get("ops_status_rows") or []),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _release_retention_reviews(evidence_entries):
     reviews = []
     for entry in evidence_entries:
@@ -1233,6 +1282,7 @@ def _evidence_summary(context, evidence_entries):
     load_reviews = _load_reviews(evidence_entries)
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
+    production_ops_readiness_reviews = _production_ops_readiness_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
     secret_manager_reviews = _secret_manager_reviews(evidence_entries)
     secret_runtime_reviews = _secret_runtime_reviews(evidence_entries)
@@ -1682,6 +1732,43 @@ def _evidence_summary(context, evidence_entries):
     if not operations_bundle_lines:
         operations_bundle_lines = ["- No `operations-release-bundle.json` files were attached.", ""]
 
+    production_ops_lines = []
+    for review in production_ops_readiness_reviews:
+        counts = ", ".join(
+            "%s=%s" % (status, count)
+            for status, count in sorted((review["status_counts"] or {}).items())
+        )
+        missing = ", ".join(review["required_missing"]) or "none"
+        production_ops_lines.append("### `%s`" % review["path"])
+        production_ops_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        production_ops_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        production_ops_lines.append(
+            "- Target/strict/fail-on-warning: %s/%s/%s"
+            % (
+                review["target_environment"] or "unset",
+                "yes" if review["strict"] else "no",
+                "yes" if review["fail_on_warning"] else "no",
+            )
+        )
+        production_ops_lines.append(
+            "- Component count/statuses: %s/%s"
+            % (review["component_count"], counts or "none")
+        )
+        production_ops_lines.append(
+            "- References backup/restore/security/dependency/container: %s/%s/%s/%s/%s"
+            % (
+                "yes" if review["backup_artifact_ref_present"] else "no",
+                "yes" if review["restore_drill_ref_present"] else "no",
+                "yes" if review["security_audit_ref_present"] else "no",
+                "yes" if review["dependency_scan_ref_present"] else "no",
+                "yes" if review["container_scan_ref_present"] else "no",
+            )
+        )
+        production_ops_lines.append("- Required missing/warning components: %s" % missing)
+        production_ops_lines.append("")
+    if not production_ops_lines:
+        production_ops_lines = ["- No `production-ops-readiness.json` files were attached.", ""]
+
     release_retention_lines = []
     for review in release_retention_reviews:
         retention_days = review["retention_days"] or {}
@@ -1999,6 +2086,9 @@ def _evidence_summary(context, evidence_entries):
 ## Operations Release Bundle Evidence
 
 {chr(10).join(operations_bundle_lines)}
+## Production Operations Readiness Evidence
+
+{chr(10).join(production_ops_lines)}
 ## Release Retention Evidence
 
 {chr(10).join(release_retention_lines)}
@@ -2048,6 +2138,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     load_reviews = _load_reviews(evidence_entries)
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
+    production_ops_readiness_reviews = _production_ops_readiness_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
     secret_manager_reviews = _secret_manager_reviews(evidence_entries)
     secret_runtime_reviews = _secret_runtime_reviews(evidence_entries)
@@ -2212,6 +2303,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Operations release bundle %s is %s" % (review["path"], review["decision"]))
 
+    for review in production_ops_readiness_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Production operations readiness %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Production operations readiness %s is %s" % (review["path"], review["decision"]))
+
     for review in release_retention_reviews:
         decision = str(review.get("decision") or "").lower()
         if decision in {"failed", "blocked"}:
@@ -2338,6 +2436,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "load_reviews": load_reviews,
         "load_matrix_reviews": load_matrix_reviews,
         "operations_bundle_reviews": operations_bundle_reviews,
+        "production_ops_readiness_reviews": production_ops_readiness_reviews,
         "release_retention_reviews": release_retention_reviews,
         "secret_manager_reviews": secret_manager_reviews,
         "secret_runtime_reviews": secret_runtime_reviews,

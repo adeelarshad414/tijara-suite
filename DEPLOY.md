@@ -92,6 +92,7 @@ make deployment-environment-evidence
 make tenant-ops-evidence
 make load-evidence
 make operations-release-bundle
+make production-ops-readiness
 make signoff-pack
 ```
 
@@ -774,6 +775,40 @@ directories, logs, `status.tsv`, `env-summary.txt`, and `summary.md` under
 `TIJARA_OPS_BUNDLE_STRICT=1` and `TIJARA_OPS_BUNDLE_FAIL_ON_WARNING=1` for
 production release drills where missing evidence or warnings must block.
 
+Export the top-level production operations readiness gate after the operations
+bundle and supporting evidence are available:
+
+```bash
+python3 scripts/export_production_ops_readiness.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment production \
+  --operations-bundle deploy/runtime/operations-release-bundle/2026-06-05-rc1/operations-release-bundle.json \
+  --monitoring-evidence deploy/runtime/operations-release-bundle/2026-06-05-rc1/monitoring-evidence/monitoring-evidence.json \
+  --incident-runbook-evidence deploy/runtime/operations-release-bundle/2026-06-05-rc1/incident-runbook/incident-runbook-evidence.json \
+  --load-evidence deploy/runtime/operations-release-bundle/2026-06-05-rc1/load-enterprise/load-evidence.json \
+  --load-profile-matrix deploy/runtime/operations-release-bundle/2026-06-05-rc1/load-profile-matrix/load-profile-matrix.json \
+  --release-retention-evidence deploy/runtime/operations-release-bundle/2026-06-05-rc1/release-retention/release-retention-evidence.json \
+  --secret-manager-evidence deploy/runtime/secret-manager-evidence/2026-06-05-rc1/secret-manager-evidence.json \
+  --secret-runtime-evidence deploy/runtime/secret-runtime-evidence/2026-06-05-rc1/secret-runtime-evidence.json \
+  --deployment-environment-evidence deploy/runtime/deployment-environments/2026-06-05-rc1/deployment-environment-evidence.json \
+  --tenant-ops-evidence deploy/runtime/tenant-ops-evidence/2026-06-05-rc1/tenant-ops-evidence.json \
+  --ops-status deploy/runtime/ops-evidence/2026-06-05-rc1/status.tsv \
+  --backup-artifact-ref backup:2026-06-05-rc1 \
+  --restore-drill-ref restore:2026-06-05-rc1 \
+  --security-audit-ref security-audit:2026-06-05-rc1 \
+  --dependency-scan-ref dependency-scan:2026-06-05-rc1 \
+  --container-scan-ref container-scan:2026-06-05-rc1 \
+  --strict \
+  --fail-on-warning
+```
+
+The exporter writes `production-ops-readiness.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/production-ops-readiness/<run-id>/`. Attach that directory to
+`TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package extracts
+`production_ops_readiness_reviews`, and production readiness blocks when this
+gate is blocked or failed.
+
 ## Display Routes
 
 Public display routes are available for store screens:
@@ -1068,6 +1103,11 @@ Optional tools:
   retention evidence under one Operations evidence directory. Set
   `TIJARA_OPS_BUNDLE_TENANT_SMOKE_ARTIFACTS` or
   `TIJARA_TENANT_SMOKE_ARTIFACTS` to include tenant smoke automatically.
+- Run `make production-ops-readiness` or
+  `scripts/export_production_ops_readiness.py --strict --fail-on-warning`
+  after the supporting evidence is attached to create one release-blocking
+  operations verdict for monitoring, restore drills, load, secrets, deployment
+  protection, tenant operations, and security scan references.
 - Run `make release-retention-evidence` to export artifact-store,
   secret-manager, retention policy, and evidence-fingerprint readiness without
   running the full operations bundle.
