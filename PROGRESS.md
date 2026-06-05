@@ -7982,6 +7982,95 @@ Status: Complete
 - Add provider/device-specific certification result mapping once real PSP, FBR,
   and hardware evidence is available.
 
+## Iteration 111: Protected Offline POS Pilot Evidence
+
+Status: Complete
+
+### Scope
+
+- Add protected release evidence for real offline POS pilot approval, including
+  outage ownership, store/register/device context, replay success, duplicate
+  handling, unresolved queue thresholds, and queue-age thresholds.
+
+### Completed
+
+- Added `scripts/export_protected_offline_pilot_evidence.py`.
+- Added `make protected-offline-pilot-evidence`.
+- The exporter writes `offline-pos-pilot-evidence.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-offline-pilot/<run-id>/`.
+- The exporter validates pilot outage reference, recovery owner, store,
+  register, source device, protected offline replay evidence, runtime proof,
+  replay success count, duplicate proof, conflict/failed counts,
+  blocked/watch counts, and maximum queue age.
+- Added queue metrics support from either `TIJARA_OFFLINE_PILOT_QUEUE_STATUS_JSON`
+  or centered GitHub environment variables.
+- Wired the protected GitHub workflow to generate and upload
+  `protected-offline-pilot` evidence after protected offline replay evidence.
+- Added `protected-offline-pilot` to first-run expected artifacts, runbook
+  review order, post-run required artifacts, release-retention evidence paths,
+  sign-off evidence paths, artifact summary defaults, and protected upload
+  paths.
+- Added `offline_pilot_reviews` to `release-readiness.json` and an Offline POS
+  Pilot Evidence section to `evidence-summary.md`.
+- Hardened sign-off readiness so failed `ops-evidence.json` now contributes
+  operations-harness blockers, and failed offline pilot evidence contributes
+  offline pilot blockers.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example` with the new pilot controls.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_offline_pilot_evidence.py
+  scripts/generate_signoff_pack.py scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_post_run_verification.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `make protected-offline-pilot-evidence` writes local warning-mode evidence
+  and exits `0`.
+- Strict passing fixture with replay runtime proof, duplicate proof, zero
+  conflicts/failures, zero blocked/watch queues, and five-minute queue age
+  writes `decision=passed`/`ci_status=pass`.
+- Strict missing-context fixture exits `1` and writes
+  `decision=failed`/`ci_status=fail`.
+- Strict threshold-breach fixture exits `1` and writes
+  `decision=failed`/`ci_status=fail`.
+- Sign-off fixture over the passing pilot evidence writes
+  `offline_pilot_reviews` in `release-readiness.json` and an Offline POS Pilot
+  Evidence section in `evidence-summary.md`.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The new exporter proves the release gate and artifact chain, but a real
+  store/register/device pilot still needs live staging data and operator
+  approval.
+- Offline queue snapshot metrics must be exported from a live Odoo pilot
+  dashboard or provided by protected environment variables until a richer live
+  collector is added.
+- FBR certified-provider validation, PSP live certification, physical hardware
+  certification, full protected browser E2E, monitoring/restore/load/security
+  execution, and production secret-manager rollout remain production blockers.
+
+### Next Iteration
+
+- Add a protected offline queue snapshot collector that authenticates to Odoo,
+  fetches offline status plus pilot dashboard metrics, and feeds
+  `protected-offline-pilot` automatically.
+- Continue live protected-run execution once staging URLs, credentials, backup
+  artifacts, monitoring endpoints, and protected self-hosted runner access are
+  available.
+- Continue PSP/FBR/hardware certification execution with real provider and
+  device evidence.
+
 ## Iteration 110: Staging Operations Harness Enforcement
 
 Status: Complete

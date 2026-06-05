@@ -18,6 +18,7 @@ DEFAULT_ARTIFACTS = [
     "protected-provider-readiness",
     "protected-payment-lifecycle",
     "protected-offline-replay",
+    "protected-offline-pilot",
     "release-evidence",
     "protected-e2e",
     "ops-tool-evidence",

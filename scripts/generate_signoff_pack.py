@@ -405,6 +405,7 @@ def _evidence_group(entry):
         or "protected-provider-readiness" in relative_lower
         or "protected-payment-lifecycle" in relative_lower
         or "protected-offline-replay" in relative_lower
+        or "protected-offline-pilot" in relative_lower
         or "github-artifact-metadata" in relative_lower
         or "protected-runner-preflight" in relative_lower
         or "protected-runner-bootstrap-verification" in relative_lower
@@ -431,6 +432,7 @@ def _evidence_group(entry):
         or filename == "protected-provider-readiness.json"
         or filename == "protected-payment-lifecycle-evidence.json"
         or filename == "protected-offline-replay-evidence.json"
+        or filename == "offline-pos-pilot-evidence.json"
         or filename == "github-artifact-metadata.json"
         or filename == "protected-runner-preflight.json"
         or filename == "protected-runner-bootstrap-verification.json"
@@ -891,6 +893,66 @@ def _ops_harness_reviews(evidence_entries):
                 "check_count": len(checks),
                 "failed_checks": [row.get("name", "") for row in checks if row.get("status") == "failed"],
                 "skipped_checks": [row.get("name", "") for row in checks if row.get("status") == "skipped"],
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
+def _offline_pilot_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "offline-pos-pilot-evidence.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        pilot = context.get("pilot") or {}
+        thresholds = context.get("thresholds") or {}
+        metrics = payload.get("queue_metrics") or {}
+        offline_replay = payload.get("offline_replay") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "target_environment": context.get("target_environment", ""),
+                "strict": bool(context.get("strict")),
+                "require_offline_replay_pass": bool(context.get("require_offline_replay_pass")),
+                "require_runtime_proof": bool(context.get("require_runtime_proof")),
+                "require_duplicate_proof": bool(context.get("require_duplicate_proof")),
+                "outage_ref": pilot.get("outage_ref", ""),
+                "recovery_owner": pilot.get("recovery_owner", ""),
+                "store_ref": pilot.get("store_ref", ""),
+                "register_ref": pilot.get("register_ref", ""),
+                "source_device_id": pilot.get("source_device_id", ""),
+                "snapshot_present": bool(metrics.get("snapshot_present")),
+                "replay_success_count": metrics.get("replay_success_count", 0),
+                "replay_failure_count": metrics.get("replay_failure_count", 0),
+                "duplicate_count": metrics.get("duplicate_count", 0),
+                "conflict_count": metrics.get("conflict_count", 0),
+                "failed_count": metrics.get("failed_count", 0),
+                "blocked_count": metrics.get("blocked_count", 0),
+                "watch_count": metrics.get("watch_count", 0),
+                "unresolved_count": metrics.get("unresolved_count", 0),
+                "max_queue_age_minutes": metrics.get("max_queue_age_minutes"),
+                "max_unresolved_blocked": thresholds.get("max_unresolved_blocked", 0),
+                "max_unresolved_watch": thresholds.get("max_unresolved_watch", 0),
+                "max_conflict_count": thresholds.get("max_conflict_count", 0),
+                "max_failed_count": thresholds.get("max_failed_count", 0),
+                "max_queue_age_threshold_minutes": thresholds.get(
+                    "max_queue_age_threshold_minutes",
+                    0,
+                ),
+                "minimum_replayed_count": thresholds.get("minimum_replayed_count", 0),
+                "minimum_duplicate_count": thresholds.get("minimum_duplicate_count", 0),
+                "offline_replay_decision": offline_replay.get("decision", ""),
+                "offline_replay_ci_status": offline_replay.get("ci_status", ""),
+                "offline_replay_runtime_proof": bool(offline_replay.get("runtime_proof")),
+                "offline_replay_duplicate_contract_proof": bool(
+                    offline_replay.get("duplicate_contract_proof")
+                ),
                 "blockers": payload.get("blockers") or [],
                 "warnings": payload.get("warnings") or [],
             }
@@ -1427,6 +1489,7 @@ def _evidence_summary(context, evidence_entries):
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     ops_harness_reviews = _ops_harness_reviews(evidence_entries)
+    offline_pilot_reviews = _offline_pilot_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
@@ -1817,6 +1880,70 @@ def _evidence_summary(context, evidence_entries):
         ops_harness_lines.append("")
     if not ops_harness_lines:
         ops_harness_lines = ["- No `ops-evidence.json` files were attached.", ""]
+
+    offline_pilot_lines = []
+    for review in offline_pilot_reviews:
+        offline_pilot_lines.append("### `%s`" % review["path"])
+        offline_pilot_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        offline_pilot_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        offline_pilot_lines.append(
+            "- Target/strict/replay/runtime/duplicate-required: %s/%s/%s/%s/%s"
+            % (
+                review["target_environment"] or "unset",
+                "yes" if review["strict"] else "no",
+                "yes" if review["require_offline_replay_pass"] else "no",
+                "yes" if review["require_runtime_proof"] else "no",
+                "yes" if review["require_duplicate_proof"] else "no",
+            )
+        )
+        offline_pilot_lines.append(
+            "- Pilot outage/store/register/device/owner: %s/%s/%s/%s/%s"
+            % (
+                review["outage_ref"] or "unset",
+                review["store_ref"] or "unset",
+                review["register_ref"] or "unset",
+                review["source_device_id"] or "unset",
+                review["recovery_owner"] or "unset",
+            )
+        )
+        offline_pilot_lines.append(
+            "- Queue replayed/failed/duplicate/conflict/blocked/watch/unresolved: %s/%s/%s/%s/%s/%s/%s"
+            % (
+                review["replay_success_count"],
+                review["replay_failure_count"],
+                review["duplicate_count"],
+                review["conflict_count"],
+                review["blocked_count"],
+                review["watch_count"],
+                review["unresolved_count"],
+            )
+        )
+        offline_pilot_lines.append(
+            "- Thresholds replayed-min/duplicate-min/blocked/watch/conflict/failed/max-age: %s/%s/%s/%s/%s/%s/%s"
+            % (
+                review["minimum_replayed_count"],
+                review["minimum_duplicate_count"],
+                review["max_unresolved_blocked"],
+                review["max_unresolved_watch"],
+                review["max_conflict_count"],
+                review["max_failed_count"],
+                review["max_queue_age_threshold_minutes"],
+            )
+        )
+        offline_pilot_lines.append(
+            "- Max queue age/runtime/duplicate-contract/snapshot: %s/%s/%s/%s"
+            % (
+                review["max_queue_age_minutes"]
+                if review["max_queue_age_minutes"] is not None
+                else "unset",
+                "yes" if review["offline_replay_runtime_proof"] else "no",
+                "yes" if review["offline_replay_duplicate_contract_proof"] else "no",
+                "yes" if review["snapshot_present"] else "no",
+            )
+        )
+        offline_pilot_lines.append("")
+    if not offline_pilot_lines:
+        offline_pilot_lines = ["- No `offline-pos-pilot-evidence.json` files were attached.", ""]
 
     monitoring_lines = []
     for review in monitoring_reviews:
@@ -2354,6 +2481,9 @@ def _evidence_summary(context, evidence_entries):
 ## Operations Harness Evidence
 
 {chr(10).join(ops_harness_lines)}
+## Offline POS Pilot Evidence
+
+{chr(10).join(offline_pilot_lines)}
 ## Monitoring Evidence
 
 {chr(10).join(monitoring_lines)}
@@ -2421,6 +2551,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     ops_harness_reviews = _ops_harness_reviews(evidence_entries)
+    offline_pilot_reviews = _offline_pilot_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
@@ -2570,6 +2701,20 @@ def _release_readiness(context, evidence_entries, group_counts):
             blockers.append("Browser E2E readiness %s is %s" % (review["path"], review["decision"]))
         elif decision in {"warning", "warn"}:
             warnings.append("Browser E2E readiness %s is %s" % (review["path"], review["decision"]))
+
+    for review in ops_harness_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Operations harness evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Operations harness evidence %s is %s" % (review["path"], review["decision"]))
+
+    for review in offline_pilot_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Offline POS pilot evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Offline POS pilot evidence %s is %s" % (review["path"], review["decision"]))
 
     for review in monitoring_reviews:
         decision = str(review.get("decision") or "").lower()
@@ -2743,6 +2888,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "e2e_execution_reviews": e2e_execution_reviews,
         "e2e_readiness_reviews": e2e_readiness_reviews,
         "ops_harness_reviews": ops_harness_reviews,
+        "offline_pilot_reviews": offline_pilot_reviews,
         "monitoring_reviews": monitoring_reviews,
         "incident_runbook_reviews": incident_runbook_reviews,
         "load_reviews": load_reviews,

@@ -1475,12 +1475,45 @@ replay browser evidence blocks release readiness. The evidence writes
 `protected-offline-replay-evidence.json`, `status.tsv`, `env-summary.txt`, and
 `summary.md` without printing Odoo passwords or secrets.
 
+Protected offline POS pilot evidence is controlled with:
+
+```bash
+TIJARA_OFFLINE_PILOT_OUTAGE_REF=outage:store-pilot-001
+TIJARA_OFFLINE_PILOT_RECOVERY_OWNER=OpsLead
+TIJARA_OFFLINE_PILOT_STORE_REF=Karachi-Branch
+TIJARA_OFFLINE_PILOT_REGISTER_REF=POS-01
+TIJARA_OFFLINE_PILOT_SOURCE_DEVICE_ID=karachi-pos-01
+TIJARA_OFFLINE_PILOT_REPLAY_SUCCESS_COUNT=1
+TIJARA_OFFLINE_PILOT_DUPLICATE_COUNT=1
+TIJARA_OFFLINE_PILOT_BLOCKED_COUNT=0
+TIJARA_OFFLINE_PILOT_WATCH_COUNT=0
+TIJARA_OFFLINE_PILOT_CONFLICT_COUNT=0
+TIJARA_OFFLINE_PILOT_FAILED_COUNT=0
+TIJARA_OFFLINE_PILOT_MAX_QUEUE_AGE_MINUTES=5
+TIJARA_OFFLINE_PILOT_REQUIRE_REPLAY_PASS=1
+TIJARA_OFFLINE_PILOT_REQUIRE_RUNTIME_PROOF=1
+TIJARA_OFFLINE_PILOT_REQUIRE_DUPLICATE_PROOF=1
+TIJARA_OFFLINE_PILOT_FAIL_ON_WARNING=1
+```
+
+`make protected-offline-pilot-evidence` writes
+`offline-pos-pilot-evidence.json`, `status.tsv`, `env-summary.txt`, and
+`summary.md` under `deploy/runtime/protected-offline-pilot/<run-id>/`. Use
+`TIJARA_OFFLINE_PILOT_QUEUE_STATUS_JSON` when the pilot exports a structured
+queue snapshot; otherwise set the count variables directly from the staging
+pilot dashboard. Strict protected runs require the outage reference, recovery
+owner, store, register, source device, replay success proof, zero blocked/watch
+queues, zero conflicts/failures, and queue age within
+`TIJARA_OFFLINE_PILOT_MAX_QUEUE_AGE_THRESHOLD_MINUTES`. The sign-off package
+adds `offline_pilot_reviews` to `release-readiness.json` and an Offline POS
+Pilot Evidence section to `evidence-summary.md`.
+
 After the protected readiness check, the workflow runs
 `scripts/export_protected_artifact_summary.py`. The generated `summary.md`
 points release owners at failed/warning rows across preflight, release,
-provider readiness, payment lifecycle, Browser E2E, offline replay, operations,
-certification, retention, secret-manager, production operations readiness, and
-sign-off artifacts. Use it as the first file to open inside
+provider readiness, payment lifecycle, Browser E2E, offline replay, offline
+pilot, operations, certification, retention, secret-manager, production
+operations readiness, and sign-off artifacts. Use it as the first file to open inside
 `tijara-protected-release-evidence-<environment>-<run>`. In GitHub Actions, the
 summary also records the workflow run URL, commit/ref metadata, and uploaded
 artifact reference when those values are available.

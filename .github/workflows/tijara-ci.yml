@@ -148,10 +148,10 @@ jobs:
       TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF: ${{ vars.TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF }}
       TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF: ${{ vars.TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF }}
       TIJARA_FIRST_RUN_BACKUP_REF: ${{ vars.TIJARA_FIRST_RUN_BACKUP_REF || vars.TIJARA_BACKUP_ARTIFACT_REF }}
-      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary' }}
+      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary' }}
       TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS: ${{ vars.TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS || '0' }}
-      TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-artifact-summary,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
-      TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,release-evidence,protected-e2e,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata' }}
+      TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,protected-artifact-summary,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
+      TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata' }}
       TIJARA_SERVICE_CHECKS_PROBE: ${{ vars.TIJARA_SERVICE_CHECKS_PROBE || '0' }}
       TIJARA_SERVICE_CHECKS_REQUIRE_PROBES: ${{ vars.TIJARA_SERVICE_CHECKS_REQUIRE_PROBES || '0' }}
       TIJARA_SERVICE_CHECKS_TIMEOUT: ${{ vars.TIJARA_SERVICE_CHECKS_TIMEOUT || '8' }}
@@ -168,6 +168,38 @@ jobs:
       TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS: ${{ vars.TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS || '0' }}
       TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF: ${{ vars.TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF || '0' }}
       TIJARA_OFFLINE_REPLAY_FAIL_ON_WARNING: ${{ vars.TIJARA_OFFLINE_REPLAY_FAIL_ON_WARNING || '0' }}
+      TIJARA_OFFLINE_PILOT_OUTAGE_REF: ${{ vars.TIJARA_OFFLINE_PILOT_OUTAGE_REF }}
+      TIJARA_OFFLINE_PILOT_RECOVERY_OWNER: ${{ vars.TIJARA_OFFLINE_PILOT_RECOVERY_OWNER }}
+      TIJARA_OFFLINE_PILOT_STORE_REF: ${{ vars.TIJARA_OFFLINE_PILOT_STORE_REF }}
+      TIJARA_OFFLINE_PILOT_REGISTER_REF: ${{ vars.TIJARA_OFFLINE_PILOT_REGISTER_REF }}
+      TIJARA_OFFLINE_PILOT_SOURCE_DEVICE_ID: ${{ vars.TIJARA_OFFLINE_PILOT_SOURCE_DEVICE_ID }}
+      TIJARA_OFFLINE_PILOT_QUEUE_STATUS_JSON: ${{ vars.TIJARA_OFFLINE_PILOT_QUEUE_STATUS_JSON }}
+      TIJARA_OFFLINE_PILOT_QUEUED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_QUEUED_COUNT }}
+      TIJARA_OFFLINE_PILOT_VALIDATED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_VALIDATED_COUNT }}
+      TIJARA_OFFLINE_PILOT_REPLAYED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_REPLAYED_COUNT }}
+      TIJARA_OFFLINE_PILOT_DUPLICATE_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_DUPLICATE_COUNT }}
+      TIJARA_OFFLINE_PILOT_MERGED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_MERGED_COUNT }}
+      TIJARA_OFFLINE_PILOT_CANCELLED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_CANCELLED_COUNT }}
+      TIJARA_OFFLINE_PILOT_CONFLICT_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_CONFLICT_COUNT }}
+      TIJARA_OFFLINE_PILOT_FAILED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_FAILED_COUNT }}
+      TIJARA_OFFLINE_PILOT_REPLAY_SUCCESS_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_REPLAY_SUCCESS_COUNT }}
+      TIJARA_OFFLINE_PILOT_REPLAY_FAILURE_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_REPLAY_FAILURE_COUNT }}
+      TIJARA_OFFLINE_PILOT_BLOCKED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_BLOCKED_COUNT }}
+      TIJARA_OFFLINE_PILOT_WATCH_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_WATCH_COUNT }}
+      TIJARA_OFFLINE_PILOT_RESOLVED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_RESOLVED_COUNT }}
+      TIJARA_OFFLINE_PILOT_UNRESOLVED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_UNRESOLVED_COUNT }}
+      TIJARA_OFFLINE_PILOT_MAX_QUEUE_AGE_MINUTES: ${{ vars.TIJARA_OFFLINE_PILOT_MAX_QUEUE_AGE_MINUTES }}
+      TIJARA_OFFLINE_PILOT_REQUIRE_REPLAY_PASS: ${{ vars.TIJARA_OFFLINE_PILOT_REQUIRE_REPLAY_PASS || '0' }}
+      TIJARA_OFFLINE_PILOT_REQUIRE_RUNTIME_PROOF: ${{ vars.TIJARA_OFFLINE_PILOT_REQUIRE_RUNTIME_PROOF || '0' }}
+      TIJARA_OFFLINE_PILOT_REQUIRE_DUPLICATE_PROOF: ${{ vars.TIJARA_OFFLINE_PILOT_REQUIRE_DUPLICATE_PROOF || '0' }}
+      TIJARA_OFFLINE_PILOT_FAIL_ON_WARNING: ${{ vars.TIJARA_OFFLINE_PILOT_FAIL_ON_WARNING || '0' }}
+      TIJARA_OFFLINE_PILOT_MAX_UNRESOLVED_BLOCKED: ${{ vars.TIJARA_OFFLINE_PILOT_MAX_UNRESOLVED_BLOCKED || '0' }}
+      TIJARA_OFFLINE_PILOT_MAX_UNRESOLVED_WATCH: ${{ vars.TIJARA_OFFLINE_PILOT_MAX_UNRESOLVED_WATCH || '0' }}
+      TIJARA_OFFLINE_PILOT_MAX_CONFLICT_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_MAX_CONFLICT_COUNT || '0' }}
+      TIJARA_OFFLINE_PILOT_MAX_FAILED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_MAX_FAILED_COUNT || '0' }}
+      TIJARA_OFFLINE_PILOT_MAX_QUEUE_AGE_THRESHOLD_MINUTES: ${{ vars.TIJARA_OFFLINE_PILOT_MAX_QUEUE_AGE_THRESHOLD_MINUTES || '30' }}
+      TIJARA_OFFLINE_PILOT_MINIMUM_REPLAYED_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_MINIMUM_REPLAYED_COUNT || '1' }}
+      TIJARA_OFFLINE_PILOT_MINIMUM_DUPLICATE_COUNT: ${{ vars.TIJARA_OFFLINE_PILOT_MINIMUM_DUPLICATE_COUNT || '1' }}
       TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS: ${{ vars.TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS || '30' }}
       TIJARA_PREFLIGHT_PROBE_URLS: ${{ vars.TIJARA_PREFLIGHT_PROBE_URLS || '0' }}
       TIJARA_PREFLIGHT_REQUIRE_URLS: ${{ vars.TIJARA_PREFLIGHT_REQUIRE_URLS || '0' }}
@@ -474,6 +506,29 @@ jobs:
             --output "deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID" \
             "${OFFLINE_REPLAY_ARGS[@]}" \
             --strict
+      - name: Protected offline POS pilot evidence
+        continue-on-error: true
+        run: |
+          OFFLINE_PILOT_ARGS=()
+          if [[ "${TIJARA_OFFLINE_PILOT_REQUIRE_REPLAY_PASS:-0}" == "1" ]]; then
+            OFFLINE_PILOT_ARGS+=(--require-offline-replay-pass)
+          fi
+          if [[ "${TIJARA_OFFLINE_PILOT_REQUIRE_RUNTIME_PROOF:-0}" == "1" ]]; then
+            OFFLINE_PILOT_ARGS+=(--require-runtime-proof)
+          fi
+          if [[ "${TIJARA_OFFLINE_PILOT_REQUIRE_DUPLICATE_PROOF:-0}" == "1" ]]; then
+            OFFLINE_PILOT_ARGS+=(--require-duplicate-proof)
+          fi
+          if [[ "${TIJARA_OFFLINE_PILOT_FAIL_ON_WARNING:-0}" == "1" ]]; then
+            OFFLINE_PILOT_ARGS+=(--fail-on-warning)
+          fi
+          python3 scripts/export_protected_offline_pilot_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/protected-offline-pilot/$TIJARA_PROTECTED_RUN_ID" \
+            --offline-replay-evidence "deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID/protected-offline-replay-evidence.json" \
+            "${OFFLINE_PILOT_ARGS[@]}" \
+            --strict
       - name: Capture protected operations tool outputs
         shell: bash
         run: |
@@ -715,6 +770,7 @@ jobs:
             --evidence-path "deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/protected-e2e/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/protected-offline-pilot/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID" \
             --evidence-path "deploy/runtime/monitoring-evidence/$TIJARA_PROTECTED_RUN_ID" \
@@ -774,7 +830,7 @@ jobs:
           fi
           TIJARA_SIGNOFF_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_ENVIRONMENT="$TIJARA_TARGET_ENVIRONMENT" \
-          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/protected-runbook-handoff/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-first-run/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-runner-bootstrap-verification/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-service-checks/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-provider-readiness/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-payment-lifecycle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-e2e/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/monitoring-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/incident-runbooks/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-runtime-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/deployment-environments/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/tenant-ops-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
+          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/protected-runbook-handoff/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-first-run/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-runner-bootstrap-verification/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-service-checks/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-provider-readiness/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-payment-lifecycle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-e2e/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/protected-offline-pilot/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/monitoring-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/incident-runbooks/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-runtime-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/deployment-environments/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/tenant-ops-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/psp,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/fbr,deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/hardware,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
           TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS="$REQUIRED_GROUPS" \
           TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
           make signoff-pack
@@ -837,6 +893,7 @@ jobs:
             deploy/runtime/protected-provider-readiness/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-payment-lifecycle/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-offline-replay/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/protected-offline-pilot/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-post-run-verification/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/github-artifact-metadata/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-artifact-summary/${{ env.TIJARA_PROTECTED_RUN_ID }}

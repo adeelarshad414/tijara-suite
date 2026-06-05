@@ -246,7 +246,8 @@ before the strict production operations readiness gate and sign-off package.
 Remaining enterprise phases include real target-hardware certification, full
 authenticated browser POS click-through coverage in staging, production FBR
 provider certification, secret-manager rollout, offline POS pilot
-certification, PSP certification/settlement-file API sign-off for real
+certification with protected queue-age/conflict evidence, PSP
+certification/settlement-file API sign-off for real
 gateways, finance posting/tax policy sign-off for each provider, and deeper
 receipt line/tax/payment layout controls.
 
@@ -482,6 +483,14 @@ The detailed policy and dependency intake checklist are maintained in
   conflict review screens, Odoo transaction tests, Browser E2E spec coverage,
   and correlated protected E2E/Playwright evidence when staging credentials are
   available.
+- `scripts/export_protected_offline_pilot_evidence.py` and
+  `make protected-offline-pilot-evidence` export protected offline POS pilot
+  evidence under `deploy/runtime/protected-offline-pilot/`, tying the replay
+  evidence to a real outage reference, recovery owner, store, register, source
+  device, replay success count, duplicate proof, conflict/failed queue counts,
+  blocked/watch thresholds, and maximum queue-age threshold. The protected
+  workflow uploads this artifact and the sign-off package exposes
+  `offline_pilot_reviews` in `release-readiness.json`.
 - The protected GitHub workflow now runs `scripts/run_operations_release_bundle.py`
   and standalone monitoring, incident, deployment-environment, secret-runtime,
   and tenant-ops evidence exporters before strict production operations
