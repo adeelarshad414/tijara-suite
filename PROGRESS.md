@@ -3905,3 +3905,104 @@ Date: 2026-06-05
   corrected.
 - Add production-grade secret-manager and evidence-retention checks into the
   release gate.
+
+## Iteration 58: Release Retention and Secret-Manager Evidence
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_release_retention_evidence.py`.
+- The retention exporter:
+  - Records artifact-store, artifact-retention policy, certification-retention
+    policy, secret-manager provider/reference, and secret-rotation policy
+    readiness without exposing secret values.
+  - Validates operational retention baselines for CI artifacts, release
+    evidence, certification evidence, logs, and backups.
+  - Fingerprints attached release evidence directories/files with SHA-256
+    hashes and byte counts.
+  - Rejects secret-like metadata keys.
+  - Writes `release-retention-evidence.json`, `status.tsv`,
+    `env-summary.txt`, and `summary.md` under
+    `deploy/runtime/release-retention-evidence/<run-id>/`.
+  - Supports strict production mode and warning-mode local execution.
+- Added operator shortcuts:
+  - `make release-retention-evidence`
+  - `npm run release:retention`
+- Enhanced `scripts/run_operations_release_bundle.py` to include a
+  `retention` lane after load matrix, enterprise load, production smoke,
+  monitoring, and incident runbook evidence.
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group release retention evidence as Operations evidence.
+  - Parse attached `release-retention-evidence.json`.
+  - Add a Release Retention Evidence section to `evidence-summary.md`.
+  - Add `release_retention_reviews` into `release-readiness.json`.
+  - Treat failed retention evidence as release blockers and warning retention
+    evidence as release warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Strict complete retention export passes:
+  `python3 scripts/export_release_retention_evidence.py --run-id
+  retention-ready --output /private/tmp/tijara-retention-ready
+  --target-environment production --artifact-store-reference
+  s3://tijara-release-evidence/retention-ready --artifact-retention-policy-ref
+  policy:release-evidence-365d --certification-retention-policy-ref
+  policy:certification-evidence-365d --secret-manager-provider vault
+  --secret-manager-reference vault:tijara/production
+  --secret-rotation-policy-ref policy:quarterly-secret-rotation
+  --ci-artifact-retention-days 30 --release-evidence-retention-days 365
+  --certification-evidence-retention-days 365 --log-retention-days 30
+  --backup-retention-days 30 --evidence-path
+  /private/tmp/tijara-fbr-fixture-smoke --strict`.
+- `make release-retention-evidence` passes in warning mode when production
+  references are not supplied.
+- `npm run release:retention` passes in warning mode.
+- `python3 scripts/run_operations_release_bundle.py --run-id ops-retention
+  --output /private/tmp/tijara-ops-retention --checks retention` passes in
+  warning mode and writes a retention manifest.
+- Full local operations bundle with
+  `TIJARA_OPS_BUNDLE_OUTPUT=/private/tmp/tijara-ops-bundle-retention make
+  operations-release-bundle` completes in warning mode and includes the
+  `retention` lane.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using the strict retention evidence directory.
+- Confirmed `evidence-summary.md` includes Release Retention Evidence.
+- Confirmed `release-readiness.json` includes `release_retention_reviews` and
+  is `ready` for the focused complete retention evidence run.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_release_retention_evidence.py
+  scripts/run_operations_release_bundle.py scripts/generate_signoff_pack.py`
+  passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- The local operations bundle remains warning-mode because production URLs,
+  k6-ready network/load prerequisites, incident owner references, monitoring
+  endpoints, and retention/secret-manager references are not configured
+  locally.
+- Artifact upload still needs the final production CI/CD provider and bucket or
+  object-store configuration.
+- Secret-manager references now have release evidence, but production still
+  needs actual provider integration, rotation jobs, and access-review evidence.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Add CI/CD artifact retention workflow guidance or workflow hooks for the
+  chosen GitHub Actions/Open-source deployment pipeline.
+- Add production secret-manager integration checks for runtime configuration
+  files once the target provider is selected.
+- Continue staging/live FBR transaction execution after database credentials and
+  certified-provider sandbox credentials are corrected.

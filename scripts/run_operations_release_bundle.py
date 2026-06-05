@@ -80,6 +80,7 @@ def _step_specs(args, output):
     smoke_dir = output / "production-smoke"
     monitoring_dir = output / "monitoring-evidence"
     incident_dir = output / "incident-runbook"
+    retention_dir = output / "release-retention"
     smoke_decision = smoke_dir / "smoke-decision.json"
     monitoring_evidence = monitoring_dir / "monitoring-evidence.json"
 
@@ -156,15 +157,42 @@ def _step_specs(args, output):
                 str(incident_dir),
             ],
         },
+        "retention": {
+            "label": "release-retention",
+            "output": retention_dir,
+            "manifest": retention_dir / "release-retention-evidence.json",
+            "command": [
+                sys.executable,
+                "scripts/export_release_retention_evidence.py",
+                "--run-id",
+                args.run_id,
+                "--target-environment",
+                args.target_environment,
+                "--output",
+                str(retention_dir),
+                "--evidence-path",
+                str(matrix_dir),
+                "--evidence-path",
+                str(load_dir),
+                "--evidence-path",
+                str(smoke_dir),
+                "--evidence-path",
+                str(monitoring_dir),
+                "--evidence-path",
+                str(incident_dir),
+            ],
+        },
     }
 
     if args.strict:
         specs["load-matrix"]["command"].append("--strict")
         specs["incident"]["command"].append("--strict")
+        specs["retention"]["command"].append("--strict")
         specs["load-enterprise"]["env"]["TIJARA_LOAD_STRICT"] = "1"
     else:
         specs["smoke"]["command"].append("--non-strict")
         specs["monitoring"]["command"].append("--non-strict")
+        specs["retention"]["command"].append("--non-strict")
         specs["load-enterprise"]["env"]["TIJARA_LOAD_STRICT"] = "0"
 
     smoke_base_url = args.smoke_base_url or args.base_url
@@ -300,7 +328,7 @@ def main():
     parser.add_argument("--run-id", default=os.environ.get("TIJARA_OPS_BUNDLE_RUN_ID", _default_run_id()))
     parser.add_argument("--target-environment", default=os.environ.get("TIJARA_OPS_BUNDLE_ENVIRONMENT", "staging"))
     parser.add_argument("--output", default=os.environ.get("TIJARA_OPS_BUNDLE_OUTPUT", ""))
-    parser.add_argument("--checks", default=os.environ.get("TIJARA_OPS_BUNDLE_CHECKS", "load-matrix,load-enterprise,smoke,monitoring,incident"))
+    parser.add_argument("--checks", default=os.environ.get("TIJARA_OPS_BUNDLE_CHECKS", "load-matrix,load-enterprise,smoke,monitoring,incident,retention"))
     parser.add_argument("--base-url", default=os.environ.get("TIJARA_BASE_URL", ""))
     parser.add_argument("--smoke-base-url", default=os.environ.get("TIJARA_SMOKE_BASE_URL", ""))
     parser.add_argument("--smoke-url", action="append", default=[])
@@ -318,7 +346,7 @@ def main():
         for item in str(args.checks or "").split(",")
         if item.strip()
     ]
-    canonical_order = ["load-matrix", "load-enterprise", "smoke", "monitoring", "incident"]
+    canonical_order = ["load-matrix", "load-enterprise", "smoke", "monitoring", "incident", "retention"]
     requested = list(dict.fromkeys(args.checks))
     args.checks = [check for check in canonical_order if check in requested] + [
         check for check in requested if check not in canonical_order
@@ -419,6 +447,11 @@ def main():
                 _safe_env_value(os.environ.get("TIJARA_SUPPORT_OWNER")),
                 _safe_env_value(os.environ.get("TIJARA_BUSINESS_OWNER")),
                 _safe_env_value(os.environ.get("TIJARA_ONCALL_CONTACT")),
+            ),
+            "retention_store_and_secret_manager=%s/%s"
+            % (
+                _safe_env_value(os.environ.get("TIJARA_ARTIFACT_STORE_REFERENCE")),
+                _safe_env_value(os.environ.get("TIJARA_SECRET_MANAGER_PROVIDER")),
             ),
         ]
     )

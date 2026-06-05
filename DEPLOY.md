@@ -85,6 +85,7 @@ make fbr-readiness-evidence
 make fbr-fixture-smoke
 make monitoring-evidence
 make incident-runbook-evidence
+make release-retention-evidence
 make load-evidence
 make operations-release-bundle
 make signoff-pack
@@ -780,6 +781,35 @@ The workflow uploads `deploy/runtime/release-evidence/ci-local` and
 release evidence, but it prevents PRs from merging with a broken local release
 gate or malformed readiness package.
 
+Export release retention and secret-manager evidence before production
+approval:
+
+```bash
+python3 scripts/export_release_retention_evidence.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment production \
+  --artifact-store-reference s3://tijara-release-evidence/2026-06-05-rc1 \
+  --artifact-retention-policy-ref policy:release-evidence-365d \
+  --certification-retention-policy-ref policy:certification-evidence-365d \
+  --secret-manager-provider vault \
+  --secret-manager-reference vault:tijara/production \
+  --secret-rotation-policy-ref policy:quarterly-secret-rotation \
+  --ci-artifact-retention-days 30 \
+  --release-evidence-retention-days 365 \
+  --certification-evidence-retention-days 365 \
+  --log-retention-days 30 \
+  --backup-retention-days 30 \
+  --evidence-path deploy/runtime/operations-release-bundle/2026-06-05-rc1 \
+  --strict
+```
+
+The exporter fingerprints attached evidence files, records retention-day
+baselines, confirms only secret-manager references are present, and writes
+`release-retention-evidence.json`, `status.tsv`, `env-summary.txt`, and
+`summary.md` under `deploy/runtime/release-retention-evidence/<run-id>/`.
+Include that directory in `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package
+extracts it under `release_retention_reviews`.
+
 Optional tools:
 
 - Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.
@@ -791,8 +821,11 @@ Optional tools:
 - Run `make load-profile-matrix-evidence` to export the approved load profile
   matrix for release sign-off.
 - Run `make operations-release-bundle` to collect matrix, enterprise load,
-  smoke, monitoring, and incident runbook evidence under one Operations
-  evidence directory.
+  smoke, monitoring, incident runbook, and release retention evidence under one
+  Operations evidence directory.
+- Run `make release-retention-evidence` to export artifact-store,
+  secret-manager, retention policy, and evidence-fingerprint readiness without
+  running the full operations bundle.
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
@@ -880,6 +913,8 @@ The wrapper keeps a single run ID across:
 - `deploy/runtime/release-evidence/<run-id>/`
 - `deploy/runtime/e2e-evidence/<run-id>/`
 - `deploy/runtime/ops-evidence/<run-id>/`
+- `deploy/runtime/release-retention-evidence/<run-id>/` when exported
+  separately or nested under an operations release bundle.
 - `deploy/runtime/signoff-packages/<run-id>/`
 - `deploy/runtime/staging-release/<run-id>/`
 
@@ -970,8 +1005,8 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
-  runbook, load evidence, load profile matrix evidence, and non-secret
-  environment summaries for approvers.
+  runbook, release retention, load evidence, load profile matrix evidence, and
+  non-secret environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -988,7 +1023,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   tenant-size and vertical profile reviews are included under
   `load_matrix_reviews`; when operations release bundle evidence is attached,
   bundle step status and evidence references are included under
-  `operations_bundle_reviews`.
+  `operations_bundle_reviews`; when release retention evidence is attached,
+  artifact-store, secret-manager, retention, and evidence fingerprint reviews
+  are included under `release_retention_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 

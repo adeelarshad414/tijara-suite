@@ -384,11 +384,13 @@ def _evidence_group(entry):
         or "load-evidence" in relative_lower
         or "load-profile-matrix" in relative_lower
         or "operations-release-bundle" in relative_lower
+        or "release-retention-evidence" in relative_lower
         or filename == "monitoring-evidence.json"
         or filename == "incident-runbook-evidence.json"
         or filename == "load-evidence.json"
         or filename == "load-profile-matrix.json"
         or filename == "operations-release-bundle.json"
+        or filename == "release-retention-evidence.json"
     ):
         return "Operations"
     if "hardware" in relative_lower:
@@ -727,6 +729,45 @@ def _operations_bundle_reviews(evidence_entries):
     return reviews
 
 
+def _release_retention_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "release-retention-evidence.json":
+            continue
+        payload = _read_json(path)
+        artifact_store = payload.get("artifact_store") or {}
+        secret_manager = payload.get("secret_manager") or {}
+        evidence = payload.get("evidence") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "artifact_store_reference_present": bool(artifact_store.get("reference_present")),
+                "artifact_policy_reference_present": bool(
+                    artifact_store.get("retention_policy_reference_present")
+                ),
+                "certification_policy_reference_present": bool(
+                    artifact_store.get("certification_policy_reference_present")
+                ),
+                "secret_manager_provider_present": bool(secret_manager.get("provider_present")),
+                "secret_manager_provider": secret_manager.get("provider", ""),
+                "secret_manager_reference_present": bool(secret_manager.get("reference_present")),
+                "secret_rotation_policy_reference_present": bool(
+                    secret_manager.get("rotation_policy_reference_present")
+                ),
+                "retention_days": payload.get("retention_days") or {},
+                "minimum_retention_days": payload.get("minimum_retention_days") or {},
+                "evidence_file_count": evidence.get("file_count", 0),
+                "evidence_total_bytes": evidence.get("total_bytes", 0),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -740,6 +781,7 @@ def _evidence_summary(context, evidence_entries):
     load_reviews = _load_reviews(evidence_entries)
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
+    release_retention_reviews = _release_retention_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -1002,18 +1044,61 @@ def _evidence_summary(context, evidence_entries):
         )
         operations_bundle_lines.append("- Step count/statuses: %s/%s" % (review["step_count"], counts or "none"))
         operations_bundle_lines.append(
-            "- Evidence refs load-matrix/load-enterprise/smoke/monitoring/incident: %s/%s/%s/%s/%s"
+            "- Evidence refs load-matrix/load-enterprise/smoke/monitoring/incident/retention: %s/%s/%s/%s/%s/%s"
             % (
                 "yes" if refs.get("load-matrix") else "no",
                 "yes" if refs.get("load-enterprise") else "no",
                 "yes" if refs.get("smoke") else "no",
                 "yes" if refs.get("monitoring") else "no",
                 "yes" if refs.get("incident") else "no",
+                "yes" if refs.get("retention") else "no",
             )
         )
         operations_bundle_lines.append("")
     if not operations_bundle_lines:
         operations_bundle_lines = ["- No `operations-release-bundle.json` files were attached.", ""]
+
+    release_retention_lines = []
+    for review in release_retention_reviews:
+        retention_days = review["retention_days"] or {}
+        release_retention_lines.append("### `%s`" % review["path"])
+        release_retention_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        release_retention_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        release_retention_lines.append(
+            "- Artifact store/policies: %s/%s/%s"
+            % (
+                "yes" if review["artifact_store_reference_present"] else "no",
+                "yes" if review["artifact_policy_reference_present"] else "no",
+                "yes" if review["certification_policy_reference_present"] else "no",
+            )
+        )
+        release_retention_lines.append(
+            "- Secret manager/provider/rotation: %s/%s/%s"
+            % (
+                review["secret_manager_provider"] or (
+                    "yes" if review["secret_manager_provider_present"] else "no"
+                ),
+                "yes" if review["secret_manager_reference_present"] else "no",
+                "yes" if review["secret_rotation_policy_reference_present"] else "no",
+            )
+        )
+        release_retention_lines.append(
+            "- Retention days ci/release/cert/logs/backups: %s/%s/%s/%s/%s"
+            % (
+                retention_days.get("ci-artifacts", "unset"),
+                retention_days.get("release-evidence", "unset"),
+                retention_days.get("certification-evidence", "unset"),
+                retention_days.get("logs", "unset"),
+                retention_days.get("backups", "unset"),
+            )
+        )
+        release_retention_lines.append(
+            "- Evidence fingerprints: %s file(s), %s byte(s)"
+            % (review["evidence_file_count"], review["evidence_total_bytes"])
+        )
+        release_retention_lines.append("")
+    if not release_retention_lines:
+        release_retention_lines = ["- No `release-retention-evidence.json` files were attached.", ""]
 
     return f"""
 # Evidence Summary
@@ -1063,6 +1148,9 @@ def _evidence_summary(context, evidence_entries):
 ## Operations Release Bundle Evidence
 
 {chr(10).join(operations_bundle_lines)}
+## Release Retention Evidence
+
+{chr(10).join(release_retention_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -1087,6 +1175,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     load_reviews = _load_reviews(evidence_entries)
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
+    release_retention_reviews = _release_retention_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -1216,6 +1305,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Operations release bundle %s is %s" % (review["path"], review["decision"]))
 
+    for review in release_retention_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Release retention evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Release retention evidence %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -1250,6 +1346,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "load_reviews": load_reviews,
         "load_matrix_reviews": load_matrix_reviews,
         "operations_bundle_reviews": operations_bundle_reviews,
+        "release_retention_reviews": release_retention_reviews,
     }
 
 
