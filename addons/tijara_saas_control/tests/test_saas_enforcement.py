@@ -52,6 +52,18 @@ class TestTijaraSaasEnforcement(TransactionCase):
             values["company_id"] = self.company.id
         return account_model.create(values)
 
+    def _create_journal(self, name, code, journal_type, default_account=False):
+        journal_model = self.env["account.journal"].with_company(self.company)
+        values = {
+            "name": name,
+            "code": code,
+            "type": journal_type,
+            "company_id": self.company.id,
+        }
+        if default_account and "default_account_id" in journal_model._fields:
+            values["default_account_id"] = default_account.id
+        return journal_model.create(values)
+
     def _configure_payment_accounting(self):
         clearing = self._create_account("Tijara PSP Clearing", "TJP001", "asset_current")
         counterpart = self._create_account("Tijara PSP Counterpart", "TJP002", "asset_current")
@@ -64,16 +76,29 @@ class TestTijaraSaasEnforcement(TransactionCase):
         )
         chargeback_fee = self._create_account("Tijara Chargeback Fees", "TJP006", "expense")
         writeoff = self._create_account("Tijara Write-Offs", "TJP007", "expense")
-        journal_values = {
-            "name": "Tijara PSP Accounting",
-            "code": "TJPA",
-            "type": "general",
-            "company_id": self.company.id,
-        }
-        journal_model = self.env["account.journal"].with_company(self.company)
-        if "default_account_id" in journal_model._fields:
-            journal_values["default_account_id"] = clearing.id
-        journal = journal_model.create(journal_values)
+        refund_payment_account = self._create_account("Tijara Refund Payment Bank", "TJP008", "asset_cash")
+        refund_payment_outstanding = self._create_account(
+            "Tijara Refund Payment Outstanding",
+            "TJP009",
+            "asset_current",
+        )
+        customer_receivable = self._create_account("Tijara Refund Customer Receivable", "TJP010", "asset_receivable")
+        self.customer.with_company(self.company).property_account_receivable_id = customer_receivable
+        journal = self._create_journal("Tijara PSP Accounting", "TJPA", "general", clearing)
+        refund_payment_journal = self._create_journal(
+            "Tijara Refund Payments",
+            "TJRP",
+            "bank",
+            refund_payment_account,
+        )
+        if (
+            "outbound_payment_method_line_ids" in refund_payment_journal._fields
+            and refund_payment_journal.outbound_payment_method_line_ids
+            and "payment_account_id" in refund_payment_journal.outbound_payment_method_line_ids._fields
+        ):
+            refund_payment_journal.outbound_payment_method_line_ids.write(
+                {"payment_account_id": refund_payment_outstanding.id}
+            )
         self.company.write(
             {
                 "tijara_payment_accounting_journal_id": journal.id,
@@ -81,6 +106,7 @@ class TestTijaraSaasEnforcement(TransactionCase):
                 "tijara_payment_counterpart_account_id": counterpart.id,
                 "tijara_provider_fee_account_id": provider_fee.id,
                 "tijara_refund_account_id": refund.id,
+                "tijara_refund_payment_journal_id": refund_payment_journal.id,
                 "tijara_chargeback_receivable_account_id": chargeback_receivable.id,
                 "tijara_chargeback_fee_account_id": chargeback_fee.id,
                 "tijara_writeoff_account_id": writeoff.id,
@@ -92,10 +118,51 @@ class TestTijaraSaasEnforcement(TransactionCase):
             "counterpart": counterpart,
             "provider_fee": provider_fee,
             "refund": refund,
+            "refund_payment_journal": refund_payment_journal,
+            "refund_payment_account": refund_payment_account,
+            "refund_payment_outstanding": refund_payment_outstanding,
+            "customer_receivable": customer_receivable,
             "chargeback_receivable": chargeback_receivable,
             "chargeback_fee": chargeback_fee,
             "writeoff": writeoff,
         }
+
+    def _create_subscription_invoice(self, subscription, amount=1000):
+        receivable = self._create_account("Tijara Customer Receivable", "TJP100", "asset_receivable")
+        income = self._create_account("Tijara SaaS Income", "TJP101", "income")
+        sale_journal = self._create_journal("Tijara SaaS Sales", "TJSA", "sale", income)
+        self.customer.with_company(self.company).property_account_receivable_id = receivable
+        invoice = (
+            self.env["account.move"]
+            .with_company(self.company)
+            .create(
+                {
+                    "move_type": "out_invoice",
+                    "partner_id": self.customer.id,
+                    "company_id": self.company.id,
+                    "journal_id": sale_journal.id,
+                    "invoice_date": fields.Date.context_today(self.env.user),
+                    "invoice_date_due": fields.Date.context_today(self.env.user),
+                    "invoice_origin": subscription.name,
+                    "ref": subscription.database_name,
+                    "tijara_saas_subscription_id": subscription.id,
+                    "invoice_line_ids": [
+                        (
+                            0,
+                            0,
+                            {
+                                "name": "Tijara SaaS Subscription",
+                                "quantity": 1,
+                                "price_unit": amount,
+                                "account_id": income.id,
+                            },
+                        )
+                    ],
+                }
+            )
+        )
+        subscription.last_invoice_id = invoice.id
+        return invoice
 
     def test_saas_feature_enforcement_blocks_starter_and_allows_enterprise(self):
         subscription = self._subscription(self.starter_plan)
@@ -588,6 +655,68 @@ class TestTijaraSaasEnforcement(TransactionCase):
 
         action.action_create_draft_accounting_move()
         self.assertEqual(action.accounting_move_id, move)
+
+    def test_refund_credit_note_action_creates_customer_credit_note(self):
+        self._configure_payment_accounting()
+        subscription = self._subscription(self.enterprise_plan, state="active")
+        invoice = self._create_subscription_invoice(subscription, amount=1000)
+        action = self.env["tijara.saas.payment.accounting.action"].create(
+            {
+                "action_type": "refund_credit_note",
+                "provider": "stripe",
+                "company_id": self.company.id,
+                "subscription_id": subscription.id,
+                "invoice_id": invoice.id,
+                "amount": 250,
+            }
+        )
+        action.action_approve()
+
+        action.action_create_draft_accounting_move()
+        credit_note = action.accounting_move_id
+
+        self.assertTrue(credit_note)
+        self.assertEqual(credit_note.move_type, "out_refund")
+        self.assertEqual(credit_note.state, "draft")
+        self.assertEqual(credit_note.partner_id, self.customer)
+        self.assertEqual(credit_note.tijara_saas_subscription_id, subscription)
+        self.assertEqual(credit_note.invoice_line_ids[:1].price_unit, 250)
+        self.assertFalse(action.refund_payment_id)
+
+    def test_refund_payment_action_creates_draft_outbound_payment(self):
+        config = self._configure_payment_accounting()
+        subscription = self._subscription(self.enterprise_plan, state="active")
+        action = self.env["tijara.saas.payment.accounting.action"].create(
+            {
+                "action_type": "refund_payment",
+                "provider": "stripe",
+                "company_id": self.company.id,
+                "subscription_id": subscription.id,
+                "amount": 250,
+            }
+        )
+        action.action_approve()
+
+        action.action_create_draft_accounting_move()
+        payment = action.refund_payment_id
+
+        self.assertTrue(payment)
+        self.assertEqual(payment.payment_type, "outbound")
+        self.assertEqual(payment.partner_type, "customer")
+        self.assertEqual(payment.partner_id, self.customer)
+        self.assertEqual(payment.journal_id, config["refund_payment_journal"])
+        self.assertEqual(payment.amount, 250)
+        self.assertEqual(payment.state, "draft")
+        self.assertFalse(action.accounting_move_id)
+
+        action.action_post_accounting_move()
+
+        self.assertNotEqual(payment.state, "draft")
+        self.assertEqual(action.status, "posted")
+        self.assertTrue(action.accounting_move_id)
+        if "move_id" in payment._fields:
+            self.assertEqual(action.accounting_move_id, payment.move_id)
+            self.assertEqual(payment.move_id.state, "posted")
 
     def test_manual_review_action_does_not_create_automatic_move(self):
         self._configure_payment_accounting()

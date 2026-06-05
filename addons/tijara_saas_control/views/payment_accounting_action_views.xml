@@ -44,6 +44,7 @@
                 <field name="subscription_id"/>
                 <field name="amount"/>
                 <field name="accounting_move_id"/>
+                <field name="refund_payment_id"/>
                 <field name="requested_at"/>
                 <field name="approval_user_id"/>
                 <field name="status"/>
@@ -76,6 +77,7 @@
                             <field name="company_id"/>
                             <field name="amount"/>
                             <field name="accounting_move_id"/>
+                            <field name="refund_payment_id"/>
                             <field name="audit_hash"/>
                         </group>
                         <group>

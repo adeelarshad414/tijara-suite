@@ -295,9 +295,12 @@ price or a billing override amount. Operators can:
   manual review. Settlement batches cannot be marked reconciled while finance
   approval is required and generated actions are missing or unapproved.
 - Configure finance accounts on the company record and create draft Odoo
-  journal entries from approved accounting actions. The system refuses draft
-  move creation until the payment accounting journal and required clearing,
-  counterpart, fee, refund, chargeback, and write-off accounts are configured.
+  journal entries, customer refund credit notes, or draft outbound refund
+  payments from approved accounting actions. The system refuses draft move or
+  refund document creation until the payment accounting journal, refund payment
+  journal, outstanding payment account, customer receivable account, and
+  required clearing, counterpart, fee, refund, chargeback, and write-off
+  accounts are configured.
 
 Set `TIJARA_PAYMENT_WEBHOOK_SECRET` in the secret store or set the Odoo system
 parameter `tijara.saas.payment_webhook_secret`. Provider requests must include
@@ -335,7 +338,8 @@ Settlement import flow:
 9. Run `Create Draft Moves` from the settlement batch, settlement line, or
    refund/chargeback case after finance configuration is complete. Use the
    individual accounting action `Create Draft Move` button for exception cases.
-   Review draft journal lines before posting.
+   Review draft journal lines, refund credit notes, and draft outbound refund
+   payments before posting.
 10. Mark the batch reconciled only after all lines are matched, no mismatch
    remains, and finance approval status is approved.
 
@@ -349,8 +353,13 @@ Finance account setup:
    payout clearing.
 5. Configure provider fee expense, refund/credit-note, chargeback receivable,
    chargeback fee expense, and write-off expense accounts.
-6. Run a staging settlement import and create draft moves for every action type
-   before enabling production closeout.
+6. Configure `Tijara Refund Payment Journal` as the bank/cash journal used for
+   outbound customer refunds.
+7. Configure the refund payment journal outbound payment-method outstanding
+   account and customer receivable accounts for refund customers.
+8. Run a staging settlement import and create draft moves, refund credit notes,
+   and draft refund payments for every action type before enabling production
+   closeout.
 
 Month-end settlement close SOP:
 
@@ -361,10 +370,11 @@ Month-end settlement close SOP:
 3. Open refund/chargeback cases, attach evidence, and resolve won/lost/refunded
    outcomes before finance close.
 4. Generate and approve finance accounting actions.
-5. Create draft accounting moves from approved actions.
-6. Review draft moves against provider statements, bank statements, tax
-   treatment, and write-off policy.
-7. Post reviewed moves through normal Odoo accounting controls.
+5. Create draft accounting moves, refund credit notes, and refund payments from
+   approved actions.
+6. Review draft moves, credit notes, and refund payments against provider
+   statements, bank statements, tax treatment, and write-off policy.
+7. Post reviewed moves/payments through normal Odoo accounting controls.
 8. Mark settlement batches reconciled and archive provider statements, evidence
    hashes, and closeout notes.
 
@@ -383,9 +393,8 @@ Refund and chargeback workflow:
 - `Approve Finance` stamps the approval user/time and refreshes action hashes.
 
 Production still needs real PSP statement samples for parser certification,
-full finance sign-off for posting policy, automatic credit-note/refund-payment
-specialization where required by tax treatment, PSP certification, and formal
-finance reconciliation SOP sign-off.
+full finance sign-off for posting policy, tax treatment, PSP certification,
+and formal finance reconciliation SOP sign-off.
 
 ## SaaS Enforcement
 

@@ -118,6 +118,7 @@
                                     <field name="status"/>
                                     <field name="approval_user_id"/>
                                     <field name="accounting_move_id"/>
+                                    <field name="refund_payment_id"/>
                                 </list>
                             </field>
                         </page>

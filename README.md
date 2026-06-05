@@ -158,7 +158,10 @@ serve menu, deal, promotion, customer-display, and queue screen payloads. Paymen
 settlement closeout now has finance approval actions that can create guarded
 draft Odoo journal entries from configured provider clearing, fee, refund,
 chargeback, write-off, and counterpart accounts, including bulk draft-move
-creation from settlement batches and dispute cases. The
+creation from settlement batches and dispute cases. Approved refund actions can
+also create customer refund credit notes and draft outbound Odoo refund
+payments from configured refund journals, outstanding accounts, and customer
+receivable accounts. The
 kiosk route now includes a real self-ordering cart and checkout foundation that
 creates auditable kiosk orders, queue tickets when the tenant has the queue
 feature, and linked Odoo POS orders/payments when a kiosk profile is mapped to a
@@ -198,8 +201,8 @@ Remaining enterprise phases include real target-hardware certification, full
 authenticated browser POS click-through coverage in staging, production FBR
 provider certification, secret-manager rollout, offline POS pilot
 certification, PSP certification/settlement-file API sign-off for real
-gateways, automated payout/accounting posting, and deeper receipt
-line/tax/payment layout controls.
+gateways, finance posting/tax policy sign-off for each provider, and deeper
+receipt line/tax/payment layout controls.
 
 Odoo 19 compatibility has been handled for this scaffold, including security
 group privileges, product form inheritance, and `list` view declarations.
@@ -249,6 +252,9 @@ The retail operations layer now includes:
   move creation for approved provider fee, payout clearing, refund,
   chargeback, and write-off accounting actions, with bulk draft-move creation
   from settlement batches, settlement lines, and refund/chargeback cases.
+- Specialized refund accounting actions that create customer refund credit
+  notes and draft outbound refund payments with refund journal, outstanding
+  account, customer receivable, approval, posting, and audit-hash guardrails.
 - FBR dry-run/live HTTP adapter foundation for queued invoices with certified
   provider metadata and compliance evidence fields.
 - Offline POS queue foundation with payload hashing, validation, duplicate

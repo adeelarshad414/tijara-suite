@@ -11,6 +11,7 @@
                 <field name="tijara_payment_counterpart_account_id"/>
                 <field name="tijara_provider_fee_account_id"/>
                 <field name="tijara_refund_account_id"/>
+                <field name="tijara_refund_payment_journal_id"/>
                 <field name="tijara_chargeback_receivable_account_id"/>
                 <field name="tijara_chargeback_fee_account_id"/>
                 <field name="tijara_writeoff_account_id"/>

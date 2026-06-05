@@ -44,6 +44,7 @@ class TijaraSaasPaymentAccountingAction(models.Model):
     subscription_id = fields.Many2one("tijara.saas.subscription")
     invoice_id = fields.Many2one("account.move")
     accounting_move_id = fields.Many2one("account.move", string="Accounting Move")
+    refund_payment_id = fields.Many2one("account.payment", string="Refund Payment")
     draft_move_created_by_id = fields.Many2one("res.users")
     draft_move_created_at = fields.Datetime()
     amount = fields.Monetary(currency_field="currency_id")
@@ -90,6 +91,7 @@ class TijaraSaasPaymentAccountingAction(models.Model):
             "subscription_id": self.subscription_id.id or False,
             "invoice_id": self.invoice_id.id or False,
             "accounting_move_id": self.accounting_move_id.id or False,
+            "refund_payment_id": self.refund_payment_id.id or False,
             "amount": self.amount or 0.0,
             "status": self.status,
             "notes": self.notes or "",
@@ -107,6 +109,174 @@ class TijaraSaasPaymentAccountingAction(models.Model):
             self.subscription_id.database_name,
         ]
         return " / ".join(reference for reference in references if reference)
+
+    def _ensure_approved_refund_action(self, action_type):
+        self.ensure_one()
+        if self.action_type != action_type:
+            raise UserError(_("Accounting action %s is not a %s action.") % (self.name, action_type))
+        if self.status != "approved":
+            raise UserError(_("Approve accounting action %s before creating refund documents.") % self.name)
+        amount = self.company_id.currency_id.round(abs(self.amount or 0.0))
+        if not amount:
+            raise UserError(_("Accounting action %s must have a non-zero amount.") % self.name)
+        return amount
+
+    def _refund_partner(self):
+        self.ensure_one()
+        partner = self.invoice_id.partner_id or self.subscription_id.customer_id
+        if not partner:
+            raise UserError(_("Set a customer on the source invoice or subscription before creating refund documents."))
+        return partner
+
+    def _refund_sales_journal(self):
+        self.ensure_one()
+        if self.invoice_id and self.invoice_id.journal_id:
+            return self.invoice_id.journal_id
+        if self.subscription_id:
+            return self.subscription_id._tijara_sales_journal()
+        journal = self.env["account.journal"].sudo().search(
+            [("company_id", "=", self.company_id.id), ("type", "=", "sale")],
+            limit=1,
+        )
+        if not journal:
+            raise UserError(_("Configure a sales journal before creating refund credit notes."))
+        return journal
+
+    def _prepare_refund_credit_note_line(self, amount):
+        self.ensure_one()
+        source_line = self.invoice_id.invoice_line_ids[:1]
+        line_values = {
+            "name": _("Refund for %s") % (self.invoice_id.name or self.invoice_id.ref or self.name),
+            "quantity": 1,
+            "price_unit": amount,
+        }
+        if source_line:
+            line_values.update(
+                {
+                    "name": _("Refund for %s") % source_line.name,
+                    "product_id": source_line.product_id.id if source_line.product_id else False,
+                    "account_id": source_line.account_id.id if source_line.account_id else False,
+                    "tax_ids": [(6, 0, source_line.tax_ids.ids)],
+                }
+            )
+        elif self.subscription_id.billing_product_id:
+            line_values["product_id"] = self.subscription_id.billing_product_id.id
+        if not line_values.get("account_id") and self.company_id.tijara_refund_account_id:
+            line_values["account_id"] = self.company_id.tijara_refund_account_id.id
+        return line_values
+
+    def _create_refund_credit_note(self):
+        self.ensure_one()
+        amount = self._ensure_approved_refund_action("refund_credit_note")
+        partner = self._refund_partner()
+        journal = self._refund_sales_journal()
+        move_values = {
+            "move_type": "out_refund",
+            "partner_id": partner.id,
+            "company_id": self.company_id.id,
+            "journal_id": journal.id,
+            "invoice_date": fields.Date.context_today(self),
+            "invoice_origin": self.invoice_id.name or self.subscription_id.name or self.name,
+            "ref": "%s - %s" % (self.name, _("Refund credit note")),
+            "invoice_line_ids": [(0, 0, self._prepare_refund_credit_note_line(amount))],
+        }
+        if self.subscription_id:
+            move_values["tijara_saas_subscription_id"] = self.subscription_id.id
+        if self.invoice_id and "reversed_entry_id" in self.env["account.move"]._fields:
+            move_values["reversed_entry_id"] = self.invoice_id.id
+        credit_note = self.env["account.move"].with_company(self.company_id).create(move_values)
+        self.write(
+            {
+                "accounting_move_id": credit_note.id,
+                "draft_move_created_by_id": self.env.user.id,
+                "draft_move_created_at": fields.Datetime.now(),
+            }
+        )
+        self.action_refresh_audit_hash()
+        return credit_note
+
+    def _create_refund_payment(self):
+        self.ensure_one()
+        amount = self._ensure_approved_refund_action("refund_payment")
+        partner = self._refund_partner()
+        journal = self.company_id.tijara_refund_payment_journal_id
+        if not journal:
+            raise UserError(_("Configure a Tijara refund payment journal before creating refund payments."))
+        if not self._refund_payment_outstanding_account(journal):
+            raise UserError(
+                _(
+                    "Configure an outstanding payments account on refund journal %s before creating refund payments."
+                )
+                % journal.display_name
+            )
+        payment_model = self.env["account.payment"].with_company(self.company_id)
+        destination_account = self._refund_payment_destination_account(partner)
+        payment_values = {
+            "payment_type": "outbound",
+            "partner_type": "customer",
+            "partner_id": partner.id,
+            "company_id": self.company_id.id,
+            "amount": amount,
+            "currency_id": self.company_id.currency_id.id,
+            "date": fields.Date.context_today(self),
+            "journal_id": journal.id,
+        }
+        if "destination_account_id" in payment_model._fields:
+            payment_values["destination_account_id"] = destination_account.id
+        payment_reference = "%s - %s" % (self.name, _("Customer refund payment"))
+        if "memo" in payment_model._fields:
+            payment_values["memo"] = payment_reference
+        elif "ref" in payment_model._fields:
+            payment_values["ref"] = payment_reference
+        elif "payment_reference" in payment_model._fields:
+            payment_values["payment_reference"] = payment_reference
+        method_line = (
+            journal.outbound_payment_method_line_ids[:1]
+            if "outbound_payment_method_line_ids" in journal._fields
+            else self.env["account.payment.method.line"]
+        )
+        if "payment_method_line_id" in payment_model._fields and method_line:
+            payment_values["payment_method_line_id"] = method_line.id
+        payment = payment_model.create(payment_values)
+        move = payment.move_id if "move_id" in payment._fields else self.env["account.move"]
+        self.write(
+            {
+                "refund_payment_id": payment.id,
+                "accounting_move_id": move.id if move else False,
+                "draft_move_created_by_id": self.env.user.id,
+                "draft_move_created_at": fields.Datetime.now(),
+            }
+        )
+        self.action_refresh_audit_hash()
+        return payment
+
+    def _refund_payment_destination_account(self, partner):
+        self.ensure_one()
+        company_partner = partner.with_company(self.company_id)
+        destination_account = company_partner.property_account_receivable_id
+        if not destination_account:
+            raise UserError(
+                _("Configure a customer receivable account for %s before creating refund payments.")
+                % partner.display_name
+            )
+        return destination_account
+
+    def _refund_payment_outstanding_account(self, journal):
+        self.ensure_one()
+        if "outbound_payment_method_line_ids" in journal._fields:
+            method_lines = journal.outbound_payment_method_line_ids
+            if method_lines and "payment_account_id" in method_lines._fields:
+                payment_account = method_lines.filtered("payment_account_id")[:1].payment_account_id
+                if payment_account:
+                    return payment_account
+        company = self.company_id
+        for field_name in (
+            "account_journal_payment_credit_account_id",
+            "account_journal_payment_debit_account_id",
+        ):
+            if field_name in company._fields and company[field_name]:
+                return company[field_name]
+        return self.env["account.account"]
 
     def _configured_accounting_route(self):
         self.ensure_one()
@@ -230,9 +400,22 @@ class TijaraSaasPaymentAccountingAction(models.Model):
 
     def action_create_draft_accounting_move(self):
         moves = self.env["account.move"]
+        payments = self.env["account.payment"]
         for action in self:
             if action.accounting_move_id:
                 moves |= action.accounting_move_id
+                continue
+            if action.action_type == "refund_credit_note":
+                moves |= action._create_refund_credit_note()
+                continue
+            if action.action_type == "refund_payment":
+                payment = action._create_refund_payment()
+                if action.accounting_move_id:
+                    moves |= action.accounting_move_id
+                elif "move_id" in payment._fields and payment.move_id:
+                    moves |= payment.move_id
+                else:
+                    payments |= payment
                 continue
             move = (
                 self.env["account.move"]
@@ -248,6 +431,14 @@ class TijaraSaasPaymentAccountingAction(models.Model):
             )
             action.action_refresh_audit_hash()
             moves |= move
+        if not moves and payments:
+            return {
+                "type": "ir.actions.act_window",
+                "name": _("Draft Refund Payments"),
+                "res_model": "account.payment",
+                "view_mode": "list,form",
+                "domain": [("id", "in", payments.ids)],
+            }
         return {
             "type": "ir.actions.act_window",
             "name": _("Draft Accounting Moves"),
@@ -261,12 +452,20 @@ class TijaraSaasPaymentAccountingAction(models.Model):
         for action in self:
             if action.status != "approved":
                 raise UserError(_("Approve accounting action %s before posting its accounting move.") % action.name)
-            if not action.accounting_move_id:
+            if not action.accounting_move_id and not action.refund_payment_id:
                 action.action_create_draft_accounting_move()
-            if action.accounting_move_id.state != "posted":
+            if not action.accounting_move_id and action.refund_payment_id and "move_id" in action.refund_payment_id._fields:
+                action.accounting_move_id = action.refund_payment_id.move_id.id
+            if action.refund_payment_id:
+                if action.refund_payment_id.state != "posted":
+                    action.refund_payment_id.action_post()
+                if "move_id" in action.refund_payment_id._fields and action.refund_payment_id.move_id:
+                    action.accounting_move_id = action.refund_payment_id.move_id.id
+            elif action.accounting_move_id.state != "posted":
                 action.accounting_move_id.action_post()
             action.action_mark_posted()
-            moves |= action.accounting_move_id
+            if action.accounting_move_id:
+                moves |= action.accounting_move_id
         return {
             "type": "ir.actions.act_window",
             "name": _("Posted Accounting Moves"),

@@ -1969,3 +1969,70 @@ Date: 2026-06-05
   and security audit against a prepared staging stack.
 - Continue PSP/FBR certification work once real provider samples, credentials,
   and compliance contracts are available.
+
+## Iteration 27: Specialized Refund Credit Notes and Refund Payments
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added customer-facing refund accounting specialization:
+  - Approved `refund_credit_note` accounting actions now create draft customer
+    refund credit notes (`out_refund`) linked to the source subscription and
+    source invoice when available.
+  - Approved `refund_payment` accounting actions now create draft outbound
+    `account.payment` refund payments linked back to the finance action.
+  - Posting a refund payment action posts the payment, links the generated
+    accounting move, marks the action posted, and refreshes the audit trail.
+- Added company setup for `Tijara Refund Payment Journal`.
+- Added production guardrails:
+  - Refund payments require a configured refund payment journal.
+  - Refund payments require an outbound outstanding payment account on the
+    journal/payment method or company payment account setup.
+  - Refund payments require a customer receivable destination account.
+  - Duplicate document creation reuses existing linked credit notes or payments.
+- Updated finance closeout UI visibility:
+  - Payment Accounting Actions show linked refund payments.
+  - Settlement batch, settlement line, and dispute case finance-action lists now
+    show linked refund payments alongside accounting moves.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- Isolated Docker/Odoo transaction suite passed with `0 failed, 0 error(s)` of
+  33 tests for `tijara_saas_control`, `tijara_retail_core`, `tijara_pos_pk`,
+  `tijara_pos_experience`, and `tijara_analytics`.
+- Odoo transaction tests were extended to cover:
+  - Refund credit-note actions creating draft customer credit notes.
+  - Refund payment actions creating draft outbound payments.
+  - Refund payment posting linking the generated posted accounting move.
+  - Refund journal outstanding-account and customer receivable setup through
+    the accounting fixtures.
+
+### Known Gaps
+
+- Production finance/tax policy still needs sign-off for refund credit notes,
+  outbound refund payments, chargebacks, write-offs, and PSP/bank clearing.
+- PSP settlement parser certification still needs real JazzCash, Easypaisa,
+  Stripe, and bank statement samples plus provider sign-off.
+- FBR certified-provider sandbox/live sign-off remains pending.
+- Physical hardware certification, staging browser E2E, monitoring drills,
+  backup restore drills, load testing, dependency/container scans, and security
+  review still need staging/production execution.
+
+### Next Iteration
+
+- Run the full staging browser E2E harness against a permissioned Odoo POS user:
+  POS checkout, refund barcode scan, receipt print-to-bridge, customer display,
+  offline replay, and kiosk checkout.
+- Add staging monitoring drill evidence, backup restore drill evidence, load
+  smoke results, dependency/container scan output, and security review notes.
+- Continue PSP/FBR certification work once real provider samples, credentials,
+  and compliance contracts are available.
+- Start physical hardware certification records for the first printer, cash
+  drawer, scanner, scale, customer display, and label printer models.

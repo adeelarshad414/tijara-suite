@@ -29,6 +29,11 @@ class ResCompany(models.Model):
         "account.account",
         string="Tijara Refund/Credit Note Account",
     )
+    tijara_refund_payment_journal_id = fields.Many2one(
+        "account.journal",
+        string="Tijara Refund Payment Journal",
+        help="Bank or cash journal used to prepare outbound customer refund payments.",
+    )
     tijara_chargeback_receivable_account_id = fields.Many2one(
         "account.account",
         string="Tijara Chargeback Receivable Account",
