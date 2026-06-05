@@ -62,6 +62,7 @@
                     <button name="action_mark_refunded" type="object" string="Refunded" invisible="case_type != 'refund' or state not in ('open', 'evidence')"/>
                     <button name="action_generate_accounting_actions" type="object" string="Generate Finance Actions"/>
                     <button name="action_approve_finance_actions" type="object" string="Approve Finance" invisible="finance_approval_status in ('approved', 'not_required')"/>
+                    <button name="action_create_draft_accounting_moves" type="object" string="Create Draft Moves" invisible="finance_approval_status != 'approved'"/>
                     <button name="action_refresh_evidence_hash" type="object" string="Refresh Evidence Hash"/>
                     <button name="action_close" type="object" string="Close" invisible="state == 'closed'"/>
                     <field name="state" widget="statusbar"/>
@@ -116,6 +117,7 @@
                                     <field name="amount"/>
                                     <field name="status"/>
                                     <field name="approval_user_id"/>
+                                    <field name="accounting_move_id"/>
                                 </list>
                             </field>
                         </page>

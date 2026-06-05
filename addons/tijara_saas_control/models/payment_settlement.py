@@ -467,6 +467,20 @@ class TijaraSaasPaymentSettlementBatch(models.Model):
             )
             batch._refresh_finance_approval_status()
 
+    def action_create_draft_accounting_moves(self):
+        actions = self.mapped("accounting_action_ids").filtered(lambda action: action.status == "approved")
+        if not actions:
+            raise UserError(_("No approved finance accounting actions are ready for draft move creation."))
+        actions.action_create_draft_accounting_move()
+        moves = actions.mapped("accounting_move_id")
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Draft Accounting Moves"),
+            "res_model": "account.move",
+            "view_mode": "list,form",
+            "domain": [("id", "in", moves.ids)],
+        }
+
     def action_mark_reconciled(self):
         for batch in self:
             if not batch.line_ids:
@@ -769,6 +783,20 @@ class TijaraSaasPaymentSettlementLine(models.Model):
             "res_model": "tijara.saas.payment.accounting.action",
             "view_mode": "list,form",
             "domain": [("id", "in", actions.ids)],
+        }
+
+    def action_create_draft_accounting_moves(self):
+        actions = self.mapped("accounting_action_ids").filtered(lambda action: action.status == "approved")
+        if not actions:
+            raise UserError(_("No approved finance accounting actions are ready for draft move creation."))
+        actions.action_create_draft_accounting_move()
+        moves = actions.mapped("accounting_move_id")
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Draft Accounting Moves"),
+            "res_model": "account.move",
+            "view_mode": "list,form",
+            "domain": [("id", "in", moves.ids)],
         }
 
     def action_create_dispute_case(self):

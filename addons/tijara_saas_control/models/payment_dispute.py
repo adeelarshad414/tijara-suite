@@ -2,6 +2,7 @@ import hashlib
 import json
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 from .payment_settlement import PAYMENT_PROVIDERS
 
@@ -371,3 +372,17 @@ class TijaraSaasPaymentDispute(models.Model):
                 }
             )
             case._refresh_finance_approval_status()
+
+    def action_create_draft_accounting_moves(self):
+        actions = self.mapped("accounting_action_ids").filtered(lambda action: action.status == "approved")
+        if not actions:
+            raise UserError(_("No approved finance accounting actions are ready for draft move creation."))
+        actions.action_create_draft_accounting_move()
+        moves = actions.mapped("accounting_move_id")
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Draft Accounting Moves"),
+            "res_model": "account.move",
+            "view_mode": "list,form",
+            "domain": [("id", "in", moves.ids)],
+        }

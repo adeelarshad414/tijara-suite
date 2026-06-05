@@ -64,6 +64,7 @@
                     <button name="action_create_dispute_cases" type="object" string="Create Dispute Cases"/>
                     <button name="action_generate_accounting_actions" type="object" string="Generate Finance Actions"/>
                     <button name="action_approve_finance_actions" type="object" string="Approve Finance" invisible="finance_approval_status == 'approved'"/>
+                    <button name="action_create_draft_accounting_moves" type="object" string="Create Draft Moves" invisible="finance_approval_status != 'approved'"/>
                     <button name="action_mark_reconciled" type="object" string="Mark Reconciled" invisible="reconciliation_status == 'reconciled'"/>
                     <button name="action_close" type="object" string="Close" invisible="reconciliation_status == 'closed'"/>
                     <field name="reconciliation_status" widget="statusbar"/>
@@ -135,6 +136,7 @@
                                     <field name="amount"/>
                                     <field name="status"/>
                                     <field name="approval_user_id"/>
+                                    <field name="accounting_move_id"/>
                                 </list>
                             </field>
                         </page>
@@ -173,6 +175,7 @@
                 <header>
                     <button name="action_match_records" type="object" string="Match"/>
                     <button name="action_generate_accounting_actions" type="object" string="Generate Finance Actions"/>
+                    <button name="action_create_draft_accounting_moves" type="object" string="Create Draft Moves" invisible="accounting_action_count == 0"/>
                     <button name="action_create_dispute_case" type="object" string="Create Dispute Case" invisible="payment_event_type not in ('refund', 'chargeback')"/>
                     <button name="action_mark_reconciled" type="object" string="Mark Reconciled" invisible="reconciliation_status == 'reconciled'"/>
                     <button name="action_mark_mismatch" type="object" string="Mark Mismatch" invisible="reconciliation_status == 'mismatch'"/>
@@ -217,6 +220,7 @@
                             <field name="amount"/>
                             <field name="status"/>
                             <field name="approval_user_id"/>
+                            <field name="accounting_move_id"/>
                         </list>
                     </field>
                 </sheet>

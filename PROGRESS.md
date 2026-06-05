@@ -1902,3 +1902,70 @@ Date: 2026-06-05
   and security audit against a prepared staging stack.
 - Continue PSP/FBR certification work once real provider samples, credentials,
   and compliance contracts are available.
+
+## Iteration 26: Bulk Finance Draft Move Closeout
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added bulk draft accounting move creation for settlement closeout:
+  - Settlement batches can create draft moves for all approved finance actions.
+  - Settlement lines can create draft moves for their approved finance actions.
+  - Refund/chargeback dispute cases can create draft moves for all approved
+    finance actions.
+- Added operator UI controls:
+  - `Create Draft Moves` on settlement batch forms after finance approval.
+  - `Create Draft Moves` on settlement line forms when finance actions exist.
+  - `Create Draft Moves` on refund/chargeback case forms after finance
+    approval.
+  - Inline finance action lists now show linked accounting moves.
+- Added guardrails:
+  - Bulk closeout refuses to run when no approved finance actions are ready.
+  - Existing accounting-action safeguards still prevent missing configuration,
+    manual-review auto posting, duplicate draft moves, or posting unapproved
+    actions.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes after generated `__pycache__`
+  artifacts were removed.
+- Isolated Docker/Odoo transaction suite passed with `0 failed, 0 error(s)` of
+  31 tests for `tijara_saas_control`, `tijara_retail_core`, `tijara_pos_pk`,
+  `tijara_pos_experience`, and `tijara_analytics`.
+- Odoo transaction tests were extended to cover:
+  - Settlement batch bulk draft move creation for approved payout clearing and
+    provider fee actions.
+  - Chargeback dispute bulk draft move creation for receivable, fee, and
+    write-off actions.
+
+### Known Gaps
+
+- Bulk move creation improves finance closeout, but credit-note and refund
+  payment specialization is still pending for tax-aware customer document
+  scenarios.
+- Production finance policy still needs sign-off on posting, write-off,
+  refund, chargeback, bank-clearing, and PSP-specific treatment.
+- Staging browser E2E, monitoring drills, restore drills, load tests,
+  dependency/container scans, and security review still need execution against
+  a prepared staging stack.
+- PSP/FBR certification still depends on real provider samples, credentials,
+  and compliance contracts.
+
+### Next Iteration
+
+- Build specialized refund/credit-note and refund-payment workflows where Odoo
+  accounting and Pakistan tax treatment require customer-facing documents or
+  payments rather than generic journal entries.
+- Add staging browser E2E execution for POS checkout, refund barcode scan,
+  receipt print-to-bridge, customer display, and offline replay.
+- Run monitoring drill, restore drill, load smoke, dependency/container scans,
+  and security audit against a prepared staging stack.
+- Continue PSP/FBR certification work once real provider samples, credentials,
+  and compliance contracts are available.

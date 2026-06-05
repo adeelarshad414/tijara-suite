@@ -403,6 +403,13 @@ class TestTijaraSaasEnforcement(TransactionCase):
         self.assertEqual(batch.finance_approval_status, "approved")
         self.assertTrue(all(action.audit_hash for action in batch.accounting_action_ids))
 
+        self._configure_payment_accounting()
+        batch.action_create_draft_accounting_moves()
+        draft_moves = batch.accounting_action_ids.mapped("accounting_move_id")
+
+        self.assertEqual(len(draft_moves), 2)
+        self.assertTrue(all(move.state == "draft" for move in draft_moves))
+
         batch.action_mark_reconciled()
 
         self.assertEqual(batch.reconciliation_status, "reconciled")
@@ -528,6 +535,13 @@ class TestTijaraSaasEnforcement(TransactionCase):
 
         self.assertEqual(case.finance_approval_status, "approved")
         self.assertTrue(all(action.audit_hash for action in case.accounting_action_ids))
+
+        self._configure_payment_accounting()
+        case.action_create_draft_accounting_moves()
+        draft_moves = case.accounting_action_ids.mapped("accounting_move_id")
+
+        self.assertEqual(len(draft_moves), 3)
+        self.assertTrue(all(move.state == "draft" for move in draft_moves))
 
     def test_accounting_action_requires_finance_config_before_draft_move(self):
         action = self.env["tijara.saas.payment.accounting.action"].create(

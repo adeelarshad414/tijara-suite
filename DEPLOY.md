@@ -332,8 +332,10 @@ Settlement import flow:
 7. Run `Generate Finance Actions` and review payout clearing, fee, refund,
    chargeback, write-off, or manual-review actions.
 8. Run `Approve Finance` after finance review.
-9. On each approved accounting action, run `Create Draft Move` after finance
-   configuration is complete. Review draft journal lines before posting.
+9. Run `Create Draft Moves` from the settlement batch, settlement line, or
+   refund/chargeback case after finance configuration is complete. Use the
+   individual accounting action `Create Draft Move` button for exception cases.
+   Review draft journal lines before posting.
 10. Mark the batch reconciled only after all lines are matched, no mismatch
    remains, and finance approval status is approved.
 
