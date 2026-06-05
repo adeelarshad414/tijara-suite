@@ -87,6 +87,13 @@ docker compose --env-file .env --env-file secrets/.env.secrets up -d
 docker compose --env-file .env --env-file secrets/.env.secrets ps
 ```
 
+`make test-odoo` runs a redacted database credential preflight before the Odoo
+test boot. If the preflight fails, verify `POSTGRES_PASSWORD` and
+`ODOO_DB_PASSWORD` in the active secret source. For local Docker volumes,
+changing the env file after the database volume was created does not rotate the
+stored Postgres password; rotate the password inside Postgres or intentionally
+recreate the local database volume.
+
 Install the custom module suite into a fresh database with the Makefile target:
 
 ```bash
@@ -117,6 +124,11 @@ Compose requires these secret values before startup:
 
 The startup script refuses to start production if placeholder or development
 secret values are still present.
+
+For single-database local development, `POSTGRES_PASSWORD` and
+`ODOO_DB_PASSWORD` should match the active password for the `POSTGRES_USER` role.
+For production, keep both values in the secret manager and rotate them through a
+planned database credential rotation, not by editing committed templates.
 
 ## Production Checklist
 

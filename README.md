@@ -336,7 +336,9 @@ The detailed policy and dependency intake checklist are maintained in
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/run_odoo_tests.sh`, `tests/e2e/`, and `playwright.config.mjs`
-  provide committed Odoo and browser regression scaffolds.
+  provide committed Odoo and browser regression scaffolds. The Odoo test
+  runner performs a redacted database credential preflight before the module
+  test boot.
 - `scripts/run_staging_e2e.sh` and `make e2e-staging` provide guarded staging
   browser evidence runs for POS, refund, print, customer display, offline
   replay, kiosk, public display coverage, and the authenticated enterprise POS

@@ -2959,3 +2959,51 @@ Date: 2026-06-05
   Stripe statement imports.
 - Extend sign-off evidence packaging to include provider readiness JSON from
   staging.
+
+## Iteration 45: Odoo Test Database Credential Preflight
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added a redacted database credential preflight to `scripts/run_odoo_tests.sh`.
+- The preflight:
+  - Runs before the Odoo module test boot.
+  - Uses the same Compose env files and Odoo service environment as the real
+    Odoo test run.
+  - Verifies PostgreSQL authentication with `ODOO_DB_HOST`, `ODOO_DB_PORT`,
+    `ODOO_DB_USER`, `ODOO_DB_PASSWORD`, and `POSTGRES_DB`.
+  - Prints only host/user/database and error class, never password values.
+  - Explains the common local Docker volume mismatch when env passwords are
+    changed after the Postgres volume was created.
+  - Can be bypassed only for diagnostics with `TIJARA_SKIP_DB_PREFLIGHT=1`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_odoo_tests.sh` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- Escalated `make test-odoo` now fails early with a clear redacted database
+  credential preflight message instead of a long Odoo stack trace.
+
+### Known Gaps
+
+- The active local Docker Postgres volume still rejects the configured Odoo
+  database password for user `odoo`.
+- Full Odoo transaction tests are still blocked until the active database role
+  password is rotated to match the secret source, or the local database volume
+  is intentionally recreated for development.
+
+### Next Iteration
+
+- Add provider settlement fixture smoke tests that can run without a live Odoo
+  database, then run the Odoo versions after the database credential mismatch is
+  fixed.
+- Add a staging provider-readiness evidence exporter so sign-off packages can
+  consume PSP readiness JSON directly.
+- Continue FBR certified-provider adapter hardening.
