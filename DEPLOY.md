@@ -1058,6 +1058,39 @@ runtime secret-manager evidence. The public CI production-ops readiness step is
 warning-mode by design until a protected staging/production runner has live
 monitoring, restore, load, scan, and secret-runtime access.
 
+Prepare the self-hosted protected runner before staging or production drills.
+The bootstrap tool is dry-run by default and writes a secret-free install plan,
+current tool/version scan, exact protected preflight command, and GitHub
+environment notes:
+
+```bash
+bash scripts/bootstrap_protected_runner.sh \
+  --config deploy/config/protected-runner-bootstrap.env.example \
+  --target-os ubuntu \
+  --dry-run \
+  --output deploy/runtime/protected-runner-bootstrap/2026-06-05-rc1
+```
+
+Review `install-plan.sh` with the DevOps owner, then run it during runner
+maintenance only when approved:
+
+```bash
+bash scripts/bootstrap_protected_runner.sh \
+  --config deploy/config/protected-runner-bootstrap.env.example \
+  --target-os ubuntu \
+  --apply \
+  --output deploy/runtime/protected-runner-bootstrap/2026-06-05-rc1
+```
+
+The generated plan installs or verifies open-source runner prerequisites:
+`python3`, `node`, `npm`, Docker with the Compose plugin, `trivy`, `k6`,
+`psql`, `pg_dump`, `pg_restore`, optional `pip-audit`, and optional GitHub CLI.
+After applying the plan, run the generated `preflight-command.sh`; its output
+must satisfy `scripts/export_protected_runner_preflight.py` before dispatching
+the protected release. Keep package installation outside the release workflow
+itself so production evidence runs only prove readiness and do not mutate the
+runner.
+
 For staging or production drills, use the manual `workflow_dispatch` profile in
 the same workflow:
 
@@ -1069,7 +1102,9 @@ the same workflow:
    are optional by default but are reported by preflight when present or
    missing. Override `TIJARA_PREFLIGHT_REQUIRED_TOOLS` and
    `TIJARA_PREFLIGHT_OPTIONAL_TOOLS` per environment if your runner contract is
-   stricter.
+   stricter. Use `deploy/config/protected-runner-bootstrap.env.example` and
+   `make protected-runner-bootstrap` to generate the install plan and the exact
+   preflight command for that runner image.
 2. Configure the GitHub environment named `staging` or `production` with the
    required secrets and variables for Odoo, Playwright, backup restore drills,
    artifact storage, secret manager references, runtime secret probes,

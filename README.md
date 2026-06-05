@@ -441,6 +441,12 @@ The detailed policy and dependency intake checklist are maintained in
   optional Odoo/bridge/monitoring reachability probes with secret-backed auth
   headers, and mandatory PSP/FBR/hardware certification inputs under
   `deploy/runtime/protected-runner-preflight/`.
+- `scripts/bootstrap_protected_runner.sh`,
+  `make protected-runner-bootstrap`, and
+  `deploy/config/protected-runner-bootstrap.env.example` generate a dry-run
+  first protected-runner install plan, current tool/version scan, exact
+  preflight command, and GitHub environment notes for Ubuntu/Debian and macOS
+  self-hosted runners before strict staging/production release dispatch.
 - `scripts/export_protected_service_checks.py` and
   `make protected-service-checks` export deeper protected service checks for
   Odoo login/session authentication, signed hardware bridge test jobs,

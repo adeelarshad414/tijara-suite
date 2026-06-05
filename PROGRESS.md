@@ -7665,3 +7665,82 @@ Status: Complete
   production-ops warning exceptions.
 - Continue provider/device certification and live offline POS pilot proof once
   credentials and staging hardware are available.
+
+## Iteration 106: Protected Runner Bootstrap Plan
+
+Status: Complete
+
+### Scope
+
+- Give DevOps a repeatable, dry-run-first bootstrap path for preparing
+  self-hosted protected GitHub runners before strict staging/production release
+  evidence runs.
+
+### Completed
+
+- Added `scripts/bootstrap_protected_runner.sh`.
+- The bootstrap script writes a protected-runner evidence folder containing:
+  `install-plan.sh`, `preflight-command.sh`, `tool-status.tsv`,
+  `status.tsv`, `env-summary.txt`, `github-environment-notes.md`, and
+  `summary.md`.
+- Dry-run is the default mode; package installation only runs with `--apply`.
+- Added Ubuntu/Debian install plan generation for Python, Node/npm,
+  PostgreSQL clients, Docker/Compose, Trivy, k6, pipx/pip-audit, and optional
+  GitHub CLI.
+- Added macOS install plan generation through Homebrew for Python, Node/npm,
+  Docker/Compose, Trivy, k6, PostgreSQL client tools, pipx/pip-audit, and
+  GitHub CLI.
+- Added current tool/version scanning so operators can see exactly which
+  required and optional preflight commands are present before dispatch.
+- Added `deploy/config/protected-runner-bootstrap.env.example` as the
+  secret-free centralized bootstrap/preflight config. The template uses shell
+  defaults so operator environment overrides win.
+- Added `make protected-runner-bootstrap`.
+- Updated `README.md` and `DEPLOY.md` with runner bootstrap, install-plan,
+  preflight-command, and release workflow guidance.
+
+### Validation
+
+- `bash -n scripts/bootstrap_protected_runner.sh` passes.
+- `bash scripts/bootstrap_protected_runner.sh --help` prints usage.
+- Ubuntu dry-run fixture writes bootstrap evidence under
+  `/private/tmp/tijara-runner-bootstrap/ubuntu`.
+- macOS dry-run fixture writes bootstrap evidence under
+  `/private/tmp/tijara-runner-bootstrap/macos`.
+- Generated Ubuntu/macOS `install-plan.sh` files and generated
+  `preflight-command.sh` pass `bash -n`.
+- Generated Ubuntu plan includes `docker-compose-plugin`, `postgresql-client`,
+  pipx/pip-audit, Trivy, k6, and the protected preflight command.
+- `TIJARA_BOOTSTRAP_CONFIG=deploy/config/protected-runner-bootstrap.env.example
+  TIJARA_BOOTSTRAP_TARGET_OS=ubuntu make protected-runner-bootstrap` writes a
+  dry-run fixture with `target_os=ubuntu`.
+- `deploy/config/protected-runner-bootstrap.env.example` sources successfully
+  and preserves environment overrides.
+- No stale `protected-runner-bootstrap.example.env` references remain.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The bootstrap plan is validated through generated dry-run fixtures; it still
+  needs execution on real Ubuntu/Debian and macOS protected runners.
+- Docker daemon access, group membership, runner PATH, Trivy/k6 package repo
+  access, PostgreSQL client versions, and pip-audit availability still need
+  real runner proof through protected preflight evidence.
+- Live monitoring/alert drills, restore drills, load execution, PSP/FBR
+  certification, physical hardware certification, and live offline POS pilot
+  proof remain production blockers.
+
+### Next Iteration
+
+- Add staging release-owner runbook steps for approving, expiring, and auditing
+  production-ops warning exceptions.
+- Add protected-runner post-bootstrap verification evidence that correlates
+  bootstrap output with `protected-runner-preflight.json`.
+- Continue provider/device certification and live offline POS pilot proof once
+  credentials and staging hardware are available.
