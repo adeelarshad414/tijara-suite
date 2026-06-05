@@ -1058,8 +1058,11 @@ checklist under `deploy/runtime/protected-first-run/<run-id>/`, exports
 redacted runner preflight evidence under
 `deploy/runtime/protected-runner-preflight/<run-id>/`, runs the
 authenticated service checks under
-`deploy/runtime/protected-service-checks/<run-id>/`, runs the release-candidate
-gate, runs protected Browser E2E seed/profile/browser/execution evidence under
+`deploy/runtime/protected-service-checks/<run-id>/`, exports protected PSP/FBR
+provider readiness under
+`deploy/runtime/protected-provider-readiness/<run-id>/`, runs the
+release-candidate gate, runs protected Browser E2E
+seed/profile/browser/execution evidence under
 `deploy/runtime/protected-e2e/<run-id>/`, captures raw
 restore, security, dependency, container, npm audit, and k6 outputs under
 `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
@@ -1220,6 +1223,27 @@ The service checker validates Odoo `/web/login`, Odoo
 Alertmanager `/-/ready`, and Grafana `/api/health`. It records redacted URLs,
 status codes, auth header names, auth env names, and credential presence only.
 
+Aggregate protected PSP/FBR provider readiness before the release-candidate
+gate:
+
+```bash
+TIJARA_PROVIDER_READINESS_PSP_PROVIDERS=jazzcash,easypaisa,stripe
+TIJARA_PROVIDER_READINESS_REQUIRE_PSP=0
+TIJARA_PROVIDER_READINESS_REQUIRE_FBR=0
+TIJARA_PROVIDER_READINESS_REQUIRE_LIVE_FBR=0
+TIJARA_PROVIDER_READINESS_FAIL_ON_WARNING=0
+```
+
+Set `TIJARA_PROVIDER_READINESS_REQUIRE_PSP=1` when JazzCash, Easypaisa, and
+Stripe native signature/webhook readiness plus approved provider certification
+must block release readiness. Set `TIJARA_PROVIDER_READINESS_REQUIRE_FBR=1` and
+`TIJARA_PROVIDER_READINESS_REQUIRE_LIVE_FBR=1` when a certified FBR provider
+endpoint, credential reference, sandbox/live approval reference, POS ID, branch
+code, and payload hash must be release blockers. The exporter writes
+`protected-provider-readiness.json`, nested `psp-readiness/` and
+`fbr-readiness/` evidence folders, `status.tsv`, `env-summary.txt`, and
+`summary.md` without printing provider secrets.
+
 Enable optional URL probes when the protected runner should prove basic network
 reachability before expensive evidence collection:
 
@@ -1275,11 +1299,12 @@ release sign-off package as Browser E2E blockers.
 After the protected readiness check, the workflow runs
 `scripts/export_protected_artifact_summary.py`. The generated `summary.md`
 points release owners at failed/warning rows across preflight, release,
-Browser E2E, operations, certification, retention, secret-manager, production
-operations readiness, and sign-off artifacts. Use it as the first file to open
-inside `tijara-protected-release-evidence-<environment>-<run>`. In GitHub
-Actions, the summary also records the workflow run URL, commit/ref metadata,
-and uploaded artifact reference when those values are available.
+provider readiness, Browser E2E, operations, certification, retention,
+secret-manager, production operations readiness, and sign-off artifacts. Use it
+as the first file to open inside
+`tijara-protected-release-evidence-<environment>-<run>`. In GitHub Actions, the
+summary also records the workflow run URL, commit/ref metadata, and uploaded
+artifact reference when those values are available.
 
 Export release retention and secret-manager evidence before production
 approval:

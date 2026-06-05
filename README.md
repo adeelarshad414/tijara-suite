@@ -356,8 +356,9 @@ The detailed policy and dependency intake checklist are maintained in
 - `.github/workflows/tijara-ci.yml`, `scripts/security_audit.sh`, and
   `scripts/js_check.sh` provide the first public-repo CI and security baseline.
   CI now also runs the local release-candidate gate, generates a strict
-  CI sign-off package with release retention, secret-manager, Browser E2E
-  readiness, and warning-mode production operations readiness evidence, checks
+  CI sign-off package with release retention, secret-manager, PSP/FBR provider
+  readiness, Browser E2E readiness, and warning-mode production operations
+  readiness evidence, checks
   `release-readiness.json`, and uploads release evidence artifacts with an
   explicit 30-day CI retention setting. A manual protected-runner job is also
   available for strict staging/production evidence on `[self-hosted,
@@ -366,11 +367,12 @@ The detailed policy and dependency intake checklist are maintained in
   `deploy/config/certification-manifests/` for PSP, FBR, and hardware
   certification manifest examples. The protected job now emits an operator
   handoff runbook, a first-run checklist, a redacted runner preflight evidence
-  report, and a protected Browser E2E handoff report before executing strict
-  release gates. After the readiness gate, it verifies protected post-run
-  evidence, records GitHub artifact metadata, writes one protected artifact
-  summary for release-owner review, and uploads a post-upload metadata sidecar
-  with the artifact ID/URL when GitHub Actions returns those outputs.
+  report, protected authenticated service checks, protected PSP/FBR provider
+  readiness, and a protected Browser E2E handoff report before executing
+  strict release gates. After the readiness gate, it verifies protected
+  post-run evidence, records GitHub artifact metadata, writes one protected
+  artifact summary for release-owner review, and uploads a post-upload metadata
+  sidecar with the artifact ID/URL when GitHub Actions returns those outputs.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
@@ -435,6 +437,12 @@ The detailed policy and dependency intake checklist are maintained in
   Prometheus, Alertmanager, and Grafana under
   `deploy/runtime/protected-service-checks/`, recording credential presence
   and probe outcomes without writing secret values.
+- `scripts/export_protected_provider_readiness.py` and
+  `make protected-provider-readiness` aggregate protected PSP and FBR readiness
+  evidence into `deploy/runtime/protected-provider-readiness/`, chaining the
+  JazzCash, Easypaisa, Stripe, and certified FBR readiness exporters while
+  preserving redacted status, provider certification, and warning/blocker
+  decisions for protected sign-off.
 - `scripts/export_protected_post_run_verification.py` and
   `make protected-post-run-verification` scan protected evidence folders after
   a run, verify required artifact presence, failed/warning `status.tsv` rows,

@@ -14,6 +14,7 @@ DEFAULT_ARTIFACTS = [
     "protected-first-run",
     "protected-runner-preflight",
     "protected-service-checks",
+    "protected-provider-readiness",
     "release-evidence",
     "protected-e2e",
     "ops-tool-evidence",

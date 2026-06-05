@@ -6905,3 +6905,95 @@ Date: 2026-06-05
   payment sync once live staging Odoo credentials are available.
 - Continue tightening production incident, backup restore, and monitoring
   alert drill execution evidence on the protected runner.
+
+## Iteration 97: Protected Provider Readiness Evidence
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_provider_readiness.py` to aggregate protected
+  PSP and FBR readiness evidence under
+  `deploy/runtime/protected-provider-readiness/`.
+- The exporter chains `scripts/export_psp_readiness.py` and
+  `scripts/export_fbr_readiness.py`, preserves nested provider evidence
+  folders, writes `protected-provider-readiness.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md`, and rejects secret-like metadata keys.
+- Added `make protected-provider-readiness`.
+- Wired `.github/workflows/tijara-ci.yml` to run protected PSP/FBR provider
+  readiness after authenticated service checks and before the release-candidate
+  gate.
+- Added protected provider readiness to first-run expected artifacts, post-run
+  required artifacts, release-retention evidence paths, sign-off evidence
+  paths, protected artifact summary defaults, and protected artifact uploads.
+- Added protected service checks and protected provider readiness to the
+  protected runbook artifact review order and go/no-go checklist.
+- Classified `protected-provider-readiness` as Operations evidence in
+  `scripts/generate_signoff_pack.py`.
+- Updated `deploy/config/github-protected-vars.example`, `README.md`, and
+  `DEPLOY.md` with provider-readiness controls and protected-runner guidance.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_provider_readiness.py
+  scripts/export_psp_readiness.py scripts/export_fbr_readiness.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py
+  scripts/export_protected_post_run_verification.py
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes `TIJARA_PROVIDER_READINESS_PSP_PROVIDERS`.
+- Protected runbook handoff fixture writes `decision=passed` and includes the
+  updated service-check/provider-readiness review order.
+- Default strict provider readiness fixture writes `decision=warning` and
+  `ci_status=pass_with_warnings` when PSP readiness is visible but not required.
+- Required PSP fixture without signature/certification inputs writes
+  `decision=failed` and `ci_status=fail`.
+- Ready PSP/FBR fixture with redacted JazzCash, Easypaisa, Stripe, and FBR
+  provider inputs writes `decision=passed` and `ci_status=pass`.
+- Secret-like metadata fixture with `api_token` is rejected.
+- Updated post-run verifier fixture requires and accepts
+  `protected-provider-readiness`.
+- Protected artifact summary over provider readiness writes `decision=passed`.
+- Updated first-run checklist fixture expects `protected-provider-readiness`.
+- `make protected-provider-readiness` passes and writes warning evidence when
+  live PSP/FBR readiness is not required.
+- Sign-off package with passing provider readiness classifies it as Operations
+  evidence and `scripts/check_release_readiness.py` returns
+  `decision=ready`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- Local fixtures prove redacted provider-readiness aggregation, but JazzCash,
+  Easypaisa, Stripe, and FBR still need provider-issued sandbox/live
+  credentials, certification references, and production compliance sign-off.
+- FBR live adapter compliance still depends on a certified provider endpoint,
+  approved POS/branch configuration, payload hash process, and regulator/API
+  validation.
+- PSP settlement, refund, chargeback, and reconciliation flows still need real
+  provider certification and live statement/webhook proof.
+- Physical hardware certification, offline POS live replay, full protected
+  staging E2E, monitoring/alert drills, load testing, and security testing
+  remain production-readiness blockers.
+
+### Next Iteration
+
+- Add protected offline POS replay evidence against staging once live Odoo POS
+  credentials and seeded POS configuration are available.
+- Add payment provider webhook/refund/settlement certification evidence once
+  PSP sandbox credentials are available.
+- Continue hardening protected production operations drills for monitoring,
+  alerting, backup restore, security scans, and incident response.
