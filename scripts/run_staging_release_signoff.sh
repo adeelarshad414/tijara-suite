@@ -9,6 +9,7 @@ RUNTIME_ROOT="${TIJARA_STAGING_RELEASE_RUNTIME_ROOT:-deploy/runtime}"
 ORCH_DIR="${TIJARA_STAGING_RELEASE_EVIDENCE_DIR:-$RUNTIME_ROOT/staging-release/$RUN_ID}"
 RELEASE_DIR="${TIJARA_RELEASE_EVIDENCE_DIR:-$RUNTIME_ROOT/release-evidence/$RUN_ID}"
 E2E_SEED_DIR="${TIJARA_E2E_SEED_EVIDENCE_DIR:-$RUNTIME_ROOT/e2e-seed/$RUN_ID}"
+E2E_PROFILE_DIR="${TIJARA_E2E_PROFILE_OUTPUT:-$RUNTIME_ROOT/e2e-profile/$RUN_ID}"
 E2E_DIR="${TIJARA_E2E_EVIDENCE_DIR:-$RUNTIME_ROOT/e2e-evidence/$RUN_ID}"
 OPS_DIR="${TIJARA_OPS_EVIDENCE_DIR:-$RUNTIME_ROOT/ops-evidence/$RUN_ID}"
 ENV_PROTECTION_DIR="${TIJARA_ENV_PROTECTION_OUTPUT:-$RUNTIME_ROOT/deployment-environments/$RUN_ID}"
@@ -28,11 +29,18 @@ FAIL_ON_WARNING="${TIJARA_STAGING_RELEASE_FAIL_ON_WARNING:-${TIJARA_RELEASE_FAIL
 ENV_PROTECTION_STRICT="${TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT:-$STRICT_REQUIRED}"
 TENANT_OPS_ARTIFACTS="${TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS:-${TIJARA_TENANT_OPS_ARTIFACTS:-}}"
 SEED_E2E="${TIJARA_STAGING_RELEASE_SEED_E2E:-0}"
+PROFILE_E2E="${TIJARA_STAGING_RELEASE_PROFILE_E2E:-0}"
 INCLUDE_E2E_SEED="${TIJARA_STAGING_RELEASE_INCLUDE_E2E_SEED:-}"
 if [[ -z "$INCLUDE_E2E_SEED" && -n "${TIJARA_E2E_SEED_EVIDENCE_DIR:-}" ]]; then
     INCLUDE_E2E_SEED="1"
 elif [[ -z "$INCLUDE_E2E_SEED" ]]; then
     INCLUDE_E2E_SEED="$SEED_E2E"
+fi
+INCLUDE_E2E_PROFILE="${TIJARA_STAGING_RELEASE_INCLUDE_E2E_PROFILE:-}"
+if [[ -z "$INCLUDE_E2E_PROFILE" && -n "${TIJARA_E2E_PROFILE_OUTPUT:-}" ]]; then
+    INCLUDE_E2E_PROFILE="1"
+elif [[ -z "$INCLUDE_E2E_PROFILE" ]]; then
+    INCLUDE_E2E_PROFILE="$PROFILE_E2E"
 fi
 TENANT_OPS_INCLUDE="${TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS:-}"
 if [[ -z "$TENANT_OPS_INCLUDE" && -n "$TENANT_OPS_ARTIFACTS" ]]; then
@@ -59,6 +67,11 @@ case "$(echo "$INCLUDE_E2E_SEED" | tr '[:upper:]' '[:lower:]')" in
         SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$E2E_SEED_DIR"
         ;;
 esac
+case "$(echo "$INCLUDE_E2E_PROFILE" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$E2E_PROFILE_DIR"
+        ;;
+esac
 case "$(echo "$TENANT_OPS_INCLUDE" | tr '[:upper:]' '[:lower:]')" in
     1|true|yes|y|on)
         SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$TENANT_OPS_DIR"
@@ -75,6 +88,7 @@ mkdir -p "$ORCH_DIR"
     echo "orchestration_dir=$ORCH_DIR"
     echo "release_evidence_dir=$RELEASE_DIR"
     echo "e2e_seed_evidence_dir=$E2E_SEED_DIR"
+    echo "e2e_profile_evidence_dir=$E2E_PROFILE_DIR"
     echo "e2e_evidence_dir=$E2E_DIR"
     echo "ops_evidence_dir=$OPS_DIR"
     echo "deployment_environment_dir=$ENV_PROTECTION_DIR"
@@ -89,6 +103,8 @@ mkdir -p "$ORCH_DIR"
     echo "deployment_environment_strict=$ENV_PROTECTION_STRICT"
     echo "seed_e2e=$SEED_E2E"
     echo "include_e2e_seed=$INCLUDE_E2E_SEED"
+    echo "profile_e2e=$PROFILE_E2E"
+    echo "include_e2e_profile=$INCLUDE_E2E_PROFILE"
     echo "tenant_ops_include=$TENANT_OPS_INCLUDE"
     echo "tenant_ops_strict=$TENANT_OPS_STRICT"
     echo "tenant_ops_artifacts=${TENANT_OPS_ARTIFACTS:-<unset>}"
@@ -159,6 +175,22 @@ case "$(echo "$SEED_E2E" | tr '[:upper:]' '[:lower:]')" in
         ;;
     *)
         record_status "e2e-seed" "skipped" "0" "" "seed step not requested"
+        ;;
+esac
+
+case "$(echo "$PROFILE_E2E" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        run_step "e2e-profile" \
+            env \
+            TIJARA_E2E_PROFILE_RUN_ID="$RUN_ID" \
+            TIJARA_E2E_PROFILE_OUTPUT="$E2E_PROFILE_DIR" \
+            TIJARA_E2E_PROFILE_ENVIRONMENT="$SIGNOFF_ENVIRONMENT" \
+            TIJARA_E2E_SEED_ENV="$E2E_SEED_DIR/e2e-seed.env" \
+            TIJARA_E2E_SEED_EVIDENCE="$E2E_SEED_DIR/e2e-seed-evidence.json" \
+            make staging-e2e-profile
+        ;;
+    *)
+        record_status "e2e-profile" "skipped" "0" "" "profile preflight not requested"
         ;;
 esac
 
@@ -244,6 +276,7 @@ fi
     echo "- Orchestration evidence: $ORCH_DIR"
     echo "- Release evidence: $RELEASE_DIR"
     echo "- Browser E2E seed evidence: $E2E_SEED_DIR"
+    echo "- Browser E2E profile evidence: $E2E_PROFILE_DIR"
     echo "- Browser E2E evidence: $E2E_DIR"
     echo "- Operations evidence: $OPS_DIR"
     echo "- Deployment environment evidence: $ENV_PROTECTION_DIR"

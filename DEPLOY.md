@@ -810,6 +810,26 @@ exports; load `ODOO_PASSWORD` from the staging secret manager before browser
 E2E. Attach the seed evidence folder to sign-off packages as Browser E2E
 evidence.
 
+Validate the live staging E2E profile before browser execution:
+
+```bash
+TIJARA_E2E_PROFILE_RUN_ID=staging-pos-seed-001 \
+TIJARA_E2E_PROFILE_STRICT=1 \
+TIJARA_E2E_PROFILE_REQUIRE_SEED=1 \
+TIJARA_E2E_SEED_ENV=deploy/runtime/e2e-seed/staging-pos-seed-001/e2e-seed.env \
+TIJARA_E2E_SEED_EVIDENCE=deploy/runtime/e2e-seed/staging-pos-seed-001/e2e-seed-evidence.json \
+TIJARA_E2E_OWNER="QA Owner" \
+TIJARA_E2E_RUNBOOK_REF=docs:DEPLOY.md#display-routes \
+TIJARA_E2E_CHANGE_REF=change:TIJARA-STAGE-E2E-001 \
+make staging-e2e-profile
+```
+
+Set `TIJARA_E2E_PROFILE_PROBE_BASE_URL=1` only when the staging Odoo URL is
+reachable from the runner and `/web/login` should be probed. The profile writes
+`staging-e2e-profile.json`, `status.tsv`, `env-summary.txt`, and `summary.md`
+under `deploy/runtime/e2e-profile/<run-id>/`; attach that directory to sign-off
+packages as Browser E2E evidence. Secret values are masked.
+
 For staging sign-off, run the guarded evidence harness instead of a raw
 Playwright command:
 
@@ -1043,6 +1063,12 @@ Optional tools:
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
+- Run `make staging-e2e-profile` after seeding and loading staging secrets to
+  validate the live POS/refund/print/offline browser profile before Playwright.
+  The profile writes `staging-e2e-profile.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/e2e-profile/<run-id>/`; the sign-off package extracts
+  readiness under `e2e_profile_reviews`.
 - Run `make e2e-staging` after installing Playwright and setting staging
   environment variables for authenticated POS, refund, print, and offline
   replay flows. The guarded runner writes `e2e-readiness.json`, `status.tsv`,
@@ -1117,9 +1143,15 @@ the staging E2E, Odoo, monitoring, restore, and provider/device variables:
 ```bash
 TIJARA_STAGING_RELEASE_RUN_ID=2026-06-05-rc1 \
 TIJARA_STAGING_RELEASE_SEED_E2E=1 \
+TIJARA_STAGING_RELEASE_PROFILE_E2E=1 \
+TIJARA_E2E_PROFILE_STRICT=1 \
+TIJARA_E2E_PROFILE_REQUIRE_SEED=1 \
 TIJARA_STAGING_RELEASE_CHECKS=full \
 TIJARA_E2E_SCOPE=full \
 TIJARA_E2E_PASSWORD=<staging-test-password> \
+TIJARA_E2E_OWNER="QA Owner" \
+TIJARA_E2E_RUNBOOK_REF=docs:DEPLOY.md#display-routes \
+TIJARA_E2E_CHANGE_REF=change:TIJARA-STAGE-E2E-001 \
 TIJARA_OPS_CHECKS=full \
 TIJARA_OPS_STRICT=1 \
 TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT=1 \
@@ -1153,6 +1185,9 @@ The wrapper keeps a single run ID across:
 - `deploy/runtime/e2e-seed/<run-id>/` when
   `TIJARA_STAGING_RELEASE_SEED_E2E=1` or
   `TIJARA_STAGING_RELEASE_INCLUDE_E2E_SEED=1`.
+- `deploy/runtime/e2e-profile/<run-id>/` when
+  `TIJARA_STAGING_RELEASE_PROFILE_E2E=1` or
+  `TIJARA_STAGING_RELEASE_INCLUDE_E2E_PROFILE=1`.
 - `deploy/runtime/e2e-evidence/<run-id>/`
 - `deploy/runtime/ops-evidence/<run-id>/`
 - `deploy/runtime/release-retention-evidence/<run-id>/` when exported
@@ -1170,6 +1205,9 @@ When `TIJARA_STAGING_RELEASE_SEED_E2E=1`, the wrapper runs `make seed-e2e`,
 sources the generated non-secret `e2e-seed.env`, maps `TIJARA_E2E_PASSWORD` to
 `ODOO_PASSWORD` if the latter is not already set, and appends seed evidence to
 the sign-off package.
+When `TIJARA_STAGING_RELEASE_PROFILE_E2E=1`, the wrapper runs
+`make staging-e2e-profile` after seed env sourcing and appends profile evidence
+to the sign-off package.
 Tenant operations evidence is opt-in for the wrapper. Set
 `TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS` to one or more comma-separated
 tenant artifact directories, or set `TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS=1`
@@ -1228,7 +1266,7 @@ python3 scripts/collect_certification_evidence.py \
 Include the generated directories in the release sign-off package:
 
 ```bash
-TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-seed/2026-06-05-rc1,deploy/runtime/e2e-profile/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
 TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,psp,fbr,hardware \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
 make signoff-pack
@@ -1240,7 +1278,7 @@ operations evidence:
 ```bash
 TIJARA_SIGNOFF_RUN_ID=2026-06-05-rc1 \
 TIJARA_SIGNOFF_ENVIRONMENT=staging \
-TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/operations-release-bundle/2026-06-05-rc1 \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-seed/2026-06-05-rc1,deploy/runtime/e2e-profile/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/operations-release-bundle/2026-06-05-rc1 \
 TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops \
 make signoff-pack
 ```
@@ -1271,7 +1309,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   `psp_readiness_reviews`; when FBR readiness evidence is attached,
   certified-provider readiness is included under `fbr_readiness_reviews`; when
   FBR fixture smoke evidence is attached, response fixture coverage is included
-  under `fbr_fixture_reviews`; when monitoring evidence is attached,
+  under `fbr_fixture_reviews`; when browser E2E seed, profile, or readiness
+  evidence is attached, reviews are included under `e2e_seed_reviews`,
+  `e2e_profile_reviews`, and `e2e_readiness_reviews`; when monitoring evidence is attached,
   observability reviews are included under
   `monitoring_reviews`; when incident runbook evidence is attached, ownership
   and response references are included under `incident_runbook_reviews`; when

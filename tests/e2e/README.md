@@ -36,8 +36,9 @@ and writes evidence under `deploy/runtime/e2e-evidence/<run-id>/`:
 
 `e2e-readiness.json` records the selected scope, required environment
 variables with secret values masked, selected specs, and optional POS/refund
-flags. The release sign-off pack extracts it under `e2e_readiness_reviews`.
-Seed evidence from `make seed-e2e` is extracted under `e2e_seed_reviews`.
+flags. The release sign-off pack extracts seed, profile, and readiness evidence
+under `e2e_seed_reviews`, `e2e_profile_reviews`, and
+`e2e_readiness_reviews`.
 
 Use `TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display routes only,
 `TIJARA_E2E_SCOPE=authenticated` for POS/refund/offline-report routes, or
@@ -60,6 +61,25 @@ ODOO_BASE_URL=http://127.0.0.1:8069 npm run test:e2e
 The seed wrapper writes `e2e-seed.env`, `status.tsv`, `summary.md`, and
 `e2e-seed-evidence.json` under `deploy/runtime/e2e-seed/<run-id>/`. The env
 file is sourceable and non-secret; keep `ODOO_PASSWORD` in staging secrets.
+
+Validate the live staging profile before running browser E2E:
+
+```bash
+TIJARA_E2E_PROFILE_RUN_ID=staging-pos-seed-001 \
+TIJARA_E2E_PROFILE_STRICT=1 \
+TIJARA_E2E_PROFILE_REQUIRE_SEED=1 \
+TIJARA_E2E_SEED_ENV=deploy/runtime/e2e-seed/staging-pos-seed-001/e2e-seed.env \
+TIJARA_E2E_SEED_EVIDENCE=deploy/runtime/e2e-seed/staging-pos-seed-001/e2e-seed-evidence.json \
+TIJARA_E2E_OWNER="QA Owner" \
+TIJARA_E2E_RUNBOOK_REF=docs:DEPLOY.md#display-routes \
+TIJARA_E2E_CHANGE_REF=change:TIJARA-STAGE-E2E-001 \
+make staging-e2e-profile
+```
+
+The profile evidence writes `staging-e2e-profile.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/e2e-profile/<run-id>/`. The sign-off pack extracts it under
+`e2e_profile_reviews`.
 
 Useful environment variables:
 

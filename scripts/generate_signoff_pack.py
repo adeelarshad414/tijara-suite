@@ -376,7 +376,12 @@ def _evidence_group(entry):
     if (
         "e2e-evidence/" in relative
         or "e2e-seed/" in relative_lower
-        or filename in {"e2e-readiness.json", "e2e-seed-evidence.json"}
+        or "e2e-profile/" in relative_lower
+        or filename in {
+            "e2e-readiness.json",
+            "e2e-seed-evidence.json",
+            "staging-e2e-profile.json",
+        }
     ):
         return "Browser E2E"
     if (
@@ -662,6 +667,51 @@ def _e2e_seed_reviews(evidence_entries):
                 "password_secret_required": bool(payload.get("password_secret_required")),
                 "password_secret_provided": bool(payload.get("password_secret_provided")),
                 "seeded_surfaces": payload.get("seeded_surfaces") or {},
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
+def _e2e_profile_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "staging-e2e-profile.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        variables = payload.get("required_variables") or []
+        operator_refs = payload.get("operator_references") or []
+        specs = payload.get("specs") or []
+        optional_flags = payload.get("optional_flags") or []
+        missing = [item.get("name", "") for item in variables if not item.get("present")]
+        missing_refs = [item.get("name", "") for item in operator_refs if not item.get("present")]
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "scope": context.get("scope", ""),
+                "target_environment": context.get("target_environment", ""),
+                "base_url": context.get("base_url", ""),
+                "strict": bool(context.get("strict")),
+                "probe_base_url": bool(context.get("probe_base_url")),
+                "required_variable_count": len(variables),
+                "missing_variable_count": len(missing),
+                "missing_variables": missing,
+                "operator_reference_count": len(operator_refs),
+                "missing_operator_references": missing_refs,
+                "spec_count": len(specs),
+                "missing_spec_count": len([item for item in specs if not item.get("exists")]),
+                "enabled_optional_flags": [
+                    item.get("name", "")
+                    for item in optional_flags
+                    if item.get("enabled")
+                ],
+                "seed_evidence_decision": payload.get("seed_evidence_decision", ""),
+                "probe_status": (payload.get("probe_result") or {}).get("status", ""),
                 "blockers": payload.get("blockers") or [],
                 "warnings": payload.get("warnings") or [],
             }
@@ -1137,6 +1187,7 @@ def _evidence_summary(context, evidence_entries):
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
+    e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
@@ -1341,6 +1392,52 @@ def _evidence_summary(context, evidence_entries):
         e2e_seed_lines.append("")
     if not e2e_seed_lines:
         e2e_seed_lines = ["- No `e2e-seed-evidence.json` files were attached.", ""]
+
+    e2e_profile_lines = []
+    for review in e2e_profile_reviews:
+        e2e_profile_lines.append("### `%s`" % review["path"])
+        e2e_profile_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        e2e_profile_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        e2e_profile_lines.append(
+            "- Scope/environment/strict/probe: %s/%s/%s/%s"
+            % (
+                review["scope"] or "unset",
+                review["target_environment"] or "unset",
+                "yes" if review["strict"] else "no",
+                "yes" if review["probe_base_url"] else "no",
+            )
+        )
+        e2e_profile_lines.append(
+            "- Required/missing variables: %s/%s"
+            % (review["required_variable_count"], review["missing_variable_count"])
+        )
+        e2e_profile_lines.append(
+            "- Operator refs/missing: %s/%s"
+            % (review["operator_reference_count"], len(review["missing_operator_references"]))
+        )
+        e2e_profile_lines.append(
+            "- Specs/missing specs: %s/%s"
+            % (review["spec_count"], review["missing_spec_count"])
+        )
+        e2e_profile_lines.append(
+            "- Seed decision/probe status: %s/%s"
+            % (review["seed_evidence_decision"] or "unset", review["probe_status"] or "unset")
+        )
+        e2e_profile_lines.append(
+            "- Enabled optional flags: %s"
+            % (", ".join(review["enabled_optional_flags"]) or "none")
+        )
+        e2e_profile_lines.append(
+            "- Missing variables: %s"
+            % (", ".join(review["missing_variables"]) or "none")
+        )
+        e2e_profile_lines.append(
+            "- Missing operator references: %s"
+            % (", ".join(review["missing_operator_references"]) or "none")
+        )
+        e2e_profile_lines.append("")
+    if not e2e_profile_lines:
+        e2e_profile_lines = ["- No `staging-e2e-profile.json` files were attached.", ""]
 
     e2e_readiness_lines = []
     for review in e2e_readiness_reviews:
@@ -1800,6 +1897,9 @@ def _evidence_summary(context, evidence_entries):
 ## Browser E2E Seed Evidence
 
 {chr(10).join(e2e_seed_lines)}
+## Browser E2E Profile Evidence
+
+{chr(10).join(e2e_profile_lines)}
 ## Browser E2E Readiness Evidence
 
 {chr(10).join(e2e_readiness_lines)}
@@ -1859,6 +1959,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
+    e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
@@ -1972,6 +2073,13 @@ def _release_readiness(context, evidence_entries, group_counts):
             blockers.append("Browser E2E seed %s is %s" % (review["path"], review["decision"]))
         elif decision in {"warning", "warn"}:
             warnings.append("Browser E2E seed %s is %s" % (review["path"], review["decision"]))
+
+    for review in e2e_profile_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"blocked", "failed"}:
+            blockers.append("Browser E2E profile %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Browser E2E profile %s is %s" % (review["path"], review["decision"]))
 
     for review in e2e_readiness_reviews:
         decision = str(review.get("decision") or "").lower()
@@ -2133,6 +2241,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "fbr_readiness_reviews": fbr_readiness_reviews,
         "fbr_fixture_reviews": fbr_fixture_reviews,
         "e2e_seed_reviews": e2e_seed_reviews,
+        "e2e_profile_reviews": e2e_profile_reviews,
         "e2e_readiness_reviews": e2e_readiness_reviews,
         "monitoring_reviews": monitoring_reviews,
         "incident_runbook_reviews": incident_runbook_reviews,

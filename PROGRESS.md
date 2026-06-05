@@ -5417,3 +5417,86 @@ Date: 2026-06-05
   running the seed-aware staging release wrapper.
 - Continue toward live authenticated checkout, refund barcode scan, receipt
   print, and offline replay E2E execution on a reachable staging Odoo.
+
+## Iteration 77: Live Staging E2E Profile Evidence
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_staging_e2e_profile.py` to validate live staging browser
+  E2E profile readiness before Playwright execution.
+- Added `make staging-e2e-profile` and `npm run test:e2e:profile` entry points.
+- Profile evidence validates E2E scope, HTTPS/local URL posture, optional seed
+  env and seed evidence, required public/authenticated variables, secret
+  presence with masking, operator references, selected Playwright spec files,
+  optional direct-POS flags, and optional `/web/login` probing.
+- The profile exporter writes `staging-e2e-profile.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under `deploy/runtime/e2e-profile/`.
+- Enhanced `scripts/generate_signoff_pack.py` so profile evidence is Browser E2E
+  evidence and is extracted into `e2e_profile_reviews`.
+- Release readiness now blocks on blocked/failed Browser E2E profile evidence
+  and surfaces warnings for incomplete operator references.
+- Enhanced `scripts/run_staging_release_signoff.sh` with optional profile
+  preflight via `TIJARA_STAGING_RELEASE_PROFILE_E2E=1`.
+- The staging wrapper can attach profile evidence via
+  `TIJARA_STAGING_RELEASE_INCLUDE_E2E_PROFILE=1` or by setting
+  `TIJARA_E2E_PROFILE_OUTPUT`.
+- Updated `README.md`, `DEPLOY.md`, and `tests/e2e/README.md` with the
+  seed/profile/readiness Browser E2E evidence workflow.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_staging_e2e_profile.py scripts/generate_signoff_pack.py`
+  passes.
+- `bash -n scripts/run_staging_release_signoff.sh` passes.
+- Synthetic complete profile evidence passes at
+  `/private/tmp/tijara-e2e-profile-ready` with `decision=ready` and
+  `ci_status=pass`.
+- Synthetic missing authenticated profile evidence blocks at
+  `/private/tmp/tijara-e2e-profile-missing` with missing POS/refund/offline
+  variables and masked secret status.
+- Generated sign-off packages at
+  `/private/tmp/tijara-signoff-e2e-profile-ready` and
+  `/private/tmp/tijara-signoff-e2e-profile-missing`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-e2e-profile-ready/release-readiness.json` passes
+  with `decision=ready` and `ci_status=pass`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-e2e-profile-missing/release-readiness.json` blocks
+  as expected with `decision=blocked` and `ci_status=fail`.
+- Profile-enabled staging wrapper smoke passes at
+  `/private/tmp/tijara-staging-wrapper-profile-smoke/staging-release/staging-wrapper-profile-smoke`.
+- The wrapper smoke records `e2e-profile: passed`, attaches seed/profile
+  evidence, and extracts `e2e_profile_reviews`; overall readiness is
+  `warning/pass_with_warnings` only because local deployment environment
+  references were intentionally unset.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The profile evidence proves live-run readiness inputs; it still does not
+  execute a real browser checkout/refund/print/offline flow.
+- Real live E2E execution still needs a reachable staging Odoo URL, seeded POS
+  data, staging password, Playwright browser dependencies, and optionally the
+  hardware bridge for print-to-bridge.
+- Full production readiness still depends on FBR certified-provider sandbox/live
+  validation, PSP certification, physical hardware certification, monitoring,
+  load testing, backup restore drills, and deeper security scans.
+
+### Next Iteration
+
+- Add a live E2E execution evidence combiner that correlates seed, profile,
+  readiness, Playwright JSON, and sign-off outputs under one run ID.
+- Then execute checkout, refund barcode scan, receipt print, customer display,
+  and offline replay against a reachable staging Odoo when credentials are
+  available.
