@@ -1045,6 +1045,13 @@ the same workflow:
 
 1. Configure a self-hosted runner with labels `self-hosted` and
    `tijara-protected`.
+   Install the protected toolchain before dispatching a release:
+   `python3`, `node`, `npm`, Docker with the Compose plugin, `trivy`, `k6`,
+   `psql`, `pg_dump`, and `pg_restore`. `pip-audit` and the GitHub CLI (`gh`)
+   are optional by default but are reported by preflight when present or
+   missing. Override `TIJARA_PREFLIGHT_REQUIRED_TOOLS` and
+   `TIJARA_PREFLIGHT_OPTIONAL_TOOLS` per environment if your runner contract is
+   stricter.
 2. Configure the GitHub environment named `staging` or `production` with the
    required secrets and variables for Odoo, Playwright, backup restore drills,
    artifact storage, secret manager references, runtime secret probes,
@@ -1063,7 +1070,8 @@ The protected job first exports an operator handoff runbook under
 `deploy/runtime/protected-runbook-handoff/<run-id>/`, then exports a first-run
 checklist under `deploy/runtime/protected-first-run/<run-id>/`, exports
 redacted runner preflight evidence under
-`deploy/runtime/protected-runner-preflight/<run-id>/`, runs the
+`deploy/runtime/protected-runner-preflight/<run-id>/`, including required and
+optional toolchain availability/version checks, runs the
 authenticated service checks under
 `deploy/runtime/protected-service-checks/<run-id>/`, exports protected PSP/FBR
 provider readiness under

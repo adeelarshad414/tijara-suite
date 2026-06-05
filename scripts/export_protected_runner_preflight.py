@@ -3,6 +3,8 @@ import argparse
 import datetime as dt
 import json
 import os
+import shutil
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -71,7 +73,33 @@ OBSERVED_VARIABLES = [
     "TIJARA_PREFLIGHT_ALERTMANAGER_AUTH_VALUE_ENV",
     "TIJARA_PREFLIGHT_GRAFANA_AUTH_HEADER",
     "TIJARA_PREFLIGHT_GRAFANA_AUTH_VALUE_ENV",
+    "TIJARA_PREFLIGHT_CHECK_TOOLS",
+    "TIJARA_PREFLIGHT_REQUIRED_TOOLS",
+    "TIJARA_PREFLIGHT_OPTIONAL_TOOLS",
+    "TIJARA_PREFLIGHT_TOOL_TIMEOUT",
+    "RUNNER_NAME",
+    "RUNNER_OS",
+    "RUNNER_ARCH",
 ]
+
+TOOL_COMMANDS = {
+    "python3": ["python3", "--version"],
+    "node": ["node", "--version"],
+    "npm": ["npm", "--version"],
+    "docker": ["docker", "--version"],
+    "docker-compose": ["docker", "compose", "version"],
+    "trivy": ["trivy", "--version"],
+    "k6": ["k6", "version"],
+    "psql": ["psql", "--version"],
+    "pg_dump": ["pg_dump", "--version"],
+    "pg_restore": ["pg_restore", "--version"],
+    "pip-audit": ["pip-audit", "--version"],
+    "git": ["git", "--version"],
+    "gh": ["gh", "--version"],
+}
+
+DEFAULT_REQUIRED_TOOLS = "python3,node,npm,docker,docker-compose,trivy,k6,psql,pg_dump,pg_restore"
+DEFAULT_OPTIONAL_TOOLS = "pip-audit,gh"
 
 CERTIFICATION_REQUIREMENTS = {
     "psp": [
@@ -181,6 +209,17 @@ def _truthy(value):
 
 def _csv_items(value):
     return [item.strip().lower() for item in str(value or "").split(",") if item.strip()]
+
+
+def _dedupe(items):
+    clean = []
+    seen = set()
+    for item in items:
+        value = str(item or "").strip().lower()
+        if value and value not in seen:
+            seen.add(value)
+            clean.append(value)
+    return clean
 
 
 def _present(value):
@@ -298,6 +337,74 @@ def _probe_url(base_url, path, timeout, headers=None):
 
 def _row(name, status, message):
     return {"name": name, "status": status, "message": message}
+
+
+def _tool_command(name):
+    return TOOL_COMMANDS.get(name, [name, "--version"])
+
+
+def _tool_review(name, required, timeout):
+    command = _tool_command(name)
+    executable = command[0]
+    if not shutil.which(executable):
+        return {
+            "name": name,
+            "required": required,
+            "command": command,
+            "present": False,
+            "status": "missing",
+            "version": "",
+            "message": "%s is not installed or not on PATH." % name,
+        }
+    try:
+        completed = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=max(timeout, 0.1),
+        )
+    except subprocess.TimeoutExpired:
+        return {
+            "name": name,
+            "required": required,
+            "command": command,
+            "present": True,
+            "status": "failed",
+            "version": "",
+            "message": "%s version command timed out." % name,
+        }
+    except OSError as error:
+        return {
+            "name": name,
+            "required": required,
+            "command": command,
+            "present": True,
+            "status": "failed",
+            "version": "",
+            "message": "%s version command failed: %s." % (name, error),
+        }
+    output = (completed.stdout or completed.stderr or "").strip().splitlines()
+    version = output[0].strip() if output else ""
+    if completed.returncode:
+        return {
+            "name": name,
+            "required": required,
+            "command": command,
+            "present": True,
+            "status": "failed",
+            "version": version,
+            "message": "%s version command exited %s." % (name, completed.returncode),
+        }
+    return {
+        "name": name,
+        "required": required,
+        "command": command,
+        "present": True,
+        "status": "passed",
+        "version": version,
+        "message": "%s is available%s." % (name, " (%s)" % version if version else ""),
+    }
 
 
 def _status_tsv(rows):
@@ -419,6 +526,30 @@ def main():
         help="Per-URL probe timeout in seconds.",
     )
     parser.add_argument(
+        "--check-tools",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_PREFLIGHT_CHECK_TOOLS")),
+        help="Verify protected runner command-line tools before release evidence starts.",
+    )
+    parser.add_argument("--required-tool", action="append", default=[])
+    parser.add_argument(
+        "--required-tools",
+        default=os.environ.get("TIJARA_PREFLIGHT_REQUIRED_TOOLS", DEFAULT_REQUIRED_TOOLS),
+        help="Comma-separated required tool names.",
+    )
+    parser.add_argument("--optional-tool", action="append", default=[])
+    parser.add_argument(
+        "--optional-tools",
+        default=os.environ.get("TIJARA_PREFLIGHT_OPTIONAL_TOOLS", DEFAULT_OPTIONAL_TOOLS),
+        help="Comma-separated optional tool names.",
+    )
+    parser.add_argument(
+        "--tool-timeout",
+        type=float,
+        default=float(os.environ.get("TIJARA_PREFLIGHT_TOOL_TIMEOUT", "5")),
+        help="Per-tool version command timeout in seconds.",
+    )
+    parser.add_argument(
         "--non-strict",
         action="store_true",
         default=_truthy(os.environ.get("TIJARA_PREFLIGHT_NON_STRICT", "1")),
@@ -452,6 +583,38 @@ def main():
 
     for key in OBSERVED_VARIABLES:
         variables.append(_variable_entry(effective_env, key, key, args.include_values, False))
+
+    required_tools = _dedupe(_csv_items(args.required_tools) + args.required_tool)
+    optional_tools = [tool for tool in _dedupe(_csv_items(args.optional_tools) + args.optional_tool) if tool not in required_tools]
+    toolchain = []
+    if args.check_tools:
+        rows.append(_row("toolchain-checks-enabled", "passed", "Protected runner toolchain checks are enabled."))
+        for tool_name in required_tools:
+            review = _tool_review(tool_name, True, args.tool_timeout)
+            toolchain.append(review)
+            check_name = "toolchain-%s" % tool_name.replace("_", "-")
+            if review["status"] == "passed":
+                rows.append(_row(check_name, "passed", review["message"]))
+            else:
+                message = "Required tool %s is not ready: %s" % (tool_name, review["message"])
+                if strict:
+                    blockers.append(message)
+                    rows.append(_row(check_name, "failed", message))
+                else:
+                    warnings.append(message)
+                    rows.append(_row(check_name, "warning", message))
+        for tool_name in optional_tools:
+            review = _tool_review(tool_name, False, args.tool_timeout)
+            toolchain.append(review)
+            check_name = "toolchain-%s" % tool_name.replace("_", "-")
+            if review["status"] == "passed":
+                rows.append(_row(check_name, "passed", review["message"]))
+            else:
+                message = "Optional tool %s is not ready: %s" % (tool_name, review["message"])
+                warnings.append(message)
+                rows.append(_row(check_name, "warning", message))
+    else:
+        rows.append(_row("toolchain-checks-enabled", "passed", "Protected runner toolchain checks are disabled."))
 
     url_probes = []
     if args.probe_urls:
@@ -579,6 +742,10 @@ def main():
         "auth_probes": bool(args.auth_probes),
         "require_auth_probes": bool(args.require_auth_probes),
         "probe_timeout": args.probe_timeout,
+        "check_tools": bool(args.check_tools),
+        "required_tools": required_tools,
+        "optional_tools": optional_tools,
+        "tool_timeout": args.tool_timeout,
     }
     manifest = {
         "context": context,
@@ -588,6 +755,7 @@ def main():
         "warnings": warnings,
         "checks": rows,
         "variables": variables,
+        "toolchain": toolchain,
         "url_probes": url_probes,
         "certification": certification,
     }
@@ -603,6 +771,10 @@ def main():
             "auth_probes=%s" % int(args.auth_probes),
             "require_auth_probes=%s" % int(args.require_auth_probes),
             "probe_timeout=%s" % args.probe_timeout,
+            "check_tools=%s" % int(args.check_tools),
+            "required_tools=%s" % (",".join(required_tools) or "<none>"),
+            "optional_tools=%s" % (",".join(optional_tools) or "<none>"),
+            "tool_timeout=%s" % args.tool_timeout,
             "decision=%s" % decision,
             "ci_status=%s" % ci_status,
         ]

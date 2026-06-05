@@ -7449,6 +7449,73 @@ Status: Complete
 - Continue PSP/FBR/hardware certification and live offline POS pilot proof once
   provider/device credentials and staging hardware are available.
 
+## Iteration 104: Protected Runner Toolchain Preflight
+
+Status: Complete
+
+### Scope
+
+- Make the protected runner prove the release toolchain is installed before
+  protected release evidence starts, covering k6, Trivy, npm, Docker/Compose,
+  PostgreSQL client tools, optional pip-audit/GitHub CLI, and runner metadata.
+
+### Completed
+
+- Enhanced `scripts/export_protected_runner_preflight.py` with toolchain checks
+  controlled by `TIJARA_PREFLIGHT_CHECK_TOOLS`,
+  `TIJARA_PREFLIGHT_REQUIRED_TOOLS`, `TIJARA_PREFLIGHT_OPTIONAL_TOOLS`, and
+  `TIJARA_PREFLIGHT_TOOL_TIMEOUT`.
+- Required tool checks block in strict mode when missing or when version probes
+  fail; optional tool checks warn but remain visible in the preflight evidence.
+- Tool reviews record command, present/missing status, version output, required
+  flag, and redacted messages in `protected-runner-preflight.json`.
+- Added default protected workflow requirements for `python3`, `node`, `npm`,
+  Docker with Compose plugin, `trivy`, `k6`, `psql`, `pg_dump`, and
+  `pg_restore`, plus optional `pip-audit` and `gh`.
+- Added the same defaults to `deploy/config/github-protected-vars.example`.
+- Updated `README.md` and `DEPLOY.md` with protected-runner installation and
+  preflight guidance.
+
+### Validation
+
+- Passing toolchain fixture with required `python3` writes `decision=passed` and
+  `ci_status=pass` at `/private/tmp/tijara-toolchain-preflight/pass`.
+- Missing required tool fixture writes `decision=failed` and `ci_status=fail`,
+  proving strict preflight blocks missing runner tooling.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_runner_preflight.py
+  scripts/export_ops_tool_evidence.py
+  scripts/export_protected_first_run_checklist.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and exposes
+  the toolchain preflight variables.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The toolchain preflight is validated locally with fixtures, but still needs a
+  real self-hosted protected GitHub runner to prove installed versions and PATH
+  visibility for Docker/Compose, Trivy, k6, PostgreSQL clients, and optional
+  pip-audit.
+- Actual live monitoring, restore, load, dependency/container scanning,
+  PSP/FBR certification, physical hardware certification, and offline POS pilot
+  evidence remain production blockers.
+
+### Next Iteration
+
+- Add release-owner exception capture for production-ops warnings that need
+  temporary approval without weakening default strict gates.
+- Add protected-runner bootstrap documentation/scripts for installing k6, Trivy,
+  pip-audit, PostgreSQL clients, and Docker Compose on Ubuntu/macOS runners.
+- Continue PSP/FBR/hardware certification and live offline POS pilot proof once
+  provider/device credentials and staging hardware are available.
+
 ## Iteration 103: Protected Live Drill Tool Evidence
 
 Status: Complete

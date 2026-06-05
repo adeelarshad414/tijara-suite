@@ -436,9 +436,10 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/export_protected_runner_preflight.py` and
   `make protected-runner-preflight` export a redacted protected-runner
   configuration report for release variables, evidence groups, URLs, load/E2E
-  toggles, optional Odoo/bridge/monitoring reachability probes with
-  secret-backed auth headers, and mandatory PSP/FBR/hardware certification
-  inputs under
+  toggles, required toolchain checks for python3, node, npm, Docker/Compose,
+  Trivy, k6, PostgreSQL client tools, optional pip-audit/GitHub CLI checks,
+  optional Odoo/bridge/monitoring reachability probes with secret-backed auth
+  headers, and mandatory PSP/FBR/hardware certification inputs under
   `deploy/runtime/protected-runner-preflight/`.
 - `scripts/export_protected_service_checks.py` and
   `make protected-service-checks` export deeper protected service checks for
