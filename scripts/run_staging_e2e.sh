@@ -45,11 +45,11 @@ case "$SCOPE" in
         ;;
     authenticated)
         required_vars=("${authenticated_required[@]}")
-        specs=(tests/e2e/pos-checkout-print.spec.mjs tests/e2e/pos-enterprise-journey.spec.mjs tests/e2e/refunds-reports.spec.mjs)
+        specs=(tests/e2e/pos-checkout-print.spec.mjs tests/e2e/pos-enterprise-journey.spec.mjs tests/e2e/pos-direct-ui-clickthrough.spec.mjs tests/e2e/refunds-reports.spec.mjs)
         ;;
     full)
         required_vars=("${public_required[@]}" "${authenticated_required[@]}")
-        specs=(tests/e2e/display-kiosk.spec.mjs tests/e2e/pos-checkout-print.spec.mjs tests/e2e/pos-enterprise-journey.spec.mjs tests/e2e/refunds-reports.spec.mjs)
+        specs=(tests/e2e/display-kiosk.spec.mjs tests/e2e/pos-checkout-print.spec.mjs tests/e2e/pos-enterprise-journey.spec.mjs tests/e2e/pos-direct-ui-clickthrough.spec.mjs tests/e2e/refunds-reports.spec.mjs)
         ;;
     *)
         echo "Unsupported TIJARA_E2E_SCOPE='$SCOPE'. Use public, authenticated, or full." >&2
@@ -87,6 +87,9 @@ done
         fi
     done
     echo "TIJARA_RUN_POS_UI_E2E=${TIJARA_RUN_POS_UI_E2E}"
+    echo "TIJARA_RUN_DIRECT_POS_CLICKTHROUGH=${TIJARA_RUN_DIRECT_POS_CLICKTHROUGH:-0}"
+    echo "TIJARA_RUN_DIRECT_POS_VALIDATE_E2E=${TIJARA_RUN_DIRECT_POS_VALIDATE_E2E:-0}"
+    echo "TIJARA_RUN_DIRECT_REFUND_FORM_E2E=${TIJARA_RUN_DIRECT_REFUND_FORM_E2E:-0}"
     echo "TIJARA_RUN_MOBILE_OFFLINE_E2E=${TIJARA_RUN_MOBILE_OFFLINE_E2E:-0}"
 } > "$ENV_FILE"
 

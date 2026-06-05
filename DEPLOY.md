@@ -564,7 +564,9 @@ export TIJARA_DISPLAY_SLUG=tijara-e2e-menu
 export TIJARA_KIOSK_SLUG=tijara-e2e-kiosk
 export TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer
 export TIJARA_E2E_PRODUCT_ID=<printed-by-seed>
+export TIJARA_E2E_PRODUCT_NAME=<printed-by-seed>
 export TIJARA_E2E_PAYMENT_METHOD_ID=<printed-by-seed>
+export TIJARA_E2E_PAYMENT_METHOD_NAME=<printed-by-seed>
 export TIJARA_E2E_REFUND_REASON_ID=<printed-by-seed>
 export TIJARA_E2E_POS_ORDER_ID=<printed-by-seed>
 export TIJARA_E2E_REFUND_BARCODE=<printed-by-seed>
@@ -575,6 +577,7 @@ export ODOO_USERNAME=<printed-by-seed>
 export ODOO_PASSWORD=<staging-test-password>
 export ODOO_DATABASE=tijara_dev
 export TIJARA_RUN_POS_UI_E2E=1
+export TIJARA_RUN_DIRECT_POS_CLICKTHROUGH=1
 ODOO_BASE_URL=http://127.0.0.1:8069 npm run test:e2e
 ```
 
@@ -596,6 +599,11 @@ paid browser/offline order capture, POS replay, receipt report rendering,
 print-to-bridge method coverage, optional customer-display state assertion,
 refund barcode matching from the generated receipt, duplicate replay handling,
 and offline status reporting.
+Direct cashier POS UI product search, add-to-cart, payment navigation, optional
+sale validation/receipt print, and refund barcode form selectors are available
+with `TIJARA_RUN_DIRECT_POS_CLICKTHROUGH=1`,
+`TIJARA_RUN_DIRECT_POS_VALIDATE_E2E=1`, and
+`TIJARA_RUN_DIRECT_REFUND_FORM_E2E=1`.
 
 ## CI, Security, and Load Smoke
 

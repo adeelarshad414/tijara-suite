@@ -272,6 +272,7 @@ print("export TIJARA_DISPLAY_SLUG=tijara-e2e-menu")
 print("export TIJARA_KIOSK_SLUG=tijara-e2e-kiosk")
 print("export TIJARA_CUSTOMER_DISPLAY_SLUG=tijara-e2e-customer")
 print("export TIJARA_E2E_PRODUCT_ID=%s" % product.id)
+print("export TIJARA_E2E_PRODUCT_NAME=%s" % product.display_name)
 print("export TIJARA_E2E_REFUND_REASON_ID=%s" % refund_reason.id)
 print("export TIJARA_REFUND_ACTION_URL=/odoo/action-tijara_retail_core.action_tijara_exchange_request")
 print("export TIJARA_OFFLINE_QUEUE_ACTION_URL=/odoo/action-tijara_pos_experience.action_tijara_offline_pos_review")
@@ -283,6 +284,7 @@ if pos_config:
     print("export TIJARA_POS_CONFIG_ID=%s" % pos_config.id)
     if payment_method:
         print("export TIJARA_E2E_PAYMENT_METHOD_ID=%s" % payment_method.id)
+        print("export TIJARA_E2E_PAYMENT_METHOD_NAME=%s" % payment_method.display_name)
 if e2e_pos_order:
     print("export TIJARA_E2E_POS_ORDER_ID=%s" % e2e_pos_order.id)
     print(

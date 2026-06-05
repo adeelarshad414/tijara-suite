@@ -2727,3 +2727,59 @@ Date: 2026-06-05
 - Add deployment provider-specific production smoke commands after target
   infrastructure is selected.
 - Run staging and rollback dry-run gates with real release evidence.
+
+## Iteration 41: Direct Cashier POS UI Click-Through Coverage
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `tests/e2e/pos-direct-ui-clickthrough.spec.mjs`.
+- The new opt-in browser spec covers:
+  - Opening the real POS UI from `pos.config.open_ui`.
+  - Searching the seeded product by name.
+  - Clicking the product to add it to the cart.
+  - Navigating to the payment screen.
+  - Optionally selecting the seeded payment method.
+  - Optionally validating a real browser sale and clicking receipt print.
+  - Optionally opening the refund form, filling the seeded invoice barcode, and
+    clicking the scan action.
+- Added staging toggles:
+  - `TIJARA_RUN_DIRECT_POS_CLICKTHROUGH=1`.
+  - `TIJARA_RUN_DIRECT_POS_VALIDATE_E2E=1`.
+  - `TIJARA_RUN_DIRECT_REFUND_FORM_E2E=1`.
+  - `TIJARA_RUN_MOBILE_DIRECT_POS_UI_E2E=1`.
+- Extended `scripts/e2e_seed.py` to print:
+  - `TIJARA_E2E_PRODUCT_NAME`.
+  - `TIJARA_E2E_PAYMENT_METHOD_NAME`.
+- Added the direct UI spec to authenticated and full staging E2E scopes.
+- Updated `README.md`, `DEPLOY.md`, `tests/e2e/README.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_staging_e2e.sh` passes.
+- `bash scripts/js_check.sh` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Direct POS UI click-through still needs execution against a live seeded
+  staging Odoo POS register with a permissioned POS user.
+- UI selector fallbacks are intentionally broad because Odoo POS class names and
+  labels vary by version/theme; live staging execution will determine whether
+  more precise selectors are needed.
+- Real receipt print through hardware still depends on configured bridge
+  printer and physical certification.
+
+### Next Iteration
+
+- Execute direct POS UI click-through on staging and tighten selectors based on
+  actual screenshots/traces.
+- Add production provider-specific post-deployment smoke commands once target
+  infrastructure is selected.
+- Continue PSP/FBR/hardware certification evidence work with real provider and
+  device inputs.

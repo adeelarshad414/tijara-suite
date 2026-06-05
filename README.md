@@ -206,7 +206,10 @@ hooks. Authenticated staging browser evidence now includes an integrated POS
 enterprise journey that creates a paid browser/offline order, replays it into
 POS, verifies receipt rendering, exercises print-to-bridge, checks
 customer-display state when configured, scans the generated refund barcode, and
-proves duplicate replay handling.
+proves duplicate replay handling. Direct cashier POS UI click-through selectors
+now cover seeded product search, add-to-cart, payment navigation, optional sale
+validation/receipt print, and refund barcode form entry for prepared staging
+registers.
 Remaining enterprise phases include real target-hardware certification, full
 authenticated browser POS click-through coverage in staging, production FBR
 provider certification, secret-manager rollout, offline POS pilot
