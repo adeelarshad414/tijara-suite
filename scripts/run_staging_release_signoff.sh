@@ -8,6 +8,7 @@ RUN_ID="${TIJARA_STAGING_RELEASE_RUN_ID:-$(date -u +%Y%m%d-%H%M%S)}"
 RUNTIME_ROOT="${TIJARA_STAGING_RELEASE_RUNTIME_ROOT:-deploy/runtime}"
 ORCH_DIR="${TIJARA_STAGING_RELEASE_EVIDENCE_DIR:-$RUNTIME_ROOT/staging-release/$RUN_ID}"
 RELEASE_DIR="${TIJARA_RELEASE_EVIDENCE_DIR:-$RUNTIME_ROOT/release-evidence/$RUN_ID}"
+E2E_SEED_DIR="${TIJARA_E2E_SEED_EVIDENCE_DIR:-$RUNTIME_ROOT/e2e-seed/$RUN_ID}"
 E2E_DIR="${TIJARA_E2E_EVIDENCE_DIR:-$RUNTIME_ROOT/e2e-evidence/$RUN_ID}"
 OPS_DIR="${TIJARA_OPS_EVIDENCE_DIR:-$RUNTIME_ROOT/ops-evidence/$RUN_ID}"
 ENV_PROTECTION_DIR="${TIJARA_ENV_PROTECTION_OUTPUT:-$RUNTIME_ROOT/deployment-environments/$RUN_ID}"
@@ -26,6 +27,13 @@ STRICT_REQUIRED="${TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE:-1}"
 FAIL_ON_WARNING="${TIJARA_STAGING_RELEASE_FAIL_ON_WARNING:-${TIJARA_RELEASE_FAIL_ON_WARNING:-1}}"
 ENV_PROTECTION_STRICT="${TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT:-$STRICT_REQUIRED}"
 TENANT_OPS_ARTIFACTS="${TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS:-${TIJARA_TENANT_OPS_ARTIFACTS:-}}"
+SEED_E2E="${TIJARA_STAGING_RELEASE_SEED_E2E:-0}"
+INCLUDE_E2E_SEED="${TIJARA_STAGING_RELEASE_INCLUDE_E2E_SEED:-}"
+if [[ -z "$INCLUDE_E2E_SEED" && -n "${TIJARA_E2E_SEED_EVIDENCE_DIR:-}" ]]; then
+    INCLUDE_E2E_SEED="1"
+elif [[ -z "$INCLUDE_E2E_SEED" ]]; then
+    INCLUDE_E2E_SEED="$SEED_E2E"
+fi
 TENANT_OPS_INCLUDE="${TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS:-}"
 if [[ -z "$TENANT_OPS_INCLUDE" && -n "$TENANT_OPS_ARTIFACTS" ]]; then
     TENANT_OPS_INCLUDE="1"
@@ -46,6 +54,11 @@ case "$(echo "$TENANT_OPS_STRICT" | tr '[:upper:]' '[:lower:]')" in
         ;;
 esac
 SIGNOFF_EVIDENCE_PATHS="$RELEASE_DIR,$E2E_DIR,$OPS_DIR,$ENV_PROTECTION_DIR"
+case "$(echo "$INCLUDE_E2E_SEED" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$E2E_SEED_DIR"
+        ;;
+esac
 case "$(echo "$TENANT_OPS_INCLUDE" | tr '[:upper:]' '[:lower:]')" in
     1|true|yes|y|on)
         SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$TENANT_OPS_DIR"
@@ -61,6 +74,7 @@ mkdir -p "$ORCH_DIR"
     echo "runtime_root=$RUNTIME_ROOT"
     echo "orchestration_dir=$ORCH_DIR"
     echo "release_evidence_dir=$RELEASE_DIR"
+    echo "e2e_seed_evidence_dir=$E2E_SEED_DIR"
     echo "e2e_evidence_dir=$E2E_DIR"
     echo "ops_evidence_dir=$OPS_DIR"
     echo "deployment_environment_dir=$ENV_PROTECTION_DIR"
@@ -73,6 +87,8 @@ mkdir -p "$ORCH_DIR"
     echo "strict_required_evidence=$STRICT_REQUIRED"
     echo "fail_on_warning=$FAIL_ON_WARNING"
     echo "deployment_environment_strict=$ENV_PROTECTION_STRICT"
+    echo "seed_e2e=$SEED_E2E"
+    echo "include_e2e_seed=$INCLUDE_E2E_SEED"
     echo "tenant_ops_include=$TENANT_OPS_INCLUDE"
     echo "tenant_ops_strict=$TENANT_OPS_STRICT"
     echo "tenant_ops_artifacts=${TENANT_OPS_ARTIFACTS:-<unset>}"
@@ -81,6 +97,8 @@ mkdir -p "$ORCH_DIR"
     echo "ODOO_BASE_URL=${ODOO_BASE_URL:-<unset>}"
     echo "ODOO_DATABASE=${ODOO_DATABASE:-<unset>}"
     echo "ODOO_USERNAME=${ODOO_USERNAME:+<set>}"
+    echo "ODOO_PASSWORD=${ODOO_PASSWORD:+<set>}"
+    echo "TIJARA_E2E_PASSWORD=${TIJARA_E2E_PASSWORD:+<set>}"
     echo "TIJARA_E2E_SCOPE=${TIJARA_E2E_SCOPE:-full}"
     echo "TIJARA_OPS_CHECKS=${TIJARA_OPS_CHECKS:-full}"
     echo "TIJARA_OPS_STRICT=${TIJARA_OPS_STRICT:-<unset>}"
@@ -95,6 +113,8 @@ record_status() {
     local message="$5"
     printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$status" "$exit_code" "$log_file" "$message" >> "$STATUS_FILE"
 }
+
+LAST_STEP_EXIT_CODE=0
 
 run_step() {
     local name="$1"
@@ -111,7 +131,36 @@ run_step() {
     else
         record_status "$name" "failed" "$exit_code" "$log_file" "step failed"
     fi
+    LAST_STEP_EXIT_CODE="$exit_code"
 }
+
+case "$(echo "$SEED_E2E" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        run_step "e2e-seed" \
+            env \
+            TIJARA_E2E_SEED_RUN_ID="$RUN_ID" \
+            TIJARA_E2E_SEED_EVIDENCE_DIR="$E2E_SEED_DIR" \
+            TIJARA_E2E_SEED_SCOPE="${TIJARA_E2E_SCOPE:-full}" \
+            make seed-e2e
+        if [[ "$LAST_STEP_EXIT_CODE" -eq 0 && -f "$E2E_SEED_DIR/e2e-seed.env" ]]; then
+            set -a
+            # shellcheck disable=SC1090
+            source "$E2E_SEED_DIR/e2e-seed.env"
+            set +a
+            if [[ -z "${ODOO_PASSWORD:-}" && -n "${TIJARA_E2E_PASSWORD:-}" ]]; then
+                export ODOO_PASSWORD="$TIJARA_E2E_PASSWORD"
+            fi
+            record_status "e2e-seed-env" "passed" "0" "$E2E_SEED_DIR/e2e-seed.env" "seed env sourced"
+        elif [[ "$LAST_STEP_EXIT_CODE" -eq 0 ]]; then
+            record_status "e2e-seed-env" "failed" "1" "$E2E_SEED_DIR/e2e-seed.env" "seed env file missing"
+        else
+            record_status "e2e-seed-env" "skipped" "$LAST_STEP_EXIT_CODE" "$E2E_SEED_DIR/e2e-seed.env" "seed step failed"
+        fi
+        ;;
+    *)
+        record_status "e2e-seed" "skipped" "0" "" "seed step not requested"
+        ;;
+esac
 
 run_step "release-candidate" \
     env \
@@ -194,6 +243,7 @@ fi
     echo "## Artifact Paths"
     echo "- Orchestration evidence: $ORCH_DIR"
     echo "- Release evidence: $RELEASE_DIR"
+    echo "- Browser E2E seed evidence: $E2E_SEED_DIR"
     echo "- Browser E2E evidence: $E2E_DIR"
     echo "- Operations evidence: $OPS_DIR"
     echo "- Deployment environment evidence: $ENV_PROTECTION_DIR"

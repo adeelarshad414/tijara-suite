@@ -1116,8 +1116,10 @@ the staging E2E, Odoo, monitoring, restore, and provider/device variables:
 
 ```bash
 TIJARA_STAGING_RELEASE_RUN_ID=2026-06-05-rc1 \
+TIJARA_STAGING_RELEASE_SEED_E2E=1 \
 TIJARA_STAGING_RELEASE_CHECKS=full \
 TIJARA_E2E_SCOPE=full \
+TIJARA_E2E_PASSWORD=<staging-test-password> \
 TIJARA_OPS_CHECKS=full \
 TIJARA_OPS_STRICT=1 \
 TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT=1 \
@@ -1148,6 +1150,9 @@ make staging-release-signoff
 The wrapper keeps a single run ID across:
 
 - `deploy/runtime/release-evidence/<run-id>/`
+- `deploy/runtime/e2e-seed/<run-id>/` when
+  `TIJARA_STAGING_RELEASE_SEED_E2E=1` or
+  `TIJARA_STAGING_RELEASE_INCLUDE_E2E_SEED=1`.
 - `deploy/runtime/e2e-evidence/<run-id>/`
 - `deploy/runtime/ops-evidence/<run-id>/`
 - `deploy/runtime/release-retention-evidence/<run-id>/` when exported
@@ -1161,6 +1166,10 @@ The wrapper keeps a single run ID across:
 It continues through package generation and readiness checking even if an
 earlier step fails, so release owners get a complete blocked/ready decision
 instead of only a partial log.
+When `TIJARA_STAGING_RELEASE_SEED_E2E=1`, the wrapper runs `make seed-e2e`,
+sources the generated non-secret `e2e-seed.env`, maps `TIJARA_E2E_PASSWORD` to
+`ODOO_PASSWORD` if the latter is not already set, and appends seed evidence to
+the sign-off package.
 Tenant operations evidence is opt-in for the wrapper. Set
 `TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS` to one or more comma-separated
 tenant artifact directories, or set `TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS=1`

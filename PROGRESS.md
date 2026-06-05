@@ -5351,3 +5351,69 @@ Date: 2026-06-05
   evidence, Playwright execution, and sign-off packaging under one run ID.
 - Then run live authenticated checkout, refund barcode scan, receipt print, and
   offline replay E2E once staging credentials and Odoo URL are available.
+
+## Iteration 76: Seed-Aware Staging Release Orchestration
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/run_staging_release_signoff.sh` with optional E2E seeding
+  through `TIJARA_STAGING_RELEASE_SEED_E2E=1`.
+- The staging wrapper now keeps E2E seed evidence under the same run ID at
+  `deploy/runtime/e2e-seed/<run-id>/`.
+- When seeding is enabled, the wrapper runs `make seed-e2e`, sources the
+  generated non-secret `e2e-seed.env`, and maps `TIJARA_E2E_PASSWORD` into
+  `ODOO_PASSWORD` if `ODOO_PASSWORD` is not already set.
+- The wrapper can attach pre-existing seed evidence with
+  `TIJARA_STAGING_RELEASE_INCLUDE_E2E_SEED=1` or by setting
+  `TIJARA_E2E_SEED_EVIDENCE_DIR`.
+- Staging sign-off evidence paths now include seed evidence when requested, so
+  the sign-off pack can extract `e2e_seed_reviews`.
+- Updated `README.md` and `DEPLOY.md` with the seed-aware staging release
+  orchestration workflow and artifact path.
+
+### Validation
+
+- `bash -n scripts/run_staging_release_signoff.sh` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/generate_signoff_pack.py` passes.
+- Local-only staging wrapper smoke passes at
+  `/private/tmp/tijara-staging-wrapper-smoke/staging-release/staging-wrapper-smoke`.
+- The smoke generated a sign-off package at
+  `/private/tmp/tijara-staging-wrapper-smoke/signoff-packages/staging-wrapper-smoke`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-staging-wrapper-smoke/signoff-packages/staging-wrapper-smoke/release-readiness.json`
+  passes with `decision=warning` and `ci_status=pass_with_warnings`; warnings
+  are expected because the smoke intentionally did not provide deployment
+  environment approval/runbook references.
+- The wrapper status table records `e2e-seed` as skipped when the seed flag is
+  not requested, then continues through release-candidate, deployment
+  environment, sign-off packaging, and readiness checking.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The wrapper now chains seed evidence when requested, but a live full staging
+  run still needs Docker/Odoo, seeded POS data, staging secrets, Playwright, and
+  reachable staging URLs.
+- The local smoke intentionally used `TIJARA_STAGING_RELEASE_SEED_E2E=0`; live
+  seed execution still needs the Odoo container and staging password.
+- Full production-grade sign-off still requires actual deployment environment
+  references, monitoring evidence, load evidence, hardware certification, PSP
+  certification, and FBR certification.
+
+### Next Iteration
+
+- Add a live E2E credential/profile checklist that operators can validate before
+  running the seed-aware staging release wrapper.
+- Continue toward live authenticated checkout, refund barcode scan, receipt
+  print, and offline replay E2E execution on a reachable staging Odoo.

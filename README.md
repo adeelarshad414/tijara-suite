@@ -438,9 +438,10 @@ The detailed policy and dependency intake checklist are maintained in
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.
 - `scripts/run_staging_release_signoff.sh` and `make staging-release-signoff`
-  sequence staging release-candidate evidence, browser E2E evidence, operations
-  evidence, deployment environment evidence, sign-off package generation,
-  readiness checking, and artifact path reporting under one run ID.
+  sequence optional E2E seeding, staging release-candidate evidence, browser
+  E2E evidence, operations evidence, deployment environment evidence, sign-off
+  package generation, readiness checking, and artifact path reporting under one
+  run ID.
 - `scripts/export_e2e_readiness.py`, used by `make e2e-staging`, writes
   authenticated POS/refund/print browser readiness evidence with secret-masked
   required-variable checks before Playwright starts.
