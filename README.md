@@ -486,7 +486,9 @@ The detailed policy and dependency intake checklist are maintained in
   render a compact GitHub Actions Markdown summary from release-readiness,
   production-ops readiness, post-run verification, and artifact-summary JSON so
   release owners can see blockers, warnings, and production-ops component
-  status without downloading the artifact bundle.
+  status without downloading the artifact bundle. The protected workflow
+  renders it once before upload and again after upload with artifact ID, URL,
+  digest, and retention metadata.
 - `scripts/export_protected_artifact_summary.py` and
   `make protected-artifact-summary` scan protected evidence folders and write a
   release-owner index of failed/warning status rows, decisions, and artifact

@@ -1095,9 +1095,13 @@ warning, and component status, and uploads the main evidence bundle as
 `tijara-protected-release-evidence-<environment>-<run>`. After that upload, the
 workflow records the real upload action outputs such as artifact ID, artifact
 URL, digest, and retention metadata, then uploads a sidecar artifact named
-`tijara-protected-artifact-metadata-<environment>-<run>`. If a strict evidence
-step fails, the job still tries to build the final sign-off package so the
-release-readiness JSON explains the blocker.
+`tijara-protected-artifact-metadata-<environment>-<run>`. After the main upload
+metadata is recorded, the workflow appends a second GitHub Actions summary and
+writes `github-step-summary-post-upload.md` under
+`deploy/runtime/github-artifact-metadata/<run-id>/`, including artifact ID,
+URL, digest, and retention days. If a strict evidence step fails, the job still
+tries to build the final sign-off package so the release-readiness JSON
+explains the blocker.
 
 Set `TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware` in the protected
 GitHub environment when external certification must be mandatory for the
@@ -1513,7 +1517,10 @@ Optional tools:
 - Run `make github-step-summary` or `scripts/export_github_step_summary.py`
   after production ops, post-run verification, artifact summary, and sign-off
   evidence exist to render the same Markdown summary that the protected GitHub
-  workflow appends to `GITHUB_STEP_SUMMARY`.
+  workflow appends to `GITHUB_STEP_SUMMARY`. When artifact upload outputs are
+  available, pass or export `TIJARA_UPLOADED_ARTIFACT_ID`,
+  `TIJARA_UPLOADED_ARTIFACT_URL`, `TIJARA_UPLOADED_ARTIFACT_DIGEST`, and
+  `TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS` to include the post-upload metadata.
 - Run `make release-retention-evidence` to export artifact-store,
   secret-manager, retention policy, and evidence-fingerprint readiness without
   running the full operations bundle.

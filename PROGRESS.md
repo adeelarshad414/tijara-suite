@@ -7391,3 +7391,60 @@ Status: Complete
   pip-audit.
 - Continue PSP/FBR/hardware certification and live offline POS pilot proof once
   provider/device credentials and staging hardware are available.
+
+## Iteration 102: Protected Post-Upload Summary Metadata
+
+Status: Complete
+
+### Scope
+
+- Refresh the protected GitHub Actions release summary after the main evidence
+  artifact upload so release owners can see artifact ID, URL, digest, and
+  retention metadata without opening the sidecar artifact first.
+
+### Completed
+
+- Extended `scripts/export_github_step_summary.py` with optional artifact ID,
+  URL, digest, and retention-day fields.
+- Added a protected workflow step after `export_github_artifact_metadata.py`
+  post-upload recording that appends a second summary to `$GITHUB_STEP_SUMMARY`.
+- The post-upload summary is also written to
+  `deploy/runtime/github-artifact-metadata/<run-id>/github-step-summary-post-upload.md`,
+  so it is included in the protected artifact metadata sidecar upload.
+- Updated `README.md` and `DEPLOY.md` to document the pre-upload and post-upload
+  summary behavior and the environment variables that populate artifact
+  metadata.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_github_step_summary.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Post-upload summary fixture renders artifact name, ID, URL, digest, and
+  retention days from `TIJARA_UPLOADED_ARTIFACT_*` and
+  `TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS`.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The post-upload summary path still needs one real protected GitHub Actions run
+  to prove GitHub-provided artifact URL, ID, and digest values render in the UI.
+- Live monitoring/alert drills, restore drills, k6 load execution,
+  dependency/container scanning, PSP/FBR certification, physical hardware
+  certification, and live offline POS pilot evidence remain production blockers.
+
+### Next Iteration
+
+- Add protected-runner live drill documentation and evidence fixtures for
+  monitoring alerts, backup restore proof, k6, Trivy, npm audit, and optional
+  pip-audit.
+- Add release-owner exception capture for production-ops warnings that need
+  temporary approval without weakening default strict gates.
+- Continue PSP/FBR/hardware certification and live offline POS pilot proof once
+  provider/device credentials and staging hardware are available.

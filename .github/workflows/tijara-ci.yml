@@ -788,6 +788,20 @@ jobs:
             --retention-days "$TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS" \
             --stage post_upload \
             --strict
+      - name: Publish protected post-upload GitHub summary
+        if: always()
+        continue-on-error: true
+        env:
+          TIJARA_UPLOADED_ARTIFACT_NAME: tijara-protected-release-evidence-${{ inputs.target_environment }}-${{ github.run_id }}
+          TIJARA_UPLOADED_ARTIFACT_ID: ${{ steps.upload_protected_release_evidence.outputs.artifact-id }}
+          TIJARA_UPLOADED_ARTIFACT_URL: ${{ steps.upload_protected_release_evidence.outputs.artifact-url }}
+          TIJARA_UPLOADED_ARTIFACT_DIGEST: ${{ steps.upload_protected_release_evidence.outputs.artifact-digest }}
+        run: |
+          python3 scripts/export_github_step_summary.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/github-artifact-metadata/$TIJARA_PROTECTED_RUN_ID/github-step-summary-post-upload.md" \
+            >> "$GITHUB_STEP_SUMMARY"
       - name: Upload protected artifact metadata
         if: always()
         uses: actions/upload-artifact@v4

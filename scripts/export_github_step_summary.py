@@ -159,12 +159,18 @@ def _summary_lines(args):
             lines.append("")
             lines.append("... %s more component(s) in production-ops readiness." % extra)
 
-    if args.artifact_name or args.artifact_url:
+    if args.artifact_name or args.artifact_url or args.artifact_id or args.artifact_digest:
         lines.extend(["", "## Artifact", ""])
         if args.artifact_name:
             lines.append("- Name: `%s`" % _markdown_escape(args.artifact_name))
+        if args.artifact_id:
+            lines.append("- ID: `%s`" % _markdown_escape(args.artifact_id))
         if args.artifact_url:
             lines.append("- URL: %s" % _markdown_escape(args.artifact_url))
+        if args.artifact_digest:
+            lines.append("- Digest: `%s`" % _markdown_escape(args.artifact_digest))
+        if args.artifact_retention_days:
+            lines.append("- Retention days: `%s`" % _markdown_escape(args.artifact_retention_days))
 
     lines.append("")
     return "\n".join(lines)
@@ -179,7 +185,10 @@ def main():
     parser.add_argument("--artifact-summary", default=os.environ.get("TIJARA_SUMMARY_ARTIFACT_SUMMARY", ""))
     parser.add_argument("--post-run-verification", default=os.environ.get("TIJARA_SUMMARY_POST_RUN", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
+    parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
+    parser.add_argument("--artifact-digest", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_DIGEST", ""))
+    parser.add_argument("--artifact-retention-days", default=os.environ.get("TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS", ""))
     parser.add_argument("--output", default=os.environ.get("TIJARA_GITHUB_STEP_SUMMARY_OUTPUT", ""))
     parser.add_argument("--max-items", type=int, default=int(os.environ.get("TIJARA_GITHUB_STEP_SUMMARY_MAX_ITEMS", "8")))
     parser.add_argument(
