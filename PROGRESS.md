@@ -7096,3 +7096,103 @@ Date: 2026-06-05
   restore, load test summaries, and security scan outputs.
 - Continue hardening offline POS pilot runbooks with real-device outage,
   duplicate, and reconciliation evidence once store hardware is available.
+
+## Iteration 99: Protected Payment Lifecycle Evidence
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_payment_lifecycle_evidence.py` to export
+  protected PSP payment lifecycle evidence under
+  `deploy/runtime/protected-payment-lifecycle/`.
+- The exporter verifies committed signed webhook route contracts, webhook event
+  normalization, provider adapter contracts, settlement import/reconciliation,
+  refund and chargeback case workflows, finance accounting actions, and payment
+  lifecycle views.
+- The exporter chains `scripts/export_psp_readiness.py` and
+  `scripts/psp_settlement_fixture_smoke.py`, preserving nested
+  `psp-readiness/` and `psp-fixture-smoke/` folders.
+- The evidence proves JazzCash, Easypaisa, and Stripe fixture coverage for
+  payment, refund, chargeback, and settlement events, while native signature
+  and provider-certification requirements can become blocking with protected
+  runner flags.
+- Added `make protected-payment-lifecycle-evidence`.
+- Wired `.github/workflows/tijara-ci.yml` to run protected payment lifecycle
+  evidence after PSP/FBR provider readiness and before the release-candidate
+  gate.
+- Added `protected-payment-lifecycle` to first-run expected artifacts, runbook
+  review order, post-run required artifacts, release-retention evidence paths,
+  sign-off evidence paths, protected artifact summary defaults, and protected
+  artifact uploads.
+- Classified `protected-payment-lifecycle` as Operations evidence in
+  `scripts/generate_signoff_pack.py`.
+- Updated `deploy/config/github-protected-vars.example`, `README.md`, and
+  `DEPLOY.md` with payment lifecycle controls and deployment guidance.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_payment_lifecycle_evidence.py
+  scripts/export_psp_readiness.py scripts/psp_settlement_fixture_smoke.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_post_run_verification.py
+  scripts/export_protected_runbook_handoff.py
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes `TIJARA_PAYMENT_LIFECYCLE_PROVIDERS`.
+- Default strict payment lifecycle fixture writes `decision=warning` and
+  `ci_status=pass_with_warnings` when live PSP secrets/certifications are not
+  required.
+- Required native-signature/provider-certification fixture without PSP inputs
+  writes `decision=failed` and `ci_status=fail`.
+- Secret-like metadata fixture with `api_token` is rejected.
+- Passing payment lifecycle fixture with redacted JazzCash, Easypaisa, and
+  Stripe signature/certification inputs writes `decision=passed` and
+  `ci_status=pass`.
+- Updated post-run verifier fixture requires and accepts
+  `protected-payment-lifecycle`.
+- Protected artifact summary over payment lifecycle evidence writes
+  `decision=passed`.
+- Updated first-run checklist fixture expects `protected-payment-lifecycle`.
+- Protected runbook handoff fixture includes `protected-payment-lifecycle` in
+  the review order and writes `decision=passed`.
+- `make protected-payment-lifecycle-evidence` passes and writes warning
+  evidence when live PSP proof is not required.
+- Sign-off package with passing payment lifecycle evidence classifies it as
+  Operations evidence and `scripts/check_release_readiness.py` returns
+  `decision=ready`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- Local fixtures prove PSP lifecycle coverage and static contracts, but real
+  JazzCash, Easypaisa, and Stripe signed webhook samples, settlement files,
+  refund callbacks, chargeback/dispute callbacks, and provider certification
+  references still need protected staging execution.
+- Payment accounting actions still require finance-configured journals,
+  clearing accounts, receivable accounts, refund journals, and approval
+  workflow proof before production posting.
+- FBR live certification, physical hardware certification, live offline POS
+  replay, monitoring/alert drills, backup restore drills, load testing, and
+  security testing remain production-readiness blockers.
+
+### Next Iteration
+
+- Add protected production operations drill evidence for alert routing, backup
+  restore, load test summaries, and security scan outputs.
+- Add PSP live signed webhook/sample statement certification evidence once
+  provider sandbox payloads are available.
+- Continue hardening finance closeout proof for refund, chargeback, payout
+  clearing, and write-off accounting actions on staging.

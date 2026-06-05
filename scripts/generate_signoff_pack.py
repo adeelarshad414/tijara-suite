@@ -403,6 +403,7 @@ def _evidence_group(entry):
         or "protected-post-run-verification" in relative_lower
         or "protected-service-checks" in relative_lower
         or "protected-provider-readiness" in relative_lower
+        or "protected-payment-lifecycle" in relative_lower
         or "protected-offline-replay" in relative_lower
         or "github-artifact-metadata" in relative_lower
         or "protected-runner-preflight" in relative_lower
@@ -426,6 +427,7 @@ def _evidence_group(entry):
         or filename == "protected-post-run-verification.json"
         or filename == "protected-service-checks.json"
         or filename == "protected-provider-readiness.json"
+        or filename == "protected-payment-lifecycle-evidence.json"
         or filename == "protected-offline-replay-evidence.json"
         or filename == "github-artifact-metadata.json"
         or filename == "protected-runner-preflight.json"

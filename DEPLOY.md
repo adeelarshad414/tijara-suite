@@ -1060,7 +1060,9 @@ redacted runner preflight evidence under
 authenticated service checks under
 `deploy/runtime/protected-service-checks/<run-id>/`, exports protected PSP/FBR
 provider readiness under
-`deploy/runtime/protected-provider-readiness/<run-id>/`, runs the
+`deploy/runtime/protected-provider-readiness/<run-id>/`, exports protected
+payment lifecycle evidence under
+`deploy/runtime/protected-payment-lifecycle/<run-id>/`, runs the
 release-candidate gate, runs protected Browser E2E
 seed/profile/browser/execution evidence under
 `deploy/runtime/protected-e2e/<run-id>/`, exports protected offline POS replay
@@ -1245,6 +1247,26 @@ code, and payload hash must be release blockers. The exporter writes
 `fbr-readiness/` evidence folders, `status.tsv`, `env-summary.txt`, and
 `summary.md` without printing provider secrets.
 
+Capture protected payment lifecycle evidence before the release-candidate gate:
+
+```bash
+TIJARA_PAYMENT_LIFECYCLE_PROVIDERS=jazzcash,easypaisa,stripe
+TIJARA_PAYMENT_LIFECYCLE_REQUIRE_NATIVE_SIGNATURES=0
+TIJARA_PAYMENT_LIFECYCLE_REQUIRE_PROVIDER_CERTIFICATION=0
+TIJARA_PAYMENT_LIFECYCLE_FAIL_ON_WARNING=0
+```
+
+The exporter verifies the committed signed webhook route, provider signature
+contracts, webhook normalization, settlement import/reconciliation, refund and
+chargeback cases, finance accounting actions, PSP readiness, and settlement
+fixture smoke coverage for payment, refund, chargeback, and settlement events.
+Set `TIJARA_PAYMENT_LIFECYCLE_REQUIRE_NATIVE_SIGNATURES=1` and
+`TIJARA_PAYMENT_LIFECYCLE_REQUIRE_PROVIDER_CERTIFICATION=1` when PSP sandbox
+credentials and approved provider references must block release readiness. The
+evidence writes `protected-payment-lifecycle-evidence.json`, nested
+`psp-readiness/` and `psp-fixture-smoke/` folders, `status.tsv`,
+`env-summary.txt`, and `summary.md` without writing secret values.
+
 Enable optional URL probes when the protected runner should prove basic network
 reachability before expensive evidence collection:
 
@@ -1320,9 +1342,9 @@ replay browser evidence blocks release readiness. The evidence writes
 After the protected readiness check, the workflow runs
 `scripts/export_protected_artifact_summary.py`. The generated `summary.md`
 points release owners at failed/warning rows across preflight, release,
-provider readiness, Browser E2E, offline replay, operations, certification, retention,
-secret-manager, production operations readiness, and sign-off artifacts. Use it
-as the first file to open inside
+provider readiness, payment lifecycle, Browser E2E, offline replay, operations,
+certification, retention, secret-manager, production operations readiness, and
+sign-off artifacts. Use it as the first file to open inside
 `tijara-protected-release-evidence-<environment>-<run>`. In GitHub Actions, the
 summary also records the workflow run URL, commit/ref metadata, and uploaded
 artifact reference when those values are available.

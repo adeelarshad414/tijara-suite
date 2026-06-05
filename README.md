@@ -368,9 +368,10 @@ The detailed policy and dependency intake checklist are maintained in
   certification manifest examples. The protected job now emits an operator
   handoff runbook, a first-run checklist, a redacted runner preflight evidence
   report, protected authenticated service checks, protected PSP/FBR provider
-  readiness, a protected Browser E2E handoff report, and protected offline POS
-  replay evidence before executing strict release gates. After the readiness
-  gate, it verifies protected post-run evidence, records GitHub artifact
+  readiness, protected payment lifecycle evidence, a protected Browser E2E
+  handoff report, and protected offline POS replay evidence before executing
+  strict release gates. After the readiness gate, it verifies protected
+  post-run evidence, records GitHub artifact
   metadata, writes one protected artifact summary for release-owner review, and
   uploads a post-upload metadata sidecar with the artifact ID/URL when GitHub
   Actions returns those outputs.
@@ -444,6 +445,12 @@ The detailed policy and dependency intake checklist are maintained in
   JazzCash, Easypaisa, Stripe, and certified FBR readiness exporters while
   preserving redacted status, provider certification, and warning/blocker
   decisions for protected sign-off.
+- `scripts/export_protected_payment_lifecycle_evidence.py` and
+  `make protected-payment-lifecycle-evidence` export protected payment
+  lifecycle evidence under `deploy/runtime/protected-payment-lifecycle/`,
+  checking signed webhook contracts, provider adapters, settlement import,
+  refund/chargeback cases, finance accounting actions, PSP readiness, and
+  JazzCash/Easypaisa/Stripe settlement fixture smoke results.
 - `scripts/export_protected_offline_replay_evidence.py` and
   `make protected-offline-replay-evidence` export protected offline POS replay
   evidence under `deploy/runtime/protected-offline-replay/`, checking the
