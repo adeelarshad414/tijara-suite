@@ -2136,3 +2136,52 @@ Date: 2026-06-05
   release-candidate sign-off package.
 - Expand authenticated POS browser click-through for checkout, payment,
   receipt, refund barcode scan, customer display updates, and offline replay.
+
+## Iteration 30: Release Candidate Evidence Gate
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_release_candidate_gate.sh` for release-candidate sign-off:
+  - Supports `TIJARA_RELEASE_CHECKS=local` for scaffold validation, JavaScript
+    checks, security audit, and shell script syntax checks.
+  - Supports `TIJARA_RELEASE_CHECKS=full` for clean-git, local checks, Odoo
+    transaction tests, guarded staging browser E2E, and guarded staging
+    operations evidence.
+  - Writes ignored evidence under `deploy/runtime/release-evidence/<run-id>/`:
+    environment summary, per-check logs, status table, and Markdown summary.
+- Added `make release-candidate` and `npm run release:candidate`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_release_candidate_gate.sh` passes.
+- `TIJARA_RELEASE_CHECKS=local make release-candidate` passes and writes local
+  release evidence.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Full release-candidate execution still needs a live seeded staging Odoo stack,
+  permissioned POS test user, E2E slugs/IDs, monitoring services, backup
+  artifact, k6, Trivy, and Docker test access.
+- Browser POS click-through still needs richer checkout/payment/refund
+  assertions beyond current route/shell/API-level staging coverage.
+- Physical hardware certification, PSP/FBR certification, and formal security
+  review execution remain open.
+
+### Next Iteration
+
+- Prepare and execute `TIJARA_RELEASE_CHECKS=full make release-candidate`
+  against a staging release candidate.
+- Expand POS browser click-through assertions for cashier checkout, payment,
+  receipt printing, refund barcode scan, customer display updates, and offline
+  replay.
+- Start release sign-off evidence templates for PSP/FBR and physical hardware
+  certification packages.

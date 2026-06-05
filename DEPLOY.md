@@ -612,6 +612,15 @@ Optional tools:
   variables for authenticated flows.
 - Run `make ops-staging` for grouped staging evidence across monitoring, load,
   dependency, restore, and container checks.
+- Run `make release-candidate` for the local release gate. Use
+  `TIJARA_RELEASE_CHECKS=full make release-candidate` after staging E2E,
+  operations evidence, Docker, and Odoo test prerequisites are ready.
+
+Release candidate evidence is written to
+`deploy/runtime/release-evidence/<run-id>/`. The default `local` scope runs
+scaffold validation, JavaScript checks, security audit, and script syntax
+checks. The `full` scope also requires a clean git worktree, Odoo transaction
+tests, guarded staging browser E2E, and guarded staging operations evidence.
 
 ## Rollback Baseline
 

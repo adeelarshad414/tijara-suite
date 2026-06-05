@@ -120,6 +120,7 @@ make js-check
 make security-audit
 make hardware-cert-smoke
 make e2e
+make release-candidate
 ```
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
@@ -321,6 +322,9 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_staging_ops_checks.sh` and `make ops-staging` gather staging
   monitoring, restore, load-smoke, dependency scan, and container scan evidence
   under `deploy/runtime/ops-evidence/`.
+- `scripts/run_release_candidate_gate.sh` and `make release-candidate` assemble
+  local, Odoo, browser, and operations checks into a release-candidate evidence
+  report under `deploy/runtime/release-evidence/`.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through
