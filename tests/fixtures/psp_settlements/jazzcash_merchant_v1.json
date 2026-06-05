@@ -1,0 +1,46 @@
+{
+  "provider": "jazzcash",
+  "profile": "jazzcash_merchant_v1",
+  "lines": [
+    {
+      "pp_TxnRefNo": "JC-PAY-001",
+      "pp_RetreivalReferenceNo": "RRN-JC-PAY-001",
+      "pp_BillReference": "tijara_test_tenant",
+      "pp_TxnType": "sale",
+      "pp_ResponseMessage": "success",
+      "pp_Amount": "15000",
+      "pp_FeeAmount": "150",
+      "pp_TxnDateTime": "2026-06-05"
+    },
+    {
+      "pp_TxnRefNo": "JC-REF-001",
+      "pp_RetreivalReferenceNo": "RRN-JC-REF-001",
+      "pp_BillReference": "tijara_test_tenant",
+      "pp_TxnType": "refund",
+      "pp_ResponseMessage": "refunded",
+      "pp_Amount": "-5000",
+      "pp_FeeAmount": "0",
+      "pp_TxnDateTime": "2026-06-05"
+    },
+    {
+      "pp_TxnRefNo": "JC-CBK-001",
+      "pp_RetreivalReferenceNo": "RRN-JC-CBK-001",
+      "pp_BillReference": "tijara_test_tenant",
+      "pp_TxnType": "chargeback",
+      "pp_ResponseMessage": "chargeback",
+      "pp_Amount": "-2500",
+      "pp_FeeAmount": "50",
+      "pp_TxnDateTime": "2026-06-05"
+    },
+    {
+      "pp_TxnRefNo": "JC-SET-001",
+      "pp_RetreivalReferenceNo": "RRN-JC-SET-001",
+      "pp_BillReference": "tijara_test_tenant",
+      "pp_TxnType": "settlement",
+      "pp_ResponseMessage": "settled",
+      "pp_Amount": "7500",
+      "pp_FeeAmount": "75",
+      "pp_TxnDateTime": "2026-06-05"
+    }
+  ]
+}

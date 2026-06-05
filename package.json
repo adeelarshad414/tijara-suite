@@ -15,6 +15,7 @@
     "release:rollback": "python3 scripts/run_production_rollback.py",
     "release:smoke": "python3 scripts/run_production_smoke.py",
     "certification:evidence": "python3 scripts/collect_certification_evidence.py",
+    "psp:fixture-smoke": "python3 scripts/psp_settlement_fixture_smoke.py",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },

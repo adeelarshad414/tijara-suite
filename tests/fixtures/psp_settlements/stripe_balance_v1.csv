@@ -1,0 +1,5 @@
+id,type,amount,fee,net,source,status,metadata_database_name,available_on,reporting_category
+txn_stripe_pay_001,charge,250000,7500,242500,ch_stripe_pay_001,available,tijara_test_tenant,1780617600,charge
+txn_stripe_ref_001,refund,-50000,0,-50000,re_stripe_ref_001,available,tijara_test_tenant,1780617600,refund
+txn_stripe_cbk_001,dispute,-25000,1500,-26500,dp_stripe_cbk_001,available,tijara_test_tenant,1780617600,dispute
+txn_stripe_set_001,payout,217500,0,217500,po_stripe_set_001,available,tijara_test_tenant,1780617600,payout

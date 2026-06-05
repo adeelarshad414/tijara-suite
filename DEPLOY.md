@@ -77,6 +77,7 @@ make hardware-cert-smoke
 make monitoring-up
 make load-smoke
 make release-candidate
+make psp-fixture-smoke
 make signoff-pack
 ```
 
@@ -362,26 +363,28 @@ including PSP certification folders in the final sign-off package.
 
 Settlement import flow:
 
-1. Open SaaS Control > Payment Settlements.
-2. Create a batch with provider, provider batch reference, settlement date, and
+1. Run `make psp-fixture-smoke` to validate the committed provider fixture
+   shape for JazzCash, Easypaisa, and Stripe before onboarding real statements.
+2. Open SaaS Control > Payment Settlements.
+3. Create a batch with provider, provider batch reference, settlement date, and
    expected gross/fee/net amounts when available. The selected provider sets
    the default parser profile for JazzCash, Easypaisa, Stripe, or manual bank
    statements.
-3. Select statement format and parser profile, then paste the provider
+4. Select statement format and parser profile, then paste the provider
    statement payload in `Statement Payload`.
-4. Run `Import Statement`, then `Match Lines`.
-5. Review mismatches in Settlement Lines and correct references or mark
+5. Run `Import Statement`, then `Match Lines`.
+6. Review mismatches in Settlement Lines and correct references or mark
    mismatch for PSP follow-up.
-6. Run `Create Dispute Cases` for refund/chargeback lines.
-7. Run `Generate Finance Actions` and review payout clearing, fee, refund,
+7. Run `Create Dispute Cases` for refund/chargeback lines.
+8. Run `Generate Finance Actions` and review payout clearing, fee, refund,
    chargeback, write-off, or manual-review actions.
-8. Run `Approve Finance` after finance review.
-9. Run `Create Draft Moves` from the settlement batch, settlement line, or
+9. Run `Approve Finance` after finance review.
+10. Run `Create Draft Moves` from the settlement batch, settlement line, or
    refund/chargeback case after finance configuration is complete. Use the
    individual accounting action `Create Draft Move` button for exception cases.
    Review draft journal lines, refund credit notes, and draft outbound refund
    payments before posting.
-10. Mark the batch reconciled only after all lines are matched, no mismatch
+11. Mark the batch reconciled only after all lines are matched, no mismatch
    remains, and finance approval status is approved.
 
 Finance account setup:

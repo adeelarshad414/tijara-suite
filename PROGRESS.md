@@ -3007,3 +3007,65 @@ Date: 2026-06-05
 - Add a staging provider-readiness evidence exporter so sign-off packages can
   consume PSP readiness JSON directly.
 - Continue FBR certified-provider adapter hardening.
+
+## Iteration 46: PSP Settlement Fixture Smoke
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added committed PSP settlement fixtures for:
+  - JazzCash merchant statement v1.
+  - Easypaisa merchant statement v1.
+  - Stripe balance transaction v1.
+- Each fixture includes payment, refund, chargeback, and settlement examples.
+- Added `scripts/psp_settlement_fixture_smoke.py` as a standalone validator that
+  does not require a live Odoo database.
+- The smoke validator:
+  - Loads JSON and CSV provider statement fixtures.
+  - Infers the provider parser profile from the fixture name.
+  - Checks secret-like key safety.
+  - Confirms required event coverage for payment, refund, chargeback, and
+    settlement.
+  - Normalizes provider event references, transaction ids, gross amount, fee,
+    net amount, event type, and line hashes.
+  - Writes `psp-fixture-smoke.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/psp-fixture-smoke/<run-id>/`.
+- Added operator shortcuts:
+  - `make psp-fixture-smoke`
+  - `npm run psp:fixture-smoke`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `python3 scripts/psp_settlement_fixture_smoke.py --run-id fixture-smoke`
+  passes.
+- `make psp-fixture-smoke` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/psp_settlement_fixture_smoke.py` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- Fixtures are representative open-source samples, not certified provider
+  production statements.
+- Real PSP certification still needs provider UAT/live fixtures and settlement
+  file sign-off from JazzCash, Easypaisa, Stripe, bank, or the selected PSP.
+- Odoo transaction tests for importing the fixtures remain blocked until the
+  local/staging database credential mismatch is fixed.
+
+### Next Iteration
+
+- Add a provider-readiness evidence exporter so staging can write PSP readiness
+  JSON into release sign-off packages.
+- Add Odoo transaction tests that import these fixtures once the database
+  credential mismatch is resolved.
+- Continue FBR certified-provider adapter hardening.

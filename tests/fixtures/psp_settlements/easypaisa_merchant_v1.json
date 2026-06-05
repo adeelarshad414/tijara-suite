@@ -1,0 +1,49 @@
+{
+  "provider": "easypaisa",
+  "profile": "easypaisa_merchant_v1",
+  "lines": [
+    {
+      "transactionId": "EP-PAY-001",
+      "orderId": "tijara_test_tenant",
+      "eventType": "payment",
+      "transactionStatus": "completed",
+      "amount": "12000",
+      "fee": "120",
+      "settlementBatch": "EP-BATCH-001",
+      "transactionDate": "2026-06-05"
+    },
+    {
+      "transactionId": "EP-REF-001",
+      "orderId": "tijara_test_tenant",
+      "eventType": "refund",
+      "transactionStatus": "refunded",
+      "amount": "-4000",
+      "fee": "0",
+      "refundReference": "EP-RF-001",
+      "settlementBatch": "EP-BATCH-001",
+      "transactionDate": "2026-06-05"
+    },
+    {
+      "transactionId": "EP-CBK-001",
+      "orderId": "tijara_test_tenant",
+      "eventType": "chargeback",
+      "transactionStatus": "chargeback",
+      "amount": "-2000",
+      "fee": "80",
+      "chargebackReference": "EP-DP-001",
+      "chargebackReason": "customer_dispute",
+      "settlementBatch": "EP-BATCH-001",
+      "transactionDate": "2026-06-05"
+    },
+    {
+      "transactionId": "EP-SET-001",
+      "orderId": "tijara_test_tenant",
+      "eventType": "settlement",
+      "transactionStatus": "settled",
+      "amount": "6000",
+      "fee": "60",
+      "settlementBatch": "EP-BATCH-001",
+      "transactionDate": "2026-06-05"
+    }
+  ]
+}
