@@ -1047,8 +1047,12 @@ Optional tools:
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
-- Run `make e2e` after installing Playwright and setting staging environment
-  variables for authenticated flows.
+- Run `make e2e-staging` after installing Playwright and setting staging
+  environment variables for authenticated POS, refund, print, and offline
+  replay flows. The guarded runner writes `e2e-readiness.json`, `status.tsv`,
+  `env-summary.txt`, Playwright logs, and `summary.md` under
+  `deploy/runtime/e2e-evidence/<run-id>/`; the sign-off package extracts
+  readiness under `e2e_readiness_reviews`.
 - Run `make ops-staging` for grouped staging evidence across monitoring, load,
   dependency, restore, and container checks. The load check automatically
   exports nested structured load evidence when k6 runs.

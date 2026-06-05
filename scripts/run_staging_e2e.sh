@@ -10,6 +10,9 @@ RUN_ID="${TIJARA_E2E_RUN_ID:-$(date -u +%Y%m%d-%H%M%S)}"
 EVIDENCE_DIR="${TIJARA_E2E_EVIDENCE_DIR:-deploy/runtime/e2e-evidence/$RUN_ID}"
 SUMMARY_FILE="$EVIDENCE_DIR/summary.md"
 ENV_FILE="$EVIDENCE_DIR/env-summary.txt"
+STATUS_FILE="$EVIDENCE_DIR/status.tsv"
+READINESS_FILE="$EVIDENCE_DIR/e2e-readiness.json"
+READINESS_SUMMARY_FILE="$EVIDENCE_DIR/e2e-readiness-summary.md"
 LOG_FILE="$EVIDENCE_DIR/playwright-output.log"
 JSON_FILE="$EVIDENCE_DIR/playwright-results.json"
 STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -93,6 +96,33 @@ done
     echo "TIJARA_RUN_MOBILE_OFFLINE_E2E=${TIJARA_RUN_MOBILE_OFFLINE_E2E:-0}"
 } > "$ENV_FILE"
 
+readiness_args=(
+    --run-id "$RUN_ID"
+    --scope "$SCOPE"
+    --base-url "$BASE_URL"
+    --output "$EVIDENCE_DIR"
+    --started-at "$STARTED_AT"
+)
+for var_name in "${required_vars[@]}"; do
+    readiness_args+=(--required-var "$var_name")
+done
+for spec in "${specs[@]}"; do
+    readiness_args+=(--spec "$spec")
+done
+for flag_name in \
+    TIJARA_RUN_POS_UI_E2E \
+    TIJARA_RUN_DIRECT_POS_CLICKTHROUGH \
+    TIJARA_RUN_DIRECT_POS_VALIDATE_E2E \
+    TIJARA_RUN_DIRECT_REFUND_FORM_E2E \
+    TIJARA_RUN_MOBILE_OFFLINE_E2E; do
+    readiness_args+=(--optional-flag "$flag_name")
+done
+
+set +e
+python3 scripts/export_e2e_readiness.py "${readiness_args[@]}" >> "$LOG_FILE" 2>&1
+readiness_status=$?
+set -e
+
 write_summary() {
     local status="$1"
     local exit_code="$2"
@@ -115,6 +145,9 @@ write_summary() {
         echo
         echo "## Evidence Files"
         echo "- Environment summary: $ENV_FILE"
+        echo "- Status table: $STATUS_FILE"
+        echo "- Readiness JSON: $READINESS_FILE"
+        echo "- Readiness summary: $READINESS_SUMMARY_FILE"
         echo "- Playwright output: $LOG_FILE"
         echo "- Playwright JSON: $JSON_FILE"
         if (( ${#missing[@]} > 0 )); then
@@ -133,13 +166,19 @@ if (( ${#missing[@]} > 0 )); then
         printf ' - %s\n' "${missing[@]}"
         echo
         echo "See $ENV_FILE"
-    } | tee "$LOG_FILE" >&2
+    } | tee -a "$LOG_FILE" >&2
     write_summary "blocked: missing environment" 2
     exit 2
 fi
 
+if [[ "$readiness_status" -ne 0 ]]; then
+    echo "E2E readiness evidence failed with exit code $readiness_status." | tee -a "$LOG_FILE" >&2
+    write_summary "blocked: readiness evidence failed" "$readiness_status"
+    exit "$readiness_status"
+fi
+
 if ! curl -fsS --max-time "${TIJARA_E2E_HEALTH_TIMEOUT:-10}" "$BASE_URL/web/login" > /dev/null; then
-    echo "Odoo login page is not reachable at $BASE_URL/web/login" | tee "$LOG_FILE" >&2
+    echo "Odoo login page is not reachable at $BASE_URL/web/login" | tee -a "$LOG_FILE" >&2
     write_summary "blocked: base URL unreachable" 2
     exit 2
 fi

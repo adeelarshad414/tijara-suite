@@ -5204,3 +5204,76 @@ Date: 2026-06-05
   are available.
 - Add certified DNS SDK/API adapters after the deployment DNS provider is
   selected.
+
+## Iteration 74: Authenticated POS E2E Readiness Evidence
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_e2e_readiness.py` to generate authenticated browser E2E
+  readiness evidence before Playwright starts.
+- The readiness exporter writes `e2e-readiness.json`, `status.tsv`, and
+  `e2e-readiness-summary.md` with masked secret-like values.
+- Enhanced `scripts/run_staging_e2e.sh` so staging POS/refund/print/offline E2E
+  runs fail early when required authenticated variables are missing.
+- Staging E2E evidence now records selected specs, required variables, optional
+  browser-test flags, missing variables, CI status, and release decision.
+- Enhanced `scripts/generate_signoff_pack.py` so sign-off packages classify
+  `e2e-readiness.json` as Browser E2E evidence.
+- Release readiness now includes `e2e_readiness_reviews` and blocks on Browser
+  E2E readiness decisions marked `blocked` or `failed`.
+- Updated `README.md`, `DEPLOY.md`, and `tests/e2e/README.md` with the new
+  authenticated E2E readiness evidence contract.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_e2e_readiness.py scripts/generate_signoff_pack.py` passes.
+- `bash -n scripts/run_staging_e2e.sh` passes.
+- Missing authenticated staging variables correctly block
+  `/private/tmp/tijara-e2e-readiness-missing` before browser tests start.
+- Complete simulated authenticated staging variables generate ready evidence at
+  `/private/tmp/tijara-e2e-readiness-ready`.
+- Secret-like values such as `ODOO_PASSWORD` are masked as `<set>` in
+  `e2e-readiness.json`.
+- Generated sign-off packages at
+  `/private/tmp/tijara-signoff-e2e-readiness-ready` and
+  `/private/tmp/tijara-signoff-e2e-readiness-missing`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-e2e-readiness-ready/release-readiness.json`
+  passes with `decision=ready` and `ci_status=pass`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-e2e-readiness-missing/release-readiness.json`
+  blocks as expected with `decision=blocked` and `ci_status=fail`.
+- Sign-off summaries include `Browser E2E Readiness Evidence` and
+  `e2e_readiness_reviews`.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- This iteration proves readiness gating and sign-off extraction; it does not
+  execute a live authenticated POS checkout/refund/print flow.
+- Live browser E2E still needs a reachable staging Odoo, seeded POS config,
+  seeded product/payment/refund data, staging POS user, and print bridge target.
+- FBR certified-provider credentials, PSP settlement certification, and physical
+  hardware certification remain external production blockers.
+- Production monitoring, alerting, backup restore drills, load testing, and
+  deeper security scans still need full staging and production execution.
+
+### Next Iteration
+
+- Add POS E2E seed/provisioning automation for staging users, POS config,
+  products, payment methods, refund reasons, refund barcodes, and display slugs.
+- Run live authenticated checkout, refund barcode scan, receipt print route, and
+  offline replay E2E once staging credentials are available.
+- Continue production evidence wiring for monitoring, alerting, backups, restore
+  drills, load testing, and security scans.

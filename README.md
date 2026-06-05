@@ -441,6 +441,9 @@ The detailed policy and dependency intake checklist are maintained in
   sequence staging release-candidate evidence, browser E2E evidence, operations
   evidence, deployment environment evidence, sign-off package generation,
   readiness checking, and artifact path reporting under one run ID.
+- `scripts/export_e2e_readiness.py`, used by `make e2e-staging`, writes
+  authenticated POS/refund/print browser readiness evidence with secret-masked
+  required-variable checks before Playwright starts.
 - `scripts/run_production_deployment_gate.py` and
   `make production-deployment-gate` generate deployment gate evidence from a
   staging sign-off package, including required deployment environment evidence,

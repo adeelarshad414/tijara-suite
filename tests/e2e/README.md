@@ -27,9 +27,16 @@ variables are missing, probes `/web/login`, runs the critical browser specs,
 and writes evidence under `deploy/runtime/e2e-evidence/<run-id>/`:
 
 - `env-summary.txt`
+- `status.tsv`
+- `e2e-readiness.json`
+- `e2e-readiness-summary.md`
 - `playwright-output.log`
 - `playwright-results.json`
 - `summary.md`
+
+`e2e-readiness.json` records the selected scope, required environment
+variables with secret values masked, selected specs, and optional POS/refund
+flags. The release sign-off pack extracts it under `e2e_readiness_reviews`.
 
 Use `TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display routes only,
 `TIJARA_E2E_SCOPE=authenticated` for POS/refund/offline-report routes, or
