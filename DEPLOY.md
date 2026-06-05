@@ -766,20 +766,39 @@ CI also runs a local release-candidate evidence path:
 
 ```bash
 TIJARA_RELEASE_RUN_ID=ci-local TIJARA_RELEASE_CHECKS=local make release-candidate
+python3 scripts/export_release_retention_evidence.py \
+  --run-id ci-local \
+  --target-environment ci \
+  --output deploy/runtime/release-retention-evidence/ci-local \
+  --artifact-store-reference github-actions:tijara-ci-release-evidence \
+  --artifact-retention-policy-ref github-actions:retention-days-30 \
+  --certification-retention-policy-ref docs:DEPLOY.md#external-certification-evidence-intake \
+  --secret-manager-provider github-actions-secrets \
+  --secret-manager-reference github-actions:tijara-ci \
+  --secret-rotation-policy-ref docs:DEPLOY.md#secret-handling \
+  --ci-artifact-retention-days 30 \
+  --release-evidence-retention-days 365 \
+  --certification-evidence-retention-days 365 \
+  --log-retention-days 30 \
+  --backup-retention-days 30 \
+  --evidence-path deploy/runtime/release-evidence/ci-local \
+  --strict
 TIJARA_SIGNOFF_RUN_ID=ci-local \
 TIJARA_SIGNOFF_ENVIRONMENT=ci \
-TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local \
-TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local,deploy/runtime/release-retention-evidence/ci-local \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,ops \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/ci-local/release-readiness.json
 ```
 
-The workflow uploads `deploy/runtime/release-evidence/ci-local` and
+The workflow uploads `deploy/runtime/release-evidence/ci-local`,
+`deploy/runtime/release-retention-evidence/ci-local`, and
 `deploy/runtime/signoff-packages/ci-local` as the
-`tijara-ci-release-evidence` artifact. This is not a substitute for staging
-release evidence, but it prevents PRs from merging with a broken local release
-gate or malformed readiness package.
+`tijara-ci-release-evidence` artifact with `retention-days: 30` and
+`if-no-files-found: error`. This is not a substitute for staging release
+evidence, but it prevents PRs from merging with a broken local release gate,
+malformed readiness package, or missing CI artifact retention evidence.
 
 Export release retention and secret-manager evidence before production
 approval:

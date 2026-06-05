@@ -58,7 +58,9 @@
 - Prometheus, Grafana, Loki, and uptime checks.
 - Blue/green or rolling deployments after MVP.
 - Release channels for staging, pilot, and production.
-- `.github/workflows/tijara-ci.yml` provides the first public-repo CI workflow.
+- `.github/workflows/tijara-ci.yml` provides the first public-repo CI workflow,
+  including local release evidence, release retention evidence, strict
+  readiness checking, and 30-day CI artifact retention.
 - `deploy/postgres/backup.sh` provides a logical backup starting point for pilot
   restore drills.
 - `deploy/postgres/restore-drill.sh` creates a temporary database, restores a

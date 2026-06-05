@@ -4006,3 +4006,69 @@ Date: 2026-06-05
   files once the target provider is selected.
 - Continue staging/live FBR transaction execution after database credentials and
   certified-provider sandbox credentials are corrected.
+
+## Iteration 59: CI Artifact Retention Workflow Hook
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `.github/workflows/tijara-ci.yml` so CI now:
+  - Runs the local release-candidate gate.
+  - Generates strict release retention evidence from the CI release evidence
+    directory.
+  - Builds the CI sign-off package with both release and operations evidence
+    groups required.
+  - Checks `release-readiness.json` after retention evidence is included.
+  - Uploads release evidence, release retention evidence, and sign-off packages
+    in one artifact.
+  - Sets `retention-days: 30` and `if-no-files-found: error` on the uploaded
+    artifact.
+- Updated `README.md`, `DEPLOY.md`, `docs/QA_SECURITY_DEVOPS.md`, and
+  `PROGRESS.md`.
+
+### Validation
+
+- Local CI-equivalent release gate passes with:
+  `TIJARA_RELEASE_RUN_ID=ci-retention TIJARA_RELEASE_CHECKS=local make
+  release-candidate`.
+- Strict CI-equivalent retention export passes for
+  `deploy/runtime/release-evidence/ci-retention`.
+- CI-equivalent sign-off package generation passes with:
+  `TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-retention,deploy/runtime/release-retention-evidence/ci-retention`
+  and `TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,ops`.
+- `make check-release-readiness
+  READINESS=deploy/runtime/signoff-packages/ci-retention/release-readiness.json`
+  exits `0` with `decision=ready` and `ci_status=pass`.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Confirmed the workflow includes the local release retention evidence step,
+  explicit artifact `retention-days: 30`, `if-no-files-found: error`, and the
+  release retention evidence upload path.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- CI is still the public-repo baseline; production deployment still needs the
+  final staging/production runner, artifact store, environment protection,
+  approval gates, and rollback promotion flow.
+- CI retention evidence uses safe GitHub Actions references, not a live
+  production object store or external secret manager.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add runtime secret-manager configuration checks that validate production env
+  templates are reference-only and no secret values are committed.
+- Add deployment environment protection/runbook evidence for staging and
+  production approval gates.
+- Continue staging/live FBR transaction execution when credentials are
+  available.
