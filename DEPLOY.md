@@ -77,6 +77,7 @@ make hardware-cert-smoke
 make monitoring-up
 make load-smoke
 make load-enterprise-surfaces
+make load-profile-matrix-evidence
 make release-candidate
 make psp-readiness-evidence
 make psp-fixture-smoke
@@ -737,6 +738,8 @@ Optional tools:
 - Run `make load-enterprise-surfaces` for the reusable k6 profile covering the
   POS shell, public display data, customer display data, kiosk data, and
   optional kiosk checkout.
+- Run `make load-profile-matrix-evidence` to export the approved load profile
+  matrix for release sign-off.
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
@@ -782,6 +785,21 @@ make load-enterprise-surfaces
 The enterprise profile is read-heavy by default. Set
 `TIJARA_RUN_KIOSK_CHECKOUT_LOAD=1` only on a seeded staging tenant where kiosk
 checkout order creation is expected and safe.
+
+Export the load profile matrix before staging or production sign-off:
+
+```bash
+TIJARA_LOAD_MATRIX_RUN_ID=2026-06-05-rc1 \
+TIJARA_LOAD_MATRIX_APPROVED_BY="Release Owner" \
+TIJARA_LOAD_MATRIX_APPROVAL_REF=LOAD-MATRIX-UAT-001 \
+make load-profile-matrix-evidence
+```
+
+The matrix evidence is written under
+`deploy/runtime/load-profile-matrix/<run-id>/` and can be attached to
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence. For production release,
+run with `TIJARA_LOAD_MATRIX_NON_STRICT=0` or `--strict` so missing approval
+metadata blocks sign-off.
 
 Release candidate evidence is written to
 `deploy/runtime/release-evidence/<run-id>/`. The default `local` scope runs
@@ -899,7 +917,8 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, monitoring, incident runbook, load evidence,
-  and non-secret environment summaries for approvers.
+  load profile matrix evidence, and non-secret environment summaries for
+  approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -910,7 +929,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   `monitoring_reviews`; when incident runbook evidence is attached, ownership
   and response references are included under `incident_runbook_reviews`; when
   load evidence is attached, threshold and profile reviews are included under
-  `load_reviews`.
+  `load_reviews`; when load profile matrix evidence is attached, approved
+  tenant-size and vertical profile reviews are included under
+  `load_matrix_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 

@@ -3654,3 +3654,88 @@ Date: 2026-06-05
   responses are available.
 - Add staging/live Odoo FBR transaction execution after database credentials are
   corrected.
+
+## Iteration 55: Load Profile Approval Matrix Evidence
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `deploy/config/load-profile-matrix.json` as a secret-free draft matrix
+  for tenant-size and vertical-specific load expectations.
+- The matrix covers:
+  - Small pilot retail for cloth, electronics, and garments.
+  - Medium superstore and grocery.
+  - Restaurant kiosk/counter.
+  - Bakery rush.
+  - Pharmacy steady regulated pilot.
+  - Large multi-branch enterprise.
+- Added `scripts/export_load_profile_matrix.py`.
+- The exporter:
+  - Validates required profile fields.
+  - Rejects secret-like profile keys.
+  - Validates VU counts, k6 duration syntax, p95 thresholds, failure-rate
+    thresholds, and checks-rate thresholds.
+  - Records approval owner/reference presence.
+  - Defaults to warning mode for local/staging and supports strict blocking for
+    production release.
+  - Writes `load-profile-matrix.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/load-profile-matrix/<run-id>/`.
+- Added operator shortcuts:
+  - `make load-profile-matrix-evidence`
+  - `npm run load:matrix`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group load profile matrix evidence as Operations evidence.
+  - Parse attached `load-profile-matrix.json`.
+  - Add a Load Profile Matrix Evidence section to `evidence-summary.md`.
+  - Add `load_matrix_reviews` into `release-readiness.json`.
+  - Treat failed matrix evidence as blockers and warning matrix evidence as
+    release warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Default matrix evidence export succeeds with warning decision when approval
+  owner/reference are not supplied.
+- Strict matrix evidence export succeeds when approval owner/reference are
+  supplied.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using approved matrix evidence.
+- Confirmed `release-readiness.json` decision is `ready`.
+- Confirmed `release-readiness.json` includes `load_matrix_reviews`.
+- Confirmed `evidence-summary.md` includes the Load Profile Matrix Evidence
+  section.
+- `make load-profile-matrix-evidence` passes and writes warning evidence when
+  release approval metadata is not supplied.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_load_profile_matrix.py scripts/generate_signoff_pack.py`
+  passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- The matrix is a draft baseline until pilot traffic assumptions are signed off
+  by release owners per customer size and vertical.
+- The profiles still need execution against seeded staging tenants with
+  monitoring and rollback evidence attached.
+- Kiosk checkout load remains opt-in because it creates transactional records.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Add FBR provider response fixture smoke tests once certified-provider sample
+  responses are available.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.
+- Add a release evidence bundle that combines load profile matrix, enterprise
+  surface load evidence, monitoring, incident runbook, and production smoke
+  evidence under one operations run ID.

@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "description": "Draft Tijara load profiles for staging and release sign-off. Tune thresholds with real pilot traffic before production approval.",
+  "profiles": [
+    {
+      "code": "pilot-small-retail",
+      "tenant_size": "pilot_small",
+      "verticals": ["cloth", "electronics", "garments"],
+      "profile_name": "enterprise-surfaces",
+      "vus": 5,
+      "duration": "2m",
+      "max_p95_ms": 1000,
+      "max_fail_rate": 0.05,
+      "min_checks_rate": 0.95,
+      "checkout_enabled": false,
+      "notes": "Initial pilot profile for counters with light public display traffic."
+    },
+    {
+      "code": "superstore-grocery-medium",
+      "tenant_size": "medium",
+      "verticals": ["superstore", "grocery"],
+      "profile_name": "enterprise-surfaces",
+      "vus": 15,
+      "duration": "5m",
+      "max_p95_ms": 1200,
+      "max_fail_rate": 0.03,
+      "min_checks_rate": 0.97,
+      "checkout_enabled": false,
+      "notes": "Public display and POS shell pressure for medium-format retail."
+    },
+    {
+      "code": "restaurant-kiosk-counter",
+      "tenant_size": "medium",
+      "verticals": ["restaurant"],
+      "profile_name": "enterprise-surfaces",
+      "vus": 20,
+      "duration": "5m",
+      "max_p95_ms": 1200,
+      "max_fail_rate": 0.03,
+      "min_checks_rate": 0.97,
+      "checkout_enabled": true,
+      "notes": "Kiosk checkout may create orders; enable only on seeded staging."
+    },
+    {
+      "code": "bakery-rush",
+      "tenant_size": "medium",
+      "verticals": ["bakery"],
+      "profile_name": "enterprise-surfaces",
+      "vus": 12,
+      "duration": "4m",
+      "max_p95_ms": 1100,
+      "max_fail_rate": 0.04,
+      "min_checks_rate": 0.96,
+      "checkout_enabled": true,
+      "notes": "Morning rush approximation for kiosk and display data."
+    },
+    {
+      "code": "pharmacy-steady",
+      "tenant_size": "regulated_pilot",
+      "verticals": ["pharmacy"],
+      "profile_name": "enterprise-surfaces",
+      "vus": 8,
+      "duration": "3m",
+      "max_p95_ms": 1000,
+      "max_fail_rate": 0.03,
+      "min_checks_rate": 0.98,
+      "checkout_enabled": false,
+      "notes": "Conservative regulated-retail profile with tighter checks rate."
+    },
+    {
+      "code": "enterprise-multi-branch",
+      "tenant_size": "large",
+      "verticals": ["superstore", "grocery", "restaurant", "bakery", "pharmacy"],
+      "profile_name": "enterprise-surfaces",
+      "vus": 40,
+      "duration": "10m",
+      "max_p95_ms": 1500,
+      "max_fail_rate": 0.02,
+      "min_checks_rate": 0.98,
+      "checkout_enabled": true,
+      "notes": "Requires staging data parity, monitoring, rollback, and release-owner approval."
+    }
+  ]
+}

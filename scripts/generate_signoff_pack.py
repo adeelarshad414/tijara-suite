@@ -382,9 +382,11 @@ def _evidence_group(entry):
         or "incident-runbook" in relative_lower
         or "load-evidence/" in relative
         or "load-evidence" in relative_lower
+        or "load-profile-matrix" in relative_lower
         or filename == "monitoring-evidence.json"
         or filename == "incident-runbook-evidence.json"
         or filename == "load-evidence.json"
+        or filename == "load-profile-matrix.json"
     ):
         return "Operations"
     if "hardware" in relative_lower:
@@ -619,6 +621,38 @@ def _load_reviews(evidence_entries):
     return reviews
 
 
+def _load_matrix_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "load-profile-matrix.json":
+            continue
+        payload = _read_json(path)
+        payload_context = payload.get("context") or {}
+        profiles = payload.get("profiles") or []
+        verticals = sorted(
+            {
+                vertical
+                for profile in profiles
+                for vertical in (profile.get("verticals") or [])
+            }
+        )
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "profile_count": payload.get("profile_count", len(profiles)),
+                "verticals": verticals,
+                "approved_by_present": bool(payload_context.get("approved_by")),
+                "approval_reference_present": bool(payload_context.get("approval_reference")),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -629,6 +663,7 @@ def _evidence_summary(context, evidence_entries):
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
+    load_matrix_reviews = _load_matrix_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -829,6 +864,24 @@ def _evidence_summary(context, evidence_entries):
     if not load_lines:
         load_lines = ["- No `load-evidence.json` files were attached.", ""]
 
+    load_matrix_lines = []
+    for review in load_matrix_reviews:
+        load_matrix_lines.append("### `%s`" % review["path"])
+        load_matrix_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        load_matrix_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        load_matrix_lines.append("- Profile count: %s" % review["profile_count"])
+        load_matrix_lines.append("- Verticals: %s" % (", ".join(review["verticals"]) or "unset"))
+        load_matrix_lines.append(
+            "- Approval owner/reference: %s/%s"
+            % (
+                "yes" if review["approved_by_present"] else "no",
+                "yes" if review["approval_reference_present"] else "no",
+            )
+        )
+        load_matrix_lines.append("")
+    if not load_matrix_lines:
+        load_matrix_lines = ["- No `load-profile-matrix.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -868,6 +921,9 @@ def _evidence_summary(context, evidence_entries):
 ## Load Test Evidence
 
 {chr(10).join(load_lines)}
+## Load Profile Matrix Evidence
+
+{chr(10).join(load_matrix_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -889,6 +945,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
+    load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -997,6 +1054,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Load evidence %s is %s" % (review["path"], review["decision"]))
 
+    for review in load_matrix_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Load profile matrix %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Load profile matrix %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -1028,6 +1092,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "monitoring_reviews": monitoring_reviews,
         "incident_runbook_reviews": incident_runbook_reviews,
         "load_reviews": load_reviews,
+        "load_matrix_reviews": load_matrix_reviews,
     }
 
 

@@ -23,6 +23,7 @@
     "load:evidence": "python3 scripts/export_load_evidence.py",
     "load:profile": "bash scripts/run_load_profile.sh",
     "load:enterprise": "bash scripts/run_load_profile.sh enterprise-surfaces",
+    "load:matrix": "python3 scripts/export_load_profile_matrix.py",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },
