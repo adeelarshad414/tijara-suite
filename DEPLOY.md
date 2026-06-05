@@ -671,6 +671,17 @@ CI/CD can read `release-readiness.json`; treat `decision=blocked` or
 `ci_status=fail` as a stop condition, and require a named release-owner
 exception for `decision=warning`.
 
+Check readiness from CI or a release terminal:
+
+```bash
+make check-release-readiness READINESS=deploy/runtime/signoff-packages/2026-06-05-rc1/release-readiness.json
+TIJARA_RELEASE_FAIL_ON_WARNING=1 python3 scripts/check_release_readiness.py deploy/runtime/signoff-packages/2026-06-05-rc1/release-readiness.json
+```
+
+The checker exits `0` for ready, `1` for blocked, `1` for warning when
+`TIJARA_RELEASE_FAIL_ON_WARNING=1`, and `2` for missing or unreadable readiness
+JSON.
+
 ## Rollback Baseline
 
 For every production release, keep:

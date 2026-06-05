@@ -2451,3 +2451,53 @@ Date: 2026-06-05
   receipt print, refund form, and customer-display assertions.
 - Prepare staging execution commands for full release-candidate, E2E,
   operations, sign-off, and readiness JSON collection.
+
+## Iteration 36: Release Readiness CI Checker
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/check_release_readiness.py` for CI/CD and release-terminal
+  gating.
+- The checker:
+  - Reads `release-readiness.json`.
+  - Prints package ID, target environment, git head, decision, CI status,
+    blockers, and warnings.
+  - Exits `1` for `decision=blocked` or `ci_status=fail`.
+  - Supports `TIJARA_RELEASE_FAIL_ON_WARNING=1` or `--fail-on-warning` to fail
+    warnings during strict release drills.
+  - Exits `2` for missing, unreadable, or unknown readiness JSON.
+- Added operator shortcuts:
+  - `make check-release-readiness READINESS=...`
+  - `npm run release:readiness -- <path>`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Readiness checker exits `0` for the warning sample by default.
+- Readiness checker exits `1` for the warning sample with
+  `TIJARA_RELEASE_FAIL_ON_WARNING=1`.
+- Readiness checker exits `1` for the blocked sample.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- GitHub Actions or deployment pipeline YAML is not yet wired to call the
+  readiness checker.
+- Release-owner policy still needs a final decision on whether warning should
+  fail every production release.
+- Live staging evidence and external PSP/FBR/hardware certifications are still
+  required before true production approval.
+
+### Next Iteration
+
+- Wire release readiness into CI/CD or release-candidate automation.
+- Continue direct cashier POS UI selector coverage.
+- Execute staging release evidence once staging credentials and external
+  provider/device evidence are available.
