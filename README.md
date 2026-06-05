@@ -124,6 +124,7 @@ make release-candidate
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make staging-release-signoff
+make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 ```
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
@@ -349,6 +350,10 @@ The detailed policy and dependency intake checklist are maintained in
   sequence staging release-candidate evidence, browser E2E evidence, operations
   evidence, sign-off package generation, readiness checking, and artifact path
   reporting under one run ID.
+- `scripts/run_production_deployment_gate.py` and
+  `make production-deployment-gate` generate deployment gate evidence from a
+  staging sign-off package, including backup, rollback, monitoring, approver,
+  pre-cutover, and rollback checklists.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through

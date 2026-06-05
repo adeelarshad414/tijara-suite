@@ -2607,3 +2607,63 @@ Date: 2026-06-05
 - Continue direct cashier POS UI selector coverage.
 - Prepare real staging execution once credentials and hardware/provider evidence
   are available.
+
+## Iteration 39: Production Deployment Gate Evidence
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_production_deployment_gate.py` to consume a staging
+  sign-off `release-readiness.json` before production cutover.
+- The gate now records:
+  - Release readiness decision and CI status.
+  - Backup reference.
+  - Rollback reference.
+  - Monitoring reference.
+  - Release approver.
+  - Sign-off package path.
+  - Deployment blockers and warnings.
+- For `TIJARA_DEPLOYMENT_TARGET=production`, backup, rollback, monitoring,
+  approver, and sign-off package evidence are required by default.
+- The gate writes:
+  - `deployment-decision.json`.
+  - `status.tsv`.
+  - `env-summary.txt`.
+  - `summary.md`.
+  - `pre-cutover-checklist.md`.
+  - `rollback-checklist.md`.
+- Added operator shortcuts:
+  - `make production-deployment-gate READINESS=...`
+  - `npm run release:deployment-gate -- <path>`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Production deployment gate smoke exits `0` with ready readiness JSON plus
+  backup, rollback, monitoring, approver, and sign-off package refs.
+- Production deployment gate smoke exits non-zero when required backup,
+  rollback, monitoring, and approver refs are missing.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- The gate records deployment readiness evidence; it does not execute live
+  infrastructure rollout or rollback commands.
+- Production approval policy still needs real owners, artifact retention rules,
+  and incident/escalation contacts.
+- Live staging sign-off, external PSP/FBR evidence, and physical hardware
+  certification are still required before production cutover can be approved.
+
+### Next Iteration
+
+- Add production rollback execution hooks or deployment provider adapters after
+  the deployment target is chosen.
+- Continue direct cashier POS UI selector coverage.
+- Execute staging and deployment gate flows with real evidence when external
+  credentials and devices are available.

@@ -728,6 +728,27 @@ The checker exits `0` for ready, `1` for blocked, `1` for warning when
 `TIJARA_RELEASE_FAIL_ON_WARNING=1`, and `2` for missing or unreadable readiness
 JSON.
 
+Before a production cutover, generate a deployment gate package from the
+staging sign-off readiness JSON:
+
+```bash
+TIJARA_DEPLOYMENT_RUN_ID=2026-06-05-prod \
+TIJARA_DEPLOYMENT_TARGET=production \
+TIJARA_DEPLOYMENT_BACKUP_REF=deploy/runtime/backups/2026-06-05-pre-prod.dump \
+TIJARA_DEPLOYMENT_ROLLBACK_REF=ghcr.io/example/tijara-suite:previous \
+TIJARA_DEPLOYMENT_MONITORING_REF=grafana-dashboard-prod-pos \
+TIJARA_DEPLOYMENT_APPROVER="Release Owner" \
+TIJARA_DEPLOYMENT_FAIL_ON_WARNING=1 \
+make production-deployment-gate READINESS=deploy/runtime/signoff-packages/2026-06-05-rc1/release-readiness.json
+```
+
+For `TIJARA_DEPLOYMENT_TARGET=production`, backup reference, rollback reference,
+monitoring reference, sign-off package, and approver are required by default.
+The gate writes `deployment-decision.json`, `status.tsv`, `summary.md`,
+`pre-cutover-checklist.md`, and `rollback-checklist.md` under
+`deploy/runtime/deployment-gates/<run-id>/`. It exits non-zero when deployment
+is blocked.
+
 ## Rollback Baseline
 
 For every production release, keep:
