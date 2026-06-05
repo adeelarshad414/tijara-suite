@@ -412,7 +412,8 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/export_protected_runner_preflight.py` and
   `make protected-runner-preflight` export a redacted protected-runner
   configuration report for release variables, evidence groups, URLs, load/E2E
-  toggles, and mandatory PSP/FBR/hardware certification inputs under
+  toggles, optional Odoo/bridge/monitoring reachability probes, and mandatory
+  PSP/FBR/hardware certification inputs under
   `deploy/runtime/protected-runner-preflight/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like

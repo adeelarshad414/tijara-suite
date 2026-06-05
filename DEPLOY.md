@@ -1093,6 +1093,24 @@ evidence fields. Attach that directory to `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the
 sign-off package reads `summary.md` and `status.tsv`, so strict preflight
 failures appear as release-readiness blockers.
 
+Enable optional URL probes when the protected runner should prove basic network
+reachability before expensive evidence collection:
+
+```bash
+TIJARA_PREFLIGHT_PROBE_URLS=1
+TIJARA_PREFLIGHT_REQUIRE_URLS=0
+TIJARA_PREFLIGHT_PROBE_TIMEOUT=5
+```
+
+The probes use redacted URLs and no credentials. Default endpoints are
+`ODOO_BASE_URL` or `TIJARA_BASE_URL` plus `/web/login`,
+`TIJARA_HARDWARE_BRIDGE_URL` plus `/health`,
+`TIJARA_PROMETHEUS_URL` plus `/-/ready`,
+`TIJARA_ALERTMANAGER_URL` plus `/-/ready`, and `TIJARA_GRAFANA_URL` plus
+`/api/health`. In strict preflight mode, configured but unreachable URLs become
+blockers. Missing URL probe targets are warnings unless
+`TIJARA_PREFLIGHT_REQUIRE_URLS=1`.
+
 Protected Browser E2E handoff is controlled with:
 
 ```bash

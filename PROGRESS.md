@@ -6232,3 +6232,73 @@ Date: 2026-06-05
   to failed preflight, E2E, certification, and operations evidence.
 - Continue live adapter hardening once PSP/FBR sandbox/live credentials and
   provider documents are available.
+
+## Iteration 88: Protected Preflight URL Probes
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Extended `scripts/export_protected_runner_preflight.py` with optional
+  redacted URL reachability probes.
+- Added probe defaults for Odoo login, hardware bridge health, Prometheus
+  readiness, Alertmanager readiness, and Grafana health.
+- Added `--probe-urls`, `--require-url-probes`, and `--probe-timeout` CLI
+  controls with matching `TIJARA_PREFLIGHT_PROBE_URLS`,
+  `TIJARA_PREFLIGHT_REQUIRE_URLS`, and `TIJARA_PREFLIGHT_PROBE_TIMEOUT`
+  environment variables.
+- Probe results are written to `protected-runner-preflight.json`, `status.tsv`,
+  `summary.md`, and `env-summary.txt` without credentials or query strings.
+- Configured but unreachable URLs become strict preflight blockers; missing URL
+  targets are warnings unless URL probes are explicitly required.
+- Wired probe controls into `.github/workflows/tijara-ci.yml`.
+- Updated `deploy/config/github-protected-vars.example` with protected probe
+  controls.
+- Updated `README.md` and `DEPLOY.md` with probe behavior, endpoint defaults,
+  and release-readiness implications.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_runner_preflight.py scripts/generate_signoff_pack.py`
+  passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and exposes
+  `TIJARA_PREFLIGHT_PROBE_URLS=1`.
+- Reachable-probe fixture against a temporary localhost HTTP server passes with
+  `decision=passed`.
+- Required missing probe targets fail with `decision=failed`.
+- Sign-off package with reachable probe evidence passes
+  `scripts/check_release_readiness.py` with `decision=ready`.
+- Sign-off package with required missing probe evidence fails
+  `scripts/check_release_readiness.py` with `decision=blocked`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` or probe server process remains running.
+
+### Known Gaps
+
+- URL probes validate basic unauthenticated reachability only; they do not prove
+  authenticated Odoo flows, hardware bridge signing, monitoring auth, alert
+  routing, or dashboard correctness.
+- Protected workflow execution still needs a real self-hosted protected runner
+  and staging/production environment variables.
+- Live Browser E2E, PSP/FBR provider certification, physical hardware proof,
+  offline POS sync, and production operations drills remain external
+  production blockers.
+
+### Next Iteration
+
+- Add protected workflow artifact summaries that point release owners directly
+  to failed preflight, Browser E2E, certification, operations, and readiness
+  artifacts.
+- Add optional authenticated health probes once secret-manager-backed
+  credentials are available on the protected runner.
+- Continue hardening PSP/FBR live adapters and offline POS sync once live
+  provider/staging systems are available.

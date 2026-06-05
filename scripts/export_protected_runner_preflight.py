@@ -4,7 +4,10 @@ import datetime as dt
 import json
 import os
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -110,6 +113,40 @@ CERTIFICATION_OPTIONAL_VARIABLES = {
     ],
 }
 
+URL_PROBE_SPECS = [
+    {
+        "name": "odoo-login",
+        "env": "ODOO_BASE_URL",
+        "fallback_env": "TIJARA_BASE_URL",
+        "path": "/web/login",
+        "label": "Odoo login",
+    },
+    {
+        "name": "hardware-bridge-health",
+        "env": "TIJARA_HARDWARE_BRIDGE_URL",
+        "path": "/health",
+        "label": "Hardware bridge health",
+    },
+    {
+        "name": "prometheus-ready",
+        "env": "TIJARA_PROMETHEUS_URL",
+        "path": "/-/ready",
+        "label": "Prometheus readiness",
+    },
+    {
+        "name": "alertmanager-ready",
+        "env": "TIJARA_ALERTMANAGER_URL",
+        "path": "/-/ready",
+        "label": "Alertmanager readiness",
+    },
+    {
+        "name": "grafana-health",
+        "env": "TIJARA_GRAFANA_URL",
+        "path": "/api/health",
+        "label": "Grafana health",
+    },
+]
+
 
 def _utc_now():
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -150,6 +187,62 @@ def _value_preview(key, value, include_values):
         return "<present>"
     text = str(value).strip()
     return text if len(text) <= 96 else text[:93] + "..."
+
+
+def _redact_url(value):
+    if not _present(value):
+        return "<unset>"
+    try:
+        parsed = urlsplit(str(value).strip())
+    except ValueError:
+        return "<invalid-url>"
+    if not parsed.scheme or not parsed.netloc:
+        return "<invalid-url>"
+    hostname = parsed.hostname or ""
+    netloc = hostname
+    if parsed.port:
+        netloc = "%s:%s" % (hostname, parsed.port)
+    return urlunsplit((parsed.scheme, netloc, parsed.path or "", "", ""))
+
+
+def _probe_url(base_url, path, timeout):
+    if not _present(base_url) or _is_placeholder(base_url):
+        return None, "missing"
+    try:
+        parsed = urlsplit(str(base_url).strip())
+    except ValueError:
+        return None, "invalid"
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None, "invalid"
+    normalized_path = (parsed.path or "").rstrip("/")
+    if path:
+        normalized_path = normalized_path + "/" + path.lstrip("/")
+    target = urlunsplit((parsed.scheme, parsed.netloc, normalized_path or "/", "", ""))
+    request = urllib.request.Request(target, headers={"User-Agent": "tijara-preflight/1"})
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            status_code = int(getattr(response, "status", 0) or response.getcode() or 0)
+            return {
+                "url": _redact_url(target),
+                "status_code": status_code,
+                "reachable": 200 <= status_code < 400,
+                "error": "",
+            }, "ok"
+    except urllib.error.HTTPError as error:
+        return {
+            "url": _redact_url(target),
+            "status_code": int(error.code),
+            "reachable": 200 <= int(error.code) < 400,
+            "error": str(error.reason or ""),
+        }, "http-error"
+    except (urllib.error.URLError, TimeoutError, OSError) as error:
+        reason = getattr(error, "reason", error)
+        return {
+            "url": _redact_url(target),
+            "status_code": 0,
+            "reachable": False,
+            "error": str(reason),
+        }, "error"
 
 
 def _row(name, status, message):
@@ -245,6 +338,24 @@ def main():
     )
     parser.add_argument("--include-values", action="store_true")
     parser.add_argument(
+        "--probe-urls",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_PREFLIGHT_PROBE_URLS")),
+        help="Probe configured Odoo, bridge, and monitoring URLs without credentials.",
+    )
+    parser.add_argument(
+        "--require-url-probes",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_PREFLIGHT_REQUIRE_URLS")),
+        help="Treat missing URL probe targets as blockers in strict mode.",
+    )
+    parser.add_argument(
+        "--probe-timeout",
+        type=float,
+        default=float(os.environ.get("TIJARA_PREFLIGHT_PROBE_TIMEOUT", "5")),
+        help="Per-URL probe timeout in seconds.",
+    )
+    parser.add_argument(
         "--non-strict",
         action="store_true",
         default=_truthy(os.environ.get("TIJARA_PREFLIGHT_NON_STRICT", "1")),
@@ -278,6 +389,60 @@ def main():
 
     for key in OBSERVED_VARIABLES:
         variables.append(_variable_entry(effective_env, key, key, args.include_values, False))
+
+    url_probes = []
+    if args.probe_urls:
+        rows.append(_row("url-probes-enabled", "passed", "Protected runner URL probes are enabled."))
+        for spec in URL_PROBE_SPECS:
+            value = effective_env.get(spec["env"], "")
+            source_env = spec["env"]
+            fallback_env = spec.get("fallback_env")
+            if not _present(value) and fallback_env:
+                value = effective_env.get(fallback_env, "")
+                source_env = fallback_env
+            probe, probe_state = _probe_url(value, spec["path"], max(args.probe_timeout, 0.1))
+            entry = {
+                "name": spec["name"],
+                "label": spec["label"],
+                "env": source_env,
+                "configured": _present(value) and not _is_placeholder(value),
+                "required": bool(args.require_url_probes),
+                "path": spec["path"],
+                "result": probe or {},
+            }
+            url_probes.append(entry)
+            check_name = "url-probe-%s" % spec["name"]
+            if probe and probe.get("reachable"):
+                rows.append(
+                    _row(
+                        check_name,
+                        "passed",
+                        "%s is reachable at %s." % (spec["label"], probe.get("url")),
+                    )
+                )
+            elif probe:
+                message = "%s is not reachable at %s: %s" % (
+                    spec["label"],
+                    probe.get("url"),
+                    probe.get("error") or "HTTP %s" % probe.get("status_code"),
+                )
+                if strict:
+                    blockers.append(message)
+                    rows.append(_row(check_name, "failed", message))
+                else:
+                    warnings.append(message)
+                    rows.append(_row(check_name, "warning", message))
+            else:
+                message = "%s URL is not configured for probing." % spec["label"]
+                if strict and args.require_url_probes:
+                    blockers.append(message)
+                    rows.append(_row(check_name, "failed", message))
+                else:
+                    warnings.append(message)
+                    rows.append(_row(check_name, "warning", message))
+    else:
+        url_probes = []
+        rows.append(_row("url-probes-enabled", "passed", "Protected runner URL probes are disabled."))
 
     certification = {}
     for group, requirements in CERTIFICATION_REQUIREMENTS.items():
@@ -326,6 +491,9 @@ def main():
         "output": str(output),
         "strict": strict,
         "include_values": bool(args.include_values),
+        "probe_urls": bool(args.probe_urls),
+        "require_url_probes": bool(args.require_url_probes),
+        "probe_timeout": args.probe_timeout,
     }
     manifest = {
         "context": context,
@@ -335,6 +503,7 @@ def main():
         "warnings": warnings,
         "checks": rows,
         "variables": variables,
+        "url_probes": url_probes,
         "certification": certification,
     }
     env_summary = "\n".join(
@@ -344,6 +513,9 @@ def main():
             "certification_groups=%s" % (",".join(certification_groups) or "<none>"),
             "strict=%s" % int(strict),
             "include_values=%s" % int(args.include_values),
+            "probe_urls=%s" % int(args.probe_urls),
+            "require_url_probes=%s" % int(args.require_url_probes),
+            "probe_timeout=%s" % args.probe_timeout,
             "decision=%s" % decision,
             "ci_status=%s" % ci_status,
         ]

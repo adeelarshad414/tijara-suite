@@ -130,6 +130,9 @@ jobs:
       TIJARA_PROTECTED_RELEASE_CHECKS: ${{ vars.TIJARA_PROTECTED_RELEASE_CHECKS || 'full' }}
       TIJARA_PROTECTED_REQUIRED_EVIDENCE_GROUPS: ${{ vars.TIJARA_PROTECTED_REQUIRED_EVIDENCE_GROUPS || 'release,e2e,ops,security' }}
       TIJARA_PROTECTED_CERTIFICATION_GROUPS: ${{ vars.TIJARA_PROTECTED_CERTIFICATION_GROUPS || '' }}
+      TIJARA_PREFLIGHT_PROBE_URLS: ${{ vars.TIJARA_PREFLIGHT_PROBE_URLS || '0' }}
+      TIJARA_PREFLIGHT_REQUIRE_URLS: ${{ vars.TIJARA_PREFLIGHT_REQUIRE_URLS || '0' }}
+      TIJARA_PREFLIGHT_PROBE_TIMEOUT: ${{ vars.TIJARA_PREFLIGHT_PROBE_TIMEOUT || '5' }}
       TIJARA_ARTIFACT_STORE_REFERENCE: ${{ vars.TIJARA_ARTIFACT_STORE_REFERENCE }}
       TIJARA_ARTIFACT_RETENTION_POLICY_REF: ${{ vars.TIJARA_ARTIFACT_RETENTION_POLICY_REF }}
       TIJARA_CERTIFICATION_RETENTION_POLICY_REF: ${{ vars.TIJARA_CERTIFICATION_RETENTION_POLICY_REF }}
@@ -215,10 +218,18 @@ jobs:
       - name: Protected runner preflight evidence
         continue-on-error: true
         run: |
+          PREFLIGHT_ARGS=()
+          if [[ "${TIJARA_PREFLIGHT_PROBE_URLS:-0}" == "1" ]]; then
+            PREFLIGHT_ARGS+=(--probe-urls)
+          fi
+          if [[ "${TIJARA_PREFLIGHT_REQUIRE_URLS:-0}" == "1" ]]; then
+            PREFLIGHT_ARGS+=(--require-url-probes)
+          fi
           python3 scripts/export_protected_runner_preflight.py \
             --run-id "$TIJARA_PROTECTED_RUN_ID" \
             --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
             --output "deploy/runtime/protected-runner-preflight/$TIJARA_PROTECTED_RUN_ID" \
+            "${PREFLIGHT_ARGS[@]}" \
             --strict
       - name: Protected release candidate gate
         run: |
