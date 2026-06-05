@@ -212,6 +212,8 @@ def _summary(context, components, blockers, warnings):
 - Target environment: {context["target_environment"]}
 - Generated: {context["generated_at"]}
 - Output directory: {context["output"]}
+- Workflow run URL: {context["workflow_run_url"] or "unset"}
+- Artifact references: {", ".join(context["artifact_references"]) if context["artifact_references"] else "unset"}
 
 ## Components
 
@@ -239,6 +241,8 @@ def main():
     parser.add_argument("--target-environment", default=os.environ.get("TIJARA_TARGET_ENVIRONMENT", "staging"))
     parser.add_argument("--output", default=os.environ.get("TIJARA_ARTIFACT_SUMMARY_OUTPUT", ""))
     parser.add_argument("--artifact-path", action="append", default=[])
+    parser.add_argument("--artifact-reference", action="append", default=[])
+    parser.add_argument("--workflow-run-url", default=os.environ.get("GITHUB_RUN_URL", ""))
     args = parser.parse_args()
 
     output = Path(args.output) if args.output else ROOT_DIR / "deploy/runtime/protected-artifact-summary" / args.run_id
@@ -296,6 +300,18 @@ def main():
         decision = "passed"
         ci_status = "pass"
 
+    github_server = os.environ.get("GITHUB_SERVER_URL", "")
+    github_repository = os.environ.get("GITHUB_REPOSITORY", "")
+    github_run_id = os.environ.get("GITHUB_RUN_ID", "")
+    workflow_run_url = args.workflow_run_url
+    if not workflow_run_url and github_server and github_repository and github_run_id:
+        workflow_run_url = "%s/%s/actions/runs/%s" % (
+            github_server.rstrip("/"),
+            github_repository,
+            github_run_id,
+        )
+    artifact_references = list(args.artifact_reference)
+    artifact_references.extend(_csv_items(os.environ.get("TIJARA_ARTIFACT_REFERENCES")))
     context = {
         "run_id": args.run_id,
         "target_environment": args.target_environment,
@@ -303,6 +319,18 @@ def main():
         "output": str(output),
         "decision": decision,
         "ci_status": ci_status,
+        "workflow_run_url": workflow_run_url,
+        "github": {
+            "server_url": github_server,
+            "repository": github_repository,
+            "run_id": github_run_id,
+            "run_number": os.environ.get("GITHUB_RUN_NUMBER", ""),
+            "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", ""),
+            "sha": os.environ.get("GITHUB_SHA", ""),
+            "ref": os.environ.get("GITHUB_REF", ""),
+            "workflow": os.environ.get("GITHUB_WORKFLOW", ""),
+        },
+        "artifact_references": artifact_references,
     }
     manifest = {
         "context": context,
@@ -317,6 +345,8 @@ def main():
             "run_id=%s" % args.run_id,
             "target_environment=%s" % args.target_environment,
             "component_count=%s" % len(components),
+            "workflow_run_url=%s" % (workflow_run_url or "<unset>"),
+            "artifact_references=%s" % (",".join(artifact_references) or "<unset>"),
             "decision=%s" % decision,
             "ci_status=%s" % ci_status,
         ]

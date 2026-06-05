@@ -1135,7 +1135,9 @@ After the protected readiness check, the workflow runs
 points release owners at failed/warning rows across preflight, release,
 Browser E2E, operations, certification, retention, secret-manager, production
 operations readiness, and sign-off artifacts. Use it as the first file to open
-inside `tijara-protected-release-evidence-<environment>-<run>`.
+inside `tijara-protected-release-evidence-<environment>-<run>`. In GitHub
+Actions, the summary also records the workflow run URL, commit/ref metadata,
+and uploaded artifact reference when those values are available.
 
 Export release retention and secret-manager evidence before production
 approval:

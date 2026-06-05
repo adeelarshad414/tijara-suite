@@ -419,7 +419,8 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/export_protected_artifact_summary.py` and
   `make protected-artifact-summary` scan protected evidence folders and write a
   release-owner index of failed/warning status rows, decisions, and artifact
-  paths under `deploy/runtime/protected-artifact-summary/`.
+  paths under `deploy/runtime/protected-artifact-summary/`, including GitHub
+  run metadata and uploaded artifact references when available.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or

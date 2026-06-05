@@ -6365,3 +6365,59 @@ Date: 2026-06-05
   credentials are available on the protected runner.
 - Continue hardening live PSP/FBR adapters and offline POS sync conflict
   handling when live provider/staging systems are available.
+
+## Iteration 90: Protected Artifact Run Metadata
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Extended `scripts/export_protected_artifact_summary.py` with GitHub Actions
+  run metadata.
+- The protected artifact summary now records workflow run URL, repository, run
+  ID, run number, run attempt, SHA, ref, workflow name, and artifact
+  references when available.
+- Added `--workflow-run-url` and `--artifact-reference` support, plus
+  `TIJARA_ARTIFACT_REFERENCES` environment support.
+- Wired `.github/workflows/tijara-ci.yml` to pass the protected evidence
+  artifact name into the summary exporter.
+- Updated `README.md` and `DEPLOY.md` so release owners know the summary
+  includes run metadata and artifact references.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_artifact_summary.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Metadata fixture with `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY`,
+  `GITHUB_RUN_ID`, `GITHUB_RUN_NUMBER`, `GITHUB_RUN_ATTEMPT`, `GITHUB_SHA`,
+  `GITHUB_REF`, and `GITHUB_WORKFLOW` writes the expected workflow run URL,
+  ref, SHA, and artifact reference.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` or probe server process remains running.
+
+### Known Gaps
+
+- The summary records the artifact reference name, but GitHub artifact IDs and
+  direct artifact URLs still require either GitHub API access or post-upload
+  metadata from a real workflow run.
+- Protected workflow execution still needs a real self-hosted runner and
+  staging/production GitHub environment setup.
+- Live Browser E2E, PSP/FBR certification, physical hardware proof, offline POS
+  sync, and production operations drills remain external production blockers.
+
+### Next Iteration
+
+- Add optional authenticated health probes once secret-manager-backed
+  credentials are available on the protected runner.
+- Add a protected workflow execution checklist for the first real staging run,
+  including expected artifacts and owner sign-offs.
+- Continue hardening live PSP/FBR adapters and offline POS sync conflict
+  handling when live provider/staging systems are available.

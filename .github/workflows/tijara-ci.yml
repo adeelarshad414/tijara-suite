@@ -376,7 +376,8 @@ jobs:
           python3 scripts/export_protected_artifact_summary.py \
             --run-id "$TIJARA_PROTECTED_RUN_ID" \
             --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
-            --output "deploy/runtime/protected-artifact-summary/$TIJARA_PROTECTED_RUN_ID"
+            --output "deploy/runtime/protected-artifact-summary/$TIJARA_PROTECTED_RUN_ID" \
+            --artifact-reference "tijara-protected-release-evidence-${{ inputs.target_environment }}-${{ github.run_id }}"
       - name: Upload protected release evidence
         if: always()
         uses: actions/upload-artifact@v4
