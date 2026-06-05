@@ -122,6 +122,7 @@ make hardware-cert-smoke
 make e2e
 make release-candidate
 make certification-evidence
+make psp-readiness-evidence
 make psp-fixture-smoke
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -355,6 +356,10 @@ The detailed policy and dependency intake checklist are maintained in
   metadata fields, fingerprint external evidence files or directories, and
   write sign-off-ready summaries under
   `deploy/runtime/certification-evidence/`.
+- `scripts/export_psp_readiness.py` and `make psp-readiness-evidence` export
+  redacted PSP readiness evidence from the committed provider adapter matrix,
+  including secret-presence status, certification status, event coverage, and
+  parser profile checks under `deploy/runtime/psp-readiness/`.
 - `scripts/psp_settlement_fixture_smoke.py` and `make psp-fixture-smoke`
   validate committed JazzCash, Easypaisa, and Stripe settlement fixtures without
   requiring a live Odoo database, including event coverage, secret-like key

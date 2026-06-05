@@ -3069,3 +3069,71 @@ Date: 2026-06-05
 - Add Odoo transaction tests that import these fixtures once the database
   credential mismatch is resolved.
 - Continue FBR certified-provider adapter hardening.
+
+## Iteration 47: PSP Readiness Evidence Exporter
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_psp_readiness.py` for redacted PSP provider readiness
+  evidence.
+- The exporter:
+  - Reads `PROVIDER_CONTRACTS` directly from the committed Odoo provider adapter
+    source using Python AST, so it does not need Odoo imports or a live
+    database.
+  - Supports manual/bank, JazzCash, Easypaisa, Stripe, and generic PSP
+    provider profiles.
+  - Records webhook route, settlement parser profile, native signature
+    requirement, secret-presence status, event coverage, certification
+    reference/status, refund fields, chargeback fields, and settlement fields.
+  - Accepts `--secret-present provider=true`, `--certification-reference
+    provider=value`, and `--certification-status provider=approved` for
+    staging evidence without printing secret values.
+  - Writes `psp-readiness.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/psp-readiness/<run-id>/`.
+  - Fails when native signatures are required but secret presence is not
+    confirmed, unless non-strict mode is enabled.
+- Added operator shortcuts:
+  - `make psp-readiness-evidence`
+  - `npm run psp:readiness`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Default readiness export passes with warnings when live PSP certifications
+  are not supplied.
+- Supplied Stripe readiness export passes with native signatures required,
+  secret presence confirmed, and certification status approved.
+- JazzCash readiness export fails when native signatures are required and
+  secret presence is not confirmed.
+- `make psp-readiness-evidence` passes with warning decision.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_psp_readiness.py` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- PSP readiness evidence still needs real staging secret-presence confirmation
+  and provider certification references from contracted PSPs.
+- The exporter proves readiness metadata and contract coverage; live webhook,
+  settlement, refund, and chargeback certification still require provider UAT
+  or live evidence.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Extend the sign-off package generator to summarize PSP readiness evidence as
+  a first-class PSP evidence source.
+- Continue FBR certified-provider adapter hardening.
+- Add staging/live PSP provider fixture imports after database credentials are
+  corrected.

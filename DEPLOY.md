@@ -77,6 +77,7 @@ make hardware-cert-smoke
 make monitoring-up
 make load-smoke
 make release-candidate
+make psp-readiness-evidence
 make psp-fixture-smoke
 make signoff-pack
 ```
@@ -360,6 +361,24 @@ tijara.saas.easypaisa_certification_status / TIJARA_EASYPAISA_CERTIFICATION_STAT
 Use `approved`, `passed`, or `certified` for approved certification status.
 Provider readiness reports should be captured in staging evidence before
 including PSP certification folders in the final sign-off package.
+
+Export PSP readiness evidence without exposing secrets:
+
+```bash
+python3 scripts/export_psp_readiness.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment staging \
+  --provider stripe \
+  --require-native-signatures \
+  --secret-present stripe=true \
+  --certification-reference stripe=STRIPE-UAT-001 \
+  --certification-status stripe=approved
+```
+
+The exporter reads the committed provider adapter contracts and writes
+`psp-readiness.json`, `status.tsv`, `env-summary.txt`, and `summary.md` under
+`deploy/runtime/psp-readiness/<run-id>/`. Include this directory in
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` with the other PSP certification evidence.
 
 Settlement import flow:
 
