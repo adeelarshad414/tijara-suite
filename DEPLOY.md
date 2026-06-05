@@ -826,10 +826,13 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `security-review-signoff.md` for scan results, RBAC, logs, rate limits,
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
-  status-table, and non-secret environment summaries for approvers.
+  status-table, PSP readiness, and non-secret environment summaries for
+  approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
-  check rows for dashboards or release automation.
+  check rows for dashboards or release automation. When PSP readiness evidence
+  is attached, provider-level readiness reviews are included under
+  `psp_readiness_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 

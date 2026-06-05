@@ -3137,3 +3137,68 @@ Date: 2026-06-05
 - Continue FBR certified-provider adapter hardening.
 - Add staging/live PSP provider fixture imports after database credentials are
   corrected.
+
+## Iteration 48: PSP Readiness Sign-Off Extraction
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/generate_signoff_pack.py` to parse attached
+  `psp-readiness.json` evidence.
+- `evidence-summary.md` now includes a dedicated PSP Readiness Evidence section
+  with:
+  - PSP readiness decision.
+  - CI status.
+  - Native signature requirement.
+  - Provider decision.
+  - Secret-presence confirmation.
+  - Certification reference/status presence.
+  - Settlement parser profile.
+- `release-readiness.json` now includes `psp_readiness_reviews` with
+  provider-level PSP readiness details for CI dashboards and release
+  automation.
+- Release readiness decisions now treat failed PSP readiness manifests or
+  failed provider decisions as blockers, and warning PSP readiness/provider
+  decisions as warnings.
+- Improved `status.tsv` parsing so normal three-column evidence status tables
+  keep their check messages in `release-readiness.json`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Generated clean Stripe PSP readiness evidence with native signatures required,
+  secret presence confirmed, and certification status approved.
+- Generated a sign-off package with PSP evidence required in strict mode.
+- Confirmed `release-readiness.json` decision is `ready`.
+- Confirmed `release-readiness.json` includes `psp_readiness_reviews`.
+- Confirmed `evidence-summary.md` includes the PSP Readiness Evidence section.
+- Confirmed three-column `status.tsv` messages are retained in
+  `release-readiness.json`.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/generate_signoff_pack.py` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- PSP readiness extraction depends on staging teams supplying real
+  `psp-readiness.json` evidence.
+- Real PSP certification, settlement, refund, and chargeback evidence still
+  requires provider UAT/live artifacts.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Continue FBR certified-provider adapter hardening.
+- Add staging/live PSP provider fixture imports after database credentials are
+  corrected.
+- Add monitoring evidence extraction for production smoke and rollback packages.

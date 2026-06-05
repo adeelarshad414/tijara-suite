@@ -425,7 +425,7 @@ def _status_counts(lines):
             continue
         name, status = parts[0], parts[1]
         counts[status] = counts.get(status, 0) + 1
-        message = parts[4] if len(parts) >= 5 else ""
+        message = parts[4] if len(parts) >= 5 else parts[2] if len(parts) >= 3 else ""
         rows.append({"name": name, "status": status, "message": message})
     return counts, rows
 
@@ -442,11 +442,63 @@ def _environment_lines(lines):
     return safe_lines[:24]
 
 
+def _read_json(path):
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _psp_readiness_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "psp-readiness.json":
+            continue
+        payload = _read_json(path)
+        provider_reviews = []
+        for provider in payload.get("providers") or []:
+            provider_reviews.append(
+                {
+                    "provider": provider.get("provider", ""),
+                    "label": provider.get("label", ""),
+                    "decision": provider.get("decision", ""),
+                    "ci_status": provider.get("ci_status", ""),
+                    "secret_present": bool((provider.get("signature") or {}).get("secret_present")),
+                    "certification_required": bool(
+                        (provider.get("certification") or {}).get("required")
+                    ),
+                    "certification_reference_present": bool(
+                        (provider.get("certification") or {}).get("reference_present")
+                    ),
+                    "certification_status": (provider.get("certification") or {}).get("status", ""),
+                    "settlement_parser_profile": (provider.get("contract") or {}).get(
+                        "settlement_parser_profile",
+                        "",
+                    ),
+                }
+            )
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "require_native_signatures": bool(payload.get("require_native_signatures")),
+                "providers": provider_reviews,
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
     status_blocks = []
     environment_blocks = []
+    psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -514,6 +566,31 @@ def _evidence_summary(context, evidence_entries):
     if not env_lines:
         env_lines = ["- No `env-summary.txt` files were attached.", ""]
 
+    psp_lines = []
+    for review in psp_readiness_reviews:
+        psp_lines.append("### `%s`" % review["path"])
+        psp_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        psp_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        psp_lines.append(
+            "- Native signatures required: %s"
+            % ("yes" if review["require_native_signatures"] else "no")
+        )
+        for provider in review["providers"]:
+            psp_lines.append(
+                "- `%s`: decision=%s, secret_present=%s, certification=%s/%s, parser=%s"
+                % (
+                    provider["provider"],
+                    provider["decision"] or "unknown",
+                    "yes" if provider["secret_present"] else "no",
+                    "yes" if provider["certification_reference_present"] else "no",
+                    provider["certification_status"] or "unset",
+                    provider["settlement_parser_profile"] or "unset",
+                )
+            )
+        psp_lines.append("")
+    if not psp_lines:
+        psp_lines = ["- No `psp-readiness.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -538,6 +615,9 @@ def _evidence_summary(context, evidence_entries):
 ## Environment Snapshots
 
 {chr(10).join(env_lines)}
+## PSP Readiness Evidence
+
+{chr(10).join(psp_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -554,6 +634,7 @@ def _evidence_summary(context, evidence_entries):
 def _release_readiness(context, evidence_entries, group_counts):
     summary_reviews = []
     check_rows = []
+    psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -609,6 +690,26 @@ def _release_readiness(context, evidence_entries, group_counts):
                         % (row["name"], entry["relative_path"], row["status"])
                     )
 
+    for review in psp_readiness_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("PSP readiness %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("PSP readiness %s is %s" % (review["path"], review["decision"]))
+        for provider in review.get("providers") or []:
+            provider_decision = str(provider.get("decision") or "").lower()
+            label = provider.get("provider") or "unknown"
+            if provider_decision in {"failed", "blocked"}:
+                blockers.append(
+                    "PSP provider %s in %s is %s"
+                    % (label, review["path"], provider.get("decision"))
+                )
+            elif provider_decision in {"warning", "warn"}:
+                warnings.append(
+                    "PSP provider %s in %s is %s"
+                    % (label, review["path"], provider.get("decision"))
+                )
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -635,6 +736,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "strict_required_evidence": bool(context.get("strict_required_evidence")),
         "summary_reviews": summary_reviews,
         "check_rows": check_rows,
+        "psp_readiness_reviews": psp_readiness_reviews,
     }
 
 

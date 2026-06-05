@@ -369,7 +369,8 @@ The detailed policy and dependency intake checklist are maintained in
   an evidence manifest for PSP, FBR, hardware, finance, security, and go/no-go
   review under `deploy/runtime/signoff-packages/`, with optional
   required-evidence group guardrails for release, E2E, operations, security,
-  hardware, FBR, and PSP evidence.
+  hardware, FBR, and PSP evidence. PSP readiness manifests are extracted into
+  provider-level readiness reviews for approvers and CI.
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.
