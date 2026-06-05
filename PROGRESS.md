@@ -4894,3 +4894,84 @@ Date: 2026-06-05
   rollout execution is available.
 - Continue authenticated POS checkout/refund/print E2E and real tenant smoke
   execution when staging credentials are available.
+
+## Iteration 70: Tenant Rollout Production Deployment Gate
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/run_production_deployment_gate.py` so production deployment
+  gates check `tenant_rollout_reviews` from `release-readiness.json`.
+- Production deployment gates now require tenant rollout reviews and a tenant
+  rollout evidence reference by default when
+  `TIJARA_DEPLOYMENT_TARGET=production`.
+- Added `TIJARA_DEPLOYMENT_REQUIRE_TENANT_ROLLOUT=0` as an explicit
+  non-production/pilot override.
+- Added `TIJARA_DEPLOYMENT_TENANT_ROLLOUT_REF` / `--tenant-rollout-ref` so the
+  deployment gate records the concrete tenant rollout evidence reviewed for
+  cutover.
+- Added `TIJARA_DEPLOYMENT_REQUIRE_TENANT_ROLLOUT_EXECUTION=1` for stricter
+  production cutovers that must prove executed rollout actions instead of
+  dry-run action plans.
+- Updated the production pre-cutover checklist to include tenant rollout
+  evidence review for DNS, ingress, TLS, Nginx, monitoring, and backup actions.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/run_production_deployment_gate.py` passes.
+- Generated strict deployment environment evidence under
+  `/private/tmp/tijara-env-rollout-gate`.
+- Generated strict tenant smoke evidence under
+  `/private/tmp/tijara-tenant-smoke-rollout-gate` using a temporary localhost
+  HTTP server; the server was stopped after validation.
+- Generated a complete sign-off package with deployment environment, tenant
+  rollout, and tenant smoke evidence under
+  `/private/tmp/tijara-signoff-rollout-gate-ready`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-rollout-gate-ready/release-readiness.json`
+  passes with `decision=ready` and `ci_status=pass`.
+- Production deployment gate passes with tenant rollout and tenant smoke
+  evidence references:
+  `/private/tmp/tijara-prod-gate-tenant-rollout-ready/deployment-decision.json`
+  records `decision=ready` and `ci_status=pass`.
+- Production deployment gate blocks when readiness lacks
+  `tenant_rollout_reviews`:
+  `/private/tmp/tijara-prod-gate-missing-tenant-rollout/deployment-decision.json`
+  records `decision=blocked` and `ci_status=fail`.
+- Production deployment gate blocks dry-run-only rollout evidence when
+  `TIJARA_DEPLOYMENT_REQUIRE_TENANT_ROLLOUT_EXECUTION=1`:
+  `/private/tmp/tijara-prod-gate-tenant-rollout-execution-required/deployment-decision.json`
+  records `decision=blocked` and `ci_status=fail`.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- Production tenant rollout gating now exists, but actual production proof still
+  needs real Kubernetes/Nginx/DNS/TLS/monitoring credentials and an executed
+  rollout run against live tenant infrastructure.
+- Tenant rollout execution mode is available but not yet paired with automated
+  rollback evidence for each tenant ingress/DNS change.
+- Authenticated POS checkout/refund browser E2E still requires a staging POS
+  user and seeded POS register.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add tenant rollout rollback planning/evidence so every DNS/ingress/TLS action
+  has a paired rollback reference before production cutover.
+- Add monitoring evidence linkage for tenant rollout execution once a live
+  rollout run exists.
+- Continue authenticated POS checkout/refund/print E2E and real FBR/provider
+  execution when staging credentials are available.

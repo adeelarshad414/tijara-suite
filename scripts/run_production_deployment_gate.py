@@ -148,6 +148,78 @@ def _check_tenant_smoke(readiness, required):
     )
 
 
+def _check_tenant_rollout(readiness, required, require_execution):
+    reviews = readiness.get("tenant_rollout_reviews") or []
+    if not reviews:
+        if required:
+            return _status_row(
+                "tenant-rollout-evidence",
+                "failed",
+                "Tenant rollout evidence is required.",
+            )
+        return _status_row(
+            "tenant-rollout-evidence",
+            "skipped",
+            "Tenant rollout evidence is not required.",
+        )
+    failed = [
+        review
+        for review in reviews
+        if str(review.get("decision") or "").strip().lower() in {"failed", "blocked"}
+        or str(review.get("ci_status") or "").strip().lower() == "fail"
+    ]
+    warning = [
+        review
+        for review in reviews
+        if str(review.get("decision") or "").strip().lower() in {"warning", "warn"}
+        or str(review.get("ci_status") or "").strip().lower() == "pass_with_warnings"
+    ]
+    tenant_count = sum(int(review.get("tenant_count") or 0) for review in reviews)
+    dry_run_count = 0
+    executed_count = 0
+    failed_count = 0
+    failed_tenants = []
+    warning_tenants = []
+    for review in reviews:
+        for tenant in review.get("tenants") or []:
+            decision = str(tenant.get("decision") or "").strip().lower()
+            ci_status = str(tenant.get("ci_status") or "").strip().lower()
+            label = tenant.get("tenant_db") or tenant.get("domain") or "unknown"
+            dry_run_count += int(tenant.get("dry_run_count") or 0)
+            executed_count += int(tenant.get("executed_count") or 0)
+            failed_count += int(tenant.get("failed_count") or 0)
+            if decision in {"failed", "blocked"} or ci_status == "fail":
+                failed_tenants.append(label)
+            elif decision in {"warning", "warn"} or ci_status == "pass_with_warnings":
+                warning_tenants.append(label)
+    if failed or failed_tenants or failed_count:
+        return _status_row(
+            "tenant-rollout-evidence",
+            "failed",
+            "%s tenant rollout review(s), %s tenant(s), and %s action(s) failed."
+            % (len(failed), len(failed_tenants), failed_count),
+        )
+    if require_execution and executed_count < 1:
+        return _status_row(
+            "tenant-rollout-evidence",
+            "failed",
+            "Tenant rollout execution is required; only dry-run actions are attached.",
+        )
+    if warning or warning_tenants:
+        return _status_row(
+            "tenant-rollout-evidence",
+            "warning",
+            "%s tenant rollout review(s) and %s tenant(s) have warnings."
+            % (len(warning), len(warning_tenants)),
+        )
+    return _status_row(
+        "tenant-rollout-evidence",
+        "passed",
+        "%s rollout review(s) covering %s tenant(s), dry-run/executed/failed actions %s/%s/%s."
+        % (len(reviews), tenant_count, dry_run_count, executed_count, failed_count),
+    )
+
+
 def _check_readiness(readiness):
     decision = str(readiness.get("decision") or "").strip().lower()
     ci_status = str(readiness.get("ci_status") or "").strip().lower()
@@ -212,6 +284,7 @@ def _pre_cutover_checklist(args, readiness):
     "Rollback reference verified and previous build/package can be restored.",
     "Monitoring, alerting, logs, and on-call routing verified.",
     "Tenant provisioning, subscription billing, POS, inventory, reporting, and display smoke tests assigned.",
+    "Tenant rollout evidence reviewed for DNS, ingress, TLS, Nginx, monitoring, and backup actions.",
     "Tenant smoke execution evidence reviewed for every production tenant in scope.",
     "PSP/FBR/hardware exceptions reviewed and approved or blocked.",
     "Customer communication and support escalation plan ready.",
@@ -298,6 +371,7 @@ def main():
     parser.add_argument("--rollback-ref", default=os.environ.get("TIJARA_DEPLOYMENT_ROLLBACK_REF", ""))
     parser.add_argument("--monitoring-ref", default=os.environ.get("TIJARA_DEPLOYMENT_MONITORING_REF", ""))
     parser.add_argument("--tenant-smoke-ref", default=os.environ.get("TIJARA_DEPLOYMENT_TENANT_SMOKE_REF", ""))
+    parser.add_argument("--tenant-rollout-ref", default=os.environ.get("TIJARA_DEPLOYMENT_TENANT_ROLLOUT_REF", ""))
     parser.add_argument("--approver", default=os.environ.get("TIJARA_DEPLOYMENT_APPROVER", ""))
     parser.add_argument("--signoff-package", default=os.environ.get("TIJARA_DEPLOYMENT_SIGNOFF_PACKAGE", ""))
     parser.add_argument(
@@ -327,6 +401,11 @@ def main():
     require_rollback = _required_flag(os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_ROLLBACK"), is_production)
     require_monitoring = _required_flag(os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_MONITORING"), is_production)
     require_tenant_smoke = _required_flag(os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_TENANT_SMOKE"), is_production)
+    require_tenant_rollout = _required_flag(os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_TENANT_ROLLOUT"), is_production)
+    require_tenant_rollout_execution = _required_flag(
+        os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_TENANT_ROLLOUT_EXECUTION"),
+        False,
+    )
     require_approver = _required_flag(os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_APPROVER"), is_production)
     require_environment_protection = _required_flag(
         os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_ENVIRONMENT_PROTECTION"),
@@ -340,6 +419,7 @@ def main():
     rows = [
         _check_readiness(readiness),
         _check_environment_protection(readiness, require_environment_protection),
+        _check_tenant_rollout(readiness, require_tenant_rollout, require_tenant_rollout_execution),
         _check_tenant_smoke(readiness, require_tenant_smoke),
         _check_required("backup-reference", args.backup_ref, require_backup, "Backup reference"),
         _check_required("rollback-reference", args.rollback_ref, require_rollback, "Rollback reference"),
@@ -349,6 +429,12 @@ def main():
             args.tenant_smoke_ref,
             require_tenant_smoke,
             "Tenant smoke evidence reference",
+        ),
+        _check_required(
+            "tenant-rollout-reference",
+            args.tenant_rollout_ref,
+            require_tenant_rollout,
+            "Tenant rollout evidence reference",
         ),
         _check_required("release-approver", args.approver, require_approver, "Release approver"),
         _check_required("signoff-package", signoff_package, True, "Sign-off package"),
@@ -372,6 +458,7 @@ def main():
         "rollback_ref": args.rollback_ref,
         "monitoring_ref": args.monitoring_ref,
         "tenant_smoke_ref": args.tenant_smoke_ref,
+        "tenant_rollout_ref": args.tenant_rollout_ref,
         "approver": args.approver,
         "signoff_package": signoff_package,
         "checks": rows,
@@ -385,11 +472,14 @@ def main():
             "rollback_ref=%s" % (args.rollback_ref or "<missing>"),
             "monitoring_ref=%s" % (args.monitoring_ref or "<missing>"),
             "tenant_smoke_ref=%s" % (args.tenant_smoke_ref or "<missing>"),
+            "tenant_rollout_ref=%s" % (args.tenant_rollout_ref or "<missing>"),
             "approver=%s" % (args.approver or "<missing>"),
             "require_backup=%s" % int(require_backup),
             "require_rollback=%s" % int(require_rollback),
             "require_monitoring=%s" % int(require_monitoring),
             "require_tenant_smoke=%s" % int(require_tenant_smoke),
+            "require_tenant_rollout=%s" % int(require_tenant_rollout),
+            "require_tenant_rollout_execution=%s" % int(require_tenant_rollout_execution),
             "require_approver=%s" % int(require_approver),
             "require_environment_protection=%s" % int(require_environment_protection),
             "fail_on_warning=%s" % int(args.fail_on_warning),

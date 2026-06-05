@@ -1298,6 +1298,7 @@ TIJARA_DEPLOYMENT_TARGET=production \
 TIJARA_DEPLOYMENT_BACKUP_REF=deploy/runtime/backups/2026-06-05-pre-prod.dump \
 TIJARA_DEPLOYMENT_ROLLBACK_REF=ghcr.io/example/tijara-suite:previous \
 TIJARA_DEPLOYMENT_MONITORING_REF=grafana-dashboard-prod-pos \
+TIJARA_DEPLOYMENT_TENANT_ROLLOUT_REF=deploy/runtime/tenant-rollouts/2026-06-05-prod/tenant-rollout-evidence.json \
 TIJARA_DEPLOYMENT_TENANT_SMOKE_REF=deploy/runtime/tenant-smoke/2026-06-05-prod/tenant-smoke-evidence.json \
 TIJARA_DEPLOYMENT_APPROVER="Release Owner" \
 TIJARA_DEPLOYMENT_FAIL_ON_WARNING=1 \
@@ -1306,14 +1307,19 @@ make production-deployment-gate READINESS=deploy/runtime/signoff-packages/2026-0
 
 For `TIJARA_DEPLOYMENT_TARGET=production`, deployment environment protection
 evidence in `release-readiness.json`, backup reference, rollback reference,
-tenant smoke reviews in `release-readiness.json`, tenant smoke evidence
-reference, monitoring reference, sign-off package, and approver are required by
-default. Set `TIJARA_DEPLOYMENT_REQUIRE_ENVIRONMENT_PROTECTION=0` or
+tenant rollout reviews in `release-readiness.json`, tenant rollout evidence
+reference, tenant smoke reviews in `release-readiness.json`, tenant smoke
+evidence reference, monitoring reference, sign-off package, and approver are
+required by default. Set `TIJARA_DEPLOYMENT_REQUIRE_ENVIRONMENT_PROTECTION=0`,
+`TIJARA_DEPLOYMENT_REQUIRE_TENANT_ROLLOUT=0`, or
 `TIJARA_DEPLOYMENT_REQUIRE_TENANT_SMOKE=0` only for an explicitly approved
-non-production drill. The gate writes `deployment-decision.json`,
-`status.tsv`, `summary.md`, `pre-cutover-checklist.md`, and
-`rollback-checklist.md` under `deploy/runtime/deployment-gates/<run-id>/`. It
-exits non-zero when deployment is blocked.
+non-production drill. Set
+`TIJARA_DEPLOYMENT_REQUIRE_TENANT_ROLLOUT_EXECUTION=1` when production cutover
+must prove executed rollout actions rather than dry-run action plans. The gate
+writes `deployment-decision.json`, `status.tsv`, `summary.md`,
+`pre-cutover-checklist.md`, and `rollback-checklist.md` under
+`deploy/runtime/deployment-gates/<run-id>/`. It exits non-zero when deployment
+is blocked.
 
 Rollback commands are dry-run by default and consume the deployment gate
 decision:

@@ -444,8 +444,8 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_production_deployment_gate.py` and
   `make production-deployment-gate` generate deployment gate evidence from a
   staging sign-off package, including required deployment environment evidence,
-  tenant smoke reviews, backup, rollback, monitoring, approver, pre-cutover,
-  and rollback checklists.
+  tenant rollout reviews, tenant smoke reviews, backup, rollback, monitoring,
+  approver, pre-cutover, and rollback checklists.
 - `scripts/run_production_rollback.py` and `make production-rollback` provide
   dry-run-first rollback hooks for manifest, Docker Compose, and Kubernetes
   providers, with command logs and rollback decision evidence.
