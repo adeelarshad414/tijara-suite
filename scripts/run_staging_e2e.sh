@@ -45,11 +45,11 @@ case "$SCOPE" in
         ;;
     authenticated)
         required_vars=("${authenticated_required[@]}")
-        specs=(tests/e2e/pos-checkout-print.spec.mjs tests/e2e/refunds-reports.spec.mjs)
+        specs=(tests/e2e/pos-checkout-print.spec.mjs tests/e2e/pos-enterprise-journey.spec.mjs tests/e2e/refunds-reports.spec.mjs)
         ;;
     full)
         required_vars=("${public_required[@]}" "${authenticated_required[@]}")
-        specs=(tests/e2e/display-kiosk.spec.mjs tests/e2e/pos-checkout-print.spec.mjs tests/e2e/refunds-reports.spec.mjs)
+        specs=(tests/e2e/display-kiosk.spec.mjs tests/e2e/pos-checkout-print.spec.mjs tests/e2e/pos-enterprise-journey.spec.mjs tests/e2e/refunds-reports.spec.mjs)
         ;;
     *)
         echo "Unsupported TIJARA_E2E_SCOPE='$SCOPE'. Use public, authenticated, or full." >&2

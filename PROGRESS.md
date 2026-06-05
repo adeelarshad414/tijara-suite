@@ -2239,3 +2239,58 @@ Date: 2026-06-05
 - Start live pilot sign-off records for first supported PSP, certified FBR
   provider, receipt printer, cash drawer, scanner, scale, customer display, and
   label printer models.
+
+## Iteration 32: Authenticated Enterprise POS Browser Journey
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `tests/e2e/pos-enterprise-journey.spec.mjs` as an integrated
+  authenticated Playwright staging journey:
+  - Captures a paid browser/offline POS payload.
+  - Replays the order into Odoo POS.
+  - Verifies paid order state, lines, payments, B2C audience, takeaway order
+    type, and generated Tijara receipt barcode.
+  - Renders the Tijara POS receipt report for the created order.
+  - Exercises `action_tijara_print_receipt_to_bridge` and accepts configured or
+    unconfigured bridge-printer outcomes as evidence.
+  - Publishes and reads customer-display state when the POS register has a
+    customer display configured.
+  - Creates a refund/exchange request and verifies barcode matching against the
+    generated receipt barcode.
+  - Replays the same browser order again to prove duplicate handling.
+  - Reads offline POS status by source device for replay audit evidence.
+- Added the new spec to the guarded staging E2E runner for
+  `TIJARA_E2E_SCOPE=authenticated` and `TIJARA_E2E_SCOPE=full`.
+- Updated `README.md`, `DEPLOY.md`, `tests/e2e/README.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_staging_e2e.sh` passes.
+- `bash scripts/js_check.sh` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- The integrated journey is ready, but actual execution still needs a live
+  seeded staging Odoo stack with permissioned POS credentials.
+- Direct cashier UI clicks through product grid, pay screen, receipt screen, and
+  refund form controls still need deeper selectors once the staging POS UI is
+  available.
+- PSP/FBR certified-provider credentials and physical hardware devices are still
+  external blockers for production certification.
+
+### Next Iteration
+
+- Add staging E2E evidence summarization into the release sign-off package so
+  the enterprise POS journey result is easier for release approvers to review.
+- Expand direct POS UI click selectors for product search, add-to-cart,
+  payment, receipt print button, and refund form when a prepared staging stack
+  is available.
+- Continue PSP/FBR/hardware certification automation around real provider and
+  device evidence.

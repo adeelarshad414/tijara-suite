@@ -591,6 +591,11 @@ is written to `deploy/runtime/e2e-evidence/<run-id>/` with an environment
 summary, Playwright output, JSON results, and a Markdown summary. Use
 `TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display only or
 `TIJARA_E2E_SCOPE=authenticated` for POS/refund/offline-report routes.
+Authenticated and full scopes also run the integrated enterprise POS journey:
+paid browser/offline order capture, POS replay, receipt report rendering,
+print-to-bridge method coverage, optional customer-display state assertion,
+refund barcode matching from the generated receipt, duplicate replay handling,
+and offline status reporting.
 
 ## CI, Security, and Load Smoke
 

@@ -91,3 +91,10 @@ Authenticated refund barcode scan, receipt report rendering, print-to-bridge
 method coverage, offline conflict review, and POS shell tests run when the seed
 prints the matching IDs/URLs and staging credentials are exported. Direct POS UI
 click-through remains opt-in with `TIJARA_RUN_POS_UI_E2E=1`.
+
+`tests/e2e/pos-enterprise-journey.spec.mjs` is the strongest authenticated
+staging journey. It creates a paid browser/offline POS order, replays it into
+Odoo POS, verifies receipt rendering, exercises the print-to-bridge method,
+publishes and reads customer-display state when the POS register is configured,
+matches the generated receipt barcode through the refund scanner workflow, and
+proves duplicate replay handling plus offline status reporting.

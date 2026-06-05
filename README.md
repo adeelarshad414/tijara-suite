@@ -198,7 +198,11 @@ monitoring operations manifests. The repo also includes Playwright browser E2E
 seed and checkout scaffolds, hardware certification records/profiles,
 Prometheus/Blackbox/Alertmanager/Grafana/Loki monitoring config, staging
 monitoring drill script, restore-drill scripts, and container/dependency scan
-hooks.
+hooks. Authenticated staging browser evidence now includes an integrated POS
+enterprise journey that creates a paid browser/offline order, replays it into
+POS, verifies receipt rendering, exercises print-to-bridge, checks
+customer-display state when configured, scans the generated refund barcode, and
+proves duplicate replay handling.
 Remaining enterprise phases include real target-hardware certification, full
 authenticated browser POS click-through coverage in staging, production FBR
 provider certification, secret-manager rollout, offline POS pilot
@@ -319,7 +323,8 @@ The detailed policy and dependency intake checklist are maintained in
   provide committed Odoo and browser regression scaffolds.
 - `scripts/run_staging_e2e.sh` and `make e2e-staging` provide guarded staging
   browser evidence runs for POS, refund, print, customer display, offline
-  replay, kiosk, and public display coverage.
+  replay, kiosk, public display coverage, and the authenticated enterprise POS
+  journey spec.
 - `scripts/run_staging_ops_checks.sh` and `make ops-staging` gather staging
   monitoring, restore, load-smoke, dependency scan, and container scan evidence
   under `deploy/runtime/ops-evidence/`.
