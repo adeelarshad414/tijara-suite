@@ -324,6 +324,29 @@ The exporter writes `tenant-ops-evidence.json`, `status.tsv`,
 production sign-off; the sign-off package extracts tenant readiness under
 `tenant_ops_reviews`.
 
+Dry-run tenant rollout actions before DNS/TLS cutover:
+
+```bash
+python3 scripts/run_tenant_rollout.py \
+  --run-id 2026-06-05-prod \
+  --target-environment production \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --platform kubernetes \
+  --minimum-tenants 1 \
+  --require-all-artifacts \
+  --strict
+```
+
+The runner reads `ops-manifest.json` and the generated tenant artifacts, builds
+Kubernetes ingress/cert-manager, Nginx, external-dns, monitoring, and backup
+rollout actions, and writes `tenant-rollout-evidence.json`, `status.tsv`,
+`summary.md`, and `env-summary.txt` under
+`deploy/runtime/tenant-rollouts/<run-id>/`. It is dry-run-first; real
+infrastructure commands require both `--execute` and
+`CONFIRM_TENANT_ROLLOUT=YES`. Attach this directory to
+`TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package extracts it under
+`tenant_rollout_reviews`.
+
 ## Subscription Billing
 
 Subscriptions can generate draft Odoo customer invoices from the selected plan
@@ -1076,6 +1099,9 @@ TIJARA_OPS_STRICT=1 \
 TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT=1 \
 TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS=deploy/runtime/tenants/tijara_customer_001 \
 TIJARA_STAGING_RELEASE_TENANT_OPS_STRICT=1 \
+TIJARA_TENANT_ROLLOUT_ARTIFACTS=deploy/runtime/tenants/tijara_customer_001 \
+TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_PLATFORM=kubernetes \
+TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_REQUIRE_ALL_ARTIFACTS=1 \
 TIJARA_DEPLOYMENT_ENVIRONMENT_NAME=staging \
 TIJARA_BRANCH_POLICY_REF=github:protected-branches/main \
 TIJARA_DEPLOYMENT_APPROVERS="Release Owner,DevOps Owner" \
@@ -1202,8 +1228,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
   runbook, release retention, secret manager, secret runtime, tenant
-  operations, tenant smoke, deployment environment, load evidence, load profile matrix
-  evidence, and non-secret environment summaries for approvers.
+  operations, tenant smoke, tenant rollout, deployment environment, load
+  evidence, load profile matrix evidence, and non-secret environment summaries
+  for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -1232,7 +1259,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   reviews are included under `tenant_ops_reviews`; when tenant smoke evidence
   is attached, per-tenant endpoint execution, route counts, checklist coverage,
   and database-isolation header usage are included under
-  `tenant_smoke_reviews`; when deployment environment evidence is attached,
+  `tenant_smoke_reviews`; when tenant rollout evidence is attached, per-tenant
+  DNS, ingress, TLS, Nginx, monitoring, backup action status is included under
+  `tenant_rollout_reviews`; when deployment environment evidence is attached,
   approver, branch-policy, promotion, rollback,
   deployment-gate, monitoring, backup, change-ticket, and freeze-window reviews
   are included under `deployment_environment_reviews`.

@@ -4811,3 +4811,86 @@ Date: 2026-06-05
   available.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 69: Tenant Rollout Automation Evidence
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_tenant_rollout.py` as a dry-run-first tenant rollout
+  runner for tenant operations artifacts.
+- The runner validates tenant artifact completeness, blocks missing artifacts
+  in strict/required mode, and writes `tenant-rollout-evidence.json`,
+  `status.tsv`, `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/tenant-rollouts/<run-id>/`.
+- Added rollout action planning for Kubernetes ingress, cert-manager
+  certificates, external-dns records, Nginx snippets, Prometheus Blackbox
+  targets, and backup policy registration.
+- Real execution requires both `--execute` and
+  `CONFIRM_TENANT_ROLLOUT=YES`; default runs remain safe dry-runs for the
+  public repo and CI.
+- Added `make tenant-rollout` and `npm run tenant:rollout`.
+- Enhanced `scripts/run_operations_release_bundle.py` with an optional
+  `tenant-rollout` step that is automatically included when tenant rollout
+  artifacts are supplied.
+- Enhanced `scripts/generate_signoff_pack.py` to group tenant rollout evidence
+  as Operations, render a Tenant Rollout Evidence section, and expose
+  `tenant_rollout_reviews` in `release-readiness.json`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/run_tenant_rollout.py scripts/generate_signoff_pack.py
+  scripts/run_operations_release_bundle.py` passes.
+- Generated tenant operations artifacts under
+  `/private/tmp/tijara-tenant-rollout-artifacts/tijara_rollout_tenant`.
+- Strict Kubernetes tenant rollout dry-run passes:
+  `/private/tmp/tijara-tenant-rollout-ready/tenant-rollout-evidence.json`
+  records `decision=dry-run` and `ci_status=pass`.
+- Confirmed rollout evidence includes expected `kubectl apply`, external-dns,
+  artifact validation, and `tijara_rollout_tenant` action rows.
+- `make tenant-rollout` passes in warning mode when tenant artifacts are not
+  supplied.
+- `npm run tenant:rollout` passes in warning mode when tenant artifacts are not
+  supplied.
+- Generated a sign-off package from rollout evidence at
+  `/private/tmp/tijara-signoff-tenant-rollout`.
+- Confirmed `evidence-summary.md` includes Tenant Rollout Evidence.
+- Confirmed `release-readiness.json` includes `tenant_rollout_reviews` and is
+  `ready` for the focused rollout evidence run.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-tenant-rollout/release-readiness.json` passes.
+- Focused operations release bundle with `--checks tenant-rollout` passes in
+  strict mode and records `tenant-rollout: passed`.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+
+### Known Gaps
+
+- Tenant rollout can now produce executable DevOps action plans, but real
+  production rollout still needs selected infrastructure, DNS/TLS credentials,
+  cluster access, Nginx target paths, Prometheus target reload workflow, and
+  operator sign-off.
+- Production tenant smoke still needs reachable tenant URLs, DNS/TLS cutover,
+  seeded public display/queue/kiosk routes, and actual post-cutover execution.
+- Authenticated POS checkout/refund browser E2E still requires a staging POS
+  user and seeded POS register.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add staging/live tenant rollout execution profiles for Kubernetes and Nginx,
+  including command log retention and rollback references.
+- Add tenant rollout evidence requirements into production deployment gate once
+  rollout execution is available.
+- Continue authenticated POS checkout/refund/print E2E and real tenant smoke
+  execution when staging credentials are available.

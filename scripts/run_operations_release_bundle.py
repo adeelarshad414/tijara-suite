@@ -78,11 +78,13 @@ def _step_specs(args, output):
     matrix_dir = output / "load-profile-matrix"
     load_dir = output / "load-enterprise"
     smoke_dir = output / "production-smoke"
+    tenant_rollout_dir = output / "tenant-rollout"
     tenant_smoke_dir = output / "tenant-smoke"
     monitoring_dir = output / "monitoring-evidence"
     incident_dir = output / "incident-runbook"
     retention_dir = output / "release-retention"
     smoke_decision = smoke_dir / "smoke-decision.json"
+    tenant_rollout_evidence = tenant_rollout_dir / "tenant-rollout-evidence.json"
     tenant_smoke_evidence = tenant_smoke_dir / "tenant-smoke-evidence.json"
     monitoring_evidence = monitoring_dir / "monitoring-evidence.json"
 
@@ -142,6 +144,25 @@ def _step_specs(args, output):
                 args.target_environment,
                 "--output",
                 str(tenant_smoke_dir),
+            ],
+        },
+        "tenant-rollout": {
+            "label": "tenant-rollout",
+            "output": tenant_rollout_dir,
+            "manifest": tenant_rollout_evidence,
+            "command": [
+                sys.executable,
+                "scripts/run_tenant_rollout.py",
+                "--run-id",
+                args.run_id,
+                "--target-environment",
+                args.target_environment,
+                "--output",
+                str(tenant_rollout_dir),
+                "--platform",
+                args.tenant_rollout_platform,
+                "--minimum-tenants",
+                str(args.tenant_rollout_minimum_tenants),
             ],
         },
         "monitoring": {
@@ -206,12 +227,14 @@ def _step_specs(args, output):
         specs["incident"]["command"].append("--strict")
         specs["retention"]["command"].append("--strict")
         specs["tenant-smoke"]["command"].append("--strict")
+        specs["tenant-rollout"]["command"].append("--strict")
         specs["load-enterprise"]["env"]["TIJARA_LOAD_STRICT"] = "1"
     else:
         specs["smoke"]["command"].append("--non-strict")
         specs["monitoring"]["command"].append("--non-strict")
         specs["retention"]["command"].append("--non-strict")
         specs["tenant-smoke"]["command"].append("--non-strict")
+        specs["tenant-rollout"]["command"].append("--non-strict")
         specs["load-enterprise"]["env"]["TIJARA_LOAD_STRICT"] = "0"
 
     smoke_base_url = args.smoke_base_url or args.base_url
@@ -223,6 +246,16 @@ def _step_specs(args, output):
 
     for tenant_artifact in args.tenant_artifact:
         specs["tenant-smoke"]["command"].extend(["--tenant-artifact", tenant_artifact])
+    for tenant_artifact in args.tenant_rollout_artifact:
+        specs["tenant-rollout"]["command"].extend(["--tenant-artifact", tenant_artifact])
+    if args.tenant_rollout_require_all_artifacts:
+        specs["tenant-rollout"]["command"].append("--require-all-artifacts")
+    if args.tenant_rollout_nginx_available_dir:
+        specs["tenant-rollout"]["command"].extend(["--nginx-available-dir", args.tenant_rollout_nginx_available_dir])
+    if args.tenant_rollout_nginx_enabled_dir:
+        specs["tenant-rollout"]["command"].extend(["--nginx-enabled-dir", args.tenant_rollout_nginx_enabled_dir])
+    if args.tenant_rollout_prometheus_target_dir:
+        specs["tenant-rollout"]["command"].extend(["--prometheus-target-dir", args.tenant_rollout_prometheus_target_dir])
     for tenant_base_url in args.tenant_base_url:
         specs["tenant-smoke"]["command"].extend(["--tenant-base-url", tenant_base_url])
     for tenant_route in args.tenant_route:
@@ -255,6 +288,8 @@ def _step_specs(args, output):
 
     if monitoring_evidence.is_file() or "monitoring" in args.checks:
         specs["incident"]["command"].extend(["--monitoring-reference", str(monitoring_evidence)])
+    if tenant_rollout_evidence.is_file() or "tenant-rollout" in args.checks:
+        specs["retention"]["command"].extend(["--evidence-path", str(tenant_rollout_dir)])
     return specs
 
 
@@ -368,6 +403,16 @@ def main():
         item for item in str(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_SMOKE_ARTIFACTS") or os.environ.get("TIJARA_TENANT_SMOKE_ARTIFACTS") or "").split(",")
         if item.strip()
     ])
+    parser.add_argument("--tenant-rollout-artifact", action="append", default=[
+        item for item in str(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_ARTIFACTS") or os.environ.get("TIJARA_TENANT_ROLLOUT_ARTIFACTS") or os.environ.get("TIJARA_TENANT_OPS_ARTIFACTS") or "").split(",")
+        if item.strip()
+    ])
+    parser.add_argument("--tenant-rollout-platform", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_PLATFORM") or os.environ.get("TIJARA_TENANT_ROLLOUT_PLATFORM", "manifest"))
+    parser.add_argument("--tenant-rollout-minimum-tenants", type=int, default=int(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_MINIMUM_TENANTS", os.environ.get("TIJARA_TENANT_ROLLOUT_MINIMUM_TENANTS", "1"))))
+    parser.add_argument("--tenant-rollout-require-all-artifacts", action="store_true", default=_truthy(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_REQUIRE_ALL_ARTIFACTS") or os.environ.get("TIJARA_TENANT_ROLLOUT_REQUIRE_ALL_ARTIFACTS")))
+    parser.add_argument("--tenant-rollout-nginx-available-dir", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_NGINX_AVAILABLE_DIR") or os.environ.get("TIJARA_TENANT_ROLLOUT_NGINX_AVAILABLE_DIR", ""))
+    parser.add_argument("--tenant-rollout-nginx-enabled-dir", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_NGINX_ENABLED_DIR") or os.environ.get("TIJARA_TENANT_ROLLOUT_NGINX_ENABLED_DIR", ""))
+    parser.add_argument("--tenant-rollout-prometheus-target-dir", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_PROMETHEUS_TARGET_DIR") or os.environ.get("TIJARA_TENANT_ROLLOUT_PROMETHEUS_TARGET_DIR", ""))
     parser.add_argument("--tenant-base-url", action="append", default=[
         item for item in str(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_SMOKE_BASE_URLS") or os.environ.get("TIJARA_TENANT_SMOKE_BASE_URLS") or "").split(",")
         if item.strip()
@@ -392,7 +437,9 @@ def main():
     requested = list(dict.fromkeys(args.checks))
     if args.tenant_artifact and "tenant-smoke" not in requested:
         requested.append("tenant-smoke")
-    canonical_order = ["load-matrix", "load-enterprise", "smoke", "tenant-smoke", "monitoring", "incident", "retention"]
+    if args.tenant_rollout_artifact and "tenant-rollout" not in requested:
+        requested.append("tenant-rollout")
+    canonical_order = ["load-matrix", "load-enterprise", "smoke", "tenant-rollout", "tenant-smoke", "monitoring", "incident", "retention"]
     args.checks = [check for check in canonical_order if check in requested] + [
         check for check in requested if check not in canonical_order
     ]
@@ -478,6 +525,9 @@ def main():
             "base_url=%s" % (args.base_url or "<unset>"),
             "smoke_base_url=%s" % (args.smoke_base_url or "<unset>"),
             "tenant_smoke_artifacts=%s" % (",".join(args.tenant_artifact) or "<unset>"),
+            "tenant_rollout_artifacts=%s" % (",".join(args.tenant_rollout_artifact) or "<unset>"),
+            "tenant_rollout_platform=%s" % (args.tenant_rollout_platform or "<unset>"),
+            "tenant_rollout_require_all_artifacts=%s" % int(args.tenant_rollout_require_all_artifacts),
             "tenant_smoke_base_urls=%s" % (",".join(args.tenant_base_url) or "<unset>"),
             "tenant_smoke_routes=%s" % (",".join(args.tenant_smoke_route) or "<unset>"),
             "tenant_smoke_skip_monitoring=%s" % int(args.tenant_smoke_skip_monitoring),

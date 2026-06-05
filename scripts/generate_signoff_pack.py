@@ -388,6 +388,7 @@ def _evidence_group(entry):
         or "deployment-environment-evidence" in relative_lower
         or "deployment-environments" in relative_lower
         or "tenant-ops-evidence" in relative_lower
+        or "tenant-rollout" in relative_lower
         or "tenant-smoke" in relative_lower
         or "tenant-ops" in relative_lower
         or "deploy/runtime/tenants/" in relative_lower
@@ -399,6 +400,7 @@ def _evidence_group(entry):
         or filename == "release-retention-evidence.json"
         or filename == "deployment-environment-evidence.json"
         or filename == "tenant-ops-evidence.json"
+        or filename == "tenant-rollout-evidence.json"
         or filename == "tenant-smoke-evidence.json"
         or filename == "ops-manifest.json"
     ):
@@ -1002,6 +1004,55 @@ def _tenant_smoke_reviews(evidence_entries):
     return reviews
 
 
+def _tenant_rollout_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "tenant-rollout-evidence.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        tenant_reviews = []
+        for tenant in payload.get("tenants") or []:
+            action_statuses = {}
+            for action in tenant.get("actions") or []:
+                status = action.get("status", "") or "unknown"
+                action_statuses[status] = action_statuses.get(status, 0) + 1
+            tenant_reviews.append(
+                {
+                    "tenant_db": tenant.get("tenant_db", ""),
+                    "domain": tenant.get("domain", ""),
+                    "decision": tenant.get("decision", ""),
+                    "ci_status": tenant.get("ci_status", ""),
+                    "dry_run_count": tenant.get("dry_run_count", action_statuses.get("dry-run", 0)),
+                    "executed_count": tenant.get("executed_count", action_statuses.get("executed", 0)),
+                    "failed_count": tenant.get("failed_count", action_statuses.get("failed", 0)),
+                    "action_statuses": action_statuses,
+                    "blockers": tenant.get("blockers") or [],
+                    "warnings": tenant.get("warnings") or [],
+                }
+            )
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "target_environment": context.get("target_environment", ""),
+                "platform": context.get("platform") or context.get("provider", ""),
+                "strict": bool(context.get("strict")),
+                "execute": bool(context.get("execute")),
+                "require_all_artifacts": bool(context.get("require_all_artifacts")),
+                "tenant_count": context.get("tenant_count", len(tenant_reviews)),
+                "minimum_tenants": context.get("minimum_tenants", 0),
+                "tenants": tenant_reviews,
+                "action_count": len(payload.get("actions") or []),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -1021,6 +1072,7 @@ def _evidence_summary(context, evidence_entries):
     deployment_environment_reviews = _deployment_environment_reviews(evidence_entries)
     tenant_ops_reviews = _tenant_ops_reviews(evidence_entries)
     tenant_smoke_reviews = _tenant_smoke_reviews(evidence_entries)
+    tenant_rollout_reviews = _tenant_rollout_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -1482,6 +1534,39 @@ def _evidence_summary(context, evidence_entries):
     if not tenant_smoke_lines:
         tenant_smoke_lines = ["- No `tenant-smoke-evidence.json` files were attached.", ""]
 
+    tenant_rollout_lines = []
+    for review in tenant_rollout_reviews:
+        tenant_rollout_lines.append("### `%s`" % review["path"])
+        tenant_rollout_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        tenant_rollout_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        tenant_rollout_lines.append(
+            "- Target/platform/strict/execute/tenants/minimum/actions: %s/%s/%s/%s/%s/%s/%s"
+            % (
+                review["target_environment"] or "unset",
+                review["platform"] or "unset",
+                "yes" if review["strict"] else "no",
+                "yes" if review["execute"] else "no",
+                review["tenant_count"],
+                review["minimum_tenants"],
+                review["action_count"],
+            )
+        )
+        for tenant in review["tenants"]:
+            tenant_rollout_lines.append(
+                "- `%s`: decision=%s, domain=%s, dry-run/executed/failed=%s/%s/%s"
+                % (
+                    tenant["tenant_db"] or "unknown",
+                    tenant["decision"] or "unknown",
+                    tenant["domain"] or "unset",
+                    tenant["dry_run_count"],
+                    tenant["executed_count"],
+                    tenant["failed_count"],
+                )
+            )
+        tenant_rollout_lines.append("")
+    if not tenant_rollout_lines:
+        tenant_rollout_lines = ["- No `tenant-rollout-evidence.json` files were attached.", ""]
+
     deployment_environment_lines = []
     for review in deployment_environment_reviews:
         deployment_environment_lines.append("### `%s`" % review["path"])
@@ -1584,6 +1669,9 @@ def _evidence_summary(context, evidence_entries):
 ## Tenant Smoke Evidence
 
 {chr(10).join(tenant_smoke_lines)}
+## Tenant Rollout Evidence
+
+{chr(10).join(tenant_rollout_lines)}
 ## Deployment Environment Evidence
 
 {chr(10).join(deployment_environment_lines)}
@@ -1617,6 +1705,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     deployment_environment_reviews = _deployment_environment_reviews(evidence_entries)
     tenant_ops_reviews = _tenant_ops_reviews(evidence_entries)
     tenant_smoke_reviews = _tenant_smoke_reviews(evidence_entries)
+    tenant_rollout_reviews = _tenant_rollout_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -1814,6 +1903,26 @@ def _release_readiness(context, evidence_entries, group_counts):
                     % (tenant_label, review["path"], tenant.get("decision"))
                 )
 
+    for review in tenant_rollout_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Tenant rollout evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Tenant rollout evidence %s is %s" % (review["path"], review["decision"]))
+        for tenant in review.get("tenants") or []:
+            tenant_decision = str(tenant.get("decision") or "").lower()
+            tenant_label = tenant.get("tenant_db") or "unknown"
+            if tenant_decision in {"failed", "blocked"}:
+                blockers.append(
+                    "Tenant rollout %s in %s is %s"
+                    % (tenant_label, review["path"], tenant.get("decision"))
+                )
+            elif tenant_decision in {"warning", "warn"}:
+                warnings.append(
+                    "Tenant rollout %s in %s is %s"
+                    % (tenant_label, review["path"], tenant.get("decision"))
+                )
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -1854,6 +1963,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "deployment_environment_reviews": deployment_environment_reviews,
         "tenant_ops_reviews": tenant_ops_reviews,
         "tenant_smoke_reviews": tenant_smoke_reviews,
+        "tenant_rollout_reviews": tenant_rollout_reviews,
     }
 
 
