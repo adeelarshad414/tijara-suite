@@ -423,6 +423,7 @@ def _evidence_group(entry):
         or filename == "operations-release-bundle.json"
         or filename == "production-ops-readiness.json"
         or filename == "ops-tool-evidence.json"
+        or filename == "ops-evidence.json"
         or filename == "protected-runbook-handoff.json"
         or filename == "protected-first-run-checklist.json"
         or filename == "protected-post-run-verification.json"
@@ -858,6 +859,38 @@ def _monitoring_reviews(evidence_entries):
                 "deployment_decision_attached": bool(refs.get("deployment_decision")),
                 "rollback_decision_attached": bool(refs.get("rollback_decision")),
                 "check_count": len(payload.get("checks") or []),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
+def _ops_harness_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "ops-evidence.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        counts = payload.get("counts") or {}
+        checks = payload.get("checks") or []
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "requested_checks": context.get("requested_checks") or [],
+                "required_checks": context.get("required_checks") or [],
+                "strict": bool(context.get("strict")),
+                "passed": counts.get("passed", 0),
+                "failed": counts.get("failed", 0),
+                "skipped": counts.get("skipped", 0),
+                "warning": counts.get("warning", 0),
+                "check_count": len(checks),
+                "failed_checks": [row.get("name", "") for row in checks if row.get("status") == "failed"],
+                "skipped_checks": [row.get("name", "") for row in checks if row.get("status") == "skipped"],
                 "blockers": payload.get("blockers") or [],
                 "warnings": payload.get("warnings") or [],
             }
@@ -1393,6 +1426,7 @@ def _evidence_summary(context, evidence_entries):
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
+    ops_harness_reviews = _ops_harness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
@@ -1756,6 +1790,33 @@ def _evidence_summary(context, evidence_entries):
         e2e_readiness_lines.append("")
     if not e2e_readiness_lines:
         e2e_readiness_lines = ["- No `e2e-readiness.json` files were attached.", ""]
+
+    ops_harness_lines = []
+    for review in ops_harness_reviews:
+        ops_harness_lines.append("### `%s`" % review["path"])
+        ops_harness_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        ops_harness_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        ops_harness_lines.append(
+            "- Requested/required/strict: %s/%s/%s"
+            % (
+                ",".join(review["requested_checks"]) or "none",
+                ",".join(review["required_checks"]) or "none",
+                "yes" if review["strict"] else "no",
+            )
+        )
+        ops_harness_lines.append(
+            "- Counts passed/failed/skipped/warning: %s/%s/%s/%s"
+            % (review["passed"], review["failed"], review["skipped"], review["warning"])
+        )
+        ops_harness_lines.append(
+            "- Failed checks: %s" % (", ".join(review["failed_checks"]) or "none")
+        )
+        ops_harness_lines.append(
+            "- Skipped checks: %s" % (", ".join(review["skipped_checks"]) or "none")
+        )
+        ops_harness_lines.append("")
+    if not ops_harness_lines:
+        ops_harness_lines = ["- No `ops-evidence.json` files were attached.", ""]
 
     monitoring_lines = []
     for review in monitoring_reviews:
@@ -2289,6 +2350,10 @@ def _evidence_summary(context, evidence_entries):
 ## Browser E2E Readiness Evidence
 
 {chr(10).join(e2e_readiness_lines)}
+
+## Operations Harness Evidence
+
+{chr(10).join(ops_harness_lines)}
 ## Monitoring Evidence
 
 {chr(10).join(monitoring_lines)}
@@ -2355,6 +2420,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
+    ops_harness_reviews = _ops_harness_reviews(evidence_entries)
     monitoring_reviews = _monitoring_reviews(evidence_entries)
     incident_runbook_reviews = _incident_runbook_reviews(evidence_entries)
     load_reviews = _load_reviews(evidence_entries)
@@ -2676,6 +2742,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "e2e_profile_reviews": e2e_profile_reviews,
         "e2e_execution_reviews": e2e_execution_reviews,
         "e2e_readiness_reviews": e2e_readiness_reviews,
+        "ops_harness_reviews": ops_harness_reviews,
         "monitoring_reviews": monitoring_reviews,
         "incident_runbook_reviews": incident_runbook_reviews,
         "load_reviews": load_reviews,

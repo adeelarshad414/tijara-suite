@@ -26,6 +26,7 @@ INTERESTING_JSON_NAMES = {
     "e2e-seed-evidence.json",
     "staging-e2e-profile.json",
     "ops-tool-evidence.json",
+    "ops-evidence.json",
     "operations-release-bundle.json",
     "monitoring-evidence.json",
     "incident-runbook-evidence.json",

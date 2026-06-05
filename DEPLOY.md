@@ -738,9 +738,23 @@ TIJARA_OPS_CHECKS=full TIJARA_RESTORE_DRILL_BACKUP=deploy/runtime/backups/latest
 ```
 
 The harness writes per-check logs, status, environment summary, and a Markdown
-summary under `deploy/runtime/ops-evidence/<run-id>/`. Set
-`TIJARA_OPS_STRICT=1` when skipped checks, missing tools, or missing backup paths
-should fail the release drill.
+summary under `deploy/runtime/ops-evidence/<run-id>/`, plus a machine-readable
+`ops-evidence.json` manifest. The harness exits non-zero when any status row is
+failed. Set `TIJARA_OPS_STRICT=1` when skipped checks, missing tools, or missing
+backup paths should fail the release drill. Set `TIJARA_OPS_REQUIRED_CHECKS` to
+force specific checks to run and pass even in non-strict mode:
+
+```bash
+TIJARA_OPS_CHECKS=monitoring,restore,load,dependency,container \
+TIJARA_OPS_REQUIRED_CHECKS=monitoring,restore,load,dependency,container \
+TIJARA_RESTORE_DRILL_BACKUP=deploy/runtime/backups/latest.dump \
+make ops-staging
+```
+
+Attach the whole `deploy/runtime/ops-evidence/<run-id>/` folder to sign-off.
+`ops-evidence.json` is extracted into `ops_harness_reviews` with requested
+checks, required checks, pass/fail/skipped/warning counts, and failed/skipped
+check names.
 When `load` is included, the harness writes `k6-load-summary.json`, runs
 `scripts/export_load_evidence.py`, and stores structured load evidence under
 `deploy/runtime/ops-evidence/<run-id>/load-evidence/` so release sign-off can

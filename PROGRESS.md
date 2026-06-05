@@ -7981,3 +7981,78 @@ Status: Complete
   and offline POS pilot proof against real staging infrastructure.
 - Add provider/device-specific certification result mapping once real PSP, FBR,
   and hardware evidence is available.
+
+## Iteration 110: Staging Operations Harness Enforcement
+
+Status: Complete
+
+### Scope
+
+- Harden grouped staging operations evidence so monitoring, restore, load,
+  dependency, and container drills produce machine-checkable root evidence and
+  failed rows actually block the harness command.
+
+### Completed
+
+- Enhanced `scripts/run_staging_ops_checks.sh`.
+- The harness now writes `ops-evidence.json` alongside `summary.md`,
+  `status.tsv`, and `env-summary.txt`.
+- The harness now exits non-zero when any status row is failed.
+- Replaced internal `bash -lc` command execution with `bash -c` so operator
+  PATH/toolchain settings are honored instead of being reset by a login shell.
+- Added `TIJARA_OPS_REQUIRED_CHECKS`; required checks must execute and pass even
+  in non-strict mode.
+- Added requested/required check coverage, counts, blockers, warnings, and
+  structured check rows to the root manifest.
+- Added `ops-evidence.json` recognition to protected artifact summary and
+  sign-off package classification.
+- Added `ops_harness_reviews` to `release-readiness.json` and an Operations
+  Harness section to `evidence-summary.md`.
+- Updated `README.md` and `DEPLOY.md` with required-check and manifest
+  guidance.
+
+### Validation
+
+- `bash -n scripts/run_staging_ops_checks.sh` passes.
+- Optional container-scan fixture without Trivy exits `0`, writes
+  `decision=warning`, `ci_status=pass_with_warnings`, and records one skipped
+  row.
+- Required restore fixture with only dependency requested exits `1`, writes
+  `decision=failed`, `ci_status=fail`, and records
+  `required-restore-drill` as failed.
+- Strict restore fixture without a backup path exits `1`.
+- Dependency-only required fixture with external audit tools hidden from PATH
+  exits `0`, writes `decision=passed`, `ci_status=pass`, and records one passed
+  row.
+- Sign-off fixture over the passing ops harness writes `ops_harness_reviews`
+  in `release-readiness.json` and an Operations Harness Evidence section in
+  `evidence-summary.md`.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/generate_signoff_pack.py scripts/export_protected_artifact_summary.py`
+  passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- Real full-scope operations evidence still needs a live staging target,
+  restore backup artifact, k6 network access, Trivy, npm audit, optional
+  pip-audit, monitoring endpoints, and hardware bridge access.
+- The passing dependency fixture intentionally hides network audit tools to
+  validate harness behavior under restricted local networking; production must
+  run real dependency/container scans on the protected runner.
+
+### Next Iteration
+
+- Add live staging protected-run evidence once the self-hosted runner, URLs,
+  credentials, and artifacts are available.
+- Continue hardening monitoring, restore drills, load testing, security scans,
+  and offline POS pilot proof against real staging infrastructure.
+- Add provider/device-specific certification result mapping once real PSP, FBR,
+  and hardware evidence is available.
