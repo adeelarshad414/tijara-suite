@@ -367,8 +367,8 @@ The detailed policy and dependency intake checklist are maintained in
   certification manifest examples. The protected job now emits an operator
   handoff runbook, a first-run checklist, a redacted runner preflight evidence
   report, and a protected Browser E2E handoff report before executing strict
-  release gates, then writes one protected artifact summary for release-owner
-  review.
+  release gates. After the readiness gate, it verifies protected post-run
+  evidence and writes one protected artifact summary for release-owner review.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load
@@ -427,6 +427,11 @@ The detailed policy and dependency intake checklist are maintained in
   secret-backed auth headers, and mandatory PSP/FBR/hardware certification
   inputs under
   `deploy/runtime/protected-runner-preflight/`.
+- `scripts/export_protected_post_run_verification.py` and
+  `make protected-post-run-verification` scan protected evidence folders after
+  a run, verify required artifact presence, failed/warning `status.tsv` rows,
+  JSON decisions, and `release-readiness.json`, and write a final artifact
+  health report under `deploy/runtime/protected-post-run-verification/`.
 - `scripts/export_protected_artifact_summary.py` and
   `make protected-artifact-summary` scan protected evidence folders and write a
   release-owner index of failed/warning status rows, decisions, and artifact

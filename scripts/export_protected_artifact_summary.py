@@ -267,6 +267,7 @@ def main():
             "deploy/runtime/secret-manager-evidence/%s" % args.run_id,
             "deploy/runtime/production-ops-readiness/%s" % args.run_id,
             "deploy/runtime/signoff-packages/%s" % args.run_id,
+            "deploy/runtime/protected-post-run-verification/%s" % args.run_id,
         ]
 
     labels = {}

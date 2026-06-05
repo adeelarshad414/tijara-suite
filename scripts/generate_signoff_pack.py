@@ -400,6 +400,7 @@ def _evidence_group(entry):
         or "ops-tool-evidence" in relative_lower
         or "protected-runbook-handoff" in relative_lower
         or "protected-first-run" in relative_lower
+        or "protected-post-run-verification" in relative_lower
         or "protected-runner-preflight" in relative_lower
         or "release-retention-evidence" in relative_lower
         or "deployment-environment-evidence" in relative_lower
@@ -418,6 +419,7 @@ def _evidence_group(entry):
         or filename == "ops-tool-evidence.json"
         or filename == "protected-runbook-handoff.json"
         or filename == "protected-first-run-checklist.json"
+        or filename == "protected-post-run-verification.json"
         or filename == "protected-runner-preflight.json"
         or filename == "release-retention-evidence.json"
         or filename == "deployment-environment-evidence.json"

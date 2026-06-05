@@ -21,6 +21,7 @@ DEFAULT_ARTIFACTS = [
     "secret-manager-evidence",
     "production-ops-readiness",
     "signoff-packages",
+    "protected-post-run-verification",
     "protected-artifact-summary",
 ]
 

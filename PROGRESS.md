@@ -6650,3 +6650,86 @@ Date: 2026-06-05
   Alertmanager, and Grafana credentials are available on the protected runner.
 - Continue hardening live PSP/FBR adapters and offline POS sync conflict
   handling when live provider/staging systems are available.
+
+## Iteration 94: Protected Post-Run Evidence Verifier
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_post_run_verification.py` to scan protected
+  evidence folders after a staging/production protected run.
+- The verifier checks required artifact folder presence, failed/warning
+  `status.tsv` rows, JSON `decision`/`ci_status` values, and the final
+  `release-readiness.json` decision.
+- The verifier writes `protected-post-run-verification.json`,
+  `evidence-overview.md`, `status.tsv`, `env-summary.txt`, and `summary.md`
+  under `deploy/runtime/protected-post-run-verification/`.
+- Added `make protected-post-run-verification`.
+- Wired `.github/workflows/tijara-ci.yml` to run post-run verification with
+  `if: always()` after the protected readiness gate and before protected
+  artifact summary generation.
+- Added post-run verification evidence to protected artifact uploads and
+  protected artifact summary defaults.
+- Updated `scripts/export_protected_first_run_checklist.py` so
+  `protected-post-run-verification` is part of the expected protected artifact
+  set.
+- Classified `protected-post-run-verification` as Operations evidence in
+  `scripts/generate_signoff_pack.py`.
+- Updated `deploy/config/github-protected-vars.example`, `README.md`, and
+  `DEPLOY.md` with post-run verifier controls and guidance.
+
+### Validation
+
+- Created a local protected evidence fixture under
+  `/private/tmp/tijara-post-run-root`.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_post_run_verification.py
+  scripts/export_protected_runbook_handoff.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_artifact_summary.py
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes `TIJARA_POST_RUN_REQUIRED_ARTIFACTS`.
+- Strict ready post-run fixture writes `decision=passed` and `ci_status=pass`.
+- Strict missing-artifact fixture writes `decision=failed` and
+  `ci_status=fail`.
+- Secret-like metadata fixture with `access_token` is rejected.
+- Ready verifier output records release readiness `decision=ready` and zero
+  blockers.
+- Protected artifact summary over post-run verifier evidence writes
+  `decision=passed`.
+- Sign-off package with post-run verifier evidence classifies it as Operations
+  evidence and passes release readiness.
+- `make protected-post-run-verification` passes against the local fixture root.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` or probe server process remains running.
+
+### Known Gaps
+
+- The verifier is ready for a protected evidence bundle, but it still needs a
+  real self-hosted `tijara-protected` runner execution to verify uploaded
+  staging/production artifacts.
+- GitHub artifact direct URLs and artifact IDs still require real GitHub
+  Actions run metadata or GitHub API enrichment after upload.
+- Live Odoo RBAC/login, hardware bridge signed jobs, monitoring alert routing,
+  PSP/FBR certification, physical hardware proof, offline POS sync, and
+  production operations drills remain external production blockers.
+
+### Next Iteration
+
+- Add GitHub artifact metadata enrichment for protected runs, using optional
+  `gh api`/Actions context to record artifact IDs, URLs, and retention expiry
+  in the protected artifact summary or post-run verifier.
+- Add deeper authenticated service checks once real Odoo, bridge, Prometheus,
+  Alertmanager, and Grafana credentials are available on the protected runner.
+- Continue hardening live PSP/FBR adapters and offline POS sync conflict
+  handling when live provider/staging systems are available.

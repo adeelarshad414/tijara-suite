@@ -1064,7 +1064,9 @@ restore, security, dependency, container, npm audit, and k6 outputs under
 evidence, collects strict PSP/FBR/hardware certification evidence when the
 matching `TIJARA_CERT_*` variables are configured, exports retention and
 secret-manager evidence, runs strict production operations readiness, generates
-the protected sign-off package, and checks `release-readiness.json`. Evidence is
+the protected sign-off package, checks `release-readiness.json`, and exports a
+post-run evidence verifier under
+`deploy/runtime/protected-post-run-verification/<run-id>/`. Evidence is
 uploaded as
 `tijara-protected-release-evidence-<environment>-<run>`. If a strict evidence
 step fails, the job still tries to build the final sign-off package so the
@@ -1140,6 +1142,23 @@ When `TIJARA_PROTECTED_CERTIFICATION_GROUPS` includes `psp`, `fbr`, or
 `TIJARA_FIRST_RUN_TAX_OWNER`, and `TIJARA_FIRST_RUN_HARDWARE_OWNER`
 respectively. The manifest rejects secret-like metadata keys and records only
 owner names, refs, labels, expected artifact groups, and checklist decisions.
+
+After a protected run, verify the final artifact folders before release-owner
+review:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_post_run_verification.py \
+  --output deploy/runtime/protected-post-run-verification/2026-06-05-rc1 \
+  --strict
+```
+
+The verifier checks required artifact folders, failed/warning `status.tsv`
+rows, JSON `decision`/`ci_status` values, and
+`deploy/runtime/signoff-packages/<run-id>/release-readiness.json`. It writes
+`protected-post-run-verification.json`, `evidence-overview.md`, `status.tsv`,
+`env-summary.txt`, and `summary.md`.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:
