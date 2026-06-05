@@ -5673,3 +5673,68 @@ Date: 2026-06-05
   manager access.
 - Continue toward live staging E2E execution when Odoo URL, credentials,
   seeded POS config, and hardware bridge are available.
+
+## Iteration 80: CI/CD Release Evidence Workflow Wiring
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `.github/workflows/tijara-ci.yml` so the public CI baseline now
+  generates Browser E2E readiness evidence.
+- Added warning-mode production operations readiness evidence into CI using the
+  release retention, secret-manager, backup, restore, security-audit, and
+  dependency-scan references available in the public runner.
+- CI sign-off evidence paths now include release evidence, Browser E2E
+  readiness evidence, release retention evidence, secret-manager evidence, and
+  production operations readiness evidence.
+- CI required evidence groups now include `release,e2e,ops,security`.
+- CI artifact upload now includes `deploy/runtime/e2e-evidence/ci-local` and
+  `deploy/runtime/production-ops-readiness/ci-local`.
+- Updated `README.md` and `DEPLOY.md` so the public CI warning-mode behavior and
+  artifact list are documented.
+- Documented `production_ops_readiness_reviews` in the sign-off package output
+  description.
+
+### Validation
+
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Local CI-equivalent smoke passes under `/private/tmp/tijara-ci-workflow-smoke`:
+  release candidate, release retention, secret-manager, Browser E2E readiness,
+  production operations readiness, sign-off package, and release-readiness
+  checker all execute successfully.
+- The CI-equivalent release readiness decision is `warning` with
+  `ci_status=pass_with_warnings`, because public CI intentionally lacks live
+  production operations evidence for monitoring, restore drills, load,
+  secret-runtime, deployment environment, tenant ops, and container scanning.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- Public CI still proves only repository-local release readiness. It does not
+  run live staging browser tests, Odoo transaction tests, k6 enterprise load,
+  restore drills, Trivy scans, or production secret-runtime probes.
+- The production operations readiness evidence is warning-mode in public CI by
+  design; a protected staging or production runner must run it with
+  `--strict --fail-on-warning`.
+- FBR, PSP, physical hardware certification, and live POS checkout/refund/print
+  browser evidence remain production blockers until real external systems are
+  available.
+
+### Next Iteration
+
+- Add adapters for real security, load, and restore evidence outputs so the
+  protected runner can attach tool results without manual references.
+- Add a staging/protected-runner workflow profile for strict production
+  operations readiness once secrets, backup artifacts, k6, Trivy, and live URLs
+  are available.
+- Continue toward live staging E2E execution when Odoo URL, credentials, seeded
+  POS config, and hardware bridge are available.

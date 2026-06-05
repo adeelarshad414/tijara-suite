@@ -55,12 +55,34 @@ jobs:
             --secret-rotation-policy-ref docs:DEPLOY.md#secret-handling \
             --secret-access-review-ref docs:DEPLOY.md#secret-handling \
             --strict
+      - name: Local Browser E2E readiness evidence
+        run: |
+          python3 scripts/export_e2e_readiness.py \
+            --run-id ci-local \
+            --scope ci-browser-baseline \
+            --base-url http://localhost:8069 \
+            --output deploy/runtime/e2e-evidence/ci-local \
+            --spec tests/e2e/pos-checkout-print.spec.mjs \
+            --spec tests/e2e/refunds-reports.spec.mjs \
+            --spec tests/e2e/pos-enterprise-journey.spec.mjs
+      - name: Local production operations readiness evidence
+        run: |
+          python3 scripts/export_production_ops_readiness.py \
+            --run-id ci-local \
+            --target-environment ci \
+            --output deploy/runtime/production-ops-readiness/ci-local \
+            --release-retention-evidence deploy/runtime/release-retention-evidence/ci-local/release-retention-evidence.json \
+            --secret-manager-evidence deploy/runtime/secret-manager-evidence/ci-local/secret-manager-evidence.json \
+            --backup-artifact-ref github-actions:tijara-ci/no-production-backup \
+            --restore-drill-ref github-actions:tijara-ci/no-production-restore \
+            --security-audit-ref github-actions:tijara-ci/security-audit \
+            --dependency-scan-ref github-actions:tijara-ci/dependency-scan
       - name: Generate CI sign-off package
         run: |
           TIJARA_SIGNOFF_RUN_ID=ci-local \
           TIJARA_SIGNOFF_ENVIRONMENT=ci \
-          TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local,deploy/runtime/release-retention-evidence/ci-local,deploy/runtime/secret-manager-evidence/ci-local \
-          TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,ops,security \
+          TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local,deploy/runtime/e2e-evidence/ci-local,deploy/runtime/release-retention-evidence/ci-local,deploy/runtime/secret-manager-evidence/ci-local,deploy/runtime/production-ops-readiness/ci-local \
+          TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,security \
           TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
           make signoff-pack
       - name: Check CI release readiness
@@ -74,6 +96,8 @@ jobs:
           if-no-files-found: error
           path: |
             deploy/runtime/release-evidence/ci-local
+            deploy/runtime/e2e-evidence/ci-local
             deploy/runtime/release-retention-evidence/ci-local
             deploy/runtime/secret-manager-evidence/ci-local
+            deploy/runtime/production-ops-readiness/ci-local
             deploy/runtime/signoff-packages/ci-local

@@ -950,24 +950,46 @@ python3 scripts/export_secret_manager_evidence.py \
   --secret-rotation-policy-ref docs:DEPLOY.md#secret-handling \
   --secret-access-review-ref docs:DEPLOY.md#secret-handling \
   --strict
+python3 scripts/export_e2e_readiness.py \
+  --run-id ci-local \
+  --scope ci-browser-baseline \
+  --base-url http://localhost:8069 \
+  --output deploy/runtime/e2e-evidence/ci-local \
+  --spec tests/e2e/pos-checkout-print.spec.mjs \
+  --spec tests/e2e/refunds-reports.spec.mjs \
+  --spec tests/e2e/pos-enterprise-journey.spec.mjs
+python3 scripts/export_production_ops_readiness.py \
+  --run-id ci-local \
+  --target-environment ci \
+  --output deploy/runtime/production-ops-readiness/ci-local \
+  --release-retention-evidence deploy/runtime/release-retention-evidence/ci-local/release-retention-evidence.json \
+  --secret-manager-evidence deploy/runtime/secret-manager-evidence/ci-local/secret-manager-evidence.json \
+  --backup-artifact-ref github-actions:tijara-ci/no-production-backup \
+  --restore-drill-ref github-actions:tijara-ci/no-production-restore \
+  --security-audit-ref github-actions:tijara-ci/security-audit \
+  --dependency-scan-ref github-actions:tijara-ci/dependency-scan
 TIJARA_SIGNOFF_RUN_ID=ci-local \
 TIJARA_SIGNOFF_ENVIRONMENT=ci \
-TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local,deploy/runtime/release-retention-evidence/ci-local,deploy/runtime/secret-manager-evidence/ci-local \
-TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,ops,security \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/ci-local,deploy/runtime/e2e-evidence/ci-local,deploy/runtime/release-retention-evidence/ci-local,deploy/runtime/secret-manager-evidence/ci-local,deploy/runtime/production-ops-readiness/ci-local \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,security \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/ci-local/release-readiness.json
 ```
 
 The workflow uploads `deploy/runtime/release-evidence/ci-local`,
+`deploy/runtime/e2e-evidence/ci-local`,
 `deploy/runtime/release-retention-evidence/ci-local`,
-`deploy/runtime/secret-manager-evidence/ci-local`, and
+`deploy/runtime/secret-manager-evidence/ci-local`,
+`deploy/runtime/production-ops-readiness/ci-local`, and
 `deploy/runtime/signoff-packages/ci-local` as the
 `tijara-ci-release-evidence` artifact with `retention-days: 30` and
 `if-no-files-found: error`. This is not a substitute for staging release
 evidence, but it prevents PRs from merging with a broken local release gate,
 malformed readiness package, missing CI artifact retention evidence, or missing
-runtime secret-manager evidence.
+runtime secret-manager evidence. The public CI production-ops readiness step is
+warning-mode by design until a protected staging/production runner has live
+monitoring, restore, load, scan, and secret-runtime access.
 
 Export release retention and secret-manager evidence before production
 approval:
@@ -1363,10 +1385,10 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
-  runbook, release retention, secret manager, secret runtime, tenant
-  operations, tenant smoke, tenant rollout, deployment environment, load
-  evidence, load profile matrix evidence, and non-secret environment summaries
-  for approvers.
+  runbook, production operations readiness, release retention, secret manager,
+  secret runtime, tenant operations, tenant smoke, tenant rollout, deployment
+  environment, load evidence, load profile matrix evidence, and non-secret
+  environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -1386,7 +1408,10 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   tenant-size and vertical profile reviews are included under
   `load_matrix_reviews`; when operations release bundle evidence is attached,
   bundle step status and evidence references are included under
-  `operations_bundle_reviews`; when release retention evidence is attached,
+  `operations_bundle_reviews`; when production operations readiness evidence is
+  attached, component status, backup/restore, scan, and required-reference
+  reviews are included under `production_ops_readiness_reviews`; when release
+  retention evidence is attached,
   artifact-store, secret-manager, retention, and evidence fingerprint reviews
   are included under `release_retention_reviews`; when secret-manager evidence
   is attached, runtime secret references, template separation, Compose guards,
