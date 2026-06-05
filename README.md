@@ -144,6 +144,7 @@ make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make production-rollback DEPLOYMENT_GATE=deploy/runtime/deployment-gates/<run-id>/deployment-decision.json
 make production-smoke
+make tenant-smoke
 ```
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
@@ -449,6 +450,10 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_production_smoke.py` and `make production-smoke` capture
   post-deploy/post-rollback endpoint smoke evidence and a machine-readable
   smoke decision.
+- `scripts/run_tenant_smoke.py` and `make tenant-smoke` execute per-tenant
+  smoke checks from tenant operations artifacts, including web/login endpoint
+  probes, database-isolation request headers, smoke checklist coverage, and
+  tenant-level release blockers under `deploy/runtime/tenant-smoke/`.
 - `scripts/export_monitoring_evidence.py` and `make monitoring-evidence`
   collect post-deploy monitoring evidence from smoke, deployment, rollback, and
   Prometheus/Alertmanager/Grafana endpoint probes under
@@ -459,8 +464,8 @@ The detailed policy and dependency intake checklist are maintained in
   monitoring references under `deploy/runtime/incident-runbooks/`.
 - `scripts/run_operations_release_bundle.py` and
   `make operations-release-bundle` combine load profile matrix, enterprise load,
-  production smoke, monitoring, and incident runbook evidence under one
-  operations run ID for release sign-off.
+  production smoke, optional tenant smoke, monitoring, and incident runbook
+  evidence under one operations run ID for release sign-off.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through

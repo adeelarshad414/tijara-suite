@@ -4627,3 +4627,104 @@ Date: 2026-06-05
   tenants are available.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 67: Tenant Smoke Execution Evidence
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_tenant_smoke.py`.
+- The tenant smoke runner:
+  - Reads tenant operations artifact directories or manifest files.
+  - Executes per-tenant HTTP endpoint probes for the tenant web root and login
+    routes.
+  - Can include manifest Blackbox routes, global extra routes, and
+    tenant-specific extra routes.
+  - Supports tenant base URL overrides for staging, DNS cutover tests, and local
+    validation.
+  - Sends a tenant `X-Odoo-dbfilter` header by default to prove the smoke
+    request is tied to tenant database isolation.
+  - Validates minimum tenant count, minimum route count, and smoke checklist
+    coverage.
+  - Records manifest SHA-256 fingerprints, route results, status codes,
+    blockers, warnings, and tenant-level decisions.
+  - Writes `tenant-smoke-evidence.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/tenant-smoke/<run-id>/`.
+- Added operator shortcuts:
+  - `make tenant-smoke`
+  - `npm run tenant:smoke`
+- Enhanced `scripts/run_operations_release_bundle.py` so tenant smoke can be
+  included in operations evidence:
+  - Explicitly with `tenant-smoke` in `TIJARA_OPS_BUNDLE_CHECKS`.
+  - Automatically when `TIJARA_OPS_BUNDLE_TENANT_SMOKE_ARTIFACTS` or
+    `TIJARA_TENANT_SMOKE_ARTIFACTS` is supplied.
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group tenant smoke evidence as Operations evidence.
+  - Parse attached `tenant-smoke-evidence.json`.
+  - Add Tenant Smoke Evidence to `evidence-summary.md`.
+  - Add `tenant_smoke_reviews` into `release-readiness.json`.
+  - Treat failed tenant smoke evidence as release blockers and warning tenant
+    smoke evidence as release warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/run_tenant_smoke.py scripts/run_operations_release_bundle.py
+  scripts/generate_signoff_pack.py scripts/run_production_smoke.py` passes.
+- `bash -n scripts/run_staging_release_signoff.sh
+  scripts/run_release_candidate_gate.sh scripts/run_staging_e2e.sh
+  scripts/run_staging_ops_checks.sh` passes.
+- `git diff --check` passes.
+- Generated fresh tenant operations artifacts under
+  `/private/tmp/tijara-tenant-smoke-artifacts/tijara_smoke_tenant`.
+- Strict tenant smoke execution passes against a temporary localhost HTTP
+  server with real HTTP responses:
+  `python3 scripts/run_tenant_smoke.py --run-id tenant-smoke-ready --output
+  /private/tmp/tijara-tenant-smoke-ready --target-environment staging
+  --tenant-artifact /private/tmp/tijara-tenant-smoke-artifacts/tijara_smoke_tenant
+  --tenant-base-url tijara_smoke_tenant=http://127.0.0.1:18765 --route
+  health=/health --minimum-tenants 1 --minimum-routes-per-tenant 3
+  --skip-monitoring-route --strict`.
+- Confirmed tenant smoke evidence records `web-root`, `web-login`, and `health`
+  route checks as passed, with `dbfilter_header` enabled.
+- `make tenant-smoke` passes in warning mode when tenant artifact paths are not
+  supplied.
+- `npm run tenant:smoke` passes in warning mode.
+- Focused operations release bundle with `--checks tenant-smoke` passes in
+  strict mode against the same localhost-backed tenant artifact.
+- Confirmed the operations release bundle records `tenant-smoke: passed`.
+- Generated a sign-off package with Operations evidence required in strict mode
+  using both standalone tenant smoke evidence and operations bundle tenant
+  smoke evidence.
+- Confirmed `evidence-summary.md` includes Tenant Smoke Evidence.
+- Confirmed `release-readiness.json` includes `tenant_smoke_reviews` and is
+  `ready` for the focused complete tenant smoke evidence run.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-tenant-smoke/release-readiness.json` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Tenant smoke can execute real endpoint checks, but production proof still
+  needs reachable staging/production tenant URLs, DNS cutover, TLS issuance,
+  and seeded public display/queue/kiosk routes.
+- Authenticated POS checkout/refund browser E2E still requires a staging POS
+  user and seeded POS register.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Wire tenant smoke into production deployment gate/monitoring evidence once
+  real tenant URLs are available.
+- Add provider-specific DNS/ingress automation once the deployment platform is
+  selected.
+- Continue staging/live FBR transaction execution when credentials are
+  available.

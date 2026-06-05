@@ -971,6 +971,8 @@ Optional tools:
 - Run `make tenant-ops-evidence` after generating tenant artifacts to export
   machine-checkable tenant DNS, ingress, admin, backup, monitoring, and smoke
   readiness evidence.
+- Run `make tenant-smoke` after tenant URLs are reachable to execute
+  tenant-aware endpoint smoke checks from tenant operations artifacts.
 - Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.
 - Run `make load-evidence` after k6 to export structured load evidence for
   release sign-off.
@@ -980,8 +982,10 @@ Optional tools:
 - Run `make load-profile-matrix-evidence` to export the approved load profile
   matrix for release sign-off.
 - Run `make operations-release-bundle` to collect matrix, enterprise load,
-  smoke, monitoring, incident runbook, and release retention evidence under one
-  Operations evidence directory.
+  smoke, optional tenant smoke, monitoring, incident runbook, and release
+  retention evidence under one Operations evidence directory. Set
+  `TIJARA_OPS_BUNDLE_TENANT_SMOKE_ARTIFACTS` or
+  `TIJARA_TENANT_SMOKE_ARTIFACTS` to include tenant smoke automatically.
 - Run `make release-retention-evidence` to export artifact-store,
   secret-manager, retention policy, and evidence-fingerprint readiness without
   running the full operations bundle.
@@ -1198,7 +1202,7 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
   runbook, release retention, secret manager, secret runtime, tenant
-  operations, deployment environment, load evidence, load profile matrix
+  operations, tenant smoke, deployment environment, load evidence, load profile matrix
   evidence, and non-secret environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
@@ -1225,8 +1229,11 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   secret probe source and resolution reviews are included under
   `secret_runtime_reviews`; when tenant operations evidence is attached,
   per-tenant DNS, ingress, admin, backup, monitoring, smoke, and artifact
-  reviews are included under `tenant_ops_reviews`; when deployment environment
-  evidence is attached, approver, branch-policy, promotion, rollback,
+  reviews are included under `tenant_ops_reviews`; when tenant smoke evidence
+  is attached, per-tenant endpoint execution, route counts, checklist coverage,
+  and database-isolation header usage are included under
+  `tenant_smoke_reviews`; when deployment environment evidence is attached,
+  approver, branch-policy, promotion, rollback,
   deployment-gate, monitoring, backup, change-ticket, and freeze-window reviews
   are included under `deployment_environment_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
@@ -1311,6 +1318,30 @@ with `smoke-decision.json`, `status.tsv`, `summary.md`, and
 `env-summary.txt`. HTTP 2xx/3xx responses pass; 4xx/5xx responses and
 unreachable endpoints block by default. Set `TIJARA_SMOKE_NON_STRICT=1` only
 for exploratory drills where endpoint failures should be warnings.
+
+Run tenant-aware smoke execution after tenant operations artifacts are
+generated and DNS/ingress are available:
+
+```bash
+python3 scripts/run_tenant_smoke.py \
+  --run-id 2026-06-05-prod \
+  --target-environment production \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --route display=/tijara/display/main/data \
+  --route queue=/tijara/queue/main/data \
+  --minimum-tenants 1 \
+  --minimum-routes-per-tenant 2 \
+  --strict
+```
+
+The runner reads each tenant `ops-manifest.json`, probes the tenant web root and
+login routes, optionally probes the manifest Blackbox URL and extra
+operator-provided routes, sends an `X-Odoo-dbfilter` tenant-isolation header,
+records smoke-checklist coverage, and writes `tenant-smoke-evidence.json`,
+`status.tsv`, `summary.md`, and `env-summary.txt` under
+`deploy/runtime/tenant-smoke/<run-id>/`. Attach that directory to
+`TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package extracts it under
+`tenant_smoke_reviews`.
 
 Capture monitoring evidence after deployment or rollback:
 

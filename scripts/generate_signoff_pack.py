@@ -388,6 +388,7 @@ def _evidence_group(entry):
         or "deployment-environment-evidence" in relative_lower
         or "deployment-environments" in relative_lower
         or "tenant-ops-evidence" in relative_lower
+        or "tenant-smoke" in relative_lower
         or "tenant-ops" in relative_lower
         or "deploy/runtime/tenants/" in relative_lower
         or filename == "monitoring-evidence.json"
@@ -398,6 +399,7 @@ def _evidence_group(entry):
         or filename == "release-retention-evidence.json"
         or filename == "deployment-environment-evidence.json"
         or filename == "tenant-ops-evidence.json"
+        or filename == "tenant-smoke-evidence.json"
         or filename == "ops-manifest.json"
     ):
         return "Operations"
@@ -954,6 +956,51 @@ def _tenant_ops_reviews(evidence_entries):
     return reviews
 
 
+def _tenant_smoke_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "tenant-smoke-evidence.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        tenant_reviews = []
+        for tenant in payload.get("tenants") or []:
+            tenant_reviews.append(
+                {
+                    "tenant_db": tenant.get("tenant_db", ""),
+                    "domain": tenant.get("domain", ""),
+                    "base_url": tenant.get("base_url", ""),
+                    "decision": tenant.get("decision", ""),
+                    "ci_status": tenant.get("ci_status", ""),
+                    "check_count": tenant.get("check_count", 0),
+                    "passed_count": tenant.get("passed_count", 0),
+                    "failed_count": tenant.get("failed_count", 0),
+                    "smoke_check_count": tenant.get("smoke_check_count", 0),
+                    "dbfilter_header_used": bool(tenant.get("dbfilter_header_used")),
+                    "blockers": tenant.get("blockers") or [],
+                    "warnings": tenant.get("warnings") or [],
+                }
+            )
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "target_environment": context.get("target_environment", ""),
+                "strict": bool(context.get("strict")),
+                "tenant_count": context.get("tenant_count", len(tenant_reviews)),
+                "minimum_tenants": context.get("minimum_tenants", 0),
+                "minimum_routes_per_tenant": context.get("minimum_routes_per_tenant", 0),
+                "requirements": payload.get("requirements") or {},
+                "tenants": tenant_reviews,
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -972,6 +1019,7 @@ def _evidence_summary(context, evidence_entries):
     secret_runtime_reviews = _secret_runtime_reviews(evidence_entries)
     deployment_environment_reviews = _deployment_environment_reviews(evidence_entries)
     tenant_ops_reviews = _tenant_ops_reviews(evidence_entries)
+    tenant_smoke_reviews = _tenant_smoke_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -1234,11 +1282,12 @@ def _evidence_summary(context, evidence_entries):
         )
         operations_bundle_lines.append("- Step count/statuses: %s/%s" % (review["step_count"], counts or "none"))
         operations_bundle_lines.append(
-            "- Evidence refs load-matrix/load-enterprise/smoke/monitoring/incident/retention: %s/%s/%s/%s/%s/%s"
+            "- Evidence refs load-matrix/load-enterprise/smoke/tenant-smoke/monitoring/incident/retention: %s/%s/%s/%s/%s/%s/%s"
             % (
                 "yes" if refs.get("load-matrix") else "no",
                 "yes" if refs.get("load-enterprise") else "no",
                 "yes" if refs.get("smoke") else "no",
+                "yes" if refs.get("tenant-smoke") else "no",
                 "yes" if refs.get("monitoring") else "no",
                 "yes" if refs.get("incident") else "no",
                 "yes" if refs.get("retention") else "no",
@@ -1398,6 +1447,39 @@ def _evidence_summary(context, evidence_entries):
     if not tenant_ops_lines:
         tenant_ops_lines = ["- No `tenant-ops-evidence.json` files were attached.", ""]
 
+    tenant_smoke_lines = []
+    for review in tenant_smoke_reviews:
+        tenant_smoke_lines.append("### `%s`" % review["path"])
+        tenant_smoke_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        tenant_smoke_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        tenant_smoke_lines.append(
+            "- Target/strict/tenants/minimum/routes-minimum: %s/%s/%s/%s/%s"
+            % (
+                review["target_environment"] or "unset",
+                "yes" if review["strict"] else "no",
+                review["tenant_count"],
+                review["minimum_tenants"],
+                review["minimum_routes_per_tenant"],
+            )
+        )
+        for tenant in review["tenants"]:
+            tenant_smoke_lines.append(
+                "- `%s`: decision=%s, domain=%s, passed/failed/checks=%s/%s/%s, checklist=%s, dbfilter=%s"
+                % (
+                    tenant["tenant_db"] or "unknown",
+                    tenant["decision"] or "unknown",
+                    tenant["domain"] or "unset",
+                    tenant["passed_count"],
+                    tenant["failed_count"],
+                    tenant["check_count"],
+                    tenant["smoke_check_count"],
+                    "yes" if tenant["dbfilter_header_used"] else "no",
+                )
+            )
+        tenant_smoke_lines.append("")
+    if not tenant_smoke_lines:
+        tenant_smoke_lines = ["- No `tenant-smoke-evidence.json` files were attached.", ""]
+
     deployment_environment_lines = []
     for review in deployment_environment_reviews:
         deployment_environment_lines.append("### `%s`" % review["path"])
@@ -1497,6 +1579,9 @@ def _evidence_summary(context, evidence_entries):
 ## Tenant Operations Evidence
 
 {chr(10).join(tenant_ops_lines)}
+## Tenant Smoke Evidence
+
+{chr(10).join(tenant_smoke_lines)}
 ## Deployment Environment Evidence
 
 {chr(10).join(deployment_environment_lines)}
@@ -1529,6 +1614,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     secret_runtime_reviews = _secret_runtime_reviews(evidence_entries)
     deployment_environment_reviews = _deployment_environment_reviews(evidence_entries)
     tenant_ops_reviews = _tenant_ops_reviews(evidence_entries)
+    tenant_smoke_reviews = _tenant_smoke_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -1706,6 +1792,26 @@ def _release_readiness(context, evidence_entries, group_counts):
                     % (tenant_label, review["path"], tenant.get("decision"))
                 )
 
+    for review in tenant_smoke_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Tenant smoke evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Tenant smoke evidence %s is %s" % (review["path"], review["decision"]))
+        for tenant in review.get("tenants") or []:
+            tenant_decision = str(tenant.get("decision") or "").lower()
+            tenant_label = tenant.get("tenant_db") or "unknown"
+            if tenant_decision in {"failed", "blocked"}:
+                blockers.append(
+                    "Tenant smoke %s in %s is %s"
+                    % (tenant_label, review["path"], tenant.get("decision"))
+                )
+            elif tenant_decision in {"warning", "warn"}:
+                warnings.append(
+                    "Tenant smoke %s in %s is %s"
+                    % (tenant_label, review["path"], tenant.get("decision"))
+                )
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -1745,6 +1851,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "secret_runtime_reviews": secret_runtime_reviews,
         "deployment_environment_reviews": deployment_environment_reviews,
         "tenant_ops_reviews": tenant_ops_reviews,
+        "tenant_smoke_reviews": tenant_smoke_reviews,
     }
 
 

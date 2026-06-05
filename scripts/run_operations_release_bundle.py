@@ -78,6 +78,7 @@ def _step_specs(args, output):
     matrix_dir = output / "load-profile-matrix"
     load_dir = output / "load-enterprise"
     smoke_dir = output / "production-smoke"
+    tenant_smoke_dir = output / "tenant-smoke"
     monitoring_dir = output / "monitoring-evidence"
     incident_dir = output / "incident-runbook"
     retention_dir = output / "release-retention"
@@ -125,6 +126,21 @@ def _step_specs(args, output):
                 args.target_environment,
                 "--output",
                 str(smoke_dir),
+            ],
+        },
+        "tenant-smoke": {
+            "label": "tenant-smoke",
+            "output": tenant_smoke_dir,
+            "manifest": tenant_smoke_dir / "tenant-smoke-evidence.json",
+            "command": [
+                sys.executable,
+                "scripts/run_tenant_smoke.py",
+                "--run-id",
+                args.run_id,
+                "--target-environment",
+                args.target_environment,
+                "--output",
+                str(tenant_smoke_dir),
             ],
         },
         "monitoring": {
@@ -188,11 +204,13 @@ def _step_specs(args, output):
         specs["load-matrix"]["command"].append("--strict")
         specs["incident"]["command"].append("--strict")
         specs["retention"]["command"].append("--strict")
+        specs["tenant-smoke"]["command"].append("--strict")
         specs["load-enterprise"]["env"]["TIJARA_LOAD_STRICT"] = "1"
     else:
         specs["smoke"]["command"].append("--non-strict")
         specs["monitoring"]["command"].append("--non-strict")
         specs["retention"]["command"].append("--non-strict")
+        specs["tenant-smoke"]["command"].append("--non-strict")
         specs["load-enterprise"]["env"]["TIJARA_LOAD_STRICT"] = "0"
 
     smoke_base_url = args.smoke_base_url or args.base_url
@@ -201,6 +219,17 @@ def _step_specs(args, output):
 
     for smoke_url in args.smoke_url:
         specs["smoke"]["command"].extend(["--url", smoke_url])
+
+    for tenant_artifact in args.tenant_artifact:
+        specs["tenant-smoke"]["command"].extend(["--tenant-artifact", tenant_artifact])
+    for tenant_base_url in args.tenant_base_url:
+        specs["tenant-smoke"]["command"].extend(["--tenant-base-url", tenant_base_url])
+    for tenant_route in args.tenant_route:
+        specs["tenant-smoke"]["command"].extend(["--tenant-route", tenant_route])
+    for route in args.tenant_smoke_route:
+        specs["tenant-smoke"]["command"].extend(["--route", route])
+    if args.tenant_smoke_skip_monitoring:
+        specs["tenant-smoke"]["command"].append("--skip-monitoring-route")
 
     if args.monitoring_url:
         for monitoring_url in args.monitoring_url:
@@ -332,6 +361,17 @@ def main():
     parser.add_argument("--base-url", default=os.environ.get("TIJARA_BASE_URL", ""))
     parser.add_argument("--smoke-base-url", default=os.environ.get("TIJARA_SMOKE_BASE_URL", ""))
     parser.add_argument("--smoke-url", action="append", default=[])
+    parser.add_argument("--tenant-artifact", action="append", default=[
+        item for item in str(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_SMOKE_ARTIFACTS") or os.environ.get("TIJARA_TENANT_SMOKE_ARTIFACTS") or "").split(",")
+        if item.strip()
+    ])
+    parser.add_argument("--tenant-base-url", action="append", default=[
+        item for item in str(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_SMOKE_BASE_URLS") or os.environ.get("TIJARA_TENANT_SMOKE_BASE_URLS") or "").split(",")
+        if item.strip()
+    ])
+    parser.add_argument("--tenant-smoke-route", action="append", default=[])
+    parser.add_argument("--tenant-route", action="append", default=[])
+    parser.add_argument("--tenant-smoke-skip-monitoring", action="store_true", default=_truthy(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_SMOKE_SKIP_MONITORING")))
     parser.add_argument("--monitoring-url", action="append", default=[])
     parser.add_argument("--prometheus-url", default=os.environ.get("TIJARA_PROMETHEUS_URL", ""))
     parser.add_argument("--alertmanager-url", default=os.environ.get("TIJARA_ALERTMANAGER_URL", ""))
@@ -346,8 +386,10 @@ def main():
         for item in str(args.checks or "").split(",")
         if item.strip()
     ]
-    canonical_order = ["load-matrix", "load-enterprise", "smoke", "monitoring", "incident", "retention"]
     requested = list(dict.fromkeys(args.checks))
+    if args.tenant_artifact and "tenant-smoke" not in requested:
+        requested.append("tenant-smoke")
+    canonical_order = ["load-matrix", "load-enterprise", "smoke", "tenant-smoke", "monitoring", "incident", "retention"]
     args.checks = [check for check in canonical_order if check in requested] + [
         check for check in requested if check not in canonical_order
     ]
@@ -432,6 +474,10 @@ def main():
             "fail_on_warning=%s" % int(args.fail_on_warning),
             "base_url=%s" % (args.base_url or "<unset>"),
             "smoke_base_url=%s" % (args.smoke_base_url or "<unset>"),
+            "tenant_smoke_artifacts=%s" % (",".join(args.tenant_artifact) or "<unset>"),
+            "tenant_smoke_base_urls=%s" % (",".join(args.tenant_base_url) or "<unset>"),
+            "tenant_smoke_routes=%s" % (",".join(args.tenant_smoke_route) or "<unset>"),
+            "tenant_smoke_skip_monitoring=%s" % int(args.tenant_smoke_skip_monitoring),
             "prometheus_url=%s" % (args.prometheus_url or "<unset>"),
             "alertmanager_url=%s" % (args.alertmanager_url or "<unset>"),
             "grafana_url=%s" % (args.grafana_url or "<unset>"),

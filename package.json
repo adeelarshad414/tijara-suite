@@ -15,6 +15,7 @@
     "release:deployment-gate": "python3 scripts/run_production_deployment_gate.py",
     "release:rollback": "python3 scripts/run_production_rollback.py",
     "release:smoke": "python3 scripts/run_production_smoke.py",
+    "tenant:smoke": "python3 scripts/run_tenant_smoke.py",
     "certification:evidence": "python3 scripts/collect_certification_evidence.py",
     "psp:readiness": "python3 scripts/export_psp_readiness.py",
     "psp:fixture-smoke": "python3 scripts/psp_settlement_fixture_smoke.py",
