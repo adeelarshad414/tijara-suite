@@ -6302,3 +6302,66 @@ Date: 2026-06-05
   credentials are available on the protected runner.
 - Continue hardening PSP/FBR live adapters and offline POS sync once live
   provider/staging systems are available.
+
+## Iteration 89: Protected Artifact Summary
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_artifact_summary.py` to scan protected release
+  evidence directories and generate a release-owner artifact index.
+- Added `make protected-artifact-summary` for local and protected-runner
+  execution.
+- The summary exporter detects failed, blocked, warning, and skipped rows from
+  `status.tsv` files.
+- The summary exporter also promotes blocked/failed/warning decisions from key
+  JSON evidence files, including `release-readiness.json`, into component
+  status.
+- Wired `.github/workflows/tijara-ci.yml` to generate the protected artifact
+  summary with `if: always()` after the release-readiness check.
+- Added `deploy/runtime/protected-artifact-summary/<run-id>/` to protected
+  artifact uploads.
+- Updated `README.md` and `DEPLOY.md` so release owners know to open the
+  protected artifact summary first when reviewing a protected evidence bundle.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_artifact_summary.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Artifact summary over passing preflight/sign-off evidence returns
+  `decision=passed`.
+- Artifact summary over failing preflight and blocked sign-off evidence returns
+  `decision=failed`.
+- Confirmed blocked `release-readiness.json` is promoted into a failed artifact
+  component.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` or probe server process remains running.
+
+### Known Gaps
+
+- Artifact summary indexes local/uploaded evidence paths; it does not create
+  external GitHub artifact deep links until the protected workflow has a real
+  run URL and artifact ID.
+- Protected workflow execution still needs a real self-hosted runner and
+  staging/production environment configuration.
+- Live Browser E2E, PSP/FBR provider certification, physical hardware proof,
+  offline POS sync, monitoring drills, and load/security execution remain
+  production blockers until run against real systems.
+
+### Next Iteration
+
+- Add GitHub run metadata and optional artifact URL/reference fields to the
+  protected artifact summary when available in Actions.
+- Add optional authenticated health probes once secret-manager-backed
+  credentials are available on the protected runner.
+- Continue hardening live PSP/FBR adapters and offline POS sync conflict
+  handling when live provider/staging systems are available.

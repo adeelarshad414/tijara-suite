@@ -1065,7 +1065,9 @@ the protected sign-off package, and checks `release-readiness.json`. Evidence is
 uploaded as
 `tijara-protected-release-evidence-<environment>-<run>`. If a strict evidence
 step fails, the job still tries to build the final sign-off package so the
-release-readiness JSON explains the blocker.
+release-readiness JSON explains the blocker. The final protected artifact
+summary is written under `deploy/runtime/protected-artifact-summary/<run-id>/`
+and uploaded with the evidence bundle.
 
 Set `TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware` in the protected
 GitHub environment when external certification must be mandatory for the
@@ -1127,6 +1129,13 @@ credentials, seeded POS data, Playwright browsers, or the staging URL are
 missing, it still writes `summary.md`, `status.tsv`, and `env-summary.txt` under
 `deploy/runtime/protected-e2e/<run-id>/`; strict failures then flow into the
 release sign-off package as Browser E2E blockers.
+
+After the protected readiness check, the workflow runs
+`scripts/export_protected_artifact_summary.py`. The generated `summary.md`
+points release owners at failed/warning rows across preflight, release,
+Browser E2E, operations, certification, retention, secret-manager, production
+operations readiness, and sign-off artifacts. Use it as the first file to open
+inside `tijara-protected-release-evidence-<environment>-<run>`.
 
 Export release retention and secret-manager evidence before production
 approval:

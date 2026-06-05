@@ -369,6 +369,14 @@ jobs:
           make signoff-pack
       - name: Check protected release readiness
         run: make check-release-readiness READINESS="deploy/runtime/signoff-packages/$TIJARA_PROTECTED_RUN_ID/release-readiness.json"
+      - name: Summarize protected release artifacts
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 scripts/export_protected_artifact_summary.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/protected-artifact-summary/$TIJARA_PROTECTED_RUN_ID"
       - name: Upload protected release evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -378,6 +386,7 @@ jobs:
           if-no-files-found: warn
           path: |
             deploy/runtime/protected-runner-preflight/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/protected-artifact-summary/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/release-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/protected-e2e/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/e2e-seed/${{ env.TIJARA_PROTECTED_RUN_ID }}
