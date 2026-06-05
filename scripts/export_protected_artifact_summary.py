@@ -254,6 +254,7 @@ def main():
     artifact_paths.extend(_csv_items(os.environ.get("TIJARA_ARTIFACT_SUMMARY_PATHS")))
     if not artifact_paths:
         artifact_paths = [
+            "deploy/runtime/protected-first-run/%s" % args.run_id,
             "deploy/runtime/protected-runner-preflight/%s" % args.run_id,
             "deploy/runtime/release-evidence/%s" % args.run_id,
             "deploy/runtime/protected-e2e/%s" % args.run_id,

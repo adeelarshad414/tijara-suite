@@ -6488,3 +6488,80 @@ Date: 2026-06-05
   Alertmanager, and Grafana credentials are available on the protected runner.
 - Continue hardening live PSP/FBR adapters and offline POS sync conflict
   handling when live provider/staging systems are available.
+
+## Iteration 92: Protected First Run Checklist
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/export_protected_first_run_checklist.py` to export a
+  protected staging/production first-run checklist under
+  `deploy/runtime/protected-first-run/`.
+- The checklist validates release, DevOps, QA, business, security, support,
+  finance, tax, and hardware owners; GitHub environment, runner labels,
+  staging URL, change ticket, rollback, incident channel, backup, protected
+  workflow reference, expected artifact groups, and certification owner
+  coverage.
+- Added metadata parsing with secret-like key rejection so public evidence
+  cannot accidentally include token/password/secret-style metadata keys.
+- Added `make protected-first-run-checklist`.
+- Wired `.github/workflows/tijara-ci.yml` to generate first-run checklist
+  evidence before protected preflight, include it in release-retention
+  evidence, sign-off package inputs, protected artifact summary defaults, and
+  uploaded protected release evidence.
+- Classified `protected-first-run` evidence as Operations evidence in
+  `scripts/generate_signoff_pack.py`.
+- Updated `deploy/config/github-protected-vars.example` with public-safe
+  first-run owner/reference/runner/artifact variables.
+- Updated `README.md` and `DEPLOY.md` with first-run checklist guidance and
+  protected workflow sequencing.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_artifact_summary.py
+  scripts/generate_signoff_pack.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and
+  exposes the first-run owner and incident-channel variables.
+- Strict ready first-run fixture writes `decision=passed` and `ci_status=pass`.
+- Strict missing first-run fixture writes `decision=failed` and
+  `ci_status=fail`.
+- Secret-like metadata fixture with `api_token` is rejected.
+- Sign-off package with passing first-run evidence passes release readiness.
+- Sign-off package with missing first-run evidence blocks release readiness
+  through failed `status.tsv` rows.
+- Protected artifact summary over first-run evidence writes `decision=passed`.
+- `make protected-first-run-checklist` passes with first-run environment
+  variables and writes evidence to `/private/tmp/tijara-make-first-run`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` or probe server process remains running.
+
+### Known Gaps
+
+- The protected workflow still needs a real self-hosted `tijara-protected`
+  runner and staging/production GitHub environment execution.
+- First-run checklist evidence proves the handoff is complete, but live Odoo
+  login/RBAC behavior, bridge signed jobs, dashboard alerting, and hardware
+  device behavior still need real staging runs.
+- Live Browser E2E, PSP/FBR certification, physical hardware proof, offline POS
+  sync, and production operations drills remain external production blockers.
+
+### Next Iteration
+
+- Add a protected runbook handoff for the first live staging execution,
+  including exact operator commands, expected artifact review order, and
+  go/no-go evidence review checklist.
+- Add deeper authenticated service checks once real Odoo, bridge, Prometheus,
+  Alertmanager, and Grafana credentials are available on the protected runner.
+- Continue hardening live PSP/FBR adapters and offline POS sync conflict
+  handling when live provider/staging systems are available.

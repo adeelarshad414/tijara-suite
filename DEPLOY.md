@@ -1052,12 +1052,13 @@ the same workflow:
 3. Start the workflow manually with `protected_release=true`,
    `target_environment=staging` or `production`, and an optional `run_id`.
 
-The protected job first exports redacted runner preflight evidence under
-`deploy/runtime/protected-runner-preflight/<run-id>/`, then runs the
-release-candidate gate, runs protected Browser E2E seed/profile/browser/
-execution evidence under `deploy/runtime/protected-e2e/<run-id>/`, captures raw
-restore, security, dependency, container, npm audit, and k6 outputs under
-`deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
+The protected job first exports a first-run checklist under
+`deploy/runtime/protected-first-run/<run-id>/`, then exports redacted runner
+preflight evidence under `deploy/runtime/protected-runner-preflight/<run-id>/`,
+runs the release-candidate gate, runs protected Browser E2E seed/profile/
+browser/execution evidence under `deploy/runtime/protected-e2e/<run-id>/`,
+captures raw restore, security, dependency, container, npm audit, and k6 outputs
+under `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
 evidence, collects strict PSP/FBR/hardware certification evidence when the
 matching `TIJARA_CERT_*` variables are configured, exports retention and
 secret-manager evidence, runs strict production operations readiness, generates
@@ -1075,6 +1076,37 @@ release. The protected sign-off package will append certification evidence
 directories to `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the selected groups;
 missing, expired, unapproved, or hash-mismatched certification evidence becomes
 a release-readiness blocker.
+
+Run the first-run checklist locally before the first protected staging workflow
+to confirm the non-secret handoff is complete:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+TIJARA_FIRST_RUN_GITHUB_ENVIRONMENT=staging \
+TIJARA_FIRST_RUN_RUNNER_LABELS=self-hosted,tijara-protected \
+TIJARA_FIRST_RUN_RELEASE_OWNER=ReleaseOwner \
+TIJARA_FIRST_RUN_DEVOPS_OWNER=DevOpsOwner \
+TIJARA_FIRST_RUN_QA_OWNER=QAOwner \
+TIJARA_FIRST_RUN_BUSINESS_OWNER=BusinessOwner \
+TIJARA_FIRST_RUN_SECURITY_OWNER=SecurityOwner \
+TIJARA_FIRST_RUN_SUPPORT_OWNER=SupportOwner \
+TIJARA_FIRST_RUN_STAGING_URL=https://staging.example.com \
+TIJARA_FIRST_RUN_CHANGE_TICKET_REF=change:protected-staging-first-run \
+TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF=runbook:rollback-protected-staging \
+TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF=slack:tijara-incidents \
+TIJARA_FIRST_RUN_BACKUP_REF=backup:staging-latest \
+TIJARA_FIRST_RUN_PROTECTED_WORKFLOW_REF=workflow:tijara-ci/protected-release-evidence \
+python3 scripts/export_protected_first_run_checklist.py \
+  --output deploy/runtime/protected-first-run/2026-06-05-rc1 \
+  --strict
+```
+
+When `TIJARA_PROTECTED_CERTIFICATION_GROUPS` includes `psp`, `fbr`, or
+`hardware`, also provide `TIJARA_FIRST_RUN_FINANCE_OWNER`,
+`TIJARA_FIRST_RUN_TAX_OWNER`, and `TIJARA_FIRST_RUN_HARDWARE_OWNER`
+respectively. The manifest rejects secret-like metadata keys and records only
+owner names, refs, labels, expected artifact groups, and checklist decisions.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:
