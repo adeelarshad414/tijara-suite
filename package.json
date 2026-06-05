@@ -23,6 +23,7 @@
     "monitoring:evidence": "python3 scripts/export_monitoring_evidence.py",
     "incident:runbook": "python3 scripts/export_incident_runbook_evidence.py",
     "release:retention": "python3 scripts/export_release_retention_evidence.py",
+    "secret-manager:evidence": "python3 scripts/export_secret_manager_evidence.py",
     "load:evidence": "python3 scripts/export_load_evidence.py",
     "load:profile": "bash scripts/run_load_profile.sh",
     "load:enterprise": "bash scripts/run_load_profile.sh enterprise-surfaces",

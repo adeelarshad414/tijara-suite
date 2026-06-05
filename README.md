@@ -132,6 +132,7 @@ make fbr-fixture-smoke
 make monitoring-evidence
 make incident-runbook-evidence
 make release-retention-evidence
+make secret-manager-evidence
 make load-evidence
 make operations-release-bundle
 make signoff-pack
@@ -400,14 +401,20 @@ The detailed policy and dependency intake checklist are maintained in
   `make release-retention-evidence` export release artifact retention,
   certification evidence retention, evidence fingerprinting, and secret-manager
   reference checks under `deploy/runtime/release-retention-evidence/`.
+- `scripts/export_secret_manager_evidence.py` and
+  `make secret-manager-evidence` validate runtime secret-manager readiness,
+  non-secret template safety, secret example placeholders, Compose secret
+  guardrails, startup secret checks, and committed-secret-file hygiene under
+  `deploy/runtime/secret-manager-evidence/`.
 - `scripts/generate_signoff_pack.py` and `make signoff-pack` generate release
   approval templates, an evidence summary, machine-readable readiness JSON, and
   an evidence manifest for PSP, FBR, hardware, finance, security, and go/no-go
   review under `deploy/runtime/signoff-packages/`, with optional
   required-evidence group guardrails for release, E2E, operations, security,
   hardware, FBR, and PSP evidence. PSP/FBR readiness manifests, FBR fixture
-  smoke evidence, monitoring, incident runbook, release retention, and load
-  evidence are extracted into readiness reviews for approvers and CI.
+  smoke evidence, monitoring, incident runbook, release retention, secret
+  manager, and load evidence are extracted into readiness reviews for approvers
+  and CI.
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.

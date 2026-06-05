@@ -395,6 +395,8 @@ def _evidence_group(entry):
         return "Operations"
     if "hardware" in relative_lower:
         return "Hardware"
+    if "secret-manager-evidence" in relative_lower or filename == "secret-manager-evidence.json":
+        return "Security"
     if "fbr" in relative_lower:
         return "FBR"
     if "psp" in relative_lower or "settlement" in relative_lower:
@@ -768,6 +770,54 @@ def _release_retention_reviews(evidence_entries):
     return reviews
 
 
+def _secret_manager_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "secret-manager-evidence.json":
+            continue
+        payload = _read_json(path)
+        secret_manager = payload.get("secret_manager") or {}
+        non_secret_templates = payload.get("non_secret_templates") or []
+        secret_examples = payload.get("secret_example_templates") or []
+        compose_guardrails = payload.get("compose_guardrails") or []
+        startup_guardrails = payload.get("startup_guardrails") or {}
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "secret_manager_provider_present": bool(secret_manager.get("provider_present")),
+                "secret_manager_provider": secret_manager.get("provider", ""),
+                "secret_manager_reference_present": bool(secret_manager.get("reference_present")),
+                "secret_rotation_policy_reference_present": bool(
+                    secret_manager.get("rotation_policy_reference_present")
+                ),
+                "secret_access_review_reference_present": bool(
+                    secret_manager.get("access_review_reference_present")
+                ),
+                "required_secret_count": len(payload.get("required_secrets") or []),
+                "non_secret_template_count": len(non_secret_templates),
+                "secret_example_template_count": len(secret_examples),
+                "compose_guarded_count": sum(1 for item in compose_guardrails if item.get("guarded")),
+                "compose_guardrail_count": len(compose_guardrails),
+                "startup_requires_db_password": bool(
+                    startup_guardrails.get("requires_odoo_db_password")
+                ),
+                "startup_requires_master_password": bool(
+                    startup_guardrails.get("requires_odoo_master_password")
+                ),
+                "startup_refuses_placeholders": bool(
+                    startup_guardrails.get("refuses_production_placeholders")
+                ),
+                "real_secret_file_count": len(payload.get("real_secret_files") or []),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _evidence_summary(context, evidence_entries):
     by_group = _group_counts(evidence_entries)
     summary_blocks = []
@@ -782,6 +832,7 @@ def _evidence_summary(context, evidence_entries):
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
+    secret_manager_reviews = _secret_manager_reviews(evidence_entries)
 
     for entry in evidence_entries:
         path = Path(entry["path"])
@@ -1100,6 +1151,44 @@ def _evidence_summary(context, evidence_entries):
     if not release_retention_lines:
         release_retention_lines = ["- No `release-retention-evidence.json` files were attached.", ""]
 
+    secret_manager_lines = []
+    for review in secret_manager_reviews:
+        secret_manager_lines.append("### `%s`" % review["path"])
+        secret_manager_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        secret_manager_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        secret_manager_lines.append(
+            "- Secret manager/provider/reference/rotation/access review: %s/%s/%s/%s"
+            % (
+                review["secret_manager_provider"] or (
+                    "yes" if review["secret_manager_provider_present"] else "no"
+                ),
+                "yes" if review["secret_manager_reference_present"] else "no",
+                "yes" if review["secret_rotation_policy_reference_present"] else "no",
+                "yes" if review["secret_access_review_reference_present"] else "no",
+            )
+        )
+        secret_manager_lines.append(
+            "- Templates required/non-secret/secret-example: %s/%s/%s"
+            % (
+                review["required_secret_count"],
+                review["non_secret_template_count"],
+                review["secret_example_template_count"],
+            )
+        )
+        secret_manager_lines.append(
+            "- Guardrails compose/db/master/placeholders/real-secret-files: %s/%s/%s/%s/%s"
+            % (
+                "%s of %s" % (review["compose_guarded_count"], review["compose_guardrail_count"]),
+                "yes" if review["startup_requires_db_password"] else "no",
+                "yes" if review["startup_requires_master_password"] else "no",
+                "yes" if review["startup_refuses_placeholders"] else "no",
+                review["real_secret_file_count"],
+            )
+        )
+        secret_manager_lines.append("")
+    if not secret_manager_lines:
+        secret_manager_lines = ["- No `secret-manager-evidence.json` files were attached.", ""]
+
     return f"""
 # Evidence Summary
 
@@ -1151,6 +1240,9 @@ def _evidence_summary(context, evidence_entries):
 ## Release Retention Evidence
 
 {chr(10).join(release_retention_lines)}
+## Secret Manager Evidence
+
+{chr(10).join(secret_manager_lines)}
 ## Approver Focus
 
 {_checklist([
@@ -1176,6 +1268,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
+    secret_manager_reviews = _secret_manager_reviews(evidence_entries)
     blockers = []
     warnings = []
 
@@ -1312,6 +1405,13 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Release retention evidence %s is %s" % (review["path"], review["decision"]))
 
+    for review in secret_manager_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Secret manager evidence %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Secret manager evidence %s is %s" % (review["path"], review["decision"]))
+
     if blockers:
         decision = "blocked"
         ci_status = "fail"
@@ -1347,6 +1447,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "load_matrix_reviews": load_matrix_reviews,
         "operations_bundle_reviews": operations_bundle_reviews,
         "release_retention_reviews": release_retention_reviews,
+        "secret_manager_reviews": secret_manager_reviews,
     }
 
 

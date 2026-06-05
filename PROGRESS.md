@@ -4072,3 +4072,89 @@ Date: 2026-06-05
   production approval gates.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 60: Runtime Secret Manager Evidence
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Removed `FBR_CLIENT_SECRET` from `.env.example` so the central non-secret
+  template no longer declares a secret-like assignment.
+- Added `scripts/export_secret_manager_evidence.py`.
+- The secret-manager evidence exporter:
+  - Validates that non-secret env templates do not define secret-like keys.
+  - Validates that `secrets/.env.secrets.example` contains required secret
+    placeholders.
+  - Validates secret example values are placeholders or references, not real
+    values.
+  - Confirms critical Compose secrets use required `:?` guards.
+  - Confirms the Odoo startup script requires DB/master passwords and refuses
+    placeholder production secrets.
+  - Confirms no non-example files are present under `secrets/`.
+  - Records production secret-manager provider/reference, rotation policy, and
+    access-review references without copying secret values.
+  - Writes `secret-manager-evidence.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/secret-manager-evidence/<run-id>/`.
+  - Supports strict production mode and local warning mode.
+- Added operator shortcuts:
+  - `make secret-manager-evidence`
+  - `npm run secret-manager:evidence`
+- Enhanced `scripts/generate_signoff_pack.py` to:
+  - Group secret-manager evidence as Security evidence.
+  - Parse attached `secret-manager-evidence.json`.
+  - Add a Secret Manager Evidence section to `evidence-summary.md`.
+  - Add `secret_manager_reviews` into `release-readiness.json`.
+  - Treat failed secret-manager evidence as release blockers and warning
+    evidence as release warnings.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Strict production-reference secret-manager export passes:
+  `python3 scripts/export_secret_manager_evidence.py --run-id
+  secret-manager-ready --output /private/tmp/tijara-secret-manager-ready
+  --target-environment production --secret-manager-provider vault
+  --secret-manager-reference vault:tijara/production
+  --secret-rotation-policy-ref policy:quarterly-secret-rotation
+  --secret-access-review-ref review:2026-q2-production-secrets --strict`.
+- `make secret-manager-evidence` passes in warning mode when production
+  references are not supplied.
+- `npm run secret-manager:evidence` passes in warning mode.
+- Generated a sign-off package with Security evidence required in strict mode
+  using the strict secret-manager evidence directory.
+- Confirmed `evidence-summary.md` includes Secret Manager Evidence.
+- Confirmed `release-readiness.json` includes `secret_manager_reviews` and is
+  `ready` for the focused complete secret-manager evidence run.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_secret_manager_evidence.py scripts/generate_signoff_pack.py`
+  passes.
+- `docker compose --env-file .env.example --env-file
+  secrets/.env.secrets.example config --quiet` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- The exporter verifies references and committed configuration hygiene; it does
+  not connect to the production secret manager or prove runtime secret delivery.
+- Production still needs actual Vault/SOPS/Kubernetes/Docker/cloud secret-manager
+  integration, rotation jobs, access-review evidence, and incident procedures.
+- CI does not yet require secret-manager evidence as a Security group.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Wire secret-manager evidence into CI as a required Security evidence group.
+- Add deployment environment protection/runbook evidence for staging and
+  production approval gates.
+- Continue staging/live FBR transaction execution when credentials are
+  available.

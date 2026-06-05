@@ -86,6 +86,7 @@ make fbr-fixture-smoke
 make monitoring-evidence
 make incident-runbook-evidence
 make release-retention-evidence
+make secret-manager-evidence
 make load-evidence
 make operations-release-bundle
 make signoff-pack
@@ -829,6 +830,31 @@ baselines, confirms only secret-manager references are present, and writes
 Include that directory in `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package
 extracts it under `release_retention_reviews`.
 
+Export runtime secret-manager and committed configuration evidence before
+production approval:
+
+```bash
+python3 scripts/export_secret_manager_evidence.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment production \
+  --secret-manager-provider vault \
+  --secret-manager-reference vault:tijara/production \
+  --secret-rotation-policy-ref policy:quarterly-secret-rotation \
+  --secret-access-review-ref review:2026-q2-production-secrets \
+  --strict
+```
+
+The exporter checks that `.env.example` contains no secret-like assignments,
+`secrets/.env.secrets.example` contains placeholder secret keys, critical
+Compose secrets use required `:?` guards, the Odoo startup script refuses
+missing or placeholder production secrets, and no non-example secret files are
+present under `secrets/`. It writes `secret-manager-evidence.json`,
+`status.tsv`, `env-summary.txt`, and `summary.md` under
+`deploy/runtime/secret-manager-evidence/<run-id>/`. Include that directory in
+`TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the `security` evidence group for
+production release sign-off; the sign-off package extracts it under
+`secret_manager_reviews`.
+
 Optional tools:
 
 - Run `k6 run scripts/load_smoke.k6.js` for a simple HTTP load smoke.
@@ -845,6 +871,9 @@ Optional tools:
 - Run `make release-retention-evidence` to export artifact-store,
   secret-manager, retention policy, and evidence-fingerprint readiness without
   running the full operations bundle.
+- Run `make secret-manager-evidence` to validate runtime secret-manager
+  references, config-template separation, required secret placeholders, and
+  committed-secret-file hygiene.
 - Run `make container-scan` when Trivy is installed.
 - Run `make dependency-scan` for npm audit and pip-audit where available.
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
@@ -1024,8 +1053,8 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
-  runbook, release retention, load evidence, load profile matrix evidence, and
-  non-secret environment summaries for approvers.
+  runbook, release retention, secret manager, load evidence, load profile
+  matrix evidence, and non-secret environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -1044,7 +1073,10 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   bundle step status and evidence references are included under
   `operations_bundle_reviews`; when release retention evidence is attached,
   artifact-store, secret-manager, retention, and evidence fingerprint reviews
-  are included under `release_retention_reviews`.
+  are included under `release_retention_reviews`; when secret-manager evidence
+  is attached, runtime secret references, template separation, Compose guards,
+  startup guards, and committed-secret hygiene are included under
+  `secret_manager_reviews`.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 
