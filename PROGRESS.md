@@ -2832,3 +2832,66 @@ Date: 2026-06-05
 - Tighten direct POS UI selectors based on real Playwright traces.
 - Continue PSP/FBR/hardware certification evidence work with real provider and
   device inputs.
+
+## Iteration 43: External Certification Evidence Intake
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/collect_certification_evidence.py` for PSP, FBR, and hardware
+  certification evidence intake.
+- The collector:
+  - Requires category-specific metadata before sign-off.
+  - Rejects secret-like metadata keys such as password, token, secret, API key,
+    and client secret fields.
+  - Fingerprints external evidence files or directories with SHA-256 without
+    copying provider/device evidence into the public repo.
+  - Writes `certification-evidence.json`, `status.tsv`, `env-summary.txt`, and
+    `summary.md` under `deploy/runtime/certification-evidence/<run-id>/`.
+  - Supports strict and non-strict modes for staged dry runs versus production
+    release gates.
+- Added operator shortcuts:
+  - `make certification-evidence`
+  - `npm run certification:evidence`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md` with certification
+  evidence collection and release sign-off wiring.
+
+### Validation
+
+- PSP evidence smoke passes and writes `decision=passed`.
+- FBR evidence smoke passes and writes `decision=passed`.
+- Hardware evidence smoke passes and writes `decision=passed`.
+- Secret-like PSP metadata smoke exits non-zero and writes `decision=failed`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/collect_certification_evidence.py` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- Real PSP certification still needs provider UAT/live evidence from JazzCash,
+  Easypaisa, Stripe, bank, or another selected PSP.
+- FBR production readiness still needs certified provider credentials, sandbox
+  approval, live API compliance evidence, and tax-owner sign-off.
+- Hardware production readiness still needs physical device evidence for each
+  printer, scanner, scale, cash drawer, customer display, and label printer
+  model used by tenants.
+- Release sign-off package generation must be run with the real certification
+  evidence directories included in `TIJARA_SIGNOFF_EVIDENCE_PATHS`.
+
+### Next Iteration
+
+- Add provider-specific PSP reconciliation/certification adapters for native
+  signatures, refunds, chargebacks, and settlement batches.
+- Add FBR certified-provider sandbox/live adapter hardening once the provider
+  endpoint and credentials are available.
+- Add device-profile certification records for real printer, drawer, scanner,
+  scale, and display models.

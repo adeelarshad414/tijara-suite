@@ -683,6 +683,63 @@ It continues through package generation and readiness checking even if an
 earlier step fails, so release owners get a complete blocked/ready decision
 instead of only a partial log.
 
+## External Certification Evidence Intake
+
+Collect external certification evidence before the final sign-off package. The
+collector does not copy provider or device evidence into the repo; it validates
+required metadata, rejects secret-like metadata keys, records SHA-256
+fingerprints, and writes release-ingestible evidence under
+`deploy/runtime/certification-evidence/<run-id>/<category>/`.
+
+PSP evidence example:
+
+```bash
+python3 scripts/collect_certification_evidence.py \
+  --run-id 2026-06-05-rc1 \
+  --category psp \
+  --provider JazzCash \
+  --reference JAZZ-UAT-001 \
+  --owner Finance \
+  --evidence-file /secure/evidence/jazzcash-settlement.csv \
+  --metadata settlement_batch=JZ-001
+```
+
+FBR evidence example:
+
+```bash
+python3 scripts/collect_certification_evidence.py \
+  --run-id 2026-06-05-rc1 \
+  --category fbr \
+  --provider CertifiedFBRProvider \
+  --reference FBR-SANDBOX-001 \
+  --owner Tax \
+  --evidence-file /secure/evidence/fbr-sandbox-response.json \
+  --metadata fbr_pos_id=123 \
+  --metadata branch_code=KHI-01
+```
+
+Hardware evidence example:
+
+```bash
+python3 scripts/collect_certification_evidence.py \
+  --run-id 2026-06-05-rc1 \
+  --category hardware \
+  --owner Operations \
+  --store "Karachi Branch" \
+  --device-model "Epson TM-T88VI" \
+  --device-serial "TEST-SERIAL-001" \
+  --evidence-file /secure/evidence/epson-tm-t88vi-certification/
+```
+
+Include the generated directories in the release sign-off package:
+
+```bash
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,psp,fbr,hardware \
+TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
+make signoff-pack
+```
+
 Generate the release sign-off package after collecting release, browser, and
 operations evidence:
 

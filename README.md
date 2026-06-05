@@ -121,6 +121,7 @@ make security-audit
 make hardware-cert-smoke
 make e2e
 make release-candidate
+make certification-evidence
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make staging-release-signoff
@@ -342,6 +343,11 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_release_candidate_gate.sh` and `make release-candidate` assemble
   local, Odoo, browser, and operations checks into a release-candidate evidence
   report under `deploy/runtime/release-evidence/`.
+- `scripts/collect_certification_evidence.py` and `make certification-evidence`
+  collect PSP, FBR, and hardware certification metadata, reject secret-like
+  metadata fields, fingerprint external evidence files or directories, and
+  write sign-off-ready summaries under
+  `deploy/runtime/certification-evidence/`.
 - `scripts/generate_signoff_pack.py` and `make signoff-pack` generate release
   approval templates, an evidence summary, machine-readable readiness JSON, and
   an evidence manifest for PSP, FBR, hardware, finance, security, and go/no-go
