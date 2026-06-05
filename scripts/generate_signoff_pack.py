@@ -407,6 +407,7 @@ def _evidence_group(entry):
         or "protected-offline-replay" in relative_lower
         or "github-artifact-metadata" in relative_lower
         or "protected-runner-preflight" in relative_lower
+        or "protected-runner-bootstrap-verification" in relative_lower
         or "release-retention-evidence" in relative_lower
         or "deployment-environment-evidence" in relative_lower
         or "deployment-environments" in relative_lower
@@ -431,6 +432,7 @@ def _evidence_group(entry):
         or filename == "protected-offline-replay-evidence.json"
         or filename == "github-artifact-metadata.json"
         or filename == "protected-runner-preflight.json"
+        or filename == "protected-runner-bootstrap-verification.json"
         or filename == "release-retention-evidence.json"
         or filename == "deployment-environment-evidence.json"
         or filename == "tenant-ops-evidence.json"

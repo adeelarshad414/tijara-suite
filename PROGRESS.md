@@ -7817,3 +7817,92 @@ Status: Complete
   credentials, and artifacts are available.
 - Continue provider/device certification and live offline POS pilot proof once
   credentials and staging hardware are available.
+
+## Iteration 108: Protected Runner Bootstrap Verification
+
+Status: Complete
+
+### Scope
+
+- Correlate protected-runner bootstrap evidence with protected-runner preflight
+  evidence so DevOps can prove the runner install plan and strict release
+  gate agree on required tool availability.
+
+### Completed
+
+- Added `scripts/export_protected_runner_bootstrap_verification.py`.
+- Added `make protected-runner-bootstrap-verification`.
+- The verifier consumes bootstrap `tool-status.tsv` plus
+  `protected-runner-preflight.json`, compares required and optional tool
+  statuses/version output, and writes:
+  `protected-runner-bootstrap-verification.json`, `tool-correlation.tsv`,
+  `status.tsv`, `env-summary.txt`, and `summary.md`.
+- Default verifier mode warns when bootstrap evidence is missing; strict mode
+  fails when bootstrap evidence, preflight evidence, or required tool
+  correlations are incomplete.
+- Registered `protected-runner-bootstrap-verification` as a protected artifact
+  family in first-run expected artifacts, protected handoff review order,
+  post-run required artifacts, protected artifact summary defaults, and
+  sign-off package Operations classification.
+- Wired the protected GitHub workflow to run bootstrap verification after
+  protected runner preflight, include it in retention evidence, sign-off
+  evidence paths, and uploaded protected release artifacts.
+- Added protected GitHub Environment variables:
+  `TIJARA_BOOTSTRAP_VERIFICATION_BOOTSTRAP_EVIDENCE`,
+  `TIJARA_BOOTSTRAP_VERIFICATION_REQUIRED_TOOLS`, and
+  `TIJARA_BOOTSTRAP_VERIFICATION_STRICT`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile`
+  passes for the new verifier and related protected artifact/sign-off scripts.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and exposes
+  bootstrap verification variables and updated artifact lists.
+- Bootstrap fixture with required tools
+  `python3,node,npm,docker,docker-compose,k6` writes dry-run evidence under
+  `/private/tmp/tijara-bootstrap-verification/bootstrap`.
+- Matching protected preflight fixture writes `decision=passed` and
+  `ci_status=pass` under
+  `/private/tmp/tijara-bootstrap-verification/preflight`.
+- Strict verifier fixture with matching bootstrap/preflight evidence writes
+  `decision=passed`, `ci_status=pass`, and aligned `tool-correlation.tsv`
+  rows.
+- Missing-bootstrap verifier fixture writes `decision=warning` by default and
+  `decision=failed` with `--strict`.
+- `make protected-runner-bootstrap-verification` passes with fixture env vars.
+- First-run checklist fixture passes and includes
+  `protected-runner-bootstrap-verification`.
+- Protected handoff fixture passes and lists
+  `protected-runner-bootstrap-verification.json` plus `tool-correlation.tsv` in
+  artifact review order.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- Correlation is validated with local fixtures; it still needs a real
+  self-hosted protected runner where bootstrap evidence and preflight evidence
+  are produced by the same runner image/account.
+- The workflow default remains warning-mode until
+  `TIJARA_BOOTSTRAP_VERIFICATION_BOOTSTRAP_EVIDENCE` is pointed at archived
+  real bootstrap evidence and `TIJARA_BOOTSTRAP_VERIFICATION_STRICT=1`.
+- PSP/FBR certification, physical hardware certification, payment provider
+  settlement/refund/chargeback certification, live offline POS pilot proof, and
+  full production monitoring remain blockers.
+
+### Next Iteration
+
+- Add live staging protected-run evidence once the self-hosted runner, URLs,
+  credentials, and artifacts are available.
+- Add PSP/FBR/hardware certification execution evidence when provider
+  credentials and physical devices are available.
+- Continue hardening monitoring, restore drills, load testing, security scans,
+  and offline POS pilot proof against real staging infrastructure.

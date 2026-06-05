@@ -1099,6 +1099,26 @@ the protected release. Keep package installation outside the release workflow
 itself so production evidence runs only prove readiness and do not mutate the
 runner.
 
+After bootstrap and preflight evidence both exist, correlate them:
+
+```bash
+python3 scripts/export_protected_runner_bootstrap_verification.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment staging \
+  --bootstrap-evidence deploy/runtime/protected-runner-bootstrap/2026-06-05-rc1 \
+  --preflight-evidence deploy/runtime/protected-runner-preflight/2026-06-05-rc1/protected-runner-preflight.json \
+  --output deploy/runtime/protected-runner-bootstrap-verification/2026-06-05-rc1 \
+  --strict
+```
+
+The verifier writes `protected-runner-bootstrap-verification.json`,
+`tool-correlation.tsv`, `status.tsv`, `env-summary.txt`, and `summary.md`.
+Protected CI also runs the verifier after preflight. By default it warns when
+no external bootstrap evidence path is attached; set
+`TIJARA_BOOTSTRAP_VERIFICATION_BOOTSTRAP_EVIDENCE` and
+`TIJARA_BOOTSTRAP_VERIFICATION_STRICT=1` after the real runner bootstrap has
+been executed and archived.
+
 For staging or production drills, use the manual `workflow_dispatch` profile in
 the same workflow:
 
@@ -1132,7 +1152,9 @@ The protected job first exports an operator handoff runbook under
 checklist under `deploy/runtime/protected-first-run/<run-id>/`, exports
 redacted runner preflight evidence under
 `deploy/runtime/protected-runner-preflight/<run-id>/`, including required and
-optional toolchain availability/version checks, runs the
+optional toolchain availability/version checks, exports protected runner
+bootstrap verification under
+`deploy/runtime/protected-runner-bootstrap-verification/<run-id>/`, runs the
 authenticated service checks under
 `deploy/runtime/protected-service-checks/<run-id>/`, exports protected PSP/FBR
 provider readiness under

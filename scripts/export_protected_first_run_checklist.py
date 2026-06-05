@@ -13,6 +13,7 @@ DEFAULT_ARTIFACTS = [
     "protected-runbook-handoff",
     "protected-first-run",
     "protected-runner-preflight",
+    "protected-runner-bootstrap-verification",
     "protected-service-checks",
     "protected-provider-readiness",
     "protected-payment-lifecycle",

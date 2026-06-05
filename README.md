@@ -450,6 +450,11 @@ The detailed policy and dependency intake checklist are maintained in
   first protected-runner install plan, current tool/version scan, exact
   preflight command, and GitHub environment notes for Ubuntu/Debian and macOS
   self-hosted runners before strict staging/production release dispatch.
+- `scripts/export_protected_runner_bootstrap_verification.py` and
+  `make protected-runner-bootstrap-verification` compare bootstrap
+  `tool-status.tsv` with `protected-runner-preflight.json`, write
+  `tool-correlation.tsv`, and add a protected artifact family under
+  `deploy/runtime/protected-runner-bootstrap-verification/`.
 - `scripts/export_protected_service_checks.py` and
   `make protected-service-checks` export deeper protected service checks for
   Odoo login/session authentication, signed hardware bridge test jobs,
