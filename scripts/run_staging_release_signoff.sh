@@ -11,6 +11,7 @@ RELEASE_DIR="${TIJARA_RELEASE_EVIDENCE_DIR:-$RUNTIME_ROOT/release-evidence/$RUN_
 E2E_DIR="${TIJARA_E2E_EVIDENCE_DIR:-$RUNTIME_ROOT/e2e-evidence/$RUN_ID}"
 OPS_DIR="${TIJARA_OPS_EVIDENCE_DIR:-$RUNTIME_ROOT/ops-evidence/$RUN_ID}"
 ENV_PROTECTION_DIR="${TIJARA_ENV_PROTECTION_OUTPUT:-$RUNTIME_ROOT/deployment-environments/$RUN_ID}"
+TENANT_OPS_DIR="${TIJARA_TENANT_OPS_OUTPUT:-$RUNTIME_ROOT/tenant-ops-evidence/$RUN_ID}"
 SIGNOFF_DIR="${TIJARA_SIGNOFF_OUTPUT:-$RUNTIME_ROOT/signoff-packages/$RUN_ID}"
 READINESS_FILE="$SIGNOFF_DIR/release-readiness.json"
 SUMMARY_FILE="$ORCH_DIR/summary.md"
@@ -24,10 +25,30 @@ REQUIRED_GROUPS="${TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS:-release,e2e,ops}"
 STRICT_REQUIRED="${TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE:-1}"
 FAIL_ON_WARNING="${TIJARA_STAGING_RELEASE_FAIL_ON_WARNING:-${TIJARA_RELEASE_FAIL_ON_WARNING:-1}}"
 ENV_PROTECTION_STRICT="${TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT:-$STRICT_REQUIRED}"
+TENANT_OPS_ARTIFACTS="${TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS:-${TIJARA_TENANT_OPS_ARTIFACTS:-}}"
+TENANT_OPS_INCLUDE="${TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS:-}"
+if [[ -z "$TENANT_OPS_INCLUDE" && -n "$TENANT_OPS_ARTIFACTS" ]]; then
+    TENANT_OPS_INCLUDE="1"
+elif [[ -z "$TENANT_OPS_INCLUDE" ]]; then
+    TENANT_OPS_INCLUDE="0"
+fi
+TENANT_OPS_STRICT="${TIJARA_STAGING_RELEASE_TENANT_OPS_STRICT:-$STRICT_REQUIRED}"
 ENV_PROTECTION_ARGS=(--non-strict)
 case "$(echo "$ENV_PROTECTION_STRICT" | tr '[:upper:]' '[:lower:]')" in
     1|true|yes|y|on)
         ENV_PROTECTION_ARGS=(--strict)
+        ;;
+esac
+TENANT_OPS_ARGS=(--non-strict)
+case "$(echo "$TENANT_OPS_STRICT" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        TENANT_OPS_ARGS=(--strict)
+        ;;
+esac
+SIGNOFF_EVIDENCE_PATHS="$RELEASE_DIR,$E2E_DIR,$OPS_DIR,$ENV_PROTECTION_DIR"
+case "$(echo "$TENANT_OPS_INCLUDE" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS,$TENANT_OPS_DIR"
         ;;
 esac
 
@@ -43,6 +64,7 @@ mkdir -p "$ORCH_DIR"
     echo "e2e_evidence_dir=$E2E_DIR"
     echo "ops_evidence_dir=$OPS_DIR"
     echo "deployment_environment_dir=$ENV_PROTECTION_DIR"
+    echo "tenant_ops_evidence_dir=$TENANT_OPS_DIR"
     echo "signoff_dir=$SIGNOFF_DIR"
     echo "readiness_file=$READINESS_FILE"
     echo "started_at=$STARTED_AT"
@@ -51,6 +73,10 @@ mkdir -p "$ORCH_DIR"
     echo "strict_required_evidence=$STRICT_REQUIRED"
     echo "fail_on_warning=$FAIL_ON_WARNING"
     echo "deployment_environment_strict=$ENV_PROTECTION_STRICT"
+    echo "tenant_ops_include=$TENANT_OPS_INCLUDE"
+    echo "tenant_ops_strict=$TENANT_OPS_STRICT"
+    echo "tenant_ops_artifacts=${TENANT_OPS_ARTIFACTS:-<unset>}"
+    echo "signoff_evidence_paths=$SIGNOFF_EVIDENCE_PATHS"
     echo
     echo "ODOO_BASE_URL=${ODOO_BASE_URL:-<unset>}"
     echo "ODOO_DATABASE=${ODOO_DATABASE:-<unset>}"
@@ -105,12 +131,27 @@ run_step "deployment-environment" \
     TIJARA_ENV_PROTECTION_OUTPUT="$ENV_PROTECTION_DIR" \
     python3 scripts/export_deployment_environment_evidence.py "${ENV_PROTECTION_ARGS[@]}"
 
+case "$(echo "$TENANT_OPS_INCLUDE" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        run_step "tenant-ops" \
+            env \
+            TIJARA_TENANT_OPS_RUN_ID="$RUN_ID" \
+            TIJARA_TENANT_OPS_ENVIRONMENT="$SIGNOFF_ENVIRONMENT" \
+            TIJARA_TENANT_OPS_OUTPUT="$TENANT_OPS_DIR" \
+            TIJARA_TENANT_OPS_ARTIFACTS="$TENANT_OPS_ARTIFACTS" \
+            python3 scripts/export_tenant_ops_evidence.py "${TENANT_OPS_ARGS[@]}"
+        ;;
+    *)
+        record_status "tenant-ops" "skipped" "0" "" "tenant operations evidence not requested"
+        ;;
+esac
+
 run_step "signoff-pack" \
     env \
     TIJARA_SIGNOFF_RUN_ID="$RUN_ID" \
     TIJARA_SIGNOFF_ENVIRONMENT="$SIGNOFF_ENVIRONMENT" \
     TIJARA_SIGNOFF_OUTPUT="$SIGNOFF_DIR" \
-    TIJARA_SIGNOFF_EVIDENCE_PATHS="$RELEASE_DIR,$E2E_DIR,$OPS_DIR,$ENV_PROTECTION_DIR" \
+    TIJARA_SIGNOFF_EVIDENCE_PATHS="$SIGNOFF_EVIDENCE_PATHS" \
     TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS="$REQUIRED_GROUPS" \
     TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE="$STRICT_REQUIRED" \
     make signoff-pack
@@ -156,6 +197,7 @@ fi
     echo "- Browser E2E evidence: $E2E_DIR"
     echo "- Operations evidence: $OPS_DIR"
     echo "- Deployment environment evidence: $ENV_PROTECTION_DIR"
+    echo "- Tenant operations evidence: $TENANT_OPS_DIR"
     echo "- Sign-off package: $SIGNOFF_DIR"
     echo "- Readiness JSON: $READINESS_FILE"
     echo

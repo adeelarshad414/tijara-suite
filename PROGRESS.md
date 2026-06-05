@@ -4553,3 +4553,77 @@ Date: 2026-06-05
   selected.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 66: Tenant Operations Staging Sign-Off Wiring
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/run_staging_release_signoff.sh` so the staging release
+  wrapper can include tenant operations evidence when tenant artifact paths are
+  supplied.
+- Added wrapper support for:
+  - `TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS`
+  - `TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS`
+  - `TIJARA_STAGING_RELEASE_TENANT_OPS_STRICT`
+  - `TIJARA_TENANT_OPS_OUTPUT`
+- The wrapper now:
+  - Writes tenant operations evidence under
+    `deploy/runtime/tenant-ops-evidence/<run-id>/`.
+  - Appends tenant operations evidence to `TIJARA_SIGNOFF_EVIDENCE_PATHS` when
+    tenant operations evidence is enabled.
+  - Records tenant operations configuration in the staging release environment
+    summary.
+  - Records the tenant operations evidence path in the staging release summary.
+  - Skips the tenant operations step by default when no tenant artifact path is
+    supplied, so existing local and CI-style release drills remain compatible.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_staging_release_signoff.sh` passes.
+- `git diff --check` passes.
+- Focused local staging release wrapper drill passes with:
+  - `TIJARA_STAGING_RELEASE_RUN_ID=tenant-ops-wrapper`
+  - `TIJARA_STAGING_RELEASE_RUNTIME_ROOT=/private/tmp/tijara-staging-wrapper-runtime`
+  - `TIJARA_STAGING_RELEASE_CHECKS=local`
+  - strict deployment environment evidence
+  - strict tenant operations evidence
+  - `TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS=/private/tmp/tijara-tenant-artifacts/tijara_customer_qa`
+  - `TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,ops`
+- The wrapper wrote tenant operations evidence under
+  `/private/tmp/tijara-staging-wrapper-runtime/tenant-ops-evidence/tenant-ops-wrapper`.
+- The wrapper appended tenant operations evidence to the generated sign-off
+  evidence paths.
+- The staging release summary recorded `tenant-ops: passed`.
+- Confirmed the generated sign-off package includes Tenant Operations Evidence.
+- Confirmed the generated `release-readiness.json` includes
+  `tenant_ops_reviews`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-staging-wrapper-runtime/signoff-packages/tenant-ops-wrapper/release-readiness.json`
+  passes with `decision=ready` and `ci_status=pass`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- The wrapper can collect and attach tenant readiness evidence, but DNS/provider
+  API pushes, certificate issuance confirmation, admin-user creation, backup-job
+  registration, tenant smoke execution, and tenant database cloud provisioning
+  still require real platform integration.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add provider-specific DNS/ingress automation once the deployment platform is
+  selected.
+- Add production smoke execution against tenant artifact bundles after staging
+  tenants are available.
+- Continue staging/live FBR transaction execution when credentials are
+  available.

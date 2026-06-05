@@ -218,9 +218,10 @@ subscription impact actions, dunning, and suspension actions. Tenant database
 provisioning has an operator script for database-per-tenant module install plus
 DNS/ingress/admin/backup/monitoring operations manifests, generated
 Kubernetes/Nginx/DNS/TLS/backup/admin/smoke-test artifacts, and tenant
-operations evidence that can be attached to release sign-off. The repo also
-includes Playwright browser E2E seed and checkout scaffolds, hardware
-certification records/profiles,
+operations evidence that can be attached to release sign-off; the staging
+release wrapper can include that evidence automatically when tenant artifact
+paths are supplied. The repo also includes Playwright browser E2E seed and
+checkout scaffolds, hardware certification records/profiles,
 Prometheus/Blackbox/Alertmanager/Grafana/Loki monitoring config, staging
 monitoring drill script, restore-drill scripts, and container/dependency scan
 hooks. Authenticated staging browser evidence now includes an integrated POS

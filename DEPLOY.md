@@ -1070,6 +1070,8 @@ TIJARA_E2E_SCOPE=full \
 TIJARA_OPS_CHECKS=full \
 TIJARA_OPS_STRICT=1 \
 TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT=1 \
+TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS=deploy/runtime/tenants/tijara_customer_001 \
+TIJARA_STAGING_RELEASE_TENANT_OPS_STRICT=1 \
 TIJARA_DEPLOYMENT_ENVIRONMENT_NAME=staging \
 TIJARA_BRANCH_POLICY_REF=github:protected-branches/main \
 TIJARA_DEPLOYMENT_APPROVERS="Release Owner,DevOps Owner" \
@@ -1097,12 +1099,20 @@ The wrapper keeps a single run ID across:
 - `deploy/runtime/release-retention-evidence/<run-id>/` when exported
   separately or nested under an operations release bundle.
 - `deploy/runtime/deployment-environments/<run-id>/`
+- `deploy/runtime/tenant-ops-evidence/<run-id>/` when
+  `TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS` is set.
 - `deploy/runtime/signoff-packages/<run-id>/`
 - `deploy/runtime/staging-release/<run-id>/`
 
 It continues through package generation and readiness checking even if an
 earlier step fails, so release owners get a complete blocked/ready decision
 instead of only a partial log.
+Tenant operations evidence is opt-in for the wrapper. Set
+`TIJARA_STAGING_RELEASE_TENANT_OPS_ARTIFACTS` to one or more comma-separated
+tenant artifact directories, or set `TIJARA_STAGING_RELEASE_INCLUDE_TENANT_OPS=1`
+with `TIJARA_TENANT_OPS_ARTIFACTS`. When enabled, the wrapper appends tenant
+operations evidence to `TIJARA_SIGNOFF_EVIDENCE_PATHS`, and release readiness
+includes `tenant_ops_reviews`.
 
 ## External Certification Evidence Intake
 
