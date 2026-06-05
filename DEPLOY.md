@@ -1269,6 +1269,7 @@ TIJARA_DEPLOYMENT_TARGET=production \
 TIJARA_DEPLOYMENT_BACKUP_REF=deploy/runtime/backups/2026-06-05-pre-prod.dump \
 TIJARA_DEPLOYMENT_ROLLBACK_REF=ghcr.io/example/tijara-suite:previous \
 TIJARA_DEPLOYMENT_MONITORING_REF=grafana-dashboard-prod-pos \
+TIJARA_DEPLOYMENT_TENANT_SMOKE_REF=deploy/runtime/tenant-smoke/2026-06-05-prod/tenant-smoke-evidence.json \
 TIJARA_DEPLOYMENT_APPROVER="Release Owner" \
 TIJARA_DEPLOYMENT_FAIL_ON_WARNING=1 \
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/2026-06-05-rc1/release-readiness.json
@@ -1276,9 +1277,11 @@ make production-deployment-gate READINESS=deploy/runtime/signoff-packages/2026-0
 
 For `TIJARA_DEPLOYMENT_TARGET=production`, deployment environment protection
 evidence in `release-readiness.json`, backup reference, rollback reference,
-monitoring reference, sign-off package, and approver are required by default.
-Set `TIJARA_DEPLOYMENT_REQUIRE_ENVIRONMENT_PROTECTION=0` only for an explicitly
-approved non-production drill. The gate writes `deployment-decision.json`,
+tenant smoke reviews in `release-readiness.json`, tenant smoke evidence
+reference, monitoring reference, sign-off package, and approver are required by
+default. Set `TIJARA_DEPLOYMENT_REQUIRE_ENVIRONMENT_PROTECTION=0` or
+`TIJARA_DEPLOYMENT_REQUIRE_TENANT_SMOKE=0` only for an explicitly approved
+non-production drill. The gate writes `deployment-decision.json`,
 `status.tsv`, `summary.md`, `pre-cutover-checklist.md`, and
 `rollback-checklist.md` under `deploy/runtime/deployment-gates/<run-id>/`. It
 exits non-zero when deployment is blocked.
@@ -1349,6 +1352,7 @@ Capture monitoring evidence after deployment or rollback:
 python3 scripts/export_monitoring_evidence.py \
   --run-id 2026-06-05-prod \
   --smoke-decision deploy/runtime/production-smoke/2026-06-05-prod/smoke-decision.json \
+  --tenant-smoke-evidence deploy/runtime/tenant-smoke/2026-06-05-prod/tenant-smoke-evidence.json \
   --deployment-decision deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json \
   --rollback-decision deploy/runtime/rollback-runs/2026-06-05-prod/rollback-decision.json \
   --prometheus-url https://prometheus.example.com \

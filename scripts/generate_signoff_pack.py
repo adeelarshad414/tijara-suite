@@ -616,6 +616,7 @@ def _monitoring_reviews(evidence_entries):
                 "decision": payload.get("decision", ""),
                 "ci_status": payload.get("ci_status", ""),
                 "smoke_decision_attached": bool(refs.get("smoke_decision")),
+                "tenant_smoke_attached": bool(refs.get("tenant_smoke_evidence")),
                 "deployment_decision_attached": bool(refs.get("deployment_decision")),
                 "rollback_decision_attached": bool(refs.get("rollback_decision")),
                 "check_count": len(payload.get("checks") or []),
@@ -1171,9 +1172,10 @@ def _evidence_summary(context, evidence_entries):
         monitoring_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
         monitoring_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
         monitoring_lines.append(
-            "- Smoke/deployment/rollback refs: %s/%s/%s"
+            "- Smoke/tenant-smoke/deployment/rollback refs: %s/%s/%s/%s"
             % (
                 "yes" if review["smoke_decision_attached"] else "no",
+                "yes" if review["tenant_smoke_attached"] else "no",
                 "yes" if review["deployment_decision_attached"] else "no",
                 "yes" if review["rollback_decision_attached"] else "no",
             )

@@ -83,6 +83,7 @@ def _step_specs(args, output):
     incident_dir = output / "incident-runbook"
     retention_dir = output / "release-retention"
     smoke_decision = smoke_dir / "smoke-decision.json"
+    tenant_smoke_evidence = tenant_smoke_dir / "tenant-smoke-evidence.json"
     monitoring_evidence = monitoring_dir / "monitoring-evidence.json"
 
     specs = {
@@ -243,6 +244,8 @@ def _step_specs(args, output):
 
     if smoke_decision.is_file() or "smoke" in args.checks:
         specs["monitoring"]["command"].extend(["--smoke-decision", str(smoke_decision)])
+    if tenant_smoke_evidence.is_file() or "tenant-smoke" in args.checks:
+        specs["monitoring"]["command"].extend(["--tenant-smoke-evidence", str(tenant_smoke_evidence)])
     if args.deployment_decision:
         specs["monitoring"]["command"].extend(["--deployment-decision", args.deployment_decision])
         specs["smoke"]["command"].extend(["--deployment-decision", args.deployment_decision])

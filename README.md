@@ -443,7 +443,8 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_production_deployment_gate.py` and
   `make production-deployment-gate` generate deployment gate evidence from a
   staging sign-off package, including required deployment environment evidence,
-  backup, rollback, monitoring, approver, pre-cutover, and rollback checklists.
+  tenant smoke reviews, backup, rollback, monitoring, approver, pre-cutover,
+  and rollback checklists.
 - `scripts/run_production_rollback.py` and `make production-rollback` provide
   dry-run-first rollback hooks for manifest, Docker Compose, and Kubernetes
   providers, with command logs and rollback decision evidence.
@@ -455,8 +456,8 @@ The detailed policy and dependency intake checklist are maintained in
   probes, database-isolation request headers, smoke checklist coverage, and
   tenant-level release blockers under `deploy/runtime/tenant-smoke/`.
 - `scripts/export_monitoring_evidence.py` and `make monitoring-evidence`
-  collect post-deploy monitoring evidence from smoke, deployment, rollback, and
-  Prometheus/Alertmanager/Grafana endpoint probes under
+  collect post-deploy monitoring evidence from production smoke, tenant smoke,
+  deployment, rollback, and Prometheus/Alertmanager/Grafana endpoint probes under
   `deploy/runtime/monitoring-evidence/`.
 - `scripts/export_incident_runbook_evidence.py` and
   `make incident-runbook-evidence` collect release owner, DevOps, support,

@@ -4728,3 +4728,86 @@ Date: 2026-06-05
   selected.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 68: Tenant Smoke Production Gate and Monitoring Wiring
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/run_production_deployment_gate.py` so production deployment
+  gates now check `tenant_smoke_reviews` in `release-readiness.json`.
+- Production deployment gates now require tenant smoke reviews by default when
+  `TIJARA_DEPLOYMENT_TARGET=production`.
+- Added `TIJARA_DEPLOYMENT_REQUIRE_TENANT_SMOKE=0` as an explicit
+  non-production/pilot override.
+- Added `TIJARA_DEPLOYMENT_TENANT_SMOKE_REF` / `--tenant-smoke-ref` so
+  deployment gate evidence can record the concrete tenant-smoke evidence
+  reference reviewed for cutover.
+- Enhanced `scripts/export_monitoring_evidence.py` with
+  `--tenant-smoke-evidence` / `TIJARA_MONITORING_TENANT_SMOKE_EVIDENCE`.
+- Monitoring evidence now treats tenant smoke as a first-class post-deploy
+  signal alongside production smoke, deployment gate, rollback evidence, and
+  monitoring endpoints.
+- Enhanced `scripts/run_operations_release_bundle.py` so bundled monitoring
+  evidence receives the tenant smoke evidence path when the `tenant-smoke`
+  bundle step is enabled.
+- Enhanced `scripts/generate_signoff_pack.py` monitoring extraction so
+  `monitoring_reviews` records whether tenant-smoke evidence was attached.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/run_production_deployment_gate.py scripts/export_monitoring_evidence.py
+  scripts/run_operations_release_bundle.py scripts/generate_signoff_pack.py`
+  passes.
+- `git diff --check` passes.
+- Generated strict deployment environment evidence under
+  `/private/tmp/tijara-deployment-env-tenant-smoke-gate`.
+- Generated a sign-off package with deployment environment and tenant-smoke
+  evidence under `/private/tmp/tijara-signoff-tenant-smoke-prod-gate`.
+- Confirmed `release-readiness.json` includes both
+  `deployment_environment_reviews` and `tenant_smoke_reviews`.
+- Production deployment gate passes with tenant-smoke reviews and
+  `--tenant-smoke-ref` supplied:
+  `/private/tmp/tijara-prod-gate-tenant-smoke/deployment-decision.json`
+  records `decision=ready` and `ci_status=pass`.
+- Production deployment gate blocks when readiness lacks tenant-smoke reviews:
+  `/private/tmp/tijara-prod-gate-missing-tenant-smoke/deployment-decision.json`
+  records `decision=blocked` and `ci_status=fail`.
+- Monitoring evidence export with `--tenant-smoke-evidence` records the
+  tenant-smoke row as passed and stores the tenant-smoke evidence reference in
+  `monitoring-evidence.json`.
+- Generated a sign-off package from monitoring evidence and confirmed
+  `monitoring_reviews` includes `tenant_smoke_attached=true`.
+- Focused operations release bundle with `tenant-smoke,monitoring` confirms the
+  bundled monitoring step automatically receives
+  `tenant-smoke/tenant-smoke-evidence.json`.
+- The temporary localhost HTTP server used for the focused bundle validation
+  was stopped.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Production tenant smoke gating now exists in code, but production proof still
+  needs reachable tenant URLs, DNS/TLS cutover, seeded public display/queue/kiosk
+  routes, and an actual deployment gate run against staging sign-off evidence.
+- Authenticated POS checkout/refund browser E2E still requires a staging POS
+  user and seeded POS register.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add provider-specific DNS/ingress automation once the deployment platform is
+  selected.
+- Add real staging tenant smoke and monitoring runs once tenant URLs are
+  available.
+- Continue staging/live FBR transaction execution when credentials are
+  available.

@@ -166,6 +166,7 @@ def main():
     parser.add_argument("--target-environment", default=os.environ.get("TIJARA_MONITORING_ENVIRONMENT", "production"))
     parser.add_argument("--output", default=os.environ.get("TIJARA_MONITORING_OUTPUT", ""))
     parser.add_argument("--smoke-decision", default=os.environ.get("TIJARA_MONITORING_SMOKE_DECISION", ""))
+    parser.add_argument("--tenant-smoke-evidence", default=os.environ.get("TIJARA_MONITORING_TENANT_SMOKE_EVIDENCE", ""))
     parser.add_argument("--deployment-decision", default=os.environ.get("TIJARA_MONITORING_DEPLOYMENT_DECISION", ""))
     parser.add_argument("--rollback-decision", default=os.environ.get("TIJARA_MONITORING_ROLLBACK_DECISION", ""))
     parser.add_argument("--prometheus-url", default=os.environ.get("TIJARA_PROMETHEUS_URL", ""))
@@ -183,6 +184,7 @@ def main():
 
     try:
         smoke_decision, smoke_path = _load_json(args.smoke_decision)
+        tenant_smoke_evidence, tenant_smoke_path = _load_json(args.tenant_smoke_evidence)
         deployment_decision, deployment_path = _load_json(args.deployment_decision)
         rollback_decision, rollback_path = _load_json(args.rollback_decision)
     except RuntimeError as error:
@@ -194,6 +196,13 @@ def main():
             "production-smoke",
             smoke_decision,
             smoke_path,
+            {"passed"},
+            {"warning"},
+        ),
+        _decision_row(
+            "tenant-smoke",
+            tenant_smoke_evidence,
+            tenant_smoke_path,
             {"passed"},
             {"warning"},
         ),
@@ -261,6 +270,7 @@ def main():
         "warnings": warnings,
         "evidence_refs": {
             "smoke_decision": smoke_path,
+            "tenant_smoke_evidence": tenant_smoke_path,
             "deployment_decision": deployment_path,
             "rollback_decision": rollback_path,
         },
@@ -271,6 +281,7 @@ def main():
             "run_id=%s" % args.run_id,
             "target_environment=%s" % args.target_environment,
             "smoke_decision=%s" % (smoke_path or "<unset>"),
+            "tenant_smoke_evidence=%s" % (tenant_smoke_path or "<unset>"),
             "deployment_decision=%s" % (deployment_path or "<unset>"),
             "rollback_decision=%s" % (rollback_path or "<unset>"),
             "prometheus_url=%s" % (args.prometheus_url or "<unset>"),
