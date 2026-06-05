@@ -4309,3 +4309,70 @@ Date: 2026-06-05
   provider is selected.
 - Continue staging/live FBR transaction execution when credentials are
   available.
+
+## Iteration 63: Deployment Environment Orchestration Wiring
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/run_staging_release_signoff.sh` so the staging release
+  wrapper now:
+  - Generates deployment environment evidence under
+    `deploy/runtime/deployment-environments/<run-id>/`.
+  - Includes deployment environment evidence in `TIJARA_SIGNOFF_EVIDENCE_PATHS`.
+  - Records the deployment environment evidence path in orchestration summary
+    output.
+  - Supports `TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT` so staging and
+    production drills can make missing environment protection release-blocking.
+- Enhanced `scripts/run_production_deployment_gate.py` so production gates now
+  require `deployment_environment_reviews` in `release-readiness.json` by
+  default.
+- Added `TIJARA_DEPLOYMENT_REQUIRE_ENVIRONMENT_PROTECTION=0` as an explicit
+  non-production override for drills.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_staging_release_signoff.sh` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/run_production_deployment_gate.py` passes.
+- Staging release wrapper passes with local checks and strict deployment
+  environment evidence using `/private/tmp/tijara-staging-env-wire-runtime`.
+- Confirmed the wrapper-generated sign-off package includes
+  `deployment_environment_reviews`.
+- Confirmed wrapper-generated `release-readiness.json` exits `0` with
+  `decision=ready` and `ci_status=pass`.
+- Production deployment gate passes against readiness that includes deployment
+  environment reviews when backup, rollback, monitoring, and approver refs are
+  supplied.
+- Production deployment gate exits non-zero and writes `decision=blocked` when
+  readiness lacks deployment environment protection evidence.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- The wrapper now requires/reports environment-protection evidence, but real
+  GitHub Environment rules, cloud deployment approvals, or Kubernetes admission
+  controls must still be configured in the production platform.
+- Production runtime secret-manager connectivity checks still depend on the
+  selected provider and credentials.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Add production runtime secret-manager connectivity checks after the target
+  provider is selected.
+- Add provider-specific deployment environment automation once GitHub
+  Environments or another deployment platform is selected.
+- Continue staging/live FBR transaction execution when credentials are
+  available.

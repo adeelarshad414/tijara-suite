@@ -426,12 +426,12 @@ The detailed policy and dependency intake checklist are maintained in
   on `warning`.
 - `scripts/run_staging_release_signoff.sh` and `make staging-release-signoff`
   sequence staging release-candidate evidence, browser E2E evidence, operations
-  evidence, sign-off package generation, readiness checking, and artifact path
-  reporting under one run ID.
+  evidence, deployment environment evidence, sign-off package generation,
+  readiness checking, and artifact path reporting under one run ID.
 - `scripts/run_production_deployment_gate.py` and
   `make production-deployment-gate` generate deployment gate evidence from a
-  staging sign-off package, including backup, rollback, monitoring, approver,
-  pre-cutover, and rollback checklists.
+  staging sign-off package, including required deployment environment evidence,
+  backup, rollback, monitoring, approver, pre-cutover, and rollback checklists.
 - `scripts/run_production_rollback.py` and `make production-rollback` provide
   dry-run-first rollback hooks for manifest, Docker Compose, and Kubernetes
   providers, with command logs and rollback decision evidence.

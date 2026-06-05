@@ -10,6 +10,7 @@ ORCH_DIR="${TIJARA_STAGING_RELEASE_EVIDENCE_DIR:-$RUNTIME_ROOT/staging-release/$
 RELEASE_DIR="${TIJARA_RELEASE_EVIDENCE_DIR:-$RUNTIME_ROOT/release-evidence/$RUN_ID}"
 E2E_DIR="${TIJARA_E2E_EVIDENCE_DIR:-$RUNTIME_ROOT/e2e-evidence/$RUN_ID}"
 OPS_DIR="${TIJARA_OPS_EVIDENCE_DIR:-$RUNTIME_ROOT/ops-evidence/$RUN_ID}"
+ENV_PROTECTION_DIR="${TIJARA_ENV_PROTECTION_OUTPUT:-$RUNTIME_ROOT/deployment-environments/$RUN_ID}"
 SIGNOFF_DIR="${TIJARA_SIGNOFF_OUTPUT:-$RUNTIME_ROOT/signoff-packages/$RUN_ID}"
 READINESS_FILE="$SIGNOFF_DIR/release-readiness.json"
 SUMMARY_FILE="$ORCH_DIR/summary.md"
@@ -22,6 +23,13 @@ SIGNOFF_ENVIRONMENT="${TIJARA_SIGNOFF_ENVIRONMENT:-staging}"
 REQUIRED_GROUPS="${TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS:-release,e2e,ops}"
 STRICT_REQUIRED="${TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE:-1}"
 FAIL_ON_WARNING="${TIJARA_STAGING_RELEASE_FAIL_ON_WARNING:-${TIJARA_RELEASE_FAIL_ON_WARNING:-1}}"
+ENV_PROTECTION_STRICT="${TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT:-$STRICT_REQUIRED}"
+ENV_PROTECTION_ARGS=(--non-strict)
+case "$(echo "$ENV_PROTECTION_STRICT" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+        ENV_PROTECTION_ARGS=(--strict)
+        ;;
+esac
 
 mkdir -p "$ORCH_DIR"
 : > "$STATUS_FILE"
@@ -34,6 +42,7 @@ mkdir -p "$ORCH_DIR"
     echo "release_evidence_dir=$RELEASE_DIR"
     echo "e2e_evidence_dir=$E2E_DIR"
     echo "ops_evidence_dir=$OPS_DIR"
+    echo "deployment_environment_dir=$ENV_PROTECTION_DIR"
     echo "signoff_dir=$SIGNOFF_DIR"
     echo "readiness_file=$READINESS_FILE"
     echo "started_at=$STARTED_AT"
@@ -41,6 +50,7 @@ mkdir -p "$ORCH_DIR"
     echo "required_evidence_groups=$REQUIRED_GROUPS"
     echo "strict_required_evidence=$STRICT_REQUIRED"
     echo "fail_on_warning=$FAIL_ON_WARNING"
+    echo "deployment_environment_strict=$ENV_PROTECTION_STRICT"
     echo
     echo "ODOO_BASE_URL=${ODOO_BASE_URL:-<unset>}"
     echo "ODOO_DATABASE=${ODOO_DATABASE:-<unset>}"
@@ -88,12 +98,19 @@ run_step "release-candidate" \
     TIJARA_OPS_EVIDENCE_DIR="$OPS_DIR" \
     make release-candidate
 
+run_step "deployment-environment" \
+    env \
+    TIJARA_ENV_PROTECTION_RUN_ID="$RUN_ID" \
+    TIJARA_ENV_PROTECTION_TARGET="$SIGNOFF_ENVIRONMENT" \
+    TIJARA_ENV_PROTECTION_OUTPUT="$ENV_PROTECTION_DIR" \
+    python3 scripts/export_deployment_environment_evidence.py "${ENV_PROTECTION_ARGS[@]}"
+
 run_step "signoff-pack" \
     env \
     TIJARA_SIGNOFF_RUN_ID="$RUN_ID" \
     TIJARA_SIGNOFF_ENVIRONMENT="$SIGNOFF_ENVIRONMENT" \
     TIJARA_SIGNOFF_OUTPUT="$SIGNOFF_DIR" \
-    TIJARA_SIGNOFF_EVIDENCE_PATHS="$RELEASE_DIR,$E2E_DIR,$OPS_DIR" \
+    TIJARA_SIGNOFF_EVIDENCE_PATHS="$RELEASE_DIR,$E2E_DIR,$OPS_DIR,$ENV_PROTECTION_DIR" \
     TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS="$REQUIRED_GROUPS" \
     TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE="$STRICT_REQUIRED" \
     make signoff-pack
@@ -138,6 +155,7 @@ fi
     echo "- Release evidence: $RELEASE_DIR"
     echo "- Browser E2E evidence: $E2E_DIR"
     echo "- Operations evidence: $OPS_DIR"
+    echo "- Deployment environment evidence: $ENV_PROTECTION_DIR"
     echo "- Sign-off package: $SIGNOFF_DIR"
     echo "- Readiness JSON: $READINESS_FILE"
     echo

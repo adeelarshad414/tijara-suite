@@ -997,6 +997,20 @@ TIJARA_STAGING_RELEASE_CHECKS=full \
 TIJARA_E2E_SCOPE=full \
 TIJARA_OPS_CHECKS=full \
 TIJARA_OPS_STRICT=1 \
+TIJARA_STAGING_RELEASE_ENV_PROTECTION_STRICT=1 \
+TIJARA_DEPLOYMENT_ENVIRONMENT_NAME=staging \
+TIJARA_BRANCH_POLICY_REF=github:protected-branches/main \
+TIJARA_DEPLOYMENT_APPROVERS="Release Owner,DevOps Owner" \
+TIJARA_APPROVER_GROUP_REF=github:tijara-release-approvers \
+TIJARA_MINIMUM_APPROVERS=2 \
+TIJARA_PROMOTION_RUNBOOK_REF=docs:DEPLOY.md#production-deployment-gate \
+TIJARA_ROLLBACK_RUNBOOK_REF=docs:DEPLOY.md#production-rollback \
+TIJARA_DEPLOYMENT_GATE_REF=deploy/runtime/deployment-gates/2026-06-05-prod/deployment-decision.json \
+TIJARA_ENV_INCIDENT_RUNBOOK_REF=docs:DEPLOY.md#monitoring-alerting-and-incident-readiness \
+TIJARA_ENV_BACKUP_POLICY_REF=deploy/postgres/README.md \
+TIJARA_ENV_MONITORING_REF=deploy/monitoring/README.md \
+TIJARA_CHANGE_TICKET_REF=change:TIJARA-STAGE-001 \
+TIJARA_FREEZE_WINDOW_REF=calendar:stage-release-window \
 TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
 TIJARA_STAGING_RELEASE_FAIL_ON_WARNING=1 \
@@ -1010,6 +1024,7 @@ The wrapper keeps a single run ID across:
 - `deploy/runtime/ops-evidence/<run-id>/`
 - `deploy/runtime/release-retention-evidence/<run-id>/` when exported
   separately or nested under an operations release bundle.
+- `deploy/runtime/deployment-environments/<run-id>/`
 - `deploy/runtime/signoff-packages/<run-id>/`
 - `deploy/runtime/staging-release/<run-id>/`
 
@@ -1166,12 +1181,14 @@ TIJARA_DEPLOYMENT_FAIL_ON_WARNING=1 \
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/2026-06-05-rc1/release-readiness.json
 ```
 
-For `TIJARA_DEPLOYMENT_TARGET=production`, backup reference, rollback reference,
+For `TIJARA_DEPLOYMENT_TARGET=production`, deployment environment protection
+evidence in `release-readiness.json`, backup reference, rollback reference,
 monitoring reference, sign-off package, and approver are required by default.
-The gate writes `deployment-decision.json`, `status.tsv`, `summary.md`,
-`pre-cutover-checklist.md`, and `rollback-checklist.md` under
-`deploy/runtime/deployment-gates/<run-id>/`. It exits non-zero when deployment
-is blocked.
+Set `TIJARA_DEPLOYMENT_REQUIRE_ENVIRONMENT_PROTECTION=0` only for an explicitly
+approved non-production drill. The gate writes `deployment-decision.json`,
+`status.tsv`, `summary.md`, `pre-cutover-checklist.md`, and
+`rollback-checklist.md` under `deploy/runtime/deployment-gates/<run-id>/`. It
+exits non-zero when deployment is blocked.
 
 Rollback commands are dry-run by default and consume the deployment gate
 decision:

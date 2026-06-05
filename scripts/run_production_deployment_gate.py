@@ -44,6 +44,51 @@ def _check_required(name, value, required, label):
     return _status_row(name, "skipped", "%s is not required for this gate." % label)
 
 
+def _check_environment_protection(readiness, required):
+    reviews = readiness.get("deployment_environment_reviews") or []
+    if not reviews:
+        if required:
+            return _status_row(
+                "deployment-environment-evidence",
+                "failed",
+                "Deployment environment protection evidence is required.",
+            )
+        return _status_row(
+            "deployment-environment-evidence",
+            "skipped",
+            "Deployment environment protection evidence is not required.",
+        )
+    failed = [
+        review
+        for review in reviews
+        if str(review.get("decision") or "").strip().lower() in {"failed", "blocked"}
+        or str(review.get("ci_status") or "").strip().lower() == "fail"
+    ]
+    warning = [
+        review
+        for review in reviews
+        if str(review.get("decision") or "").strip().lower() in {"warning", "warn"}
+        or str(review.get("ci_status") or "").strip().lower() == "pass_with_warnings"
+    ]
+    if failed:
+        return _status_row(
+            "deployment-environment-evidence",
+            "failed",
+            "%s deployment environment review(s) failed." % len(failed),
+        )
+    if warning:
+        return _status_row(
+            "deployment-environment-evidence",
+            "warning",
+            "%s deployment environment review(s) have warnings." % len(warning),
+        )
+    return _status_row(
+        "deployment-environment-evidence",
+        "passed",
+        "%s deployment environment review(s) attached." % len(reviews),
+    )
+
+
 def _check_readiness(readiness):
     decision = str(readiness.get("decision") or "").strip().lower()
     ci_status = str(readiness.get("ci_status") or "").strip().lower()
@@ -221,6 +266,10 @@ def main():
     require_rollback = _required_flag(os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_ROLLBACK"), is_production)
     require_monitoring = _required_flag(os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_MONITORING"), is_production)
     require_approver = _required_flag(os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_APPROVER"), is_production)
+    require_environment_protection = _required_flag(
+        os.environ.get("TIJARA_DEPLOYMENT_REQUIRE_ENVIRONMENT_PROTECTION"),
+        is_production,
+    )
 
     output = Path(args.output) if args.output else ROOT_DIR / "deploy/runtime/deployment-gates" / args.run_id
     output.mkdir(parents=True, exist_ok=True)
@@ -228,6 +277,7 @@ def main():
     signoff_package = args.signoff_package or str(readiness_path.parent)
     rows = [
         _check_readiness(readiness),
+        _check_environment_protection(readiness, require_environment_protection),
         _check_required("backup-reference", args.backup_ref, require_backup, "Backup reference"),
         _check_required("rollback-reference", args.rollback_ref, require_rollback, "Rollback reference"),
         _check_required("monitoring-reference", args.monitoring_ref, require_monitoring, "Monitoring reference"),
@@ -269,6 +319,7 @@ def main():
             "require_rollback=%s" % int(require_rollback),
             "require_monitoring=%s" % int(require_monitoring),
             "require_approver=%s" % int(require_approver),
+            "require_environment_protection=%s" % int(require_environment_protection),
             "fail_on_warning=%s" % int(args.fail_on_warning),
         ]
     )
