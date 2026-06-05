@@ -5826,3 +5826,63 @@ Date: 2026-06-05
   production operations readiness evidence.
 - Continue toward live staging E2E execution when Odoo URL, credentials, seeded
   POS config, and hardware bridge are available.
+
+## Iteration 82: Protected Runner Strict Evidence Workflow
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `.github/workflows/tijara-ci.yml` with a manual
+  `workflow_dispatch` profile for protected staging/production evidence.
+- Added inputs for `protected_release`, `target_environment`, and optional
+  `run_id`.
+- Added `protected-release-evidence` job guarded by
+  `protected_release=true`.
+- The protected job targets `[self-hosted, tijara-protected]` and binds to the
+  selected GitHub environment (`staging` or `production`).
+- The protected job runs the release-candidate gate, captures restore,
+  security, dependency, container, npm audit, and k6 raw outputs, exports
+  strict operations tool evidence, exports retention and secret-manager
+  evidence, runs strict production operations readiness, generates the protected
+  sign-off package, checks release readiness, and uploads protected evidence
+  artifacts.
+- Strict ops-tool and production-ops evidence steps use `continue-on-error`
+  so the final sign-off package can still explain blockers.
+- Updated `README.md` and `DEPLOY.md` with protected-runner trigger guidance,
+  expected runner labels, expected environment configuration, and artifact
+  behavior.
+
+### Validation
+
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML and includes
+  `protected-release-evidence`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The protected workflow is wired but has not executed against a real
+  self-hosted protected runner.
+- Real execution still needs configured GitHub environments, runner labels,
+  Odoo/staging secrets, backup artifact path, k6, Trivy, npm audit, optional
+  pip-audit, live monitoring endpoints, and seeded POS/browser data.
+- FBR, PSP, physical hardware certification, and live POS checkout/refund/print
+  browser evidence remain production blockers until real external systems are
+  available.
+
+### Next Iteration
+
+- Add protected-runner documentation for required GitHub variables/secrets and
+  environment setup checklist.
+- Add live staging E2E execution once Odoo URL, credentials, seeded POS config,
+  Playwright browser dependencies, and hardware bridge are available.
+- Continue tightening production evidence gates around FBR, PSP, and hardware
+  certification artifacts.

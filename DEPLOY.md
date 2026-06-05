@@ -1035,6 +1035,28 @@ runtime secret-manager evidence. The public CI production-ops readiness step is
 warning-mode by design until a protected staging/production runner has live
 monitoring, restore, load, scan, and secret-runtime access.
 
+For staging or production drills, use the manual `workflow_dispatch` profile in
+the same workflow:
+
+1. Configure a self-hosted runner with labels `self-hosted` and
+   `tijara-protected`.
+2. Configure the GitHub environment named `staging` or `production` with the
+   required secrets and variables for Odoo, Playwright, backup restore drills,
+   artifact storage, secret manager references, Trivy, k6, npm, and optional
+   pip-audit.
+3. Start the workflow manually with `protected_release=true`,
+   `target_environment=staging` or `production`, and an optional `run_id`.
+
+The protected job runs the release-candidate gate, captures raw restore,
+security, dependency, container, npm audit, and k6 outputs under
+`deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
+evidence, exports retention and secret-manager evidence, runs strict production
+operations readiness, generates the protected sign-off package, and checks
+`release-readiness.json`. Evidence is uploaded as
+`tijara-protected-release-evidence-<environment>-<run>`. If a strict evidence
+step fails, the job still tries to build the final sign-off package so the
+release-readiness JSON explains the blocker.
+
 Export release retention and secret-manager evidence before production
 approval:
 

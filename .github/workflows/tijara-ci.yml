@@ -3,6 +3,25 @@ name: Tijara CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      protected_release:
+        description: "Run the protected staging/production evidence profile"
+        required: true
+        type: boolean
+        default: false
+      target_environment:
+        description: "Protected environment to evaluate"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+      run_id:
+        description: "Optional evidence run ID"
+        required: false
+        type: string
 
 jobs:
   validate:
@@ -101,3 +120,182 @@ jobs:
             deploy/runtime/secret-manager-evidence/ci-local
             deploy/runtime/production-ops-readiness/ci-local
             deploy/runtime/signoff-packages/ci-local
+
+  protected-release-evidence:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.protected_release }}
+    runs-on: [self-hosted, tijara-protected]
+    environment: ${{ inputs.target_environment }}
+    env:
+      TIJARA_TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+      TIJARA_PROTECTED_RELEASE_CHECKS: ${{ vars.TIJARA_PROTECTED_RELEASE_CHECKS || 'full' }}
+      TIJARA_ARTIFACT_STORE_REFERENCE: ${{ vars.TIJARA_ARTIFACT_STORE_REFERENCE }}
+      TIJARA_ARTIFACT_RETENTION_POLICY_REF: ${{ vars.TIJARA_ARTIFACT_RETENTION_POLICY_REF }}
+      TIJARA_CERTIFICATION_RETENTION_POLICY_REF: ${{ vars.TIJARA_CERTIFICATION_RETENTION_POLICY_REF }}
+      TIJARA_SECRET_MANAGER_PROVIDER: ${{ vars.TIJARA_SECRET_MANAGER_PROVIDER }}
+      TIJARA_SECRET_MANAGER_REFERENCE: ${{ vars.TIJARA_SECRET_MANAGER_REFERENCE }}
+      TIJARA_SECRET_ROTATION_POLICY_REF: ${{ vars.TIJARA_SECRET_ROTATION_POLICY_REF }}
+      TIJARA_SECRET_ACCESS_REVIEW_REF: ${{ vars.TIJARA_SECRET_ACCESS_REVIEW_REF }}
+      TIJARA_RESTORE_DRILL_BACKUP: ${{ vars.TIJARA_RESTORE_DRILL_BACKUP }}
+      TIJARA_BACKUP_ARTIFACT_REF: ${{ vars.TIJARA_BACKUP_ARTIFACT_REF }}
+      ODOO_IMAGE: ${{ vars.ODOO_IMAGE }}
+      POSTGRES_IMAGE: ${{ vars.POSTGRES_IMAGE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Resolve protected run ID
+        run: |
+          RUN_ID="${{ inputs.run_id }}"
+          if [[ -z "$RUN_ID" ]]; then
+            RUN_ID="${{ inputs.target_environment }}-${GITHUB_RUN_ID}"
+          fi
+          echo "TIJARA_PROTECTED_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+      - name: Protected release candidate gate
+        run: |
+          TIJARA_RELEASE_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
+          TIJARA_RELEASE_CHECKS="$TIJARA_PROTECTED_RELEASE_CHECKS" \
+          make release-candidate
+      - name: Capture protected operations tool outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          RAW_DIR="deploy/runtime/ops-tool-raw/$TIJARA_PROTECTED_RUN_ID"
+          mkdir -p "$RAW_DIR"
+          echo "TIJARA_OPS_TOOL_RAW_DIR=$RAW_DIR" >> "$GITHUB_ENV"
+
+          set +e
+          if [[ -n "${TIJARA_RESTORE_DRILL_BACKUP:-}" ]]; then
+            CONFIRM_RESTORE_DRILL=YES bash deploy/postgres/restore-drill.sh "$TIJARA_RESTORE_DRILL_BACKUP" > "$RAW_DIR/restore-drill.log" 2>&1
+            RESTORE_EXIT=$?
+          else
+            echo "TIJARA_RESTORE_DRILL_BACKUP is not configured." > "$RAW_DIR/restore-drill.log"
+            RESTORE_EXIT=2
+          fi
+
+          bash scripts/security_audit.sh > "$RAW_DIR/security-audit.log" 2>&1
+          SECURITY_EXIT=$?
+
+          bash scripts/dependency_scan.sh > "$RAW_DIR/dependency-scan.log" 2>&1
+          DEPENDENCY_EXIT=$?
+
+          npm audit --json > "$RAW_DIR/npm-audit.json" 2> "$RAW_DIR/npm-audit.stderr"
+          NPM_AUDIT_EXIT=$?
+
+          bash scripts/container_scan.sh > "$RAW_DIR/container-scan.log" 2>&1
+          CONTAINER_EXIT=$?
+
+          if command -v k6 >/dev/null 2>&1; then
+            k6 run --summary-export "$RAW_DIR/k6-summary.json" scripts/load_smoke.k6.js > "$RAW_DIR/k6.log" 2>&1
+            K6_EXIT=$?
+          else
+            echo "k6 is not installed on the protected runner." > "$RAW_DIR/k6.log"
+            K6_EXIT=127
+          fi
+          set -e
+
+          echo "TIJARA_RESTORE_EXIT=$RESTORE_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_SECURITY_EXIT=$SECURITY_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_DEPENDENCY_EXIT=$DEPENDENCY_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_NPM_AUDIT_EXIT=$NPM_AUDIT_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_CONTAINER_EXIT=$CONTAINER_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_K6_EXIT=$K6_EXIT" >> "$GITHUB_ENV"
+      - name: Export protected operations tool evidence
+        continue-on-error: true
+        run: |
+          python3 scripts/export_ops_tool_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --restore-drill-log "$TIJARA_OPS_TOOL_RAW_DIR/restore-drill.log" \
+            --restore-drill-exit-code "$TIJARA_RESTORE_EXIT" \
+            --backup-artifact-ref "${TIJARA_BACKUP_ARTIFACT_REF:-}" \
+            --security-audit-log "$TIJARA_OPS_TOOL_RAW_DIR/security-audit.log" \
+            --security-audit-exit-code "$TIJARA_SECURITY_EXIT" \
+            --dependency-scan-log "$TIJARA_OPS_TOOL_RAW_DIR/dependency-scan.log" \
+            --dependency-scan-exit-code "$TIJARA_DEPENDENCY_EXIT" \
+            --container-scan-log "$TIJARA_OPS_TOOL_RAW_DIR/container-scan.log" \
+            --container-scan-exit-code "$TIJARA_CONTAINER_EXIT" \
+            --npm-audit-json "$TIJARA_OPS_TOOL_RAW_DIR/npm-audit.json" \
+            --k6-summary-json "$TIJARA_OPS_TOOL_RAW_DIR/k6-summary.json" \
+            --strict \
+            --fail-on-warning
+      - name: Protected release retention evidence
+        run: |
+          python3 scripts/export_release_retention_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --artifact-store-reference "$TIJARA_ARTIFACT_STORE_REFERENCE" \
+            --artifact-retention-policy-ref "$TIJARA_ARTIFACT_RETENTION_POLICY_REF" \
+            --certification-retention-policy-ref "$TIJARA_CERTIFICATION_RETENTION_POLICY_REF" \
+            --secret-manager-provider "$TIJARA_SECRET_MANAGER_PROVIDER" \
+            --secret-manager-reference "$TIJARA_SECRET_MANAGER_REFERENCE" \
+            --secret-rotation-policy-ref "$TIJARA_SECRET_ROTATION_POLICY_REF" \
+            --ci-artifact-retention-days 30 \
+            --release-evidence-retention-days 365 \
+            --certification-evidence-retention-days 365 \
+            --log-retention-days 30 \
+            --backup-retention-days 30 \
+            --evidence-path "deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --evidence-path "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --strict
+      - name: Protected secret manager evidence
+        run: |
+          python3 scripts/export_secret_manager_evidence.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --secret-manager-provider "$TIJARA_SECRET_MANAGER_PROVIDER" \
+            --secret-manager-reference "$TIJARA_SECRET_MANAGER_REFERENCE" \
+            --secret-rotation-policy-ref "$TIJARA_SECRET_ROTATION_POLICY_REF" \
+            --secret-access-review-ref "$TIJARA_SECRET_ACCESS_REVIEW_REF" \
+            --strict
+      - name: Protected production operations readiness
+        continue-on-error: true
+        run: |
+          python3 scripts/export_production_ops_readiness.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
+            --operations-bundle "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/operations-release-bundle.json" \
+            --load-evidence "deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID/load-enterprise/load-evidence.json" \
+            --release-retention-evidence "deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID/release-retention-evidence.json" \
+            --secret-manager-evidence "deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID/secret-manager-evidence.json" \
+            --ops-tool-evidence "deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID/ops-tool-evidence.json" \
+            --backup-artifact-ref "${TIJARA_BACKUP_ARTIFACT_REF:-}" \
+            --strict \
+            --fail-on-warning
+      - name: Generate protected sign-off package
+        run: |
+          TIJARA_SIGNOFF_RUN_ID="$TIJARA_PROTECTED_RUN_ID" \
+          TIJARA_SIGNOFF_ENVIRONMENT="$TIJARA_TARGET_ENVIRONMENT" \
+          TIJARA_SIGNOFF_EVIDENCE_PATHS="deploy/runtime/release-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-seed/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-profile/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/e2e-execution/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/ops-tool-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/operations-release-bundle/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/release-retention-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/secret-manager-evidence/$TIJARA_PROTECTED_RUN_ID,deploy/runtime/production-ops-readiness/$TIJARA_PROTECTED_RUN_ID" \
+          TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,security \
+          TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
+          make signoff-pack
+      - name: Check protected release readiness
+        run: make check-release-readiness READINESS="deploy/runtime/signoff-packages/$TIJARA_PROTECTED_RUN_ID/release-readiness.json"
+      - name: Upload protected release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tijara-protected-release-evidence-${{ inputs.target_environment }}-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            deploy/runtime/release-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/e2e-seed/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/e2e-profile/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/e2e-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/e2e-execution/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/ops-tool-raw/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/ops-tool-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/operations-release-bundle/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/release-retention-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/secret-manager-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/production-ops-readiness/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/signoff-packages/${{ env.TIJARA_PROTECTED_RUN_ID }}
