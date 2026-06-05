@@ -349,6 +349,28 @@ infrastructure commands require both `--execute` and
 operators can reverse DNS, ingress, TLS, Nginx, monitoring, and backup-policy
 changes with named release-owner approval.
 
+For provider-specific DNS command evidence, pass non-secret CLI templates and
+template values. Template placeholders can use `hostname`, `target`,
+`record_type`, `ttl`, `tenant_db`, and operator-provided non-secret values such
+as `zone_id`, `record_id`, or `domain`. Secret-like template keys are rejected.
+
+```bash
+python3 scripts/run_tenant_rollout.py \
+  --run-id 2026-06-05-prod-dns \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --platform external-dns \
+  --dns-apply-command-template 'cloudflare dns record create --zone-id {zone_id} --type {record_type} --name {hostname} --content {target} --ttl {ttl}' \
+  --dns-rollback-command-template 'cloudflare dns record delete --zone-id {zone_id} --record-id {record_id}' \
+  --dns-template-value zone_id=zone-public-ref \
+  --dns-template-value record_id=record-public-ref \
+  --strict
+```
+
+For Route53 or DigitalOcean, use the same template mechanism with the relevant
+CLI syntax, for example `aws route53 change-resource-record-sets ...` or
+`doctl compute domain records delete ...`. Store provider tokens in the secret
+manager or runner environment; do not put them in rollout evidence.
+
 ## Subscription Billing
 
 Subscriptions can generate draft Odoo customer invoices from the selected plan

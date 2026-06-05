@@ -5121,3 +5121,86 @@ Date: 2026-06-05
   execution when staging credentials are available.
 - Add live monitoring endpoint evidence once production-like observability URLs
   are available.
+
+## Iteration 73: Provider-Specific DNS Rollback Templates
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/run_tenant_rollout.py` with provider-aware DNS apply and
+  rollback command templates.
+- Added provider normalization for Cloudflare, Route53, DigitalOcean, and
+  external-dns/manual DNS modes.
+- Added `--dns-apply-command-template`,
+  `--dns-rollback-command-template`, and `--dns-template-value`.
+- Added environment support for generic and provider-specific DNS templates via
+  `TIJARA_TENANT_ROLLOUT_DNS_APPLY_COMMAND_TEMPLATE`,
+  `TIJARA_TENANT_ROLLOUT_DNS_ROLLBACK_COMMAND_TEMPLATE`,
+  provider-specific variants such as
+  `TIJARA_TENANT_ROLLOUT_DNS_ROLLBACK_COMMAND_TEMPLATE_CLOUDFLARE`, and
+  `TIJARA_TENANT_ROLLOUT_DNS_TEMPLATE_VALUES`.
+- DNS templates can use non-secret placeholders such as `hostname`, `target`,
+  `record_type`, `ttl`, `tenant_db`, `zone_id`, `record_id`, and `domain`.
+- Secret-like DNS template keys are rejected before evidence is written.
+- Unknown DNS template placeholders block rollout evidence in strict mode.
+- Enhanced `scripts/run_operations_release_bundle.py` so bundled tenant rollout
+  checks can pass DNS apply/rollback templates and non-secret template values.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/run_tenant_rollout.py scripts/run_operations_release_bundle.py`
+  passes.
+- Generated Cloudflare, Route53, and DigitalOcean tenant operations artifacts
+  under `/private/tmp/tijara-dns-provider-artifacts`.
+- Cloudflare DNS rollout dry-run passes at
+  `/private/tmp/tijara-tenant-dns-cloudflare` and records Cloudflare apply and
+  rollback commands in `tenant-rollout-evidence.json` and `rollback-plan.md`.
+- Route53 DNS rollout dry-run passes at
+  `/private/tmp/tijara-tenant-dns-route53` and records Route53 apply and
+  rollback commands in evidence.
+- Focused operations release bundle for DigitalOcean passes at
+  `/private/tmp/tijara-ops-dns-digitalocean` and records `doctl` apply and
+  rollback commands while keeping only DNS template value keys in the bundle
+  environment summary.
+- Unknown DNS template placeholders block strict rollout evidence at
+  `/private/tmp/tijara-tenant-dns-unknown-placeholder`.
+- Secret-like template key `api_token` is rejected before writing secret-bearing
+  evidence.
+- Generated a sign-off package at
+  `/private/tmp/tijara-signoff-dns-provider-rollout`.
+- `python3 scripts/check_release_readiness.py
+  /private/tmp/tijara-signoff-dns-provider-rollout/release-readiness.json`
+  passes with `decision=ready` and `ci_status=pass`.
+- `git diff --check` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- Provider-specific DNS command templates now exist, but production execution
+  still needs real provider CLIs, credentials stored outside evidence, zone/record
+  identifiers, and provider sandbox/live approval.
+- DNS command templates are operator-provided; certified provider SDK/API
+  adapters are still future work once the deployment DNS provider is selected.
+- Authenticated POS checkout/refund browser E2E still requires a staging POS
+  user and seeded POS register.
+- FBR certified-provider live credentials and Odoo transaction execution remain
+  external blockers.
+
+### Next Iteration
+
+- Continue authenticated POS checkout/refund/print E2E and real FBR/provider
+  execution when staging credentials are available.
+- Add live monitoring endpoint evidence once production-like observability URLs
+  are available.
+- Add certified DNS SDK/API adapters after the deployment DNS provider is
+  selected.

@@ -458,7 +458,8 @@ The detailed policy and dependency intake checklist are maintained in
   tenant-level release blockers under `deploy/runtime/tenant-smoke/`.
 - `scripts/run_tenant_rollout.py` and `make tenant-rollout` dry-run or execute
   tenant DNS/ingress/TLS/Nginx/monitoring/backup rollout actions from tenant
-  operations artifacts, writing auditable rollout and rollback evidence under
+  operations artifacts, including provider-aware DNS apply/rollback command
+  templates, writing auditable rollout and rollback evidence under
   `deploy/runtime/tenant-rollouts/`.
 - `scripts/export_monitoring_evidence.py` and `make monitoring-evidence`
   collect post-deploy monitoring evidence from production smoke, tenant rollout,

@@ -256,6 +256,12 @@ def _step_specs(args, output):
         specs["tenant-rollout"]["command"].extend(["--nginx-enabled-dir", args.tenant_rollout_nginx_enabled_dir])
     if args.tenant_rollout_prometheus_target_dir:
         specs["tenant-rollout"]["command"].extend(["--prometheus-target-dir", args.tenant_rollout_prometheus_target_dir])
+    if args.tenant_rollout_dns_apply_command_template:
+        specs["tenant-rollout"]["command"].extend(["--dns-apply-command-template", args.tenant_rollout_dns_apply_command_template])
+    if args.tenant_rollout_dns_rollback_command_template:
+        specs["tenant-rollout"]["command"].extend(["--dns-rollback-command-template", args.tenant_rollout_dns_rollback_command_template])
+    for value in args.tenant_rollout_dns_template_value:
+        specs["tenant-rollout"]["command"].extend(["--dns-template-value", value])
     for tenant_base_url in args.tenant_base_url:
         specs["tenant-smoke"]["command"].extend(["--tenant-base-url", tenant_base_url])
     for tenant_route in args.tenant_route:
@@ -415,6 +421,12 @@ def main():
     parser.add_argument("--tenant-rollout-nginx-available-dir", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_NGINX_AVAILABLE_DIR") or os.environ.get("TIJARA_TENANT_ROLLOUT_NGINX_AVAILABLE_DIR", ""))
     parser.add_argument("--tenant-rollout-nginx-enabled-dir", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_NGINX_ENABLED_DIR") or os.environ.get("TIJARA_TENANT_ROLLOUT_NGINX_ENABLED_DIR", ""))
     parser.add_argument("--tenant-rollout-prometheus-target-dir", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_PROMETHEUS_TARGET_DIR") or os.environ.get("TIJARA_TENANT_ROLLOUT_PROMETHEUS_TARGET_DIR", ""))
+    parser.add_argument("--tenant-rollout-dns-apply-command-template", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_DNS_APPLY_COMMAND_TEMPLATE") or os.environ.get("TIJARA_TENANT_ROLLOUT_DNS_APPLY_COMMAND_TEMPLATE", ""))
+    parser.add_argument("--tenant-rollout-dns-rollback-command-template", default=os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_DNS_ROLLBACK_COMMAND_TEMPLATE") or os.environ.get("TIJARA_TENANT_ROLLOUT_DNS_ROLLBACK_COMMAND_TEMPLATE", ""))
+    parser.add_argument("--tenant-rollout-dns-template-value", action="append", default=[
+        item for item in str(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_ROLLOUT_DNS_TEMPLATE_VALUES") or os.environ.get("TIJARA_TENANT_ROLLOUT_DNS_TEMPLATE_VALUES") or "").split(",")
+        if item.strip()
+    ])
     parser.add_argument("--tenant-base-url", action="append", default=[
         item for item in str(os.environ.get("TIJARA_OPS_BUNDLE_TENANT_SMOKE_BASE_URLS") or os.environ.get("TIJARA_TENANT_SMOKE_BASE_URLS") or "").split(",")
         if item.strip()
@@ -530,6 +542,17 @@ def main():
             "tenant_rollout_artifacts=%s" % (",".join(args.tenant_rollout_artifact) or "<unset>"),
             "tenant_rollout_platform=%s" % (args.tenant_rollout_platform or "<unset>"),
             "tenant_rollout_require_all_artifacts=%s" % int(args.tenant_rollout_require_all_artifacts),
+            "tenant_rollout_dns_apply_template=%s" % ("<set>" if args.tenant_rollout_dns_apply_command_template else "<unset>"),
+            "tenant_rollout_dns_rollback_template=%s" % ("<set>" if args.tenant_rollout_dns_rollback_command_template else "<unset>"),
+            "tenant_rollout_dns_template_value_keys=%s"
+            % (
+                ",".join(
+                    item.split("=", 1)[0].strip()
+                    for item in args.tenant_rollout_dns_template_value
+                    if "=" in item and item.split("=", 1)[0].strip()
+                )
+                or "<unset>"
+            ),
             "tenant_smoke_base_urls=%s" % (",".join(args.tenant_base_url) or "<unset>"),
             "tenant_smoke_routes=%s" % (",".join(args.tenant_smoke_route) or "<unset>"),
             "tenant_smoke_skip_monitoring=%s" % int(args.tenant_smoke_skip_monitoring),

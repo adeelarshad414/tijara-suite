@@ -4,6 +4,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -22,6 +23,16 @@ EXPECTED_ARTIFACTS = {
     "smoke": "smoke-checklist.md",
 }
 SECRET_KEY_PARTS = {"password", "secret", "token", "api_key", "apikey", "client_secret"}
+PROVIDER_ALIASES = {
+    "aws": "route53",
+    "amazon-route53": "route53",
+    "route-53": "route53",
+    "cloudflare-dns": "cloudflare",
+    "do": "digitalocean",
+    "digital-ocean": "digitalocean",
+    "externaldns": "external-dns",
+    "external_dns": "external-dns",
+}
 
 
 def _utc_now():
@@ -90,6 +101,19 @@ def _metadata_items(items):
     return metadata
 
 
+def _key_value_items(items):
+    parsed = {}
+    for raw in items or []:
+        if "=" not in raw:
+            raise ValueError("Template values must use key=value format: %s" % raw)
+        key, value = raw.split("=", 1)
+        key = key.strip()
+        if not key:
+            raise ValueError("Template value key cannot be blank.")
+        parsed[key] = value.strip()
+    return parsed
+
+
 def _secret_like_keys(metadata):
     flagged = []
     for key in metadata:
@@ -97,6 +121,80 @@ def _secret_like_keys(metadata):
         if any(part in normalized for part in SECRET_KEY_PARTS):
             flagged.append(key)
     return flagged
+
+
+def _provider_key(value):
+    cleaned = str(value or "").strip().lower().replace("_", "-")
+    return PROVIDER_ALIASES.get(cleaned, cleaned or "manual")
+
+
+def _template_env(prefix, provider):
+    specific = os.environ.get("%s_%s" % (prefix, provider.upper().replace("-", "_")))
+    return specific or os.environ.get(prefix, "")
+
+
+def _format_command_template(template, values):
+    if not template:
+        return []
+    try:
+        rendered = template.format(**values)
+    except KeyError as error:
+        raise ValueError("DNS command template references unknown placeholder: %s" % error)
+    return shlex.split(rendered)
+
+
+def _dns_action_plan(args, dns, tenant, template_values):
+    provider = _provider_key(dns.get("provider"))
+    values = {
+        "provider": provider,
+        "hostname": dns.get("hostname") or tenant.get("domain") or "",
+        "target": dns.get("target") or "",
+        "record_type": dns.get("record_type") or "CNAME",
+        "ttl": str(dns.get("ttl") or 300),
+        "tenant_db": tenant.get("database") or "",
+    }
+    values.update(template_values)
+    default_messages = {
+        "cloudflare": (
+            "Cloudflare DNS rollback: delete or restore {record_type} {hostname} after confirming zone and record id.",
+            "Cloudflare DNS apply: create or upsert {record_type} {hostname} -> {target}.",
+        ),
+        "route53": (
+            "Route53 DNS rollback: submit a DELETE or previous-value UPSERT change batch for {record_type} {hostname}.",
+            "Route53 DNS apply: submit an UPSERT change batch for {record_type} {hostname} -> {target}.",
+        ),
+        "digitalocean": (
+            "DigitalOcean DNS rollback: delete or restore {record_type} {hostname} after confirming domain record id.",
+            "DigitalOcean DNS apply: create or update {record_type} {hostname} -> {target}.",
+        ),
+        "external-dns": (
+            "ExternalDNS rollback: remove the ingress annotation/resource and verify provider record deletion.",
+            "ExternalDNS apply: Kubernetes ingress annotations publish the provider DNS record.",
+        ),
+        "manual": (
+            "Manual DNS rollback: remove or restore {record_type} {hostname} and wait for TTL propagation.",
+            "Manual DNS apply: create or update {record_type} {hostname} -> {target}.",
+        ),
+    }
+    rollback_template = args.dns_rollback_command_template or _template_env(
+        "TIJARA_TENANT_ROLLOUT_DNS_ROLLBACK_COMMAND_TEMPLATE",
+        provider,
+    )
+    apply_template = args.dns_apply_command_template or _template_env(
+        "TIJARA_TENANT_ROLLOUT_DNS_APPLY_COMMAND_TEMPLATE",
+        provider,
+    )
+    rollback_command = _format_command_template(rollback_template, values)
+    apply_command = _format_command_template(apply_template, values)
+    rollback_message, apply_message = default_messages.get(provider, default_messages["manual"])
+    return {
+        "provider": provider,
+        "command": apply_command,
+        "rollback_command": rollback_command,
+        "message": apply_message.format(**values),
+        "rollback_message": rollback_message.format(**values),
+        "template_configured": bool(apply_template or rollback_template),
+    }
 
 
 def _tenant_paths(args):
@@ -239,6 +337,7 @@ def _tenant_actions(args, tenant_dir, manifest):
             )
         )
     if provider in {"manifest", "external-dns", "kubernetes"}:
+        dns_plan = _dns_action_plan(args, dns, tenant, args.dns_template_values)
         message = "Publish DNS record %s -> %s." % (
             dns.get("hostname") or tenant.get("domain") or "<unset>",
             dns.get("target") or "<unset>",
@@ -247,14 +346,13 @@ def _tenant_actions(args, tenant_dir, manifest):
             _action(
                 "dns-record",
                 tenant_db,
-                dns.get("provider") or "external-dns",
-                [],
+                dns_plan["provider"],
+                dns_plan["command"],
                 artifacts["dns"],
-                message,
-                False,
-                rollback_message="Remove or revert DNS record %s and wait for TTL propagation." % (
-                    dns.get("hostname") or tenant.get("domain") or "<unset>"
-                ),
+                "%s %s" % (message, dns_plan["message"]),
+                execute and bool(dns_plan["command"]),
+                rollback_command=dns_plan["rollback_command"],
+                rollback_message=dns_plan["rollback_message"],
             )
         )
     if provider in {"manifest", "monitoring"}:
@@ -464,6 +562,9 @@ def main():
     parser.add_argument("--nginx-available-dir", default=os.environ.get("TIJARA_TENANT_ROLLOUT_NGINX_AVAILABLE_DIR", ""))
     parser.add_argument("--nginx-enabled-dir", default=os.environ.get("TIJARA_TENANT_ROLLOUT_NGINX_ENABLED_DIR", ""))
     parser.add_argument("--prometheus-target-dir", default=os.environ.get("TIJARA_TENANT_ROLLOUT_PROMETHEUS_TARGET_DIR", ""))
+    parser.add_argument("--dns-apply-command-template", default=os.environ.get("TIJARA_TENANT_ROLLOUT_DNS_APPLY_COMMAND_TEMPLATE", ""))
+    parser.add_argument("--dns-rollback-command-template", default=os.environ.get("TIJARA_TENANT_ROLLOUT_DNS_ROLLBACK_COMMAND_TEMPLATE", ""))
+    parser.add_argument("--dns-template-value", action="append", default=[])
     parser.add_argument("--minimum-tenants", type=int, default=int(os.environ.get("TIJARA_TENANT_ROLLOUT_MINIMUM_TENANTS", "1")))
     parser.add_argument("--require-all-artifacts", action="store_true", default=_truthy(os.environ.get("TIJARA_TENANT_ROLLOUT_REQUIRE_ALL_ARTIFACTS")))
     parser.add_argument("--metadata", action="append", default=[])
@@ -483,13 +584,18 @@ def main():
 
     try:
         metadata = _metadata_items(args.metadata)
+        dns_template_values = _key_value_items(
+            list(args.dns_template_value)
+            + _csv_items(os.environ.get("TIJARA_TENANT_ROLLOUT_DNS_TEMPLATE_VALUES"))
+        )
     except ValueError as error:
         print(str(error), file=sys.stderr)
         return 2
-    flagged = _secret_like_keys(metadata)
+    flagged = _secret_like_keys(metadata) + _secret_like_keys(dns_template_values)
     if flagged:
-        print("Secret-like metadata keys are not allowed: %s" % ", ".join(flagged), file=sys.stderr)
+        print("Secret-like metadata/template keys are not allowed: %s" % ", ".join(flagged), file=sys.stderr)
         return 2
+    args.dns_template_values = dns_template_values
 
     blockers = []
     warnings = []
@@ -541,7 +647,30 @@ def main():
                 }
             )
             continue
-        actions = [_run_action(action, args.execute, args.confirm, output) for action in _tenant_actions(args, tenant_dir, manifest)]
+        try:
+            planned_actions = _tenant_actions(args, tenant_dir, manifest)
+        except ValueError as error:
+            blockers.append("tenant:%s: %s" % (tenant_db, error))
+            tenant_reviews.append(
+                {
+                    "tenant_db": tenant_db,
+                    "domain": (manifest.get("tenant") or {}).get("domain") or "",
+                    "path": _safe_relative(tenant_dir),
+                    "manifest_path": _safe_relative(manifest_path),
+                    "manifest_sha256": _hash_file(manifest_path),
+                    "decision": "failed",
+                    "ci_status": "fail",
+                    "dry_run_count": 0,
+                    "executed_count": 0,
+                    "failed_count": 0,
+                    "rollback_action_count": 0,
+                    "actions": [],
+                    "blockers": [str(error)],
+                    "warnings": [],
+                }
+            )
+            continue
+        actions = [_run_action(action, args.execute, args.confirm, output) for action in planned_actions]
         all_actions.extend(actions)
         failed_actions = [action for action in actions if action["status"] == "failed"]
         dry_run_count = sum(1 for action in actions if action["status"] == "dry-run")
@@ -621,6 +750,9 @@ def main():
             "nginx_available_dir=%s" % (args.nginx_available_dir or "<unset>"),
             "nginx_enabled_dir=%s" % (args.nginx_enabled_dir or "<unset>"),
             "prometheus_target_dir=%s" % (args.prometheus_target_dir or "<unset>"),
+            "dns_apply_template=%s" % ("<set>" if args.dns_apply_command_template else "<unset>"),
+            "dns_rollback_template=%s" % ("<set>" if args.dns_rollback_command_template else "<unset>"),
+            "dns_template_value_keys=%s" % (",".join(sorted(dns_template_values)) or "<unset>"),
         ]
     )
 
