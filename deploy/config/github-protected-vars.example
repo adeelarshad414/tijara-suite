@@ -1,0 +1,39 @@
+# GitHub environment variables for the protected Tijara release evidence job.
+# These are non-secret references. Configure them under the staging/production
+# GitHub Environment "Variables" tab.
+
+TIJARA_PROTECTED_RELEASE_CHECKS=full
+TIJARA_ARTIFACT_STORE_REFERENCE=s3:tijara-release-evidence-production
+TIJARA_ARTIFACT_RETENTION_POLICY_REF=policy:release-evidence-365d
+TIJARA_CERTIFICATION_RETENTION_POLICY_REF=policy:certification-evidence-365d
+
+TIJARA_SECRET_MANAGER_PROVIDER=vault
+TIJARA_SECRET_MANAGER_REFERENCE=vault:tijara/production
+TIJARA_SECRET_ROTATION_POLICY_REF=runbook:secret-rotation-quarterly
+TIJARA_SECRET_ACCESS_REVIEW_REF=review:production-secret-access-q2
+
+TIJARA_RESTORE_DRILL_BACKUP=deploy/runtime/backups/latest.dump
+TIJARA_BACKUP_ARTIFACT_REF=backup:production-latest
+
+ODOO_IMAGE=odoo:19.0
+POSTGRES_IMAGE=postgres:16-alpine
+
+TIJARA_BASE_URL=https://staging.example.com
+ODOO_BASE_URL=https://staging.example.com
+TIJARA_HARDWARE_BRIDGE_URL=https://bridge-staging.example.com
+TIJARA_PROMETHEUS_URL=https://prometheus-staging.example.com
+TIJARA_ALERTMANAGER_URL=https://alertmanager-staging.example.com
+TIJARA_GRAFANA_URL=https://grafana-staging.example.com
+
+TIJARA_E2E_SCOPE=full
+TIJARA_RUN_POS_UI_E2E=1
+TIJARA_RUN_DIRECT_POS_CLICKTHROUGH=1
+TIJARA_RUN_DIRECT_POS_VALIDATE_E2E=1
+TIJARA_RUN_DIRECT_REFUND_FORM_E2E=1
+TIJARA_RUN_MOBILE_OFFLINE_E2E=1
+
+TIJARA_LOAD_VUS=25
+TIJARA_LOAD_DURATION=10m
+TIJARA_LOAD_MAX_P95_MS=1000
+TIJARA_LOAD_MAX_FAIL_RATE=0.01
+TIJARA_LOAD_MIN_CHECKS_RATE=0.95

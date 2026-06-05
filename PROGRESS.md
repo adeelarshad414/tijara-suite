@@ -5886,3 +5886,52 @@ Date: 2026-06-05
   Playwright browser dependencies, and hardware bridge are available.
 - Continue tightening production evidence gates around FBR, PSP, and hardware
   certification artifacts.
+
+## Iteration 83: Protected Runner Environment Templates
+
+Status: In Progress
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `deploy/config/github-protected-vars.example` with non-secret GitHub
+  Environment variable names for the protected release evidence workflow.
+- Added `secrets/github-protected-secrets.example` with required GitHub
+  Environment secret names for Odoo, database, E2E, bridge, payment, FBR, and
+  PSP credentials.
+- Updated `.gitignore` so `secrets/*.example` remains commit-safe while real
+  files under `secrets/` stay ignored.
+- Updated `README.md` and `DEPLOY.md` to link the protected-runner variable and
+  secret templates from the setup checklist.
+
+### Validation
+
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes with the new secret example template.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The protected runner still needs real GitHub environment configuration and a
+  live self-hosted runner before strict staging/production evidence can execute.
+- The templates document names and references only; they intentionally do not
+  include real secrets or production endpoints.
+- FBR, PSP, physical hardware certification, and live POS checkout/refund/print
+  browser evidence remain production blockers until real external systems are
+  available.
+
+### Next Iteration
+
+- Add FBR/PSP/hardware certification evidence intake hardening so protected
+  release sign-off can require certified external provider/device artifacts.
+- Continue toward live staging E2E execution when Odoo URL, credentials, seeded
+  POS config, Playwright browser dependencies, and hardware bridge are
+  available.
+- Add production incident/rollback drill execution proof once the protected
+  runner can access deployment infrastructure.

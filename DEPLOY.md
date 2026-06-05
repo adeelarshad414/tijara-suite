@@ -1044,6 +1044,9 @@ the same workflow:
    required secrets and variables for Odoo, Playwright, backup restore drills,
    artifact storage, secret manager references, Trivy, k6, npm, and optional
    pip-audit.
+   Use `deploy/config/github-protected-vars.example` for non-secret environment
+   variables and `secrets/github-protected-secrets.example` for the required
+   secret names.
 3. Start the workflow manually with `protected_release=true`,
    `target_environment=staging` or `production`, and an optional `run_id`.
 

@@ -361,7 +361,8 @@ The detailed policy and dependency intake checklist are maintained in
   `release-readiness.json`, and uploads release evidence artifacts with an
   explicit 30-day CI retention setting. A manual protected-runner job is also
   available for strict staging/production evidence on `[self-hosted,
-  tijara-protected]`.
+  tijara-protected]`; see `deploy/config/github-protected-vars.example` and
+  `secrets/github-protected-secrets.example` for setup templates.
 - `deploy/postgres/backup.sh` and `scripts/load_smoke.k6.js` provide backup and
   load-smoke starting points for pilots.
 - `scripts/export_load_evidence.py` and `make load-evidence` collect k6/load

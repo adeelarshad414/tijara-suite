@@ -3,6 +3,7 @@
 !*.env.example
 secrets/*
 !secrets/.env.secrets.example
+!secrets/*.example
 deploy/runtime/
 *.pyc
 __pycache__/
