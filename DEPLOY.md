@@ -648,6 +648,33 @@ scaffold validation, JavaScript checks, security audit, and script syntax
 checks. The `full` scope also requires a clean git worktree, Odoo transaction
 tests, guarded staging browser E2E, and guarded staging operations evidence.
 
+For a full staging release drill, use the orchestration wrapper after exporting
+the staging E2E, Odoo, monitoring, restore, and provider/device variables:
+
+```bash
+TIJARA_STAGING_RELEASE_RUN_ID=2026-06-05-rc1 \
+TIJARA_STAGING_RELEASE_CHECKS=full \
+TIJARA_E2E_SCOPE=full \
+TIJARA_OPS_CHECKS=full \
+TIJARA_OPS_STRICT=1 \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops \
+TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
+TIJARA_STAGING_RELEASE_FAIL_ON_WARNING=1 \
+make staging-release-signoff
+```
+
+The wrapper keeps a single run ID across:
+
+- `deploy/runtime/release-evidence/<run-id>/`
+- `deploy/runtime/e2e-evidence/<run-id>/`
+- `deploy/runtime/ops-evidence/<run-id>/`
+- `deploy/runtime/signoff-packages/<run-id>/`
+- `deploy/runtime/staging-release/<run-id>/`
+
+It continues through package generation and readiness checking even if an
+earlier step fails, so release owners get a complete blocked/ready decision
+instead of only a partial log.
+
 Generate the release sign-off package after collecting release, browser, and
 operations evidence:
 

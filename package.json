@@ -10,6 +10,7 @@
     "release:candidate": "bash scripts/run_release_candidate_gate.sh",
     "signoff:pack": "python3 scripts/generate_signoff_pack.py",
     "release:readiness": "python3 scripts/check_release_readiness.py",
+    "release:staging-signoff": "bash scripts/run_staging_release_signoff.sh",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },

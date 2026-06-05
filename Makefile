@@ -11,7 +11,7 @@ DB ?= tijara_dev
 TIJARA_MODULES := tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery
 DEMO_MODULES := tijara_demo_pos
 
-.PHONY: up down logs shell restart ps validate js-check security-audit config install-suite seed-pos-demo seed-e2e test-odoo e2e e2e-staging ops-staging release-candidate signoff-pack check-release-readiness bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill
+.PHONY: up down logs shell restart ps validate js-check security-audit config install-suite seed-pos-demo seed-e2e test-odoo e2e e2e-staging ops-staging release-candidate signoff-pack check-release-readiness staging-release-signoff bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill
 
 up:
 	$(COMPOSE) up -d
@@ -73,6 +73,9 @@ signoff-pack:
 check-release-readiness:
 	test -n "$(READINESS)" || (echo "Usage: make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json" >&2; exit 1)
 	python3 scripts/check_release_readiness.py "$(READINESS)"
+
+staging-release-signoff:
+	bash scripts/run_staging_release_signoff.sh
 
 bridge-up:
 	$(COMPOSE) --profile hardware up -d hardware_bridge

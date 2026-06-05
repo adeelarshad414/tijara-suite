@@ -123,6 +123,7 @@ make e2e
 make release-candidate
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
+make staging-release-signoff
 ```
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
@@ -344,6 +345,10 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.
+- `scripts/run_staging_release_signoff.sh` and `make staging-release-signoff`
+  sequence staging release-candidate evidence, browser E2E evidence, operations
+  evidence, sign-off package generation, readiness checking, and artifact path
+  reporting under one run ID.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through

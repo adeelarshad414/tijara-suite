@@ -2551,3 +2551,59 @@ Date: 2026-06-05
 - Continue direct cashier POS UI selector coverage.
 - Prepare production deployment/rollback automation once staging evidence is
   available.
+
+## Iteration 38: Staging Release Sign-Off Orchestrator
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_staging_release_signoff.sh` as a one-command staging
+  release evidence orchestrator.
+- The wrapper:
+  - Keeps release, E2E, operations, sign-off package, readiness JSON, and
+    orchestration evidence under one run ID.
+  - Runs `make release-candidate` with configurable
+    `TIJARA_STAGING_RELEASE_CHECKS` defaulting to `full`.
+  - Passes shared E2E and operations evidence directories into the nested
+    guarded staging runners.
+  - Generates a sign-off package with configurable required evidence groups.
+  - Runs the release-readiness checker with configurable warning policy.
+  - Continues through sign-off and readiness even if an earlier step fails, so
+    blocked releases still produce complete evidence and artifact paths.
+  - Writes orchestration `summary.md`, `status.tsv`, `env-summary.txt`, and
+    per-step logs under `deploy/runtime/staging-release/<run-id>/`.
+- Added operator shortcuts:
+  - `make staging-release-signoff`
+  - `npm run release:staging-signoff`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_staging_release_signoff.sh` passes.
+- Local smoke with temporary runtime root and local release checks passes.
+- Smoke-generated readiness JSON returns `decision=ready` and `ci_status=pass`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Full staging execution still needs a seeded staging Odoo stack, POS E2E
+  credentials, monitoring endpoints, backup artifact, k6, Trivy, Docker test
+  access, and strict ops settings.
+- The orchestrator sequences the release evidence, but it does not create
+  external PSP/FBR/hardware evidence by itself.
+- Production deployment and rollback automation still need to consume the
+  staging-ready package.
+
+### Next Iteration
+
+- Add production deployment/rollback evidence templates or automation hooks that
+  consume the staging sign-off package.
+- Continue direct cashier POS UI selector coverage.
+- Prepare real staging execution once credentials and hardware/provider evidence
+  are available.
