@@ -8071,6 +8071,87 @@ Status: Complete
 - Continue PSP/FBR/hardware certification execution with real provider and
   device evidence.
 
+## Iteration 112: Protected Offline Queue Snapshot Collector
+
+Status: Complete
+
+### Scope
+
+- Replace manual-only offline pilot queue metrics with an authenticated
+  protected collector that can pull replay, duplicate, blocked/watch, and
+  queue-age data from live Odoo staging.
+
+### Completed
+
+- Added `scripts/export_protected_offline_queue_snapshot.py`.
+- Added `make protected-offline-queue-snapshot`.
+- The collector authenticates with `/web/session/authenticate`, calls
+  `/tijara/offline-pos/status`, and reads safe `tijara.offline.pos.queue`
+  fields through `search_read`.
+- The collector writes `offline-queue-snapshot.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-offline-pilot/<run-id>/queue-snapshot/`.
+- Snapshot output includes state counts, pilot attention counts, replay success
+  count, duplicate count, conflict/failed counts, blocked/watch counts,
+  unresolved count, maximum queue age, redacted auth/status/search probes, and
+  hashed source-device samples.
+- The protected GitHub workflow now runs the snapshot collector after protected
+  offline replay evidence and passes
+  `queue-snapshot/offline-queue-snapshot.json` into
+  `protected-offline-pilot-evidence`.
+- Added centered protected variables for
+  `TIJARA_OFFLINE_QUEUE_SNAPSHOT_PROBE`,
+  `TIJARA_OFFLINE_QUEUE_SNAPSHOT_REQUIRE_PROBE`,
+  `TIJARA_OFFLINE_QUEUE_SNAPSHOT_FAIL_ON_WARNING`,
+  `TIJARA_OFFLINE_QUEUE_SNAPSHOT_LIMIT`,
+  `TIJARA_OFFLINE_QUEUE_SNAPSHOT_TIMEOUT`, and
+  `TIJARA_OFFLINE_QUEUE_SNAPSHOT_POS_CONFIG_ID`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_offline_queue_snapshot.py
+  scripts/export_protected_offline_pilot_evidence.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `make protected-offline-queue-snapshot` writes local warning-mode evidence
+  and exits `0` with probes disabled.
+- Strict missing-credentials fixture exits `1` and writes
+  `decision=failed`/`ci_status=fail`.
+- Temporary fake Odoo fixture verifies successful session auth, offline status
+  route JSON, queue `search_read`, replayed/duplicate counts, max queue age,
+  and hashed source-device samples.
+- Pilot evidence run over the generated snapshot writes
+  `decision=passed`/`ci_status=pass`.
+- Direct metrics fixture verifies queue row state counts are used when status
+  route counts are missing.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, offline snapshot fixture
+  server, or probe server process remains running.
+
+### Known Gaps
+
+- The collector is ready for protected staging, but live evidence still needs a
+  reachable Odoo URL, real credentials, seeded POS config, and offline pilot
+  data from a store/register/device.
+- Physical device certification, PSP/FBR live certification, monitoring,
+  restore, load, and security executions still need real protected-runner
+  artifacts.
+
+### Next Iteration
+
+- Add production-grade protected release readiness exception controls for
+  offline pilot warnings, or move to PSP/FBR/hardware live certification result
+  mapping once provider/device evidence is available.
+- Run the protected workflow on a self-hosted staging runner and attach real
+  Browser E2E, offline snapshot, offline pilot, ops, and certification
+  artifacts.
+
 ## Iteration 110: Staging Operations Harness Enforcement
 
 Status: Complete

@@ -1475,6 +1475,27 @@ replay browser evidence blocks release readiness. The evidence writes
 `protected-offline-replay-evidence.json`, `status.tsv`, `env-summary.txt`, and
 `summary.md` without printing Odoo passwords or secrets.
 
+Protected offline queue snapshots can be collected automatically before the
+pilot evidence gate:
+
+```bash
+TIJARA_OFFLINE_QUEUE_SNAPSHOT_PROBE=1
+TIJARA_OFFLINE_QUEUE_SNAPSHOT_REQUIRE_PROBE=1
+TIJARA_OFFLINE_QUEUE_SNAPSHOT_LIMIT=250
+TIJARA_OFFLINE_QUEUE_SNAPSHOT_TIMEOUT=8
+TIJARA_OFFLINE_QUEUE_SNAPSHOT_POS_CONFIG_ID=replace-with-pos-config-id
+```
+
+`make protected-offline-queue-snapshot` authenticates to Odoo with
+`ODOO_BASE_URL`, `ODOO_DATABASE`, `ODOO_USERNAME`, and `ODOO_PASSWORD`, calls
+`/tijara/offline-pos/status`, then reads safe `tijara.offline.pos.queue` fields
+through `search_read`. It writes `offline-queue-snapshot.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/protected-offline-pilot/<run-id>/queue-snapshot/`. The protected
+workflow passes that JSON into `protected-offline-pilot-evidence` so replay,
+duplicate, blocked/watch, conflict/failed, unresolved, and queue-age metrics do
+not need to be typed manually when staging is reachable.
+
 Protected offline POS pilot evidence is controlled with:
 
 ```bash

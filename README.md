@@ -483,6 +483,11 @@ The detailed policy and dependency intake checklist are maintained in
   conflict review screens, Odoo transaction tests, Browser E2E spec coverage,
   and correlated protected E2E/Playwright evidence when staging credentials are
   available.
+- `scripts/export_protected_offline_queue_snapshot.py` and
+  `make protected-offline-queue-snapshot` authenticate to Odoo, read the
+  offline status route, collect safe offline queue rows with pilot attention
+  and queue-age metrics, and write `offline-queue-snapshot.json` under
+  `deploy/runtime/protected-offline-pilot/<run-id>/queue-snapshot/`.
 - `scripts/export_protected_offline_pilot_evidence.py` and
   `make protected-offline-pilot-evidence` export protected offline POS pilot
   evidence under `deploy/runtime/protected-offline-pilot/`, tying the replay

@@ -168,6 +168,12 @@ jobs:
       TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS: ${{ vars.TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS || '0' }}
       TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF: ${{ vars.TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF || '0' }}
       TIJARA_OFFLINE_REPLAY_FAIL_ON_WARNING: ${{ vars.TIJARA_OFFLINE_REPLAY_FAIL_ON_WARNING || '0' }}
+      TIJARA_OFFLINE_QUEUE_SNAPSHOT_PROBE: ${{ vars.TIJARA_OFFLINE_QUEUE_SNAPSHOT_PROBE || '1' }}
+      TIJARA_OFFLINE_QUEUE_SNAPSHOT_REQUIRE_PROBE: ${{ vars.TIJARA_OFFLINE_QUEUE_SNAPSHOT_REQUIRE_PROBE || '0' }}
+      TIJARA_OFFLINE_QUEUE_SNAPSHOT_FAIL_ON_WARNING: ${{ vars.TIJARA_OFFLINE_QUEUE_SNAPSHOT_FAIL_ON_WARNING || '0' }}
+      TIJARA_OFFLINE_QUEUE_SNAPSHOT_LIMIT: ${{ vars.TIJARA_OFFLINE_QUEUE_SNAPSHOT_LIMIT || '250' }}
+      TIJARA_OFFLINE_QUEUE_SNAPSHOT_TIMEOUT: ${{ vars.TIJARA_OFFLINE_QUEUE_SNAPSHOT_TIMEOUT || '8' }}
+      TIJARA_OFFLINE_QUEUE_SNAPSHOT_POS_CONFIG_ID: ${{ vars.TIJARA_OFFLINE_QUEUE_SNAPSHOT_POS_CONFIG_ID || vars.TIJARA_POS_CONFIG_ID }}
       TIJARA_OFFLINE_PILOT_OUTAGE_REF: ${{ vars.TIJARA_OFFLINE_PILOT_OUTAGE_REF }}
       TIJARA_OFFLINE_PILOT_RECOVERY_OWNER: ${{ vars.TIJARA_OFFLINE_PILOT_RECOVERY_OWNER }}
       TIJARA_OFFLINE_PILOT_STORE_REF: ${{ vars.TIJARA_OFFLINE_PILOT_STORE_REF }}
@@ -506,6 +512,25 @@ jobs:
             --output "deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID" \
             "${OFFLINE_REPLAY_ARGS[@]}" \
             --strict
+      - name: Protected offline queue snapshot
+        continue-on-error: true
+        run: |
+          OFFLINE_SNAPSHOT_ARGS=()
+          if [[ "${TIJARA_OFFLINE_QUEUE_SNAPSHOT_PROBE:-0}" == "1" ]]; then
+            OFFLINE_SNAPSHOT_ARGS+=(--probe)
+          fi
+          if [[ "${TIJARA_OFFLINE_QUEUE_SNAPSHOT_REQUIRE_PROBE:-0}" == "1" ]]; then
+            OFFLINE_SNAPSHOT_ARGS+=(--require-probe)
+          fi
+          if [[ "${TIJARA_OFFLINE_QUEUE_SNAPSHOT_FAIL_ON_WARNING:-0}" == "1" ]]; then
+            OFFLINE_SNAPSHOT_ARGS+=(--fail-on-warning)
+          fi
+          python3 scripts/export_protected_offline_queue_snapshot.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/protected-offline-pilot/$TIJARA_PROTECTED_RUN_ID/queue-snapshot" \
+            "${OFFLINE_SNAPSHOT_ARGS[@]}" \
+            --strict
       - name: Protected offline POS pilot evidence
         continue-on-error: true
         run: |
@@ -527,6 +552,7 @@ jobs:
             --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
             --output "deploy/runtime/protected-offline-pilot/$TIJARA_PROTECTED_RUN_ID" \
             --offline-replay-evidence "deploy/runtime/protected-offline-replay/$TIJARA_PROTECTED_RUN_ID/protected-offline-replay-evidence.json" \
+            --queue-status-json "deploy/runtime/protected-offline-pilot/$TIJARA_PROTECTED_RUN_ID/queue-snapshot/offline-queue-snapshot.json" \
             "${OFFLINE_PILOT_ARGS[@]}" \
             --strict
       - name: Capture protected operations tool outputs
