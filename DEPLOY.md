@@ -655,6 +655,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, and non-secret environment summaries for approvers.
+- `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
+  CI status, blockers, warnings, evidence group counts, summary reviews, and
+  check rows for dashboards or release automation.
 - `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
   files.
 
@@ -664,6 +667,9 @@ groups are written as warnings in the package. Set
 `TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1` for production release drills where
 missing required groups should make `make signoff-pack` exit non-zero after the
 package is written.
+CI/CD can read `release-readiness.json`; treat `decision=blocked` or
+`ci_status=fail` as a stop condition, and require a named release-owner
+exception for `decision=warning`.
 
 ## Rollback Baseline
 

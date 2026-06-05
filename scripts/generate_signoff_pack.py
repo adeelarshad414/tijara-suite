@@ -551,6 +551,93 @@ def _evidence_summary(context, evidence_entries):
 """
 
 
+def _release_readiness(context, evidence_entries, group_counts):
+    summary_reviews = []
+    check_rows = []
+    blockers = []
+    warnings = []
+
+    if not evidence_entries:
+        warnings.append("No evidence files were attached.")
+
+    missing_groups = context.get("missing_evidence_groups") or []
+    if missing_groups:
+        message = "Missing required evidence groups: %s" % ", ".join(missing_groups)
+        if context.get("strict_required_evidence"):
+            blockers.append(message)
+        else:
+            warnings.append(message)
+
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        lines = _read_lines(path)
+        if path.name == "summary.md":
+            fields = _summary_fields(lines)
+            status = fields.get("Status", "").strip().lower()
+            review = {
+                "path": entry["relative_path"],
+                "status": fields.get("Status", ""),
+                "exit_code": fields.get("Exit code", ""),
+                "run_id": fields.get("Run ID", ""),
+                "scope": fields.get("Scope", ""),
+            }
+            summary_reviews.append(review)
+            if status and status not in {"passed", "approved"}:
+                blockers.append(
+                    "Summary %s has non-passing status %s"
+                    % (entry["relative_path"], fields.get("Status", "unknown"))
+                )
+        elif path.name == "status.tsv":
+            _counts, rows = _status_counts(lines)
+            for row in rows:
+                status = row["status"].strip().lower()
+                check = {
+                    "path": entry["relative_path"],
+                    "name": row["name"],
+                    "status": row["status"],
+                    "message": row["message"],
+                }
+                check_rows.append(check)
+                if status in {"failed", "error", "blocked"}:
+                    blockers.append(
+                        "Check %s in %s is %s"
+                        % (row["name"], entry["relative_path"], row["status"])
+                    )
+                elif status in {"skipped", "warning", "warn"}:
+                    warnings.append(
+                        "Check %s in %s is %s"
+                        % (row["name"], entry["relative_path"], row["status"])
+                    )
+
+    if blockers:
+        decision = "blocked"
+        ci_status = "fail"
+    elif warnings:
+        decision = "warning"
+        ci_status = "pass_with_warnings"
+    else:
+        decision = "ready"
+        ci_status = "pass"
+
+    return {
+        "package_id": context["run_id"],
+        "generated_at": context["generated_at"],
+        "target_environment": context["target_environment"],
+        "git_branch": context["git_branch"],
+        "git_head": context["git_head"],
+        "decision": decision,
+        "ci_status": ci_status,
+        "blockers": blockers,
+        "warnings": warnings,
+        "evidence_group_counts": group_counts,
+        "required_evidence_groups": context.get("required_evidence_groups") or [],
+        "missing_evidence_groups": missing_groups,
+        "strict_required_evidence": bool(context.get("strict_required_evidence")),
+        "summary_reviews": summary_reviews,
+        "check_rows": check_rows,
+    }
+
+
 def _index(context, files, evidence_entries):
     evidence_lines = "\n".join(
         "- `%s` (%s bytes) `%s`" % (
@@ -595,6 +682,7 @@ def _index(context, files, evidence_entries):
 ## Evidence Summary
 
 - [Evidence Summary](evidence-summary.md)
+- [Release Readiness JSON](release-readiness.json)
 
 ## Required Evidence Guardrails
 
@@ -713,14 +801,17 @@ def main():
         "context": context,
         "generated_templates": [path.name for _, path in written_templates],
         "evidence_summary": "evidence-summary.md",
+        "release_readiness": "release-readiness.json",
         "evidence_group_counts": group_counts,
         "required_evidence_groups": required_groups,
         "missing_evidence_groups": missing_required_groups,
         "strict_required_evidence": bool(args.strict_required_evidence),
         "evidence": evidence_entries,
     }
+    readiness = _release_readiness(context, evidence_entries, group_counts)
     _write(output / "evidence-manifest.json", json.dumps(manifest, indent=2, sort_keys=True))
     _write(output / "evidence-summary.md", _evidence_summary(context, evidence_entries))
+    _write(output / "release-readiness.json", json.dumps(readiness, indent=2, sort_keys=True))
     _write(output / "README.md", _index(context, written_templates, evidence_entries))
 
     print("Sign-off package written to %s" % output)

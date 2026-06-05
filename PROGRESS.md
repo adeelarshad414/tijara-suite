@@ -2401,3 +2401,53 @@ Date: 2026-06-05
 - Execute full staging release-candidate and sign-off flows once staging
   credentials, PSP/FBR samples, and hardware evidence are available.
 - Continue direct cashier POS UI selector coverage.
+
+## Iteration 35: Machine-Readable Release Readiness Decision
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `release-readiness.json` generation to
+  `scripts/generate_signoff_pack.py`.
+- The readiness file now includes:
+  - Package ID, target environment, git branch, and git head.
+  - `decision` values of `ready`, `warning`, or `blocked`.
+  - `ci_status` values of `pass`, `pass_with_warnings`, or `fail`.
+  - Blockers and warnings derived from missing required evidence groups,
+    non-passing `summary.md` statuses, failed status-table checks, skipped
+    checks, and missing attached evidence.
+  - Evidence group counts, required groups, missing groups, strict mode,
+    summary reviews, and parsed check rows.
+- Linked `release-readiness.json` from the generated sign-off package README.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Local sign-off package smoke produces `decision=warning` when operations
+  evidence includes a skipped restore check.
+- Strict missing-group smoke produces `decision=blocked` and exits non-zero
+  when required PSP evidence is missing.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- CI/CD is not yet wired to consume `release-readiness.json`.
+- Warning and blocker policy still needs final production release-owner
+  thresholds.
+- Real readiness still depends on live staging execution, PSP/FBR provider
+  evidence, and physical hardware certification.
+
+### Next Iteration
+
+- Add CI/CD release-readiness check target that can fail builds on
+  `decision=blocked`.
+- Continue direct cashier POS UI selectors for product search, cart, payment,
+  receipt print, refund form, and customer-display assertions.
+- Prepare staging execution commands for full release-candidate, E2E,
+  operations, sign-off, and readiness JSON collection.

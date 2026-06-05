@@ -332,11 +332,11 @@ The detailed policy and dependency intake checklist are maintained in
   local, Odoo, browser, and operations checks into a release-candidate evidence
   report under `deploy/runtime/release-evidence/`.
 - `scripts/generate_signoff_pack.py` and `make signoff-pack` generate release
-  approval templates, an evidence summary, and an evidence manifest for PSP,
-  FBR, hardware, finance, security, and go/no-go review under
-  `deploy/runtime/signoff-packages/`, with optional required-evidence group
-  guardrails for release, E2E, operations, security, hardware, FBR, and PSP
-  evidence.
+  approval templates, an evidence summary, machine-readable readiness JSON, and
+  an evidence manifest for PSP, FBR, hardware, finance, security, and go/no-go
+  review under `deploy/runtime/signoff-packages/`, with optional
+  required-evidence group guardrails for release, E2E, operations, security,
+  hardware, FBR, and PSP evidence.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through
