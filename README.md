@@ -121,6 +121,7 @@ make security-audit
 make hardware-cert-smoke
 make e2e
 make release-candidate
+make signoff-pack
 ```
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
@@ -325,6 +326,9 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_release_candidate_gate.sh` and `make release-candidate` assemble
   local, Odoo, browser, and operations checks into a release-candidate evidence
   report under `deploy/runtime/release-evidence/`.
+- `scripts/generate_signoff_pack.py` and `make signoff-pack` generate release
+  approval templates and an evidence manifest for PSP, FBR, hardware, finance,
+  security, and go/no-go review under `deploy/runtime/signoff-packages/`.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through

@@ -2185,3 +2185,57 @@ Date: 2026-06-05
   replay.
 - Start release sign-off evidence templates for PSP/FBR and physical hardware
   certification packages.
+
+## Iteration 31: Release Sign-Off Package Templates
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/generate_signoff_pack.py` for production release approval
+  packages:
+  - Generates go/no-go, PSP certification, FBR certification, physical hardware
+    certification, finance/tax, and security review templates.
+  - Captures package ID, target environment, git branch, git head, and generated
+    timestamp.
+  - Accepts evidence files or directories through repeated `--evidence-path`
+    arguments or `TIJARA_SIGNOFF_EVIDENCE_PATHS`.
+  - Writes an `evidence-manifest.json` with SHA-256 fingerprints, relative
+    paths, absolute paths, and file sizes for attached evidence.
+  - Defaults output to `deploy/runtime/signoff-packages/<run-id>/`, which stays
+    ignored from source control.
+- Added operator shortcuts:
+  - `make signoff-pack`
+  - `npm run signoff:pack`
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- Local sign-off package smoke run passes with a temporary output directory.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- Templates are ready, but production sign-off still needs real PSP settlement
+  samples, certified FBR sandbox/live responses, physical hardware pilot
+  evidence, finance/tax approval, and security owner approval.
+- Full release-candidate execution still needs a live seeded staging Odoo stack,
+  permissioned POS test user, monitoring services, backup artifact, k6, Trivy,
+  and Docker test access.
+- Browser POS click-through still needs richer checkout/payment/refund
+  assertions beyond current route/shell/API-level staging coverage.
+
+### Next Iteration
+
+- Execute `TIJARA_RELEASE_CHECKS=full make release-candidate` against a prepared
+  staging release candidate and feed evidence into `make signoff-pack`.
+- Expand authenticated POS browser click-through for checkout, payment, receipt
+  printing, refund barcode scan, customer display updates, and offline replay.
+- Start live pilot sign-off records for first supported PSP, certified FBR
+  provider, receipt printer, cash drawer, scanner, scale, customer display, and
+  label printer models.

@@ -76,6 +76,8 @@ make provision-tenant-ops TENANT_DB=tijara_customer_001 TENANT_DOMAIN=customer.e
 make hardware-cert-smoke
 make monitoring-up
 make load-smoke
+make release-candidate
+make signoff-pack
 ```
 
 Direct Compose usage should include both env files:
@@ -621,6 +623,32 @@ Release candidate evidence is written to
 scaffold validation, JavaScript checks, security audit, and script syntax
 checks. The `full` scope also requires a clean git worktree, Odoo transaction
 tests, guarded staging browser E2E, and guarded staging operations evidence.
+
+Generate the release sign-off package after collecting release, browser, and
+operations evidence:
+
+```bash
+TIJARA_SIGNOFF_RUN_ID=2026-06-05-rc1 \
+TIJARA_SIGNOFF_ENVIRONMENT=staging \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1 \
+make signoff-pack
+```
+
+The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
+`TIJARA_SIGNOFF_OUTPUT` is set. It includes:
+
+- `release-go-no-go.md` for product, operations, rollback, and exception review.
+- `psp-certification.md` for JazzCash, Easypaisa, Stripe, bank, or other PSP
+  signature, settlement, refund, chargeback, and reconciliation sign-off.
+- `fbr-certification.md` for certified-provider sandbox/live evidence.
+- `hardware-certification.md` for printer, drawer, scanner, scale, customer
+  display, and label printer physical certification.
+- `finance-tax-signoff.md` for accounting setup, refund, chargeback, write-off,
+  and tax policy approval.
+- `security-review-signoff.md` for scan results, RBAC, logs, rate limits,
+  backup/restore, and exception handling.
+- `evidence-manifest.json` with SHA-256 fingerprints for attached evidence
+  files.
 
 ## Rollback Baseline
 
