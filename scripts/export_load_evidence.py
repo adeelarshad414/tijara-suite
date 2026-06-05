@@ -48,7 +48,13 @@ def _load_summary(path):
 def _metric(summary, metric_name, value_name, default=None):
     metric = (summary.get("metrics") or {}).get(metric_name) or {}
     values = metric.get("values") or {}
-    return values.get(value_name, default)
+    if value_name in values:
+        return values.get(value_name, default)
+    if value_name in metric:
+        return metric.get(value_name, default)
+    if value_name == "rate":
+        return metric.get("rate", metric.get("value", default))
+    return default
 
 
 def _float(value, default=None):

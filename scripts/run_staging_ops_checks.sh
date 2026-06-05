@@ -38,6 +38,11 @@ IFS="," read -r -a checks <<< "$requested_checks"
     echo "TIJARA_BACKUP_DRILL_FILE=${TIJARA_BACKUP_DRILL_FILE:-<unset>}"
     echo "TIJARA_RESTORE_DRILL_BACKUP=${TIJARA_RESTORE_DRILL_BACKUP:-<unset>}"
     echo "TIJARA_BASE_URL=${TIJARA_BASE_URL:-http://localhost:8069}"
+    echo "TIJARA_LOAD_VUS=${TIJARA_LOAD_VUS:-5}"
+    echo "TIJARA_LOAD_DURATION=${TIJARA_LOAD_DURATION:-30s}"
+    echo "TIJARA_LOAD_MAX_P95_MS=${TIJARA_LOAD_MAX_P95_MS:-1000}"
+    echo "TIJARA_LOAD_MAX_FAIL_RATE=${TIJARA_LOAD_MAX_FAIL_RATE:-0.05}"
+    echo "TIJARA_LOAD_MIN_CHECKS_RATE=${TIJARA_LOAD_MIN_CHECKS_RATE:-0.95}"
     echo "ODOO_IMAGE=${ODOO_IMAGE:-odoo:19.0}"
     echo "POSTGRES_IMAGE=${POSTGRES_IMAGE:-postgres:16-alpine}"
 } > "$ENV_FILE"
@@ -84,12 +89,81 @@ run_monitoring() {
     run_command_check "monitoring-drill" "python3 scripts/staging_monitoring_drill.py"
 }
 
+run_load_evidence_export() {
+    local summary_json="$1"
+    local combined_log="$2"
+    local load_evidence_dir="$EVIDENCE_DIR/load-evidence"
+    local load_export_log="$EVIDENCE_DIR/load-evidence.log"
+    local base_url="${TIJARA_BASE_URL:-http://localhost:8069}"
+    local load_vus="${TIJARA_LOAD_VUS:-5}"
+    local load_duration="${TIJARA_LOAD_DURATION:-30s}"
+    local args=(
+        scripts/export_load_evidence.py
+        --run-id "$RUN_ID"
+        --target-environment staging
+        --output "$load_evidence_dir"
+        --base-url "$base_url"
+        --vus "$load_vus"
+        --duration "$load_duration"
+    )
+
+    if [[ -n "$summary_json" ]]; then
+        args+=(--summary-json "$summary_json")
+    fi
+    if [[ "$STRICT" == "1" ]]; then
+        args+=(--strict)
+    fi
+
+    local evidence_exit=0
+    if python3 "${args[@]}" > "$load_export_log" 2>&1; then
+        evidence_exit=0
+        record_status "load-evidence" "passed" "$evidence_exit" "$load_export_log" "$load_evidence_dir/load-evidence.json"
+    else
+        evidence_exit=$?
+        record_status "load-evidence" "failed" "$evidence_exit" "$load_export_log" "load evidence export failed"
+    fi
+
+    {
+        echo
+        echo "== Load evidence export =="
+        cat "$load_export_log"
+    } >> "$combined_log"
+
+    return "$evidence_exit"
+}
+
 run_load() {
+    local log_file="$EVIDENCE_DIR/load-smoke.log"
+    local summary_json="$EVIDENCE_DIR/k6-load-summary.json"
+
     if ! command -v k6 >/dev/null 2>&1; then
-        skip_check "load-smoke" "k6 is not installed; install k6 or omit load from TIJARA_OPS_CHECKS."
+        local message="k6 is not installed; install k6 or omit load from TIJARA_OPS_CHECKS."
+        echo "$message" > "$log_file"
+        if [[ "$STRICT" == "1" ]]; then
+            record_status "load-smoke" "failed" "2" "$log_file" "$message"
+        else
+            record_status "load-smoke" "skipped" "0" "$log_file" "$message"
+        fi
+        if run_load_evidence_export "" "$log_file"; then
+            :
+        else
+            :
+        fi
         return
     fi
-    run_command_check "load-smoke" "k6 run scripts/load_smoke.k6.js"
+
+    if k6 run --summary-export "$summary_json" scripts/load_smoke.k6.js > "$log_file" 2>&1; then
+        record_status "load-smoke" "passed" "0" "$log_file" "$summary_json"
+    else
+        local exit_code=$?
+        record_status "load-smoke" "failed" "$exit_code" "$log_file" "k6 load smoke failed"
+    fi
+
+    if run_load_evidence_export "$summary_json" "$log_file"; then
+        :
+    else
+        :
+    fi
 }
 
 run_dependency() {
@@ -178,6 +252,9 @@ fi
     echo "## Evidence Files"
     echo "- Environment summary: $ENV_FILE"
     echo "- Status table: $STATUS_FILE"
+    if [[ -f "$EVIDENCE_DIR/load-evidence/load-evidence.json" ]]; then
+        echo "- Load evidence: $EVIDENCE_DIR/load-evidence/load-evidence.json"
+    fi
 } > "$SUMMARY_FILE"
 
 echo "Staging operations evidence written to $EVIDENCE_DIR"

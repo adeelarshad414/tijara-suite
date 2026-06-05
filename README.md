@@ -355,7 +355,8 @@ The detailed policy and dependency intake checklist are maintained in
   journey spec.
 - `scripts/run_staging_ops_checks.sh` and `make ops-staging` gather staging
   monitoring, restore, load-smoke, dependency scan, and container scan evidence
-  under `deploy/runtime/ops-evidence/`.
+  under `deploy/runtime/ops-evidence/`. Load checks now export k6 summary JSON
+  and nested structured load evidence for sign-off extraction.
 - `scripts/run_release_candidate_gate.sh` and `make release-candidate` assemble
   local, Odoo, browser, and operations checks into a release-candidate evidence
   report under `deploy/runtime/release-evidence/`.

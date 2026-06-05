@@ -3500,3 +3500,75 @@ Date: 2026-06-05
   responses are available.
 - Add staging/live Odoo FBR transaction execution after database credentials are
   corrected.
+
+## Iteration 53: Operations Load Evidence Automation
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Enhanced `scripts/run_staging_ops_checks.sh` so the `load` check now:
+  - Runs k6 with `--summary-export`.
+  - Writes `k6-load-summary.json` inside the operations evidence directory.
+  - Calls `scripts/export_load_evidence.py` automatically.
+  - Stores nested structured load evidence under
+    `deploy/runtime/ops-evidence/<run-id>/load-evidence/`.
+  - Records separate `load-smoke` and `load-evidence` rows in `status.tsv`.
+  - Links the nested `load-evidence.json` from the operations summary.
+  - Emits warning-mode load evidence when k6 is unavailable in non-strict mode.
+  - Fails both load smoke and load evidence in strict mode when the load step is
+    blocked or over threshold.
+- Updated `scripts/export_load_evidence.py` to support both k6 summary formats:
+  nested `values` metrics and direct metric fields such as `p(95)` and
+  `value`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_staging_ops_checks.sh` passes.
+- Forced no-k6 PATH run passes in non-strict mode and writes warning
+  `load-evidence.json`.
+- Real k6 ops load run against local Odoo passes outside the sandbox and writes:
+  - `status.tsv` with passing `load-smoke` and `load-evidence` rows.
+  - `k6-load-summary.json`.
+  - nested `load-evidence/load-evidence.json` with `decision=passed`.
+  - p95 duration, failure-rate, and checks-rate metrics.
+- Generated a sign-off package from the ops evidence directory with Operations
+  required in strict mode.
+- Confirmed `release-readiness.json` decision is `ready`.
+- Confirmed `release-readiness.json` includes nested ops `load_reviews`.
+- Confirmed `evidence-summary.md` includes Load Test Evidence from the nested
+  ops evidence directory.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_load_evidence.py scripts/generate_signoff_pack.py` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories are present under `addons`, `scripts`, or
+  `tests`.
+
+### Known Gaps
+
+- Full `make ops-staging` still needs a prepared staging stack with monitoring,
+  dependency/container scan tools, restore backup artifact, and production-like
+  load target.
+- The local k6 pass required unsandboxed local TCP access; CI/staging runners
+  need network access to the target Odoo URL.
+- Load profiles are still smoke-level and need larger vertical-specific
+  profiles for superstore, pharmacy, restaurant, grocery, bakery, and cloth
+  pilots.
+- Odoo transaction tests remain blocked by the local Docker database credential
+  mismatch.
+
+### Next Iteration
+
+- Add larger open-source k6 load profiles for POS checkout, public display, and
+  kiosk endpoints, with evidence export support.
+- Add FBR provider response fixture smoke tests once certified-provider sample
+  responses are available.
+- Add staging/live Odoo FBR transaction execution after database credentials are
+  corrected.

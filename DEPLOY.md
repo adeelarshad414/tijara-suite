@@ -628,6 +628,10 @@ The harness writes per-check logs, status, environment summary, and a Markdown
 summary under `deploy/runtime/ops-evidence/<run-id>/`. Set
 `TIJARA_OPS_STRICT=1` when skipped checks, missing tools, or missing backup paths
 should fail the release drill.
+When `load` is included, the harness writes `k6-load-summary.json`, runs
+`scripts/export_load_evidence.py`, and stores structured load evidence under
+`deploy/runtime/ops-evidence/<run-id>/load-evidence/` so release sign-off can
+extract `load_reviews` without a separate manual step.
 
 ## Display Routes
 
@@ -735,7 +739,8 @@ Optional tools:
 - Run `make e2e` after installing Playwright and setting staging environment
   variables for authenticated flows.
 - Run `make ops-staging` for grouped staging evidence across monitoring, load,
-  dependency, restore, and container checks.
+  dependency, restore, and container checks. The load check automatically
+  exports nested structured load evidence when k6 runs.
 - Run `make release-candidate` for the local release gate. Use
   `TIJARA_RELEASE_CHECKS=full make release-candidate` after staging E2E,
   operations evidence, Docker, and Odoo test prerequisites are ready.
