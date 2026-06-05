@@ -1379,8 +1379,30 @@ includes `tenant_ops_reviews`.
 Collect external certification evidence before the final sign-off package. The
 collector does not copy provider or device evidence into the repo; it validates
 required metadata, rejects secret-like metadata keys, records SHA-256
-fingerprints, and writes release-ingestible evidence under
+fingerprints, validates optional provider artifact manifests, enforces approval
+references and validity dates when requested, and writes release-ingestible
+evidence under
 `deploy/runtime/certification-evidence/<run-id>/<category>/`.
+
+Artifact manifests should be JSON files with an `artifacts` list. Each artifact
+can include `path`, `sha256`, and `required`; relative paths resolve beside the
+manifest file so provider/export bundles can stay portable:
+
+```json
+{
+  "metadata": {
+    "provider": "JazzCash",
+    "batch": "JZ-UAT-001"
+  },
+  "artifacts": [
+    {
+      "path": "jazzcash-settlement.csv",
+      "sha256": "<64-character-sha256>",
+      "required": true
+    }
+  ]
+}
+```
 
 PSP evidence example:
 
@@ -1392,7 +1414,17 @@ python3 scripts/collect_certification_evidence.py \
   --reference JAZZ-UAT-001 \
   --owner Finance \
   --evidence-file /secure/evidence/jazzcash-settlement.csv \
-  --metadata settlement_batch=JZ-001
+  --artifact-manifest /secure/evidence/jazzcash-certification-manifest.json \
+  --expected-sha256 /secure/evidence/jazzcash-settlement.csv=<64-character-sha256> \
+  --minimum-evidence-files 1 \
+  --approved-by "Finance Lead" \
+  --approval-reference FIN-PSP-2026-001 \
+  --valid-until 2027-06-05 \
+  --require-artifact-manifest \
+  --require-approval \
+  --require-validity \
+  --metadata settlement_batch=JZ-001 \
+  --strict
 ```
 
 FBR evidence example:
@@ -1405,8 +1437,16 @@ python3 scripts/collect_certification_evidence.py \
   --reference FBR-SANDBOX-001 \
   --owner Tax \
   --evidence-file /secure/evidence/fbr-sandbox-response.json \
+  --artifact-manifest /secure/evidence/fbr-certification-manifest.json \
+  --approved-by "Tax Lead" \
+  --approval-reference FBR-SIGNOFF-2026-001 \
+  --valid-until 2027-06-05 \
+  --require-artifact-manifest \
+  --require-approval \
+  --require-validity \
   --metadata fbr_pos_id=123 \
-  --metadata branch_code=KHI-01
+  --metadata branch_code=KHI-01 \
+  --strict
 ```
 
 Hardware evidence example:
@@ -1419,7 +1459,15 @@ python3 scripts/collect_certification_evidence.py \
   --store "Karachi Branch" \
   --device-model "Epson TM-T88VI" \
   --device-serial "TEST-SERIAL-001" \
-  --evidence-file /secure/evidence/epson-tm-t88vi-certification/
+  --evidence-file /secure/evidence/epson-tm-t88vi-certification/ \
+  --artifact-manifest /secure/evidence/epson-tm-t88vi-certification/manifest.json \
+  --approved-by "Store Operations Lead" \
+  --approval-reference HW-KHI-EPSON-2026-001 \
+  --valid-until 2027-06-05 \
+  --require-artifact-manifest \
+  --require-approval \
+  --require-validity \
+  --strict
 ```
 
 Include the generated directories in the release sign-off package:
@@ -1456,11 +1504,11 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `security-review-signoff.md` for scan results, RBAC, logs, rate limits,
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
-  status-table, PSP/FBR readiness, FBR fixture smoke, monitoring, incident
-  runbook, production operations readiness, release retention, secret manager,
-  secret runtime, tenant operations, tenant smoke, tenant rollout, deployment
-  environment, load evidence, load profile matrix evidence, and non-secret
-  environment summaries for approvers.
+  status-table, PSP/FBR readiness, FBR fixture smoke, certification evidence,
+  monitoring, incident runbook, production operations readiness, release
+  retention, secret manager, secret runtime, tenant operations, tenant smoke,
+  tenant rollout, deployment environment, load evidence, load profile matrix
+  evidence, and non-secret environment summaries for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -1468,8 +1516,11 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   `psp_readiness_reviews`; when FBR readiness evidence is attached,
   certified-provider readiness is included under `fbr_readiness_reviews`; when
   FBR fixture smoke evidence is attached, response fixture coverage is included
-  under `fbr_fixture_reviews`; when browser E2E seed, profile, execution, or
-  readiness evidence is attached, reviews are included under
+  under `fbr_fixture_reviews`; when external PSP, FBR, or hardware
+  certification evidence is attached, manifest, hash, approval, validity, and
+  device/provider reviews are included under `certification_evidence_reviews`;
+  when browser E2E seed, profile, execution, or readiness evidence is attached,
+  reviews are included under
   `e2e_seed_reviews`, `e2e_profile_reviews`, `e2e_execution_reviews`, and
   `e2e_readiness_reviews`; when monitoring evidence is attached,
   observability reviews are included under

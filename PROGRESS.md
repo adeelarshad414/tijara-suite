@@ -5935,3 +5935,84 @@ Date: 2026-06-05
   available.
 - Add production incident/rollback drill execution proof once the protected
   runner can access deployment infrastructure.
+
+## Iteration 84: Certification Evidence Intake Hardening
+
+Status: Complete
+
+Date: 2026-06-05
+
+### Completed
+
+- Hardened `scripts/collect_certification_evidence.py` for PSP, FBR, and
+  hardware certification evidence.
+- Added provider artifact manifest support with manifest-relative artifact
+  paths, required artifact checks, manifest SHA-256 validation, and de-duped
+  evidence file counting.
+- Added expected SHA-256 guardrails via `--expected-sha256` and
+  `TIJARA_CERT_EXPECTED_SHA256`.
+- Added production approval and validity controls with `--approved-by`,
+  `--approval-reference`, `--valid-until`, `--require-approval`,
+  `--require-validity`, and `--require-artifact-manifest`.
+- Added minimum evidence count enforcement with `--minimum-evidence-files`.
+- Extended certification evidence manifests with artifact manifest metadata,
+  expected hashes, approval status, validity status, and requirement fields.
+- Extended `scripts/generate_signoff_pack.py` so
+  `certification-evidence.json` files produce `certification_evidence_reviews`
+  in `release-readiness.json`.
+- Added a dedicated Certification Evidence section to `evidence-summary.md`.
+- Wired failed or warning certification evidence into release-readiness
+  blockers/warnings so expired or incomplete external certification can stop a
+  release package.
+- Updated `README.md` and `DEPLOY.md` with strict certification evidence
+  guidance, artifact manifest format, approval/validity requirements, and
+  sign-off review behavior.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/collect_certification_evidence.py scripts/generate_signoff_pack.py`
+  passes.
+- Strict PSP certification fixture with provider manifest, expected SHA-256,
+  approval, and future validity passes with `decision=passed`.
+- Strict hardware certification fixture with provider manifest, expected
+  SHA-256, approval, and future validity passes with `decision=passed`.
+- Strict expired PSP certification fixture fails with `decision=failed` and a
+  validity blocker.
+- Sign-off package with ready PSP and hardware certification evidence passes
+  `scripts/check_release_readiness.py` with `decision=ready`.
+- Sign-off package with expired PSP certification evidence fails
+  `scripts/check_release_readiness.py` with `decision=blocked`.
+- `evidence-summary.md` includes the new `Certification Evidence` section.
+- `release-readiness.json` includes `certification_evidence_reviews`.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server` process remains running.
+
+### Known Gaps
+
+- The certification intake now enforces evidence quality, but real PSP, FBR,
+  and hardware certification still requires certified provider documents,
+  provider credentials, compliance references, and physical device evidence.
+- Protected GitHub runner execution has not yet produced live staging or
+  production certification evidence.
+- Live POS checkout/refund/print browser evidence still needs a staging Odoo
+  URL, credentials, seeded POS data, and hardware bridge access.
+- Offline POS browser capture/replay and live payment/FBR provider
+  certification remain production blockers until exercised against real
+  systems.
+
+### Next Iteration
+
+- Add strict certification evidence collection steps to the protected runner
+  workflow so PSP, FBR, and hardware artifact directories can be attached to
+  protected release sign-off automatically.
+- Add templates for PSP/FBR/hardware certification artifact manifests that
+  operators can fill during sandbox/live certification.
+- Continue toward live staging E2E execution once Odoo URL, credentials, seeded
+  POS config, Playwright browser dependencies, and hardware bridge are
+  available.

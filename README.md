@@ -402,8 +402,10 @@ The detailed policy and dependency intake checklist are maintained in
   report under `deploy/runtime/release-evidence/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
-  metadata fields, fingerprint external evidence files or directories, and
-  write sign-off-ready summaries under
+  metadata fields, fingerprint external evidence files, directories, or
+  provider artifact manifests, validate expected SHA-256 hashes, enforce
+  minimum evidence counts, approvals, validity dates, and required manifests,
+  and write sign-off-ready summaries under
   `deploy/runtime/certification-evidence/`.
 - `scripts/export_psp_readiness.py` and `make psp-readiness-evidence` export
   redacted PSP readiness evidence from the committed provider adapter matrix,
@@ -446,10 +448,10 @@ The detailed policy and dependency intake checklist are maintained in
   review under `deploy/runtime/signoff-packages/`, with optional
   required-evidence group guardrails for release, E2E, operations, security,
   hardware, FBR, and PSP evidence. PSP/FBR readiness manifests, FBR fixture
-  smoke evidence, E2E seed/profile/execution/readiness evidence, monitoring,
-  incident runbook, release retention, secret manager, secret runtime,
-  deployment environment, and load evidence are extracted into readiness
-  reviews for approvers and CI.
+  smoke evidence, certification evidence, E2E seed/profile/execution/readiness
+  evidence, monitoring, incident runbook, release retention, secret manager,
+  secret runtime, deployment environment, and load evidence are extracted into
+  readiness reviews for approvers and CI.
 - `scripts/check_release_readiness.py` and `make check-release-readiness` let
   CI/CD fail on `release-readiness.json` decisions of `blocked` and optionally
   on `warning`.

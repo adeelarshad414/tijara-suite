@@ -619,6 +619,55 @@ def _fbr_fixture_reviews(evidence_entries):
     return reviews
 
 
+def _certification_evidence_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "certification-evidence.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        approval = payload.get("approval") or {}
+        validity = payload.get("validity") or {}
+        requirements = payload.get("requirements") or {}
+        artifact_manifest = payload.get("artifact_manifest") or {}
+        evidence = payload.get("evidence") or []
+        existing = [item for item in evidence if item.get("exists")]
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "category": context.get("category", ""),
+                "target_environment": context.get("target_environment", ""),
+                "provider": context.get("provider", ""),
+                "reference": context.get("reference", ""),
+                "owner": context.get("owner", ""),
+                "device_model": context.get("device_model", ""),
+                "device_serial": context.get("device_serial", ""),
+                "store": context.get("store", ""),
+                "evidence_count": len(existing),
+                "minimum_evidence_files": requirements.get("minimum_evidence_files", 0),
+                "expected_hash_count": len(payload.get("expected_hashes") or {}),
+                "artifact_manifest_present": bool(artifact_manifest.get("path")),
+                "artifact_manifest_count": artifact_manifest.get("artifact_count", 0),
+                "require_artifact_manifest": bool(
+                    artifact_manifest.get("required")
+                    or requirements.get("require_artifact_manifest")
+                ),
+                "approved_by_present": bool(approval.get("approved_by_present")),
+                "approval_reference_present": bool(approval.get("approval_reference_present")),
+                "require_approval": bool(approval.get("require_approval")),
+                "valid_until": validity.get("valid_until", ""),
+                "valid_until_present": bool(validity.get("valid_until_present")),
+                "require_validity": bool(validity.get("require_validity")),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _e2e_readiness_reviews(evidence_entries):
     reviews = []
     for entry in evidence_entries:
@@ -1311,6 +1360,7 @@ def _evidence_summary(context, evidence_entries):
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
+    certification_evidence_reviews = _certification_evidence_reviews(evidence_entries)
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
@@ -1473,6 +1523,53 @@ def _evidence_summary(context, evidence_entries):
         fbr_fixture_lines.append("")
     if not fbr_fixture_lines:
         fbr_fixture_lines = ["- No `fbr-fixture-smoke.json` files were attached.", ""]
+
+    certification_lines = []
+    for review in certification_evidence_reviews:
+        certification_lines.append("### `%s`" % review["path"])
+        certification_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        certification_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        certification_lines.append(
+            "- Category/environment: %s/%s"
+            % (review["category"] or "unset", review["target_environment"] or "unset")
+        )
+        certification_lines.append(
+            "- Provider/reference/owner: %s/%s/%s"
+            % (
+                review["provider"] or "unset",
+                review["reference"] or "unset",
+                review["owner"] or "unset",
+            )
+        )
+        certification_lines.append(
+            "- Device model/serial/store: %s/%s/%s"
+            % (
+                review["device_model"] or "unset",
+                review["device_serial"] or "unset",
+                review["store"] or "unset",
+            )
+        )
+        certification_lines.append(
+            "- Evidence/minimum/hashes/manifest artifacts/manifest required: %s/%s/%s/%s/%s"
+            % (
+                review["evidence_count"],
+                review["minimum_evidence_files"],
+                review["expected_hash_count"],
+                review["artifact_manifest_count"],
+                "yes" if review["require_artifact_manifest"] else "no",
+            )
+        )
+        certification_lines.append(
+            "- Approval owner/reference and validity: %s/%s/%s"
+            % (
+                "yes" if review["approved_by_present"] else "no",
+                "yes" if review["approval_reference_present"] else "no",
+                review["valid_until"] or "unset",
+            )
+        )
+        certification_lines.append("")
+    if not certification_lines:
+        certification_lines = ["- No `certification-evidence.json` files were attached.", ""]
 
     e2e_seed_lines = []
     for review in e2e_seed_reviews:
@@ -2139,6 +2236,9 @@ def _evidence_summary(context, evidence_entries):
 ## FBR Fixture Evidence
 
 {chr(10).join(fbr_fixture_lines)}
+## Certification Evidence
+
+{chr(10).join(certification_lines)}
 ## Browser E2E Seed Evidence
 
 {chr(10).join(e2e_seed_lines)}
@@ -2212,6 +2312,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     psp_readiness_reviews = _psp_readiness_reviews(evidence_entries)
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
+    certification_evidence_reviews = _certification_evidence_reviews(evidence_entries)
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
@@ -2323,6 +2424,20 @@ def _release_readiness(context, evidence_entries, group_counts):
             blockers.append("FBR fixture smoke %s is %s" % (review["path"], review["decision"]))
         elif decision in {"warning", "warn"}:
             warnings.append("FBR fixture smoke %s is %s" % (review["path"], review["decision"]))
+
+    for review in certification_evidence_reviews:
+        decision = str(review.get("decision") or "").lower()
+        category = review.get("category") or "certification"
+        if decision in {"failed", "blocked"}:
+            blockers.append(
+                "Certification evidence %s (%s) is %s"
+                % (review["path"], category, review["decision"])
+            )
+        elif decision in {"warning", "warn"}:
+            warnings.append(
+                "Certification evidence %s (%s) is %s"
+                % (review["path"], category, review["decision"])
+            )
 
     for review in e2e_seed_reviews:
         decision = str(review.get("decision") or "").lower()
@@ -2518,6 +2633,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "psp_readiness_reviews": psp_readiness_reviews,
         "fbr_readiness_reviews": fbr_readiness_reviews,
         "fbr_fixture_reviews": fbr_fixture_reviews,
+        "certification_evidence_reviews": certification_evidence_reviews,
         "e2e_seed_reviews": e2e_seed_reviews,
         "e2e_profile_reviews": e2e_profile_reviews,
         "e2e_execution_reviews": e2e_execution_reviews,

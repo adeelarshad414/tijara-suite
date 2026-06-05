@@ -29,6 +29,10 @@ def _truthy(value):
     return str(value or "").strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
+def _csv_items(value):
+    return [item.strip() for item in str(value or "").split(",") if item.strip()]
+
+
 def _write(path, content):
     path.write_text(content.strip() + "\n", encoding="utf-8")
 
@@ -53,6 +57,69 @@ def _metadata_items(items):
             raise ValueError("Metadata key cannot be blank.")
         metadata[key] = value
     return metadata
+
+
+def _validate_sha256(digest, label):
+    cleaned = str(digest or "").strip().lower()
+    if len(cleaned) != 64 or any(char not in "0123456789abcdef" for char in cleaned):
+        raise ValueError("%s must be a 64-character SHA-256 hex digest." % label)
+    return cleaned
+
+
+def _expected_hash_items(items):
+    expected = {}
+    for raw in items:
+        if "=" not in raw:
+            raise ValueError("Expected hash must use path=sha256 format: %s" % raw)
+        path, digest = raw.split("=", 1)
+        path = path.strip()
+        if not path:
+            raise ValueError("Expected hash path cannot be blank.")
+        expected[path] = _validate_sha256(digest, "Expected hash for %s" % path)
+    return expected
+
+
+def _load_artifact_manifest(path):
+    if not path:
+        return {}, [], None
+    manifest_path = Path(path)
+    if not manifest_path.is_absolute():
+        manifest_path = ROOT_DIR / manifest_path
+    if not manifest_path.is_file():
+        raise ValueError("Artifact manifest does not exist: %s" % manifest_path)
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("Could not read artifact manifest %s: %s" % (manifest_path, error)) from error
+    artifacts = payload.get("artifacts")
+    if not isinstance(artifacts, list):
+        raise ValueError("Artifact manifest must contain an artifacts list.")
+    return payload, artifacts, manifest_path
+
+
+def _manifest_artifact_path(manifest_path, artifact_path):
+    candidate = Path(str(artifact_path or ""))
+    if candidate.is_absolute():
+        return str(candidate)
+    if manifest_path:
+        return str(manifest_path.parent / candidate)
+    return str(ROOT_DIR / candidate)
+
+
+def _normalized_input_path(raw_path):
+    path = Path(str(raw_path or ""))
+    if not path.is_absolute():
+        path = ROOT_DIR / path
+    return str(path)
+
+
+def _parse_valid_until(value):
+    if not value:
+        return None
+    try:
+        return dt.date.fromisoformat(value)
+    except ValueError as error:
+        raise ValueError("valid-until must use YYYY-MM-DD format.") from error
 
 
 def _repo_relative(path):
@@ -107,6 +174,15 @@ def _evidence_entries(raw_path):
     if not path.is_file():
         return [_missing_evidence_entry(path, source, "Evidence file does not exist.")]
     return [_evidence_file_entry(path, source)]
+
+
+def _entry_matches(entry, expected_path):
+    path = str(entry.get("path") or "")
+    relative = str(entry.get("relative_path") or "")
+    source = str(entry.get("source") or "")
+    name = Path(path).name
+    expected = str(expected_path or "")
+    return expected in {path, relative, source, name}
 
 
 def _status_row(name, status, message):
@@ -173,6 +249,36 @@ def main():
     parser.add_argument("--device-serial", default=os.environ.get("TIJARA_CERT_DEVICE_SERIAL", ""))
     parser.add_argument("--store", default=os.environ.get("TIJARA_CERT_STORE", ""))
     parser.add_argument("--evidence-file", action="append", default=[])
+    parser.add_argument("--artifact-manifest", default=os.environ.get("TIJARA_CERT_ARTIFACT_MANIFEST", ""))
+    parser.add_argument(
+        "--expected-sha256",
+        action="append",
+        default=_csv_items(os.environ.get("TIJARA_CERT_EXPECTED_SHA256")),
+        help="Expected evidence hash in path=sha256 format. Can be repeated.",
+    )
+    parser.add_argument(
+        "--minimum-evidence-files",
+        type=int,
+        default=int(os.environ.get("TIJARA_CERT_MINIMUM_EVIDENCE_FILES", "1")),
+    )
+    parser.add_argument("--approved-by", default=os.environ.get("TIJARA_CERT_APPROVED_BY", ""))
+    parser.add_argument("--approval-reference", default=os.environ.get("TIJARA_CERT_APPROVAL_REFERENCE", ""))
+    parser.add_argument("--valid-until", default=os.environ.get("TIJARA_CERT_VALID_UNTIL", ""))
+    parser.add_argument(
+        "--require-artifact-manifest",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_CERT_REQUIRE_ARTIFACT_MANIFEST")),
+    )
+    parser.add_argument(
+        "--require-approval",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_CERT_REQUIRE_APPROVAL")),
+    )
+    parser.add_argument(
+        "--require-validity",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_CERT_REQUIRE_VALIDITY")),
+    )
     parser.add_argument("--metadata", action="append", default=[])
     parser.add_argument(
         "--non-strict",
@@ -210,6 +316,53 @@ def main():
     else:
         rows.append(_status_row("metadata-format", "passed", "%s metadata item(s) parsed." % len(metadata)))
 
+    try:
+        expected_hashes = _expected_hash_items(args.expected_sha256)
+    except ValueError as error:
+        expected_hashes = {}
+        blockers.append(str(error))
+        rows.append(_status_row("expected-hash-format", "failed", str(error)))
+    else:
+        rows.append(_status_row("expected-hash-format", "passed", "%s expected hash item(s) parsed." % len(expected_hashes)))
+
+    try:
+        artifact_manifest, manifest_artifacts, artifact_manifest_path = _load_artifact_manifest(args.artifact_manifest)
+    except ValueError as error:
+        artifact_manifest = {}
+        manifest_artifacts = []
+        artifact_manifest_path = None
+        blockers.append(str(error))
+        rows.append(_status_row("artifact-manifest", "failed", str(error)))
+    else:
+        if args.artifact_manifest:
+            rows.append(_status_row("artifact-manifest", "passed", "%s artifact manifest item(s) parsed." % len(manifest_artifacts)))
+        elif args.require_artifact_manifest:
+            message = "Artifact manifest is required for this certification evidence run."
+            if args.non_strict:
+                warnings.append(message)
+                rows.append(_status_row("artifact-manifest", "warning", message))
+            else:
+                blockers.append(message)
+                rows.append(_status_row("artifact-manifest", "failed", message))
+        else:
+            warnings.append("No artifact manifest was attached.")
+            rows.append(_status_row("artifact-manifest", "warning", "No artifact manifest was attached."))
+
+    try:
+        valid_until_date = _parse_valid_until(args.valid_until)
+    except ValueError as error:
+        valid_until_date = None
+        blockers.append(str(error))
+        rows.append(_status_row("valid-until-format", "failed", str(error)))
+    else:
+        rows.append(
+            _status_row(
+                "valid-until-format",
+                "passed" if valid_until_date else "warning",
+                "Certification validity date is %s." % (args.valid_until or "not recorded"),
+            )
+        )
+
     secret_keys = _secret_metadata_keys(metadata)
     if secret_keys:
         message = "Secret-like metadata keys are not allowed: %s" % ", ".join(secret_keys)
@@ -229,6 +382,9 @@ def main():
         "device_model": args.device_model,
         "device_serial": args.device_serial,
         "store": args.store,
+        "approved_by": args.approved_by,
+        "approval_reference": args.approval_reference,
+        "valid_until": args.valid_until,
     }
     for field in REQUIRED_BY_CATEGORY[args.category]:
         value = context.get(field)
@@ -247,8 +403,56 @@ def main():
     env_paths = os.environ.get("TIJARA_CERT_EVIDENCE_FILES", "")
     if env_paths:
         evidence_paths.extend(path.strip() for path in env_paths.split(",") if path.strip())
-    evidence = []
+    manifest_hash_errors = []
+    resolved_manifest_artifacts = []
+    for artifact in manifest_artifacts:
+        if isinstance(artifact, dict) and artifact.get("path"):
+            resolved_path = _manifest_artifact_path(artifact_manifest_path, artifact["path"])
+            resolved_manifest_artifacts.append(
+                {
+                    "path": str(artifact["path"]),
+                    "resolved_path": resolved_path,
+                    "required": artifact.get("required", True),
+                    "sha256": str(artifact.get("sha256") or "").strip().lower(),
+                }
+            )
+            evidence_paths.append(resolved_path)
+            if artifact.get("sha256"):
+                try:
+                    expected_hashes.setdefault(
+                        resolved_path,
+                        _validate_sha256(artifact["sha256"], "Manifest artifact hash for %s" % artifact["path"]),
+                    )
+                except ValueError as error:
+                    manifest_hash_errors.append(str(error))
+    if manifest_hash_errors:
+        message = "; ".join(manifest_hash_errors)
+        if args.non_strict:
+            warnings.append(message)
+            rows.append(_status_row("manifest-artifact-hashes", "warning", message))
+        else:
+            blockers.append(message)
+            rows.append(_status_row("manifest-artifact-hashes", "failed", message))
+    else:
+        rows.append(
+            _status_row(
+                "manifest-artifact-hashes",
+                "passed",
+                "%s manifest artifact hash item(s) parsed." % len(
+                    [artifact for artifact in resolved_manifest_artifacts if artifact.get("sha256")]
+                ),
+            )
+        )
+    deduped_evidence_paths = []
+    seen_evidence_paths = set()
     for path in evidence_paths:
+        normalized_path = _normalized_input_path(path)
+        if normalized_path in seen_evidence_paths:
+            continue
+        seen_evidence_paths.add(normalized_path)
+        deduped_evidence_paths.append(normalized_path)
+    evidence = []
+    for path in deduped_evidence_paths:
         evidence.extend(_evidence_entries(path))
     if evidence and all(entry["exists"] for entry in evidence):
         rows.append(_status_row("evidence-files", "passed", "%s evidence file(s) hashed." % len(evidence)))
@@ -270,6 +474,101 @@ def main():
             blockers.append(message)
             rows.append(_status_row("evidence-files", "failed", message))
 
+    present_evidence = [entry for entry in evidence if entry.get("exists")]
+    if len(present_evidence) >= args.minimum_evidence_files:
+        rows.append(
+            _status_row(
+                "minimum-evidence-files",
+                "passed",
+                "%s/%s required evidence file(s) are present." % (len(present_evidence), args.minimum_evidence_files),
+            )
+        )
+    else:
+        message = "%s evidence file(s) attached; minimum is %s." % (len(present_evidence), args.minimum_evidence_files)
+        if args.non_strict:
+            warnings.append(message)
+            rows.append(_status_row("minimum-evidence-files", "warning", message))
+        else:
+            blockers.append(message)
+            rows.append(_status_row("minimum-evidence-files", "failed", message))
+
+    hash_failures = []
+    for expected_path, expected_hash in expected_hashes.items():
+        matches = [entry for entry in present_evidence if _entry_matches(entry, expected_path)]
+        if not matches:
+            hash_failures.append("%s was not found in attached evidence" % expected_path)
+            continue
+        if not any(entry.get("sha256") == expected_hash for entry in matches):
+            hash_failures.append("%s hash does not match expected SHA-256" % expected_path)
+    if hash_failures:
+        message = "; ".join(hash_failures)
+        if args.non_strict:
+            warnings.append(message)
+            rows.append(_status_row("expected-hashes", "warning", message))
+        else:
+            blockers.append(message)
+            rows.append(_status_row("expected-hashes", "failed", message))
+    else:
+        rows.append(_status_row("expected-hashes", "passed", "%s expected hash item(s) matched." % len(expected_hashes)))
+
+    missing_manifest_artifacts = []
+    for artifact in resolved_manifest_artifacts:
+        required = artifact.get("required", True)
+        path = str(artifact.get("path") or "")
+        resolved_path = str(artifact.get("resolved_path") or "")
+        if required and resolved_path and not any(
+            (_entry_matches(entry, resolved_path) or _entry_matches(entry, path)) and entry.get("exists")
+            for entry in evidence
+        ):
+            missing_manifest_artifacts.append(path or resolved_path)
+    if missing_manifest_artifacts:
+        message = "Required manifest artifact(s) missing: %s" % ", ".join(missing_manifest_artifacts)
+        if args.non_strict:
+            warnings.append(message)
+            rows.append(_status_row("manifest-required-artifacts", "warning", message))
+        else:
+            blockers.append(message)
+            rows.append(_status_row("manifest-required-artifacts", "failed", message))
+    else:
+        rows.append(_status_row("manifest-required-artifacts", "passed", "All required manifest artifact(s) are present."))
+
+    if args.approved_by and args.approval_reference:
+        rows.append(_status_row("approval", "passed", "Approval owner and reference are recorded."))
+    elif args.require_approval:
+        message = "Approval owner and reference are required for production certification evidence."
+        if args.non_strict:
+            warnings.append(message)
+            rows.append(_status_row("approval", "warning", message))
+        else:
+            blockers.append(message)
+            rows.append(_status_row("approval", "failed", message))
+    else:
+        warnings.append("Approval owner/reference are not recorded.")
+        rows.append(_status_row("approval", "warning", "Approval owner/reference are not recorded."))
+
+    if valid_until_date:
+        today = dt.datetime.now(dt.timezone.utc).date()
+        if valid_until_date >= today:
+            rows.append(_status_row("validity", "passed", "Certification evidence is valid until %s." % args.valid_until))
+        else:
+            message = "Certification evidence expired on %s." % args.valid_until
+            if args.non_strict:
+                warnings.append(message)
+                rows.append(_status_row("validity", "warning", message))
+            else:
+                blockers.append(message)
+                rows.append(_status_row("validity", "failed", message))
+    elif args.require_validity:
+        message = "Certification validity date is required."
+        if args.non_strict:
+            warnings.append(message)
+            rows.append(_status_row("validity", "warning", message))
+        else:
+            blockers.append(message)
+            rows.append(_status_row("validity", "failed", message))
+    else:
+        rows.append(_status_row("validity", "warning", "Certification validity date is not recorded."))
+
     if blockers:
         decision = "failed"
         ci_status = "fail"
@@ -283,7 +582,32 @@ def main():
     manifest = {
         "context": context,
         "metadata": metadata,
+        "artifact_manifest": {
+            "path": args.artifact_manifest,
+            "artifact_count": len(manifest_artifacts),
+            "metadata": artifact_manifest.get("metadata") if isinstance(artifact_manifest.get("metadata"), dict) else {},
+            "required": bool(args.require_artifact_manifest),
+            "resolved_artifacts": resolved_manifest_artifacts,
+        },
         "evidence": evidence,
+        "expected_hashes": expected_hashes,
+        "approval": {
+            "approved_by_present": bool(args.approved_by),
+            "approval_reference_present": bool(args.approval_reference),
+            "approved_by": args.approved_by,
+            "approval_reference": args.approval_reference,
+            "require_approval": bool(args.require_approval),
+        },
+        "validity": {
+            "valid_until": args.valid_until,
+            "valid_until_present": bool(args.valid_until),
+            "require_validity": bool(args.require_validity),
+        },
+        "requirements": {
+            "minimum_evidence_files": args.minimum_evidence_files,
+            "attached_evidence_files": len(present_evidence),
+            "require_artifact_manifest": bool(args.require_artifact_manifest),
+        },
         "decision": decision,
         "ci_status": ci_status,
         "blockers": blockers,
@@ -301,6 +625,12 @@ def main():
             "device_model=%s" % (args.device_model or "<unset>"),
             "device_serial=%s" % (args.device_serial or "<unset>"),
             "store=%s" % (args.store or "<unset>"),
+            "approved_by=%s" % (args.approved_by or "<unset>"),
+            "approval_reference=%s" % (args.approval_reference or "<unset>"),
+            "valid_until=%s" % (args.valid_until or "<unset>"),
+            "artifact_manifest=%s" % (args.artifact_manifest or "<unset>"),
+            "require_artifact_manifest=%s" % int(args.require_artifact_manifest),
+            "minimum_evidence_files=%s" % args.minimum_evidence_files,
             "non_strict=%s" % int(args.non_strict),
         ]
     )
