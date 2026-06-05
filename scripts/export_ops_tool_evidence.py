@@ -234,6 +234,56 @@ def _pip_audit_component(path):
     return _component("dependency-scan", "pip-audit-json", source, "passed", "pip-audit found no vulnerabilities.", metrics)
 
 
+def _monitoring_drill_component(path):
+    payload, source = _read_json(path)
+    if payload.get("_read_error"):
+        return _component("monitoring-drill", "monitoring-drill-json", source, "failed", payload["_read_error"])
+    checks = payload.get("checks") or []
+    passed_count = 0
+    failed_count = 0
+    skipped_count = 0
+    for check in checks:
+        status = str(check.get("status") or "").strip().lower()
+        if status == "passed":
+            passed_count += 1
+        elif status == "failed":
+            failed_count += 1
+        elif status == "skipped":
+            skipped_count += 1
+    metrics = {
+        "passed_checks": passed_count,
+        "failed_checks": failed_count,
+        "skipped_checks": skipped_count,
+        "total_checks": len(checks),
+    }
+    if failed_count:
+        return _component(
+            "monitoring-drill",
+            "monitoring-drill-json",
+            source,
+            "failed",
+            "Monitoring drill found %s failed check(s)." % failed_count,
+            metrics,
+        )
+    if skipped_count:
+        return _component(
+            "monitoring-drill",
+            "monitoring-drill-json",
+            source,
+            "warning",
+            "Monitoring drill has %s skipped check(s)." % skipped_count,
+            metrics,
+        )
+    return _component(
+        "monitoring-drill",
+        "monitoring-drill-json",
+        source,
+        "passed",
+        "Monitoring drill passed %s check(s)." % passed_count,
+        metrics,
+    )
+
+
 def _metric(summary, metric_name, value_name, default=None):
     metric = (summary.get("metrics") or {}).get(metric_name) or {}
     values = metric.get("values") or {}
@@ -366,6 +416,7 @@ def main():
     parser.add_argument("--npm-audit-json", action="append", default=_csv_items(os.environ.get("TIJARA_OPS_TOOL_NPM_AUDIT_JSON")))
     parser.add_argument("--pip-audit-json", action="append", default=_csv_items(os.environ.get("TIJARA_OPS_TOOL_PIP_AUDIT_JSON")))
     parser.add_argument("--k6-summary-json", action="append", default=_csv_items(os.environ.get("TIJARA_OPS_TOOL_K6_SUMMARY_JSON")))
+    parser.add_argument("--monitoring-drill-json", action="append", default=_csv_items(os.environ.get("TIJARA_OPS_TOOL_MONITORING_DRILL_JSON")))
     parser.add_argument("--metadata", action="append", default=[])
     parser.add_argument("--max-p95-ms", type=float, default=float(os.environ.get("TIJARA_OPS_TOOL_MAX_P95_MS", "1000")))
     parser.add_argument("--max-fail-rate", type=float, default=float(os.environ.get("TIJARA_OPS_TOOL_MAX_FAIL_RATE", "0.05")))
@@ -427,6 +478,7 @@ def main():
     components.extend(_trivy_component(path) for path in args.trivy_json)
     components.extend(_npm_audit_component(path) for path in args.npm_audit_json)
     components.extend(_pip_audit_component(path) for path in args.pip_audit_json)
+    components.extend(_monitoring_drill_component(path) for path in args.monitoring_drill_json)
     components.extend(
         _k6_component(path, args.max_p95_ms, args.max_fail_rate, args.min_checks_rate)
         for path in args.k6_summary_json
@@ -504,6 +556,7 @@ def main():
             "npm_audit_json=%s" % (",".join(args.npm_audit_json) or "<unset>"),
             "pip_audit_json=%s" % (",".join(args.pip_audit_json) or "<unset>"),
             "k6_summary_json=%s" % (",".join(args.k6_summary_json) or "<unset>"),
+            "monitoring_drill_json=%s" % (",".join(args.monitoring_drill_json) or "<unset>"),
             "backup_artifact_ref=%s" % ("<set>" if args.backup_artifact_ref else "<unset>"),
         ]
     )

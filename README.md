@@ -606,8 +606,12 @@ The detailed policy and dependency intake checklist are maintained in
   operations verdict under `deploy/runtime/production-ops-readiness/`.
 - `scripts/export_ops_tool_evidence.py` and `make ops-tool-evidence` turn
   actual restore-drill logs, security-audit logs, dependency scan logs, Trivy
-  JSON, npm audit JSON, pip-audit JSON, and k6 summaries into structured
-  Operations evidence under `deploy/runtime/ops-tool-evidence/`.
+  JSON, npm audit JSON, pip-audit JSON, k6 summaries, and monitoring drill JSON
+  into structured Operations evidence under
+  `deploy/runtime/ops-tool-evidence/`. The protected workflow now captures
+  optional pip-audit and Trivy JSON plus `scripts/staging_monitoring_drill.py`
+  output from the self-hosted runner when those tools and endpoints are
+  available.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, POS checkout, refund barcode, receipt print, and offline
   POS replay browser tests, then writes E2E seed evidence under

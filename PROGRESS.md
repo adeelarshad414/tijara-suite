@@ -7448,3 +7448,75 @@ Status: Complete
   temporary approval without weakening default strict gates.
 - Continue PSP/FBR/hardware certification and live offline POS pilot proof once
   provider/device credentials and staging hardware are available.
+
+## Iteration 103: Protected Live Drill Tool Evidence
+
+Status: Complete
+
+### Scope
+
+- Improve protected-runner live operations evidence so production release gates
+  can consume monitoring-drill, pip-audit, Trivy JSON, k6, restore, dependency,
+  and security outputs from one structured ops-tool evidence bundle.
+
+### Completed
+
+- Enhanced `scripts/export_ops_tool_evidence.py` with
+  `--monitoring-drill-json` support.
+- Monitoring drill evidence now records passed, failed, skipped, and total
+  checks; failed checks block, skipped checks warn, and clean drills pass.
+- Updated the protected GitHub workflow to capture optional `pip-audit
+  --format json`, Trivy config/image JSON, and
+  `scripts/staging_monitoring_drill.py` JSON into
+  `deploy/runtime/ops-tool-raw/<run-id>/`.
+- Updated protected ops-tool export wiring so generated pip-audit JSON, Trivy
+  JSON, and monitoring-drill JSON are attached when present.
+- Added `TIJARA_DRILL_TIMEOUT` to
+  `deploy/config/github-protected-vars.example`.
+- Updated `README.md` and `DEPLOY.md` so operators know the protected runner
+  captures restore, security, dependency, container, npm audit, optional
+  pip-audit, Trivy JSON, k6, and monitoring-drill outputs.
+
+### Validation
+
+- Strict live-drill fixture at `/private/tmp/tijara-ops-tool-live-drill/evidence`
+  writes `decision=passed` and `ci_status=pass` with restore, security,
+  dependency, container, npm audit, pip-audit, Trivy, k6, and monitoring-drill
+  evidence attached.
+- Skipped monitoring-drill fixture writes `decision=warning` and
+  `ci_status=pass_with_warnings`, proving incomplete drill inputs remain visible
+  to protected release owners.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_ops_tool_evidence.py scripts/export_production_ops_readiness.py
+  scripts/export_github_step_summary.py scripts/staging_monitoring_drill.py`
+  passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully and exposes
+  `TIJARA_DRILL_TIMEOUT`.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The live-drill wiring still needs an actual protected GitHub Actions run with
+  real Odoo, hardware bridge, Prometheus, Alertmanager, Grafana, backup
+  artifact, k6, Trivy, npm audit, and optional pip-audit installed.
+- Trivy and pip-audit are captured when available; runner bootstrap still needs
+  production installation guidance and proof that those tools are present.
+- PSP/FBR certification, physical hardware certification, and live offline POS
+  pilot proof remain production blockers.
+
+### Next Iteration
+
+- Add protected-runner toolchain preflight/certification evidence for k6, Trivy,
+  npm, pip-audit, Docker/Compose, PostgreSQL client tools, and GitHub runner
+  labels before release evidence starts.
+- Add release-owner exception capture for production-ops warnings that need
+  temporary approval without weakening default strict gates.
+- Continue PSP/FBR/hardware certification and live offline POS pilot proof once
+  provider/device credentials and staging hardware are available.

@@ -229,6 +229,7 @@ jobs:
       TIJARA_TENANT_OPS_REQUIRE_ALL_ARTIFACTS: ${{ vars.TIJARA_TENANT_OPS_REQUIRE_ALL_ARTIFACTS || '1' }}
       TIJARA_MONITORING_TIMEOUT: ${{ vars.TIJARA_MONITORING_TIMEOUT || '8' }}
       TIJARA_MONITORING_NON_STRICT: ${{ vars.TIJARA_MONITORING_NON_STRICT || '1' }}
+      TIJARA_DRILL_TIMEOUT: ${{ vars.TIJARA_DRILL_TIMEOUT || '8' }}
       TIJARA_OPS_BUNDLE_CHECKS: ${{ vars.TIJARA_OPS_BUNDLE_CHECKS || 'load-matrix,load-enterprise,smoke,monitoring,incident,retention' }}
       TIJARA_OPS_BUNDLE_STRICT: ${{ vars.TIJARA_OPS_BUNDLE_STRICT || '0' }}
       TIJARA_OPS_BUNDLE_FAIL_ON_WARNING: ${{ vars.TIJARA_OPS_BUNDLE_FAIL_ON_WARNING || '0' }}
@@ -469,8 +470,30 @@ jobs:
           npm audit --json > "$RAW_DIR/npm-audit.json" 2> "$RAW_DIR/npm-audit.stderr"
           NPM_AUDIT_EXIT=$?
 
+          if command -v pip-audit >/dev/null 2>&1; then
+            pip-audit --format json > "$RAW_DIR/pip-audit.json" 2> "$RAW_DIR/pip-audit.stderr"
+            PIP_AUDIT_EXIT=$?
+          else
+            echo "pip-audit is not installed on the protected runner." > "$RAW_DIR/pip-audit.stderr"
+            PIP_AUDIT_EXIT=127
+          fi
+
           bash scripts/container_scan.sh > "$RAW_DIR/container-scan.log" 2>&1
           CONTAINER_EXIT=$?
+
+          if command -v trivy >/dev/null 2>&1; then
+            trivy config --format json --severity HIGH,CRITICAL . > "$RAW_DIR/trivy-config.json" 2> "$RAW_DIR/trivy-config.stderr"
+            TRIVY_CONFIG_EXIT=$?
+            trivy image --format json --severity HIGH,CRITICAL "${ODOO_IMAGE:-odoo:19.0}" > "$RAW_DIR/trivy-odoo.json" 2> "$RAW_DIR/trivy-odoo.stderr"
+            TRIVY_ODOO_EXIT=$?
+            trivy image --format json --severity HIGH,CRITICAL "${POSTGRES_IMAGE:-postgres:16-alpine}" > "$RAW_DIR/trivy-postgres.json" 2> "$RAW_DIR/trivy-postgres.stderr"
+            TRIVY_POSTGRES_EXIT=$?
+          else
+            echo "trivy is not installed on the protected runner." > "$RAW_DIR/trivy.stderr"
+            TRIVY_CONFIG_EXIT=127
+            TRIVY_ODOO_EXIT=127
+            TRIVY_POSTGRES_EXIT=127
+          fi
 
           if command -v k6 >/dev/null 2>&1; then
             k6 run --summary-export "$RAW_DIR/k6-summary.json" scripts/load_smoke.k6.js > "$RAW_DIR/k6.log" 2>&1
@@ -479,17 +502,43 @@ jobs:
             echo "k6 is not installed on the protected runner." > "$RAW_DIR/k6.log"
             K6_EXIT=127
           fi
+
+          TIJARA_STAGING_BASE_URL="${ODOO_BASE_URL:-${TIJARA_BASE_URL:-}}" \
+          TIJARA_BACKUP_DRILL_FILE="${TIJARA_RESTORE_DRILL_BACKUP:-}" \
+            python3 scripts/staging_monitoring_drill.py > "$RAW_DIR/monitoring-drill.json" 2> "$RAW_DIR/monitoring-drill.stderr"
+          MONITORING_DRILL_EXIT=$?
           set -e
 
           echo "TIJARA_RESTORE_EXIT=$RESTORE_EXIT" >> "$GITHUB_ENV"
           echo "TIJARA_SECURITY_EXIT=$SECURITY_EXIT" >> "$GITHUB_ENV"
           echo "TIJARA_DEPENDENCY_EXIT=$DEPENDENCY_EXIT" >> "$GITHUB_ENV"
           echo "TIJARA_NPM_AUDIT_EXIT=$NPM_AUDIT_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_PIP_AUDIT_EXIT=$PIP_AUDIT_EXIT" >> "$GITHUB_ENV"
           echo "TIJARA_CONTAINER_EXIT=$CONTAINER_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_TRIVY_CONFIG_EXIT=$TRIVY_CONFIG_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_TRIVY_ODOO_EXIT=$TRIVY_ODOO_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_TRIVY_POSTGRES_EXIT=$TRIVY_POSTGRES_EXIT" >> "$GITHUB_ENV"
           echo "TIJARA_K6_EXIT=$K6_EXIT" >> "$GITHUB_ENV"
+          echo "TIJARA_MONITORING_DRILL_EXIT=$MONITORING_DRILL_EXIT" >> "$GITHUB_ENV"
       - name: Export protected operations tool evidence
         continue-on-error: true
         run: |
+          OPS_TOOL_ARGS=()
+          if [[ -f "$TIJARA_OPS_TOOL_RAW_DIR/pip-audit.json" ]]; then
+            OPS_TOOL_ARGS+=(--pip-audit-json "$TIJARA_OPS_TOOL_RAW_DIR/pip-audit.json")
+          fi
+          if [[ -f "$TIJARA_OPS_TOOL_RAW_DIR/trivy-config.json" ]]; then
+            OPS_TOOL_ARGS+=(--trivy-json "$TIJARA_OPS_TOOL_RAW_DIR/trivy-config.json")
+          fi
+          if [[ -f "$TIJARA_OPS_TOOL_RAW_DIR/trivy-odoo.json" ]]; then
+            OPS_TOOL_ARGS+=(--trivy-json "$TIJARA_OPS_TOOL_RAW_DIR/trivy-odoo.json")
+          fi
+          if [[ -f "$TIJARA_OPS_TOOL_RAW_DIR/trivy-postgres.json" ]]; then
+            OPS_TOOL_ARGS+=(--trivy-json "$TIJARA_OPS_TOOL_RAW_DIR/trivy-postgres.json")
+          fi
+          if [[ -f "$TIJARA_OPS_TOOL_RAW_DIR/monitoring-drill.json" ]]; then
+            OPS_TOOL_ARGS+=(--monitoring-drill-json "$TIJARA_OPS_TOOL_RAW_DIR/monitoring-drill.json")
+          fi
           python3 scripts/export_ops_tool_evidence.py \
             --run-id "$TIJARA_PROTECTED_RUN_ID" \
             --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
@@ -505,6 +554,7 @@ jobs:
             --container-scan-exit-code "$TIJARA_CONTAINER_EXIT" \
             --npm-audit-json "$TIJARA_OPS_TOOL_RAW_DIR/npm-audit.json" \
             --k6-summary-json "$TIJARA_OPS_TOOL_RAW_DIR/k6-summary.json" \
+            "${OPS_TOOL_ARGS[@]}" \
             --strict \
             --fail-on-warning
       - name: Protected operations release bundle

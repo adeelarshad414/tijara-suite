@@ -795,6 +795,9 @@ trivy image --format json --severity HIGH,CRITICAL "${ODOO_IMAGE:-odoo:19.0}" \
   > deploy/runtime/ops-tool-raw/2026-06-05-rc1/trivy-odoo.json
 k6 run --summary-export deploy/runtime/ops-tool-raw/2026-06-05-rc1/k6-summary.json \
   scripts/load_smoke.k6.js
+TIJARA_BACKUP_DRILL_FILE=deploy/runtime/backups/latest.dump \
+  python3 scripts/staging_monitoring_drill.py \
+  > deploy/runtime/ops-tool-raw/2026-06-05-rc1/monitoring-drill.json
 python3 scripts/export_ops_tool_evidence.py \
   --run-id 2026-06-05-rc1 \
   --target-environment production \
@@ -807,6 +810,7 @@ python3 scripts/export_ops_tool_evidence.py \
   --pip-audit-json deploy/runtime/ops-tool-raw/2026-06-05-rc1/pip-audit.json \
   --trivy-json deploy/runtime/ops-tool-raw/2026-06-05-rc1/trivy-odoo.json \
   --k6-summary-json deploy/runtime/ops-tool-raw/2026-06-05-rc1/k6-summary.json \
+  --monitoring-drill-json deploy/runtime/ops-tool-raw/2026-06-05-rc1/monitoring-drill.json \
   --strict \
   --fail-on-warning
 ```
@@ -817,7 +821,7 @@ The exporter writes `ops-tool-evidence.json`, `status.tsv`,
 `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the sign-off package extracts
 `ops_tool_reviews`. Production operations readiness can also consume it through
 `--ops-tool-evidence`, and passed tool components satisfy restore, security,
-dependency, container, and k6 load references.
+dependency, container, monitoring-drill, and k6 load references.
 
 Export the top-level production operations readiness gate after the operations
 bundle and supporting evidence are available:
@@ -1070,7 +1074,8 @@ release-candidate gate, runs protected Browser E2E
 seed/profile/browser/execution evidence under
 `deploy/runtime/protected-e2e/<run-id>/`, exports protected offline POS replay
 evidence under `deploy/runtime/protected-offline-replay/<run-id>/`, captures raw
-restore, security, dependency, container, npm audit, and k6 outputs under
+restore, security, dependency, container, npm audit, optional pip-audit, Trivy
+JSON, k6, and monitoring-drill outputs under
 `deploy/runtime/ops-tool-raw/<run-id>/`, exports strict operations tool
 evidence, runs the operations release bundle under
 `deploy/runtime/operations-release-bundle/<run-id>/`, exports standalone
@@ -1507,8 +1512,9 @@ Optional tools:
   `export_production_ops_readiness.py --strict --fail-on-warning` can block on
   a complete evidence set instead of a single coarse bundle verdict.
 - Run `make ops-tool-evidence` or `scripts/export_ops_tool_evidence.py` after
-  capturing restore, security, dependency, container, and k6 outputs to produce
-  structured tool evidence for protected-runner sign-off.
+  capturing restore, security, dependency, container, npm audit, optional
+  pip-audit, Trivy JSON, k6, and monitoring-drill outputs to produce structured
+  tool evidence for protected-runner sign-off.
 - Run `make production-ops-readiness` or
   `scripts/export_production_ops_readiness.py --strict --fail-on-warning`
   after the supporting evidence is attached to create one release-blocking
