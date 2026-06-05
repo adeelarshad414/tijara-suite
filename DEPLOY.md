@@ -559,6 +559,20 @@ export TIJARA_RUN_POS_UI_E2E=1
 ODOO_BASE_URL=http://127.0.0.1:8069 npm run test:e2e
 ```
 
+For staging sign-off, run the guarded evidence harness instead of a raw
+Playwright command:
+
+```bash
+TIJARA_E2E_SCOPE=full ODOO_BASE_URL=https://staging.example.com make e2e-staging
+```
+
+The harness verifies the required slugs, credentials, POS config/product/payment
+IDs, refund barcode, report URL, and offline review URL before running. Evidence
+is written to `deploy/runtime/e2e-evidence/<run-id>/` with an environment
+summary, Playwright output, JSON results, and a Markdown summary. Use
+`TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display only or
+`TIJARA_E2E_SCOPE=authenticated` for POS/refund/offline-report routes.
+
 ## CI, Security, and Load Smoke
 
 The first GitHub Actions workflow is `.github/workflows/tijara-ci.yml`. Local

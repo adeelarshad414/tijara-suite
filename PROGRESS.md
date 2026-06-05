@@ -2036,3 +2036,53 @@ Date: 2026-06-05
   and compliance contracts are available.
 - Start physical hardware certification records for the first printer, cash
   drawer, scanner, scale, customer display, and label printer models.
+
+## Iteration 28: Staging Browser E2E Evidence Runner
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_staging_e2e.sh` for production-style browser QA execution:
+  - Supports `TIJARA_E2E_SCOPE=public`, `authenticated`, or `full`.
+  - Validates required staging slugs, credentials, POS config/product/payment
+    IDs, refund barcode, refund action URL, report URL, and offline review URL
+    before Playwright runs.
+  - Probes the Odoo `/web/login` endpoint before executing specs.
+  - Runs the existing critical Playwright specs for public display, kiosk
+    checkout, customer display, POS shell, print-to-bridge, refund barcode scan,
+    report rendering, offline replay, and offline conflict review.
+  - Writes ignored evidence under `deploy/runtime/e2e-evidence/<run-id>/`:
+    environment summary, Playwright output, JSON results, and Markdown summary.
+- Added `make e2e-staging` and `npm run test:e2e:staging`.
+- Updated `README.md`, `DEPLOY.md`, `tests/e2e/README.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_staging_e2e.sh` passes.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- The evidence runner is ready, but a real staging execution still requires a
+  running Odoo staging URL, seeded E2E slugs, and a permissioned POS test user.
+- Browser E2E still needs full click-through assertions for real POS checkout
+  payment flow beyond shell/open/report/route coverage.
+- Physical hardware certification, PSP/FBR certification, monitoring drills,
+  backup restore drills, load testing, dependency/container scans, and security
+  review still need staging/production execution.
+
+### Next Iteration
+
+- Execute `make seed-e2e` and `make e2e-staging` against a live staging stack,
+  then archive evidence artifacts from `deploy/runtime/e2e-evidence/`.
+- Expand direct POS browser assertions for cashier checkout, payment, receipt,
+  refund scan, and customer display updates using the permissioned staging POS
+  user.
+- Run monitoring drill, restore drill, load smoke, container/dependency scans,
+  and security review against the same staging environment.

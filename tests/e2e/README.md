@@ -16,6 +16,27 @@ Run:
 ODOO_BASE_URL=http://127.0.0.1:8069 npm run test:e2e
 ```
 
+For staging evidence runs, prefer the guarded runner:
+
+```bash
+TIJARA_E2E_SCOPE=full ODOO_BASE_URL=https://staging.example.com make e2e-staging
+```
+
+The runner fails before Playwright starts if required public/authenticated
+variables are missing, probes `/web/login`, runs the critical browser specs,
+and writes evidence under `deploy/runtime/e2e-evidence/<run-id>/`:
+
+- `env-summary.txt`
+- `playwright-output.log`
+- `playwright-results.json`
+- `summary.md`
+
+Use `TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display routes only,
+`TIJARA_E2E_SCOPE=authenticated` for POS/refund/offline-report routes, or
+`TIJARA_E2E_SCOPE=full` for the complete staging smoke. Set
+`TIJARA_E2E_PROJECT=chromium-desktop` when a single browser project is needed
+for a controlled drill.
+
 Seed local/staging public-display data before the first run:
 
 ```bash

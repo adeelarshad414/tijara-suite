@@ -315,6 +315,9 @@ The detailed policy and dependency intake checklist are maintained in
   load-smoke starting points for pilots.
 - `scripts/run_odoo_tests.sh`, `tests/e2e/`, and `playwright.config.mjs`
   provide committed Odoo and browser regression scaffolds.
+- `scripts/run_staging_e2e.sh` and `make e2e-staging` provide guarded staging
+  browser evidence runs for POS, refund, print, customer display, offline
+  replay, kiosk, and public display coverage.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through
