@@ -522,6 +522,23 @@ Prometheus readiness, Alertmanager readiness, Grafana health, and the optional
 `TIJARA_HARDWARE_BRIDGE_URL`, `TIJARA_PROMETHEUS_URL`,
 `TIJARA_ALERTMANAGER_URL`, and `TIJARA_GRAFANA_URL`.
 
+For release sign-off evidence, run the grouped operations harness:
+
+```bash
+TIJARA_OPS_CHECKS=monitoring,load,dependency make ops-staging
+```
+
+Use the full scope when restore and container scans are ready:
+
+```bash
+TIJARA_OPS_CHECKS=full TIJARA_RESTORE_DRILL_BACKUP=deploy/runtime/backups/latest.dump make ops-staging
+```
+
+The harness writes per-check logs, status, environment summary, and a Markdown
+summary under `deploy/runtime/ops-evidence/<run-id>/`. Set
+`TIJARA_OPS_STRICT=1` when skipped checks, missing tools, or missing backup paths
+should fail the release drill.
+
 ## Display Routes
 
 Public display routes are available for store screens:
@@ -593,6 +610,8 @@ Optional tools:
 - Run `make test-odoo` for committed Odoo transaction/HTTP tests.
 - Run `make e2e` after installing Playwright and setting staging environment
   variables for authenticated flows.
+- Run `make ops-staging` for grouped staging evidence across monitoring, load,
+  dependency, restore, and container checks.
 
 ## Rollback Baseline
 

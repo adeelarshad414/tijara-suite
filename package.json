@@ -6,6 +6,7 @@
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:staging": "bash scripts/run_staging_e2e.sh",
+    "ops:staging": "bash scripts/run_staging_ops_checks.sh",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },

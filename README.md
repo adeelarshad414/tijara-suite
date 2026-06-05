@@ -318,6 +318,9 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_staging_e2e.sh` and `make e2e-staging` provide guarded staging
   browser evidence runs for POS, refund, print, customer display, offline
   replay, kiosk, and public display coverage.
+- `scripts/run_staging_ops_checks.sh` and `make ops-staging` gather staging
+  monitoring, restore, load-smoke, dependency scan, and container scan evidence
+  under `deploy/runtime/ops-evidence/`.
 - `scripts/seed_e2e_odoo.sh` creates stable staging slugs for display, kiosk,
   customer-display, and offline POS replay browser tests.
 - `scripts/provision_tenant_db.sh` provisions isolated tenant databases through

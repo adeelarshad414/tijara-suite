@@ -2086,3 +2086,53 @@ Date: 2026-06-05
   user.
 - Run monitoring drill, restore drill, load smoke, container/dependency scans,
   and security review against the same staging environment.
+
+## Iteration 29: Staging Operations Evidence Runner
+
+Status: Completed
+
+Date: 2026-06-05
+
+### Completed
+
+- Added `scripts/run_staging_ops_checks.sh` for grouped staging operations
+  sign-off evidence:
+  - Supports `TIJARA_OPS_CHECKS=monitoring,load,dependency` for the normal
+    staging smoke.
+  - Supports `TIJARA_OPS_CHECKS=full` to include monitoring, restore drill,
+    load smoke, dependency scan, and container scan.
+  - Supports `TIJARA_OPS_STRICT=1` to fail when checks are skipped because a
+    tool, URL, or backup artifact is missing.
+  - Writes ignored evidence under `deploy/runtime/ops-evidence/<run-id>/`:
+    environment summary, per-check logs, status table, and Markdown summary.
+- Added `make ops-staging` and `npm run ops:staging`.
+- Updated `README.md`, `DEPLOY.md`, and `PROGRESS.md`.
+
+### Validation
+
+- `bash -n scripts/run_staging_ops_checks.sh` passes.
+- Local non-strict skip-path smoke for an unknown check writes evidence and
+  exits cleanly.
+- `make validate` passes.
+- 74 XML files parse successfully.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+
+### Known Gaps
+
+- The operations evidence runner is ready, but true production evidence still
+  needs a live staging stack with monitoring services, backup artifact, k6,
+  Trivy, and optional pip-audit installed.
+- Restore drill and container scanning should be required with
+  `TIJARA_OPS_STRICT=1` during release sign-off.
+- Browser POS click-through, physical hardware certification, PSP/FBR
+  certification, and security review execution still remain open.
+
+### Next Iteration
+
+- Execute `make ops-staging` with `TIJARA_OPS_CHECKS=full` and
+  `TIJARA_OPS_STRICT=1` against a prepared staging stack.
+- Archive staging operations evidence and browser E2E evidence together for a
+  release-candidate sign-off package.
+- Expand authenticated POS browser click-through for checkout, payment,
+  receipt, refund barcode scan, customer display updates, and offline replay.
