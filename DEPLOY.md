@@ -1214,8 +1214,10 @@ upload, the workflow verifies the sidecar artifact ID, URL, digest, retention
 days, expected evidence files, and retention-manifest consistency under
 `deploy/runtime/protected-sidecar-verification/<run-id>/`, exports a protected
 evidence replay report under
-`deploy/runtime/protected-evidence-replay/<run-id>/`, appends a final GitHub
-Actions summary, and uploads
+`deploy/runtime/protected-evidence-replay/<run-id>/`, writes one protected
+release evidence index under
+`deploy/runtime/protected-release-evidence-index/<run-id>/`, appends a final
+GitHub Actions summary, and uploads
 `tijara-protected-sidecar-verification-<environment>-<run>`. After the main
 upload metadata is recorded, the workflow also appends a second GitHub Actions
 summary and writes `github-step-summary-post-upload.md` under
@@ -1433,6 +1435,24 @@ checks decision status, primary artifact consistency, sidecar artifact metadata,
 and digest/url/id continuity, then writes
 `protected-evidence-replay-report.json`, `audit-replay.md`, `status.tsv`,
 `env-summary.txt`, and `summary.md`.
+
+Build the final operator-facing protected release evidence index:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_release_evidence_index.py \
+  --output deploy/runtime/protected-release-evidence-index/2026-06-05-rc1 \
+  --required-components release-readiness,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,signoff-package,certification-result-matrix,github-artifact-metadata \
+  --strict \
+  --fail-on-warning
+```
+
+The index writes `operator-index.md` for release owners and
+`protected-release-evidence-index.json` for automation. It links the final
+run-decision, release-readiness, sign-off package, certification matrix,
+retention manifest, sidecar verification, replay report, and GitHub artifact
+URLs in one page.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:

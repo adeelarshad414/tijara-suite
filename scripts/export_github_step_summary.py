@@ -103,6 +103,7 @@ def _summary_lines(args):
         _read_json(args.sidecar_verification) if args.sidecar_verification else ({}, "")
     )
     evidence_replay, evidence_replay_source = _read_json(args.evidence_replay) if args.evidence_replay else ({}, "")
+    evidence_index, evidence_index_source = _read_json(args.evidence_index) if args.evidence_index else ({}, "")
 
     lines = [
         "# Tijara Protected Release Summary",
@@ -127,6 +128,8 @@ def _summary_lines(args):
         lines.append(_verdict_row("Protected sidecar verification", sidecar_verification, sidecar_verification_source))
     if args.evidence_replay:
         lines.append(_verdict_row("Protected evidence replay", evidence_replay, evidence_replay_source))
+    if args.evidence_index:
+        lines.append(_verdict_row("Protected evidence index", evidence_index, evidence_index_source))
     lines.append("")
 
     blockers = []
@@ -165,6 +168,13 @@ def _summary_lines(args):
             warnings.append("evidence-replay: evidence JSON is missing")
         if evidence_replay.get("_read_error"):
             blockers.append("evidence-replay: could not read evidence JSON: %s" % evidence_replay["_read_error"])
+    if args.evidence_index:
+        blockers.extend("evidence-index: %s" % item for item in evidence_index.get("blockers") or [])
+        warnings.extend("evidence-index: %s" % item for item in evidence_index.get("warnings") or [])
+        if evidence_index.get("_missing"):
+            warnings.append("evidence-index: evidence JSON is missing")
+        if evidence_index.get("_read_error"):
+            blockers.append("evidence-index: could not read evidence JSON: %s" % evidence_index["_read_error"])
 
     blocker_items, blocker_extra = _limit(blockers, args.max_items)
     warning_items, warning_extra = _limit(warnings, args.max_items)
@@ -223,6 +233,7 @@ def main():
     parser.add_argument("--evidence-retention", default=os.environ.get("TIJARA_SUMMARY_EVIDENCE_RETENTION", ""))
     parser.add_argument("--sidecar-verification", default=os.environ.get("TIJARA_SUMMARY_SIDECAR_VERIFICATION", ""))
     parser.add_argument("--evidence-replay", default=os.environ.get("TIJARA_SUMMARY_EVIDENCE_REPLAY", ""))
+    parser.add_argument("--evidence-index", default=os.environ.get("TIJARA_SUMMARY_EVIDENCE_INDEX", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
     parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
@@ -259,6 +270,10 @@ def main():
         default_replay = "deploy/runtime/protected-evidence-replay/%s/protected-evidence-replay-report.json" % args.run_id
         if _resolve(default_replay).is_file():
             args.evidence_replay = default_replay
+    if not args.evidence_index:
+        default_index = "deploy/runtime/protected-release-evidence-index/%s/protected-release-evidence-index.json" % args.run_id
+        if _resolve(default_index).is_file():
+            args.evidence_index = default_index
 
     summary = _summary_lines(args)
     if args.output:

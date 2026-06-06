@@ -8649,3 +8649,79 @@ Status: Complete
   report, sign-off package, certification matrix, and GitHub artifact URLs.
 - Continue live protected-run execution with real credentials, providers,
   hardware, backups, and monitoring endpoints when available.
+
+## Iteration 118: Protected Release Evidence Index
+
+### Scope
+
+- Add a final operator-facing protected release evidence index that links the
+  run decision, release-readiness, sign-off package, certification matrix,
+  retention manifest, sidecar verification, evidence replay report, and GitHub
+  artifact URLs in one release-owner page.
+
+### Completed
+
+- Added `scripts/export_protected_release_evidence_index.py`.
+- Added `make protected-release-evidence-index`.
+- The exporter reviews required and optional protected release evidence
+  components, records decisions, CI status, source paths, file counts, artifact
+  IDs, artifact URLs, digests, workflow run URL, blockers, and warnings.
+- The exporter writes `protected-release-evidence-index.json`,
+  `operator-index.md`, `status.tsv`, `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-release-evidence-index/<run-id>/`.
+- Wired the protected GitHub workflow to generate the evidence index after the
+  replay report and before the final GitHub summary/upload.
+- Added `protected-release-evidence-index` to first-run expected artifacts,
+  runbook review order, generated handoff defaults, generated checklist
+  defaults, final protected upload paths, and public-safe protected GitHub
+  variables.
+- Extended `scripts/export_github_step_summary.py` to include Protected evidence
+  index as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-release-evidence-index.json`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_release_evidence_index.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports evidence index
+  configuration successfully.
+- Approved strict evidence-index fixture writes `decision=passed` and
+  `ci_status=pass`.
+- Missing sidecar verification fixture exits `1` and writes `decision=failed`
+  and `ci_status=fail`.
+- Explicit non-strict missing-sidecar fixture exits `0` and writes
+  `decision=warning` and `ci_status=pass_with_warnings`.
+- GitHub step summary fixture includes Protected evidence index as a verdict
+  row.
+- Protected artifact summary fixture recognizes
+  `protected-release-evidence-index.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-release-evidence-index` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+
+### Known Gaps
+
+- The evidence index is ready for protected CI, but it still needs execution
+  against real GitHub artifact URLs from a protected runner.
+- Real staging execution, PSP/FBR provider credentials, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real evidence is attached.
+
+### Next Iteration
+
+- Add a protected release closure gate that consumes the evidence index and
+  produces a final promotion-ready/blocked decision for release owners.
+- Continue live protected-run execution with real credentials, providers,
+  hardware, backups, and monitoring endpoints when available.

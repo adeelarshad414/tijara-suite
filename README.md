@@ -147,6 +147,7 @@ make protected-run-decision
 make protected-evidence-retention
 make protected-sidecar-verification
 make protected-evidence-replay
+make protected-release-evidence-index
 make github-step-summary
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -522,11 +523,11 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/export_github_step_summary.py` and `make github-step-summary`
   render a compact GitHub Actions Markdown summary from release-readiness,
   production-ops readiness, post-run verification, artifact-summary, and
-  protected-run-decision JSON, plus protected evidence retention when available,
-  so release owners can see blockers, warnings, and production-ops component
-  status without downloading the artifact bundle. The protected workflow
-  renders it once before upload and again after upload with artifact ID, URL,
-  digest, and retention metadata.
+  protected-run-decision JSON, plus protected evidence retention, sidecar,
+  replay, and evidence-index verdicts when available, so release owners can see
+  blockers, warnings, and production-ops component status without downloading
+  the artifact bundle. The protected workflow renders it once before upload and
+  again after upload with artifact ID, URL, digest, and retention metadata.
 - `scripts/export_protected_artifact_summary.py` and
   `make protected-artifact-summary` scan protected evidence folders and write a
   release-owner index of failed/warning status rows, decisions, and artifact
@@ -555,6 +556,11 @@ The detailed policy and dependency intake checklist are maintained in
   manifest, and sidecar verification, then write
   `protected-evidence-replay-report.json` and `audit-replay.md` under
   `deploy/runtime/protected-evidence-replay/`.
+- `scripts/export_protected_release_evidence_index.py` and
+  `make protected-release-evidence-index` build one operator-facing index that
+  links run decision, release-readiness, sign-off package, certification matrix,
+  retention manifest, sidecar verification, replay report, and GitHub artifact
+  URLs under `deploy/runtime/protected-release-evidence-index/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or
