@@ -39,6 +39,7 @@ DEFAULT_ARTIFACTS = [
     "protected-run-decision",
     "protected-evidence-retention",
     "protected-sidecar-verification",
+    "protected-evidence-replay",
 ]
 
 

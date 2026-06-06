@@ -8574,3 +8574,78 @@ Status: Complete
   produce a release-owner audit replay packet.
 - Continue live protected-run execution once staging credentials, provider
   sandboxes, hardware, backups, and monitoring endpoints are available.
+
+## Iteration 117: Protected Evidence Replay Report
+
+### Scope
+
+- Add a release-owner audit replay packet that consumes final protected
+  release-readiness, run-decision, GitHub artifact metadata, evidence retention,
+  and sidecar verification artifacts.
+
+### Completed
+
+- Added `scripts/export_protected_evidence_replay_report.py`.
+- Added `make protected-evidence-replay`.
+- The exporter validates required evidence JSON decisions, checks primary
+  artifact ID/URL/digest consistency across GitHub upload metadata, retention
+  manifest, and sidecar verification, and records sidecar artifact ID/URL/digest
+  continuity.
+- The exporter writes `protected-evidence-replay-report.json`,
+  `audit-replay.md`, `status.tsv`, `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-evidence-replay/<run-id>/`.
+- Wired the protected GitHub workflow to generate the replay report after
+  sidecar verification and before the final GitHub summary/upload.
+- Added `protected-evidence-replay` to first-run expected artifacts, runbook
+  review order, generated handoff defaults, generated checklist defaults, final
+  protected upload paths, and public-safe protected GitHub variables.
+- Extended `scripts/export_github_step_summary.py` to include Protected evidence
+  replay as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-evidence-replay-report.json`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_evidence_replay_report.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports replay configuration
+  successfully.
+- Approved strict replay fixture writes `decision=passed` and `ci_status=pass`.
+- Missing sidecar verification fixture exits `1` and writes `decision=failed`
+  and `ci_status=fail`.
+- Explicit non-strict missing-sidecar fixture exits `0` and writes
+  `decision=warning` and `ci_status=pass_with_warnings`.
+- GitHub step summary fixture includes Protected evidence replay as a verdict
+  row.
+- Protected artifact summary fixture recognizes
+  `protected-evidence-replay-report.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-evidence-replay` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+
+### Known Gaps
+
+- The replay report is ready for protected CI, but it still needs execution
+  against real GitHub artifact upload outputs from a protected runner.
+- Real staging execution, PSP/FBR provider credentials, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real evidence is attached.
+
+### Next Iteration
+
+- Add a protected release evidence index that produces one final operator page
+  linking the run decision, retention manifest, sidecar verification, replay
+  report, sign-off package, certification matrix, and GitHub artifact URLs.
+- Continue live protected-run execution with real credentials, providers,
+  hardware, backups, and monitoring endpoints when available.

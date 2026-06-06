@@ -1212,8 +1212,10 @@ uploads a sidecar artifact named
 `tijara-protected-artifact-metadata-<environment>-<run>`. After the sidecar
 upload, the workflow verifies the sidecar artifact ID, URL, digest, retention
 days, expected evidence files, and retention-manifest consistency under
-`deploy/runtime/protected-sidecar-verification/<run-id>/`, appends a final
-GitHub Actions summary, and uploads
+`deploy/runtime/protected-sidecar-verification/<run-id>/`, exports a protected
+evidence replay report under
+`deploy/runtime/protected-evidence-replay/<run-id>/`, appends a final GitHub
+Actions summary, and uploads
 `tijara-protected-sidecar-verification-<environment>-<run>`. After the main
 upload metadata is recorded, the workflow also appends a second GitHub Actions
 summary and writes `github-step-summary-post-upload.md` under
@@ -1411,6 +1413,25 @@ The sidecar verifier checks the local sidecar paths for
 metadata is present, confirms retention days meet policy, and verifies the
 retention manifest still matches the primary uploaded release artifact metadata.
 It writes `protected-sidecar-verification.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md`.
+
+Export a release-owner audit replay packet after sidecar verification:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_evidence_replay_report.py \
+  --output deploy/runtime/protected-evidence-replay/2026-06-05-rc1 \
+  --required-components release-readiness,protected-run-decision,github-artifact-metadata,protected-evidence-retention,protected-sidecar-verification \
+  --strict \
+  --fail-on-warning
+```
+
+The replay report consumes release-readiness, protected run decision, GitHub
+artifact metadata, evidence retention, and sidecar verification JSON files. It
+checks decision status, primary artifact consistency, sidecar artifact metadata,
+and digest/url/id continuity, then writes
+`protected-evidence-replay-report.json`, `audit-replay.md`, `status.tsv`,
 `env-summary.txt`, and `summary.md`.
 
 Run the protected preflight locally before a protected workflow if you want to
