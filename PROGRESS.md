@@ -8489,3 +8489,88 @@ Status: Complete
   against actual GitHub artifact metadata.
 - Continue live staging execution once real URLs, credentials, hardware,
   PSP/FBR providers, backup artifacts, and monitoring endpoints are available.
+
+## Iteration 116: Protected Sidecar Upload Verification
+
+### Scope
+
+- Add a post-upload verifier for the protected metadata sidecar artifact so CI
+  can validate sidecar artifact ID, URL, digest, retention days, expected
+  evidence files, and consistency with the retained primary release artifact
+  metadata.
+
+### Completed
+
+- Added `scripts/export_protected_sidecar_verification.py`.
+- Added `make protected-sidecar-verification`.
+- The verifier reads `github-artifact-metadata.json` and
+  `protected-evidence-retention-manifest.json`, checks sidecar upload action
+  outputs, verifies local sidecar evidence files, validates retention-day
+  policy, checks primary artifact metadata, and confirms the retention manifest
+  still matches the primary uploaded artifact ID, URL, and digest.
+- The verifier writes `protected-sidecar-verification.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-sidecar-verification/<run-id>/`.
+- Wired the protected GitHub workflow to:
+  - use `TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS` for protected artifact uploads,
+  - assign an ID to the protected metadata sidecar upload,
+  - run sidecar verification after the sidecar upload,
+  - append a final GitHub step summary that includes the sidecar verdict, and
+  - upload a final `tijara-protected-sidecar-verification-<environment>-<run>`
+    artifact.
+- Added `protected-sidecar-verification` to first-run expected artifacts,
+  runbook review order, generated handoff defaults, generated checklist
+  defaults, and public-safe protected GitHub variables.
+- Extended `scripts/export_github_step_summary.py` to show Protected sidecar
+  verification as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-sidecar-verification.json`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_sidecar_verification.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports sidecar verifier
+  configuration successfully.
+- Approved strict sidecar fixture writes `decision=passed` and
+  `ci_status=pass`.
+- Missing required sidecar upload output fixture exits `1` and writes
+  `decision=failed` and `ci_status=fail`.
+- Explicit non-strict missing-output fixture exits `0` and writes
+  `decision=warning` and `ci_status=pass_with_warnings`.
+- GitHub step summary fixture includes Protected sidecar verification as a
+  verdict row.
+- Protected artifact summary fixture recognizes
+  `protected-sidecar-verification.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-sidecar-verification` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+
+### Known Gaps
+
+- The sidecar verifier is ready for protected CI, but it still needs execution
+  in GitHub Actions with real `actions/upload-artifact` outputs.
+- The final sidecar verification artifact is separate from the metadata sidecar
+  because it can only be generated after the metadata sidecar upload completes.
+- Live staging URLs, PSP/FBR credentials, physical hardware certification,
+  monitoring/alerting, restore drills, load tests, dependency/container scans,
+  and secret-manager rollout remain production blockers until real protected
+  evidence is attached.
+
+### Next Iteration
+
+- Add a protected evidence replay report that consumes the final uploaded
+  metadata, retention manifest, sidecar verifier, and run-decision artifacts to
+  produce a release-owner audit replay packet.
+- Continue live protected-run execution once staging credentials, provider
+  sandboxes, hardware, backups, and monitoring endpoints are available.

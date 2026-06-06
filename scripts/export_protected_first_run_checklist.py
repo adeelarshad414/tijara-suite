@@ -38,6 +38,7 @@ DEFAULT_ARTIFACTS = [
     "protected-artifact-summary",
     "protected-run-decision",
     "protected-evidence-retention",
+    "protected-sidecar-verification",
 ]
 
 

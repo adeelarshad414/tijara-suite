@@ -145,6 +145,7 @@ make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
 make protected-run-decision
 make protected-evidence-retention
+make protected-sidecar-verification
 make github-step-summary
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -542,6 +543,11 @@ The detailed policy and dependency intake checklist are maintained in
   release-retention evidence, and post-upload GitHub artifact metadata into
   `protected-evidence-retention-manifest.json` under
   `deploy/runtime/protected-evidence-retention/`.
+- `scripts/export_protected_sidecar_verification.py` and
+  `make protected-sidecar-verification` validate the protected metadata sidecar
+  upload after GitHub Actions returns the sidecar artifact ID, URL, digest, and
+  retention settings, then write `protected-sidecar-verification.json` under
+  `deploy/runtime/protected-sidecar-verification/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or

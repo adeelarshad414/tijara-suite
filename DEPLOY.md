@@ -1209,9 +1209,14 @@ workflow records the real upload action outputs such as artifact ID, artifact
 URL, digest, and retention metadata, writes a protected evidence retention
 manifest under `deploy/runtime/protected-evidence-retention/<run-id>/`, then
 uploads a sidecar artifact named
-`tijara-protected-artifact-metadata-<environment>-<run>`. After the main upload
-metadata is recorded, the workflow appends a second GitHub Actions summary and
-writes `github-step-summary-post-upload.md` under
+`tijara-protected-artifact-metadata-<environment>-<run>`. After the sidecar
+upload, the workflow verifies the sidecar artifact ID, URL, digest, retention
+days, expected evidence files, and retention-manifest consistency under
+`deploy/runtime/protected-sidecar-verification/<run-id>/`, appends a final
+GitHub Actions summary, and uploads
+`tijara-protected-sidecar-verification-<environment>-<run>`. After the main
+upload metadata is recorded, the workflow also appends a second GitHub Actions
+summary and writes `github-step-summary-post-upload.md` under
 `deploy/runtime/github-artifact-metadata/<run-id>/`, including artifact ID,
 URL, digest, retention days, and the retention-manifest verdict. If a strict
 evidence step fails, the job still tries to build the final sign-off package so
@@ -1381,6 +1386,32 @@ summary, release-retention evidence, and GitHub artifact metadata. It writes
 `protected-evidence-retention-manifest.json`, `status.tsv`,
 `env-summary.txt`, and `summary.md`. The post-upload protected sidecar artifact
 includes this folder beside `github-artifact-metadata`.
+
+Verify the protected metadata sidecar after the sidecar upload action has
+returned artifact outputs:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_sidecar_verification.py \
+  --output deploy/runtime/protected-sidecar-verification/2026-06-05-rc1 \
+  --sidecar-artifact-name tijara-protected-artifact-metadata-staging-123456 \
+  --sidecar-artifact-id 987654321 \
+  --sidecar-artifact-url https://github.com/org/repo/actions/runs/123456/artifacts/987654321 \
+  --sidecar-artifact-digest sha256:example \
+  --sidecar-retention-days 30 \
+  --minimum-retention-days 30 \
+  --strict \
+  --fail-on-warning
+```
+
+The sidecar verifier checks the local sidecar paths for
+`github-artifact-metadata.json` and
+`protected-evidence-retention-manifest.json`, confirms the sidecar upload
+metadata is present, confirms retention days meet policy, and verifies the
+retention manifest still matches the primary uploaded release artifact metadata.
+It writes `protected-sidecar-verification.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md`.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:

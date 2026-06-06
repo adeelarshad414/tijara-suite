@@ -24,6 +24,7 @@ INTERESTING_JSON_NAMES = {
     "protected-post-run-verification.json",
     "protected-run-decision.json",
     "protected-evidence-retention-manifest.json",
+    "protected-sidecar-verification.json",
     "e2e-execution-evidence.json",
     "e2e-readiness.json",
     "e2e-seed-evidence.json",
