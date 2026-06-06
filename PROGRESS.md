@@ -8226,3 +8226,94 @@ Status: Complete
   and offline POS pilot proof against real staging infrastructure.
 - Add provider/device-specific certification result mapping once real PSP, FBR,
   and hardware evidence is available.
+
+## Iteration 113: Protected Certification Result Matrix
+
+Status: Complete
+
+### Scope
+
+- Add one protected release artifact that maps PSP, FBR, and hardware
+  certification execution into reviewer-ready pass/fail/warning/skipped
+  results, then wire that artifact into sign-off, artifact summaries, CI, and
+  DevOps documentation.
+
+### Completed
+
+- Added `scripts/export_certification_result_matrix.py`.
+- Added `make certification-result-matrix`.
+- The exporter reads root `certification-execution.json`, category-level
+  `certification-evidence.json`, optional protected PSP/FBR provider readiness,
+  required groups, approval fields, validity dates, expected hashes, evidence
+  counts, and manifest counts.
+- The exporter writes `certification-result-matrix.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/certification-evidence/<run-id>/result-matrix/`.
+- Optional missing certification groups now stay informational/skipped instead
+  of turning the matrix or protected artifact summary into warning state.
+- Required missing, skipped, failed, expired, unapproved, under-evidenced, or
+  provider-readiness-failed certification groups become matrix blockers.
+- Wired the protected GitHub workflow to export the matrix after protected
+  certification evidence.
+- Added matrix controls:
+  `TIJARA_CERTIFICATION_MATRIX_REQUIRE_PROVIDER_READINESS` and
+  `TIJARA_CERTIFICATION_MATRIX_FAIL_ON_WARNING`.
+- Added `certification_result_matrix_reviews` to release sign-off packaging and
+  release-readiness JSON.
+- Added a Certification Result Matrix section to generated
+  `evidence-summary.md`.
+- Added `certification-result-matrix.json` recognition to protected artifact
+  summary.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_certification_result_matrix.py scripts/generate_signoff_pack.py
+  scripts/export_protected_artifact_summary.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `bash -n scripts/run_protected_certification_evidence.sh` passes.
+- Passing PSP-required fixture with provider readiness writes
+  `decision=passed`/`ci_status=pass`, with PSP passed and FBR/hardware skipped
+  as optional.
+- Required-missing-FBR fixture exits `1` and writes
+  `decision=failed`/`ci_status=fail`.
+- Missing-root-execution fixture exits `1` and writes
+  `decision=failed`/`ci_status=fail`.
+- Sign-off package over the passing matrix writes
+  `certification_result_matrix_reviews`, keeps `decision=ready`, and records no
+  blockers or warnings.
+- Sign-off package over the failing matrix writes
+  `decision=blocked`/`ci_status=fail`.
+- Protected artifact summary over the passing matrix writes `decision=passed`
+  and includes the matrix JSON review.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, certificate matrix
+  fixture server, offline snapshot fixture server, or probe server process
+  remains running.
+
+### Known Gaps
+
+- The matrix is production-release plumbing; it still needs real PSP, FBR, and
+  hardware certification evidence from certified providers and physical
+  devices.
+- Protected staging still needs a live self-hosted runner with Odoo URLs,
+  credentials, backup artifacts, monitoring endpoints, scanner/printer/drawer
+  hardware, and provider credentials.
+- Full production readiness still depends on live Browser E2E, offline POS
+  pilot proof, monitoring/alerting evidence, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout.
+
+### Next Iteration
+
+- Add live protected-run evidence gating for staging release execution, tying
+  Browser E2E, offline pilot, operations harness, certification matrix,
+  artifact summary, and release-readiness outcomes into one protected run
+  decision artifact.
+- Continue PSP/FBR/hardware certification execution once real provider and
+  device evidence is available.

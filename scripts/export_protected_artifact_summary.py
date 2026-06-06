@@ -36,6 +36,7 @@ INTERESTING_JSON_NAMES = {
     "tenant-ops-evidence.json",
     "certification-evidence.json",
     "certification-execution.json",
+    "certification-result-matrix.json",
     "release-retention-evidence.json",
     "secret-manager-evidence.json",
     "production-ops-readiness.json",
@@ -144,6 +145,12 @@ def _component(label, raw_path):
                 if status in {"failed", "blocked", "error"}:
                     component["failed_rows"].append(row)
                 elif status in {"warning", "warn", "skipped"}:
+                    if (
+                        status == "skipped"
+                        and "result-matrix/" in _repo_relative(candidate).replace("\\", "/")
+                        and str(row.get("name") or "").startswith("category-")
+                    ):
+                        continue
                     component["warning_rows"].append(row)
         if candidate.name in INTERESTING_JSON_NAMES:
             payload = _read_json(candidate)

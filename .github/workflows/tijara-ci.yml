@@ -164,6 +164,8 @@ jobs:
       TIJARA_PAYMENT_LIFECYCLE_REQUIRE_NATIVE_SIGNATURES: ${{ vars.TIJARA_PAYMENT_LIFECYCLE_REQUIRE_NATIVE_SIGNATURES || '0' }}
       TIJARA_PAYMENT_LIFECYCLE_REQUIRE_PROVIDER_CERTIFICATION: ${{ vars.TIJARA_PAYMENT_LIFECYCLE_REQUIRE_PROVIDER_CERTIFICATION || '0' }}
       TIJARA_PAYMENT_LIFECYCLE_FAIL_ON_WARNING: ${{ vars.TIJARA_PAYMENT_LIFECYCLE_FAIL_ON_WARNING || '0' }}
+      TIJARA_CERTIFICATION_MATRIX_REQUIRE_PROVIDER_READINESS: ${{ vars.TIJARA_CERTIFICATION_MATRIX_REQUIRE_PROVIDER_READINESS || '0' }}
+      TIJARA_CERTIFICATION_MATRIX_FAIL_ON_WARNING: ${{ vars.TIJARA_CERTIFICATION_MATRIX_FAIL_ON_WARNING || '0' }}
       TIJARA_OFFLINE_REPLAY_REQUIRE_E2E: ${{ vars.TIJARA_OFFLINE_REPLAY_REQUIRE_E2E || '0' }}
       TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS: ${{ vars.TIJARA_OFFLINE_REPLAY_REQUIRE_PLAYWRIGHT_PASS || '0' }}
       TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF: ${{ vars.TIJARA_OFFLINE_REPLAY_REQUIRE_DUPLICATE_PROOF || '0' }}
@@ -769,6 +771,24 @@ jobs:
       - name: Protected certification evidence
         continue-on-error: true
         run: make protected-certification-evidence
+      - name: Protected certification result matrix
+        continue-on-error: true
+        run: |
+          CERT_MATRIX_ARGS=()
+          if [[ "${TIJARA_CERTIFICATION_MATRIX_REQUIRE_PROVIDER_READINESS:-0}" == "1" ]]; then
+            CERT_MATRIX_ARGS+=(--require-provider-readiness)
+          fi
+          if [[ "${TIJARA_CERTIFICATION_MATRIX_FAIL_ON_WARNING:-0}" == "1" ]]; then
+            CERT_MATRIX_ARGS+=(--fail-on-warning)
+          fi
+          python3 scripts/export_certification_result_matrix.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --certification-root "deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID" \
+            --provider-readiness "deploy/runtime/protected-provider-readiness/$TIJARA_PROTECTED_RUN_ID/protected-provider-readiness.json" \
+            --output "deploy/runtime/certification-evidence/$TIJARA_PROTECTED_RUN_ID/result-matrix" \
+            "${CERT_MATRIX_ARGS[@]}" \
+            --strict
       - name: Protected release retention evidence
         run: |
           python3 scripts/export_release_retention_evidence.py \

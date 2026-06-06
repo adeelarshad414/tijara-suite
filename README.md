@@ -125,6 +125,7 @@ make load-enterprise-surfaces
 make load-profile-matrix-evidence
 make release-candidate
 make certification-evidence
+make certification-result-matrix
 make psp-readiness-evidence
 make psp-fixture-smoke
 make fbr-readiness-evidence
@@ -377,8 +378,9 @@ The detailed policy and dependency intake checklist are maintained in
   handoff runbook, a first-run checklist, a redacted runner preflight evidence
   report, protected authenticated service checks, protected PSP/FBR provider
   readiness, protected payment lifecycle evidence, a protected Browser E2E
-  handoff report, and protected offline POS replay evidence before executing
-  strict release gates. After the readiness gate, it verifies protected
+  handoff report, protected offline POS replay evidence, and a protected
+  certification result matrix before executing strict release gates. After the
+  readiness gate, it verifies protected
   post-run evidence, records GitHub artifact
   metadata, writes one protected artifact summary for release-owner review, and
   uploads a post-upload metadata sidecar with the artifact ID/URL when GitHub
@@ -540,6 +542,12 @@ The detailed policy and dependency intake checklist are maintained in
   `TIJARA_PROTECTED_CERTIFICATION_GROUPS` now fail if unconfigured, and the
   runner writes root `certification-execution.json`, `status.tsv`,
   `env-summary.txt`, and `summary.md` evidence.
+- `scripts/export_certification_result_matrix.py` and
+  `make certification-result-matrix` merge protected PSP, FBR, and hardware
+  certification execution, category evidence, approval, validity, and optional
+  PSP/FBR provider-readiness proof into one reviewer-facing
+  `certification-result-matrix.json` under
+  `deploy/runtime/certification-evidence/<run-id>/result-matrix/`.
 - `scripts/export_psp_readiness.py` and `make psp-readiness-evidence` export
   redacted PSP readiness evidence from the committed provider adapter matrix,
   including secret-presence status, certification status, event coverage, and

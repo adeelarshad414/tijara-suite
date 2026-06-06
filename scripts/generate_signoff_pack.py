@@ -437,6 +437,7 @@ def _evidence_group(entry):
         or filename == "protected-runner-preflight.json"
         or filename == "protected-runner-bootstrap-verification.json"
         or filename == "certification-execution.json"
+        or filename == "certification-result-matrix.json"
         or filename == "release-retention-evidence.json"
         or filename == "deployment-environment-evidence.json"
         or filename == "tenant-ops-evidence.json"
@@ -686,6 +687,70 @@ def _certification_evidence_reviews(evidence_entries):
                 "valid_until": validity.get("valid_until", ""),
                 "valid_until_present": bool(validity.get("valid_until_present")),
                 "require_validity": bool(validity.get("require_validity")),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
+def _certification_result_matrix_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "certification-result-matrix.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        counts = {}
+        categories = []
+        for item in payload.get("matrix") or []:
+            result = item.get("result") or "unknown"
+            counts[result] = counts.get(result, 0) + 1
+            provider_readiness = item.get("provider_readiness") or {}
+            categories.append(
+                {
+                    "category": item.get("category", ""),
+                    "required": bool(item.get("required")),
+                    "result": result,
+                    "execution_status": item.get("execution_status", ""),
+                    "evidence_present": bool(item.get("evidence_present")),
+                    "evidence_decision": item.get("evidence_decision", ""),
+                    "evidence_ci_status": item.get("evidence_ci_status", ""),
+                    "provider": item.get("provider", ""),
+                    "reference": item.get("reference", ""),
+                    "owner": item.get("owner", ""),
+                    "device_model": item.get("device_model", ""),
+                    "store": item.get("store", ""),
+                    "evidence_count": item.get("evidence_count", 0),
+                    "minimum_evidence_files": item.get("minimum_evidence_files", 0),
+                    "expected_hash_count": item.get("expected_hash_count", 0),
+                    "artifact_manifest_present": bool(item.get("artifact_manifest_present")),
+                    "artifact_manifest_count": item.get("artifact_manifest_count", 0),
+                    "approved_by_present": bool(item.get("approved_by_present")),
+                    "approval_reference_present": bool(item.get("approval_reference_present")),
+                    "valid_until": item.get("valid_until", ""),
+                    "validity_expired": bool(item.get("validity_expired")),
+                    "provider_readiness_present": bool(provider_readiness.get("present")),
+                    "provider_readiness_status": provider_readiness.get("status", ""),
+                    "provider_readiness_decision": provider_readiness.get("decision", ""),
+                    "provider_readiness_ci_status": provider_readiness.get("ci_status", ""),
+                    "blockers": item.get("blockers") or [],
+                    "warnings": item.get("warnings") or [],
+                }
+            )
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "target_environment": context.get("target_environment", ""),
+                "required_groups": context.get("required_groups") or [],
+                "require_provider_readiness": bool(context.get("require_provider_readiness")),
+                "fail_on_warning": bool(context.get("fail_on_warning")),
+                "strict": bool(context.get("strict")),
+                "counts": counts,
+                "categories": categories,
                 "blockers": payload.get("blockers") or [],
                 "warnings": payload.get("warnings") or [],
             }
@@ -1484,6 +1549,7 @@ def _evidence_summary(context, evidence_entries):
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
     certification_evidence_reviews = _certification_evidence_reviews(evidence_entries)
+    certification_result_matrix_reviews = _certification_result_matrix_reviews(evidence_entries)
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
@@ -1695,6 +1761,46 @@ def _evidence_summary(context, evidence_entries):
         certification_lines.append("")
     if not certification_lines:
         certification_lines = ["- No `certification-evidence.json` files were attached.", ""]
+
+    certification_matrix_lines = []
+    for review in certification_result_matrix_reviews:
+        counts = review["counts"]
+        count_text = ", ".join("%s=%s" % (status, count) for status, count in sorted(counts.items()))
+        certification_matrix_lines.append("### `%s`" % review["path"])
+        certification_matrix_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        certification_matrix_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        certification_matrix_lines.append(
+            "- Environment/strict/provider-readiness/fail-on-warning: %s/%s/%s/%s"
+            % (
+                review["target_environment"] or "unset",
+                "yes" if review["strict"] else "no",
+                "yes" if review["require_provider_readiness"] else "no",
+                "yes" if review["fail_on_warning"] else "no",
+            )
+        )
+        certification_matrix_lines.append(
+            "- Required groups: %s" % (", ".join(review["required_groups"]) or "none")
+        )
+        certification_matrix_lines.append("- Result counts: %s" % (count_text or "none"))
+        for category in review["categories"]:
+            certification_matrix_lines.append(
+                "- `%s`: result=%s, required=%s, execution=%s, evidence=%s/%s, approval=%s/%s, valid_until=%s, provider_readiness=%s"
+                % (
+                    category["category"] or "unset",
+                    category["result"] or "unknown",
+                    "yes" if category["required"] else "no",
+                    category["execution_status"] or "unset",
+                    category["evidence_decision"] or "missing",
+                    category["evidence_ci_status"] or "missing",
+                    "yes" if category["approved_by_present"] else "no",
+                    "yes" if category["approval_reference_present"] else "no",
+                    category["valid_until"] or "unset",
+                    category["provider_readiness_status"] or "unset",
+                )
+            )
+        certification_matrix_lines.append("")
+    if not certification_matrix_lines:
+        certification_matrix_lines = ["- No `certification-result-matrix.json` files were attached.", ""]
 
     e2e_seed_lines = []
     for review in e2e_seed_reviews:
@@ -2465,6 +2571,9 @@ def _evidence_summary(context, evidence_entries):
 ## Certification Evidence
 
 {chr(10).join(certification_lines)}
+## Certification Result Matrix
+
+{chr(10).join(certification_matrix_lines)}
 ## Browser E2E Seed Evidence
 
 {chr(10).join(e2e_seed_lines)}
@@ -2546,6 +2655,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     fbr_readiness_reviews = _fbr_readiness_reviews(evidence_entries)
     fbr_fixture_reviews = _fbr_fixture_reviews(evidence_entries)
     certification_evidence_reviews = _certification_evidence_reviews(evidence_entries)
+    certification_result_matrix_reviews = _certification_result_matrix_reviews(evidence_entries)
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
@@ -2621,6 +2731,12 @@ def _release_readiness(context, evidence_entries, group_counts):
                         % (row["name"], entry["relative_path"], row["status"])
                     )
                 elif status in {"skipped", "warning", "warn"}:
+                    if (
+                        status == "skipped"
+                        and "result-matrix/" in entry["relative_path"].replace("\\", "/")
+                        and row["name"].startswith("category-")
+                    ):
+                        continue
                     warnings.append(
                         "Check %s in %s is %s"
                         % (row["name"], entry["relative_path"], row["status"])
@@ -2673,6 +2789,32 @@ def _release_readiness(context, evidence_entries, group_counts):
                 "Certification evidence %s (%s) is %s"
                 % (review["path"], category, review["decision"])
             )
+
+    for review in certification_result_matrix_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append(
+                "Certification result matrix %s is %s"
+                % (review["path"], review["decision"])
+            )
+        elif decision in {"warning", "warn"}:
+            warnings.append(
+                "Certification result matrix %s is %s"
+                % (review["path"], review["decision"])
+            )
+        for category in review.get("categories") or []:
+            result = str(category.get("result") or "").lower()
+            label = category.get("category") or "certification"
+            if result in {"failed", "blocked"}:
+                blockers.append(
+                    "Certification matrix category %s in %s is %s"
+                    % (label, review["path"], category.get("result"))
+                )
+            elif result in {"warning", "warn"}:
+                warnings.append(
+                    "Certification matrix category %s in %s is %s"
+                    % (label, review["path"], category.get("result"))
+                )
 
     for review in e2e_seed_reviews:
         decision = str(review.get("decision") or "").lower()
@@ -2883,6 +3025,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "fbr_readiness_reviews": fbr_readiness_reviews,
         "fbr_fixture_reviews": fbr_fixture_reviews,
         "certification_evidence_reviews": certification_evidence_reviews,
+        "certification_result_matrix_reviews": certification_result_matrix_reviews,
         "e2e_seed_reviews": e2e_seed_reviews,
         "e2e_profile_reviews": e2e_profile_reviews,
         "e2e_execution_reviews": e2e_execution_reviews,

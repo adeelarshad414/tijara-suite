@@ -1228,6 +1228,17 @@ a release-readiness blocker.
 failed instead of silently skipping it. Unrequested categories are recorded as
 skipped optional groups.
 
+The protected workflow also exports
+`deploy/runtime/certification-evidence/<run-id>/result-matrix/` with
+`certification-result-matrix.json`, `status.tsv`, `env-summary.txt`, and
+`summary.md`. The matrix merges root certification execution, PSP/FBR/hardware
+evidence, approvals, validity dates, evidence counts, and optional PSP/FBR
+provider-readiness evidence into one release-owner review. Set
+`TIJARA_CERTIFICATION_MATRIX_REQUIRE_PROVIDER_READINESS=1` when PSP/FBR
+provider readiness must be attached to the matrix, and set
+`TIJARA_CERTIFICATION_MATRIX_FAIL_ON_WARNING=1` when warning rows should block
+the protected release.
+
 Generate the protected operator handoff before the first live staging run so
 the release owner, DevOps, QA, support, security, and business reviewers have
 the exact commands and review order in one evidence folder:
@@ -1982,6 +1993,16 @@ Also attach the root certification execution folder when reviewing operations
 evidence, because it records which categories were passed, failed, or skipped:
 
 ```bash
+python3 scripts/export_certification_result_matrix.py \
+  --run-id 2026-06-05-rc1 \
+  --target-environment staging \
+  --certification-root deploy/runtime/certification-evidence/2026-06-05-rc1 \
+  --provider-readiness deploy/runtime/protected-provider-readiness/2026-06-05-rc1/protected-provider-readiness.json \
+  --output deploy/runtime/certification-evidence/2026-06-05-rc1/result-matrix \
+  --strict
+```
+
+```bash
 TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/certification-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
 TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=psp,fbr,hardware \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
@@ -2014,10 +2035,11 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   backup/restore, and exception handling.
 - `evidence-summary.md` with extracted release, browser E2E, operations,
   status-table, PSP/FBR readiness, FBR fixture smoke, certification evidence,
-  monitoring, incident runbook, production operations readiness, release
-  retention, secret manager, secret runtime, tenant operations, tenant smoke,
-  tenant rollout, deployment environment, load evidence, load profile matrix
-  evidence, and non-secret environment summaries for approvers.
+  certification result matrix, monitoring, incident runbook, production
+  operations readiness, release retention, secret manager, secret runtime,
+  tenant operations, tenant smoke, tenant rollout, deployment environment, load
+  evidence, load profile matrix evidence, and non-secret environment summaries
+  for approvers.
 - `release-readiness.json` with `ready`, `warning`, or `blocked` decision,
   CI status, blockers, warnings, evidence group counts, summary reviews, and
   check rows for dashboards or release automation. When PSP readiness evidence
@@ -2028,6 +2050,9 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
   under `fbr_fixture_reviews`; when external PSP, FBR, or hardware
   certification evidence is attached, manifest, hash, approval, validity, and
   device/provider reviews are included under `certification_evidence_reviews`;
+  when the protected certification result matrix is attached, category-level
+  pass/fail/warning/skipped reviews are included under
+  `certification_result_matrix_reviews`;
   when browser E2E seed, profile, execution, or readiness evidence is attached,
   reviews are included under
   `e2e_seed_reviews`, `e2e_profile_reviews`, `e2e_execution_reviews`, and
