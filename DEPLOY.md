@@ -1216,8 +1216,10 @@ days, expected evidence files, and retention-manifest consistency under
 evidence replay report under
 `deploy/runtime/protected-evidence-replay/<run-id>/`, writes one protected
 release evidence index under
-`deploy/runtime/protected-release-evidence-index/<run-id>/`, appends a final
-GitHub Actions summary, and uploads
+`deploy/runtime/protected-release-evidence-index/<run-id>/`, exports the final
+protected release closure gate under
+`deploy/runtime/protected-release-closure/<run-id>/`, appends a final GitHub
+Actions summary, and uploads
 `tijara-protected-sidecar-verification-<environment>-<run>`. After the main
 upload metadata is recorded, the workflow also appends a second GitHub Actions
 summary and writes `github-step-summary-post-upload.md` under
@@ -1453,6 +1455,33 @@ The index writes `operator-index.md` for release owners and
 run-decision, release-readiness, sign-off package, certification matrix,
 retention manifest, sidecar verification, replay report, and GitHub artifact
 URLs in one page.
+
+Export the final closure gate after the evidence index is available:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_release_closure_gate.py \
+  --output deploy/runtime/protected-release-closure/2026-06-05-rc1 \
+  --required-components release-readiness,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,signoff-package,certification-result-matrix,github-artifact-metadata \
+  --release-owner release:owner \
+  --devops-owner devops:owner \
+  --qa-owner qa:owner \
+  --security-owner security:owner \
+  --business-owner business:owner \
+  --change-ticket-ref change:123 \
+  --rollback-plan-ref runbook:rollback \
+  --incident-channel-ref slack:tijara-incidents \
+  --strict \
+  --fail-on-warning \
+  --require-approvals
+```
+
+The closure gate writes `protected-release-closure-decision.json`,
+`promotion-checklist.md`, `status.tsv`, `env-summary.txt`, and `summary.md`.
+It returns `promotion_ready` only when the evidence index is passing, required
+artifact links and review files are present, approvals are attached, and no
+warnings are being treated as blockers.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:

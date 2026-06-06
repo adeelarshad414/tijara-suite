@@ -41,6 +41,7 @@ DEFAULT_ARTIFACTS = [
     "protected-sidecar-verification",
     "protected-evidence-replay",
     "protected-release-evidence-index",
+    "protected-release-closure",
 ]
 
 

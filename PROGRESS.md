@@ -8725,3 +8725,79 @@ Status: Complete
   produces a final promotion-ready/blocked decision for release owners.
 - Continue live protected-run execution with real credentials, providers,
   hardware, backups, and monitoring endpoints when available.
+
+## Iteration 119: Protected Release Closure Gate
+
+### Scope
+
+- Add a final protected release closure gate that consumes the operator evidence
+  index and produces a release-owner `promotion_ready`, `watch`, or `blocked`
+  decision before promotion.
+
+### Completed
+
+- Added `scripts/export_protected_release_closure_gate.py`.
+- Added `make protected-release-closure`.
+- The exporter reads `protected-release-evidence-index.json`, validates required
+  evidence components, required primary/sidecar artifact links, required
+  operator review files, approval refs, change ticket, rollback plan, incident
+  channel, and optional release-window reference.
+- The exporter writes `protected-release-closure-decision.json`,
+  `promotion-checklist.md`, `status.tsv`, `env-summary.txt`, and `summary.md`
+  under `deploy/runtime/protected-release-closure/<run-id>/`.
+- Wired the protected GitHub workflow to generate the closure gate after the
+  evidence index and before the final GitHub summary/upload.
+- Added `protected-release-closure` to first-run expected artifacts, runbook
+  review order, generated handoff defaults, generated checklist defaults, final
+  protected upload paths, and public-safe protected GitHub variables.
+- Extended `scripts/export_github_step_summary.py` to include Protected closure
+  gate as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-release-closure-decision.json`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_release_closure_gate.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports closure gate
+  configuration successfully.
+- Approved strict closure fixture with all approvals and operational refs writes
+  `decision=promotion_ready` and `ci_status=pass`.
+- Missing approval/ref fixture exits `1` and writes `decision=blocked` and
+  `ci_status=fail`.
+- Explicit non-strict missing approval/ref fixture exits `0` and writes
+  `decision=watch` and `ci_status=pass_with_warnings`.
+- GitHub step summary fixture includes Protected closure gate as a verdict row.
+- Protected artifact summary fixture recognizes
+  `protected-release-closure-decision.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-release-closure` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+
+### Known Gaps
+
+- The closure gate is ready for protected CI, but it still needs execution
+  against real protected runner evidence and real approval refs.
+- Real staging execution, PSP/FBR provider credentials, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real evidence is attached.
+
+### Next Iteration
+
+- Add a protected closure result verifier that confirms the closure decision is
+  included in the final uploaded artifact and makes the upload metadata point to
+  the promotion-ready/blocked decision.
+- Continue live protected-run execution with real credentials, providers,
+  hardware, backups, monitoring endpoints, and release-owner approvals when
+  available.

@@ -148,6 +148,7 @@ make protected-evidence-retention
 make protected-sidecar-verification
 make protected-evidence-replay
 make protected-release-evidence-index
+make protected-release-closure
 make github-step-summary
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -561,6 +562,12 @@ The detailed policy and dependency intake checklist are maintained in
   links run decision, release-readiness, sign-off package, certification matrix,
   retention manifest, sidecar verification, replay report, and GitHub artifact
   URLs under `deploy/runtime/protected-release-evidence-index/`.
+- `scripts/export_protected_release_closure_gate.py` and
+  `make protected-release-closure` consume the evidence index, required
+  operator review files, artifact links, approval refs, change ticket, rollback
+  plan, and incident channel, then write the final
+  `protected-release-closure-decision.json` promotion-ready/blocked decision
+  under `deploy/runtime/protected-release-closure/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or
