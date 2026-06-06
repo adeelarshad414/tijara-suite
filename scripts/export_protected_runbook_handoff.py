@@ -20,6 +20,7 @@ DEFAULT_REVIEW_ORDER = [
     "protected-offline-replay",
     "protected-offline-pilot",
     "protected-artifact-summary",
+    "protected-run-decision",
     "release-evidence",
     "protected-e2e",
     "e2e-execution",
@@ -234,6 +235,7 @@ def _artifact_review_rows(review_order):
         "protected-runner-preflight": "protected-runner-preflight.json, status.tsv",
         "protected-runner-bootstrap-verification": "protected-runner-bootstrap-verification.json, tool-correlation.tsv",
         "protected-artifact-summary": "protected-artifact-summary.json, summary.md",
+        "protected-run-decision": "protected-run-decision.json, summary.md",
         "release-evidence": "release-candidate.json, status.tsv, summary.md",
         "protected-e2e": "summary.md, status.tsv, e2e execution artifacts",
         "protected-offline-pilot": "offline-pos-pilot-evidence.json, status.tsv",
@@ -585,7 +587,13 @@ def main():
     warning_exception = _warning_exception(args)
     _add_warning_exception_checks(rows, blockers, warnings, strict, warning_exception)
 
-    required_artifacts = {"protected-runbook-handoff", "protected-first-run", "protected-artifact-summary", "signoff-packages"}
+    required_artifacts = {
+        "protected-runbook-handoff",
+        "protected-first-run",
+        "protected-artifact-summary",
+        "protected-run-decision",
+        "signoff-packages",
+    }
     missing_review = sorted(required_artifacts - set(review_order))
     if missing_review:
         message = "Artifact review order is missing: %s" % ", ".join(missing_review)

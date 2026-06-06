@@ -36,6 +36,7 @@ DEFAULT_ARTIFACTS = [
     "protected-post-run-verification",
     "github-artifact-metadata",
     "protected-artifact-summary",
+    "protected-run-decision",
 ]
 
 

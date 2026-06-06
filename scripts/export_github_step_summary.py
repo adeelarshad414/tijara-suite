@@ -97,6 +97,7 @@ def _summary_lines(args):
     release_readiness, release_readiness_source = _read_json(args.release_readiness)
     artifact_summary, artifact_summary_source = _read_json(args.artifact_summary)
     post_run, post_run_source = _read_json(args.post_run_verification)
+    run_decision, run_decision_source = _read_json(args.run_decision)
 
     lines = [
         "# Tijara Protected Release Summary",
@@ -113,6 +114,7 @@ def _summary_lines(args):
         _verdict_row("Production operations readiness", production_ops, production_ops_source),
         _verdict_row("Protected post-run verification", post_run, post_run_source),
         _verdict_row("Protected artifact summary", artifact_summary, artifact_summary_source),
+        _verdict_row("Protected run decision", run_decision, run_decision_source),
         "",
     ]
 
@@ -123,6 +125,7 @@ def _summary_lines(args):
         ("production-ops", production_ops),
         ("post-run", post_run),
         ("artifact-summary", artifact_summary),
+        ("run-decision", run_decision),
     ]:
         blockers.extend("%s: %s" % (label, item) for item in payload.get("blockers") or [])
         warnings.extend("%s: %s" % (label, item) for item in payload.get("warnings") or [])
@@ -184,6 +187,7 @@ def main():
     parser.add_argument("--release-readiness", default=os.environ.get("TIJARA_SUMMARY_RELEASE_READINESS", ""))
     parser.add_argument("--artifact-summary", default=os.environ.get("TIJARA_SUMMARY_ARTIFACT_SUMMARY", ""))
     parser.add_argument("--post-run-verification", default=os.environ.get("TIJARA_SUMMARY_POST_RUN", ""))
+    parser.add_argument("--run-decision", default=os.environ.get("TIJARA_SUMMARY_RUN_DECISION", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
     parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
@@ -206,6 +210,8 @@ def main():
         args.artifact_summary = "deploy/runtime/protected-artifact-summary/%s/protected-artifact-summary.json" % args.run_id
     if not args.post_run_verification:
         args.post_run_verification = "deploy/runtime/protected-post-run-verification/%s/protected-post-run-verification.json" % args.run_id
+    if not args.run_decision:
+        args.run_decision = "deploy/runtime/protected-run-decision/%s/protected-run-decision.json" % args.run_id
 
     summary = _summary_lines(args)
     if args.output:

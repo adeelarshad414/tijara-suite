@@ -8317,3 +8317,89 @@ Status: Complete
   decision artifact.
 - Continue PSP/FBR/hardware certification execution once real provider and
   device evidence is available.
+
+## Iteration 114: Protected Run Decision Gate
+
+Status: Complete
+
+### Scope
+
+- Add a final protected-run go/no-go artifact that consolidates the key
+  protected release evidence into one machine-readable decision for release
+  owners and CI summaries.
+
+### Completed
+
+- Added `scripts/export_protected_run_decision.py`.
+- Added `make protected-run-decision`.
+- The exporter reads release-readiness, production operations readiness,
+  protected post-run verification, protected artifact summary, certification
+  result matrix, Browser E2E execution, protected offline pilot, operations
+  release bundle, and ops-tool evidence.
+- The exporter writes `protected-run-decision.json`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-run-decision/<run-id>/`.
+- Required components are configurable with
+  `TIJARA_PROTECTED_RUN_DECISION_REQUIRED_COMPONENTS`.
+- Warning behavior is configurable with
+  `TIJARA_PROTECTED_RUN_DECISION_FAIL_ON_WARNING`.
+- Wired the protected GitHub workflow to generate the decision after protected
+  artifact summary and before the GitHub step summary.
+- Added `protected-run-decision` to protected evidence upload paths, first-run
+  expected artifacts, runbook review order, public-safe GitHub environment
+  variables, and generated handoff/checklist defaults.
+- Extended `scripts/export_github_step_summary.py` to show Protected run
+  decision as its own verdict row.
+- Extended protected artifact summary recognition for
+  `protected-run-decision.json`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_run_decision.py scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- Approved protected-run fixture with nine passing components writes
+  `decision=approved`/`ci_status=pass`.
+- Warning fixture exits `1` and writes `decision=blocked`/`ci_status=fail`
+  when `--fail-on-warning` is active.
+- Missing required component fixture exits `1` and writes
+  `decision=blocked`/`ci_status=fail`.
+- Explicit non-strict missing-only fixture exits `0` and writes
+  `decision=warning`/`ci_status=pass_with_warnings`.
+- GitHub step summary fixture includes Protected run decision as a verdict row.
+- Protected artifact summary fixture recognizes `protected-run-decision.json`
+  and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-run-decision` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, run-decision fixture
+  server, offline snapshot fixture server, or probe server process remains
+  running.
+
+### Known Gaps
+
+- The protected run decision is ready for staging CI, but final production
+  approval still needs real protected-run artifacts from live staging and
+  production-like infrastructure.
+- Live Browser E2E, offline pilot, PSP/FBR certification, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real protected evidence is attached.
+
+### Next Iteration
+
+- Add a protected evidence retention/export manifest that fingerprints the final
+  decision, sign-off, artifact metadata, release-readiness, certification
+  matrix, and uploaded artifact references for audit retention.
+- Continue live protected-run execution once staging URLs, credentials,
+  hardware, PSP/FBR providers, backup artifacts, and monitoring endpoints are
+  available.

@@ -143,6 +143,7 @@ make production-ops-readiness
 make ops-tool-evidence
 make signoff-pack
 make check-release-readiness READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
+make protected-run-decision
 make github-step-summary
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -517,16 +518,22 @@ The detailed policy and dependency intake checklist are maintained in
   `gh api` artifact JSON under `deploy/runtime/github-artifact-metadata/`.
 - `scripts/export_github_step_summary.py` and `make github-step-summary`
   render a compact GitHub Actions Markdown summary from release-readiness,
-  production-ops readiness, post-run verification, and artifact-summary JSON so
-  release owners can see blockers, warnings, and production-ops component
-  status without downloading the artifact bundle. The protected workflow
-  renders it once before upload and again after upload with artifact ID, URL,
-  digest, and retention metadata.
+  production-ops readiness, post-run verification, artifact-summary, and
+  protected-run-decision JSON so release owners can see blockers, warnings, and
+  production-ops component status without downloading the artifact bundle. The
+  protected workflow renders it once before upload and again after upload with
+  artifact ID, URL, digest, and retention metadata.
 - `scripts/export_protected_artifact_summary.py` and
   `make protected-artifact-summary` scan protected evidence folders and write a
   release-owner index of failed/warning status rows, decisions, and artifact
   paths under `deploy/runtime/protected-artifact-summary/`, including GitHub
   run metadata and uploaded artifact references when available.
+- `scripts/export_protected_run_decision.py` and
+  `make protected-run-decision` combine release-readiness, production
+  operations, post-run verification, protected artifact summary, certification
+  matrix, Browser E2E execution, offline pilot, operations bundle, and ops-tool
+  evidence into one final `protected-run-decision.json` go/no-go artifact under
+  `deploy/runtime/protected-run-decision/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or

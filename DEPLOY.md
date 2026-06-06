@@ -1199,9 +1199,11 @@ exports a post-run evidence verifier under
 `deploy/runtime/protected-post-run-verification/<run-id>/`. It then prepares a
 pre-upload GitHub artifact metadata placeholder under
 `deploy/runtime/github-artifact-metadata/<run-id>/`, writes the final protected
-artifact summary, publishes a compact GitHub Actions step summary with
-release-readiness, production-ops, post-run, artifact-summary, blocker,
-warning, and component status, and uploads the main evidence bundle as
+artifact summary, writes a protected run decision under
+`deploy/runtime/protected-run-decision/<run-id>/`, publishes a compact GitHub
+Actions step summary with release-readiness, production-ops, post-run,
+artifact-summary, run-decision, blocker, warning, and component status, and
+uploads the main evidence bundle as
 `tijara-protected-release-evidence-<environment>-<run>`. After that upload, the
 workflow records the real upload action outputs such as artifact ID, artifact
 URL, digest, and retention metadata, then uploads a sidecar artifact named
@@ -1317,6 +1319,26 @@ rows, JSON `decision`/`ci_status` values, and
 `deploy/runtime/signoff-packages/<run-id>/release-readiness.json`. It writes
 `protected-post-run-verification.json`, `evidence-overview.md`, `status.tsv`,
 `env-summary.txt`, and `summary.md`.
+
+Generate the final protected run decision after post-run verification and
+protected artifact summary:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_run_decision.py \
+  --output deploy/runtime/protected-run-decision/2026-06-05-rc1 \
+  --required-components release-readiness,production-ops-readiness,protected-post-run-verification,protected-artifact-summary,certification-result-matrix,e2e-execution,protected-offline-pilot,operations-release-bundle,ops-tool-evidence \
+  --strict \
+  --fail-on-warning
+```
+
+The decision exporter reads the core protected evidence JSON files and writes
+`protected-run-decision.json`, `status.tsv`, `env-summary.txt`, and
+`summary.md`. Set `TIJARA_PROTECTED_RUN_DECISION_REQUIRED_COMPONENTS` to change
+which components are mandatory, and set
+`TIJARA_PROTECTED_RUN_DECISION_FAIL_ON_WARNING=0` only when a release owner has
+approved warning-mode protected runs.
 
 Capture GitHub artifact metadata locally or in a protected runner:
 
@@ -1699,9 +1721,10 @@ Optional tools:
   operations verdict for monitoring, restore drills, load, secrets, deployment
   protection, tenant operations, and security scan references.
 - Run `make github-step-summary` or `scripts/export_github_step_summary.py`
-  after production ops, post-run verification, artifact summary, and sign-off
-  evidence exist to render the same Markdown summary that the protected GitHub
-  workflow appends to `GITHUB_STEP_SUMMARY`. When artifact upload outputs are
+  after production ops, post-run verification, artifact summary,
+  protected-run-decision, and sign-off evidence exist to render the same
+  Markdown summary that the protected GitHub workflow appends to
+  `GITHUB_STEP_SUMMARY`. When artifact upload outputs are
   available, pass or export `TIJARA_UPLOADED_ARTIFACT_ID`,
   `TIJARA_UPLOADED_ARTIFACT_URL`, `TIJARA_UPLOADED_ARTIFACT_DIGEST`, and
   `TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS` to include the post-upload metadata.
