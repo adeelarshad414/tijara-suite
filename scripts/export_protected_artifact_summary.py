@@ -23,6 +23,7 @@ INTERESTING_JSON_NAMES = {
     "fbr-readiness.json",
     "protected-post-run-verification.json",
     "protected-run-decision.json",
+    "protected-evidence-retention-manifest.json",
     "e2e-execution-evidence.json",
     "e2e-readiness.json",
     "e2e-seed-evidence.json",

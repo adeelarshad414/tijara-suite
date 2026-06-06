@@ -1206,14 +1206,16 @@ artifact-summary, run-decision, blocker, warning, and component status, and
 uploads the main evidence bundle as
 `tijara-protected-release-evidence-<environment>-<run>`. After that upload, the
 workflow records the real upload action outputs such as artifact ID, artifact
-URL, digest, and retention metadata, then uploads a sidecar artifact named
+URL, digest, and retention metadata, writes a protected evidence retention
+manifest under `deploy/runtime/protected-evidence-retention/<run-id>/`, then
+uploads a sidecar artifact named
 `tijara-protected-artifact-metadata-<environment>-<run>`. After the main upload
 metadata is recorded, the workflow appends a second GitHub Actions summary and
 writes `github-step-summary-post-upload.md` under
 `deploy/runtime/github-artifact-metadata/<run-id>/`, including artifact ID,
-URL, digest, and retention days. If a strict evidence step fails, the job still
-tries to build the final sign-off package so the release-readiness JSON
-explains the blocker.
+URL, digest, retention days, and the retention-manifest verdict. If a strict
+evidence step fails, the job still tries to build the final sign-off package so
+the release-readiness JSON explains the blocker.
 
 Set `TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware` in the protected
 GitHub environment when external certification must be mandatory for the
@@ -1359,6 +1361,26 @@ When a `gh api repos/<owner>/<repo>/actions/runs/<run-id>/artifacts` response
 is available, pass it with `--artifacts-json` and the exporter will match by
 artifact name and record ID, API URL, archive download URL, size, expiry, and
 workflow context without writing token values.
+
+Generate the protected evidence retention manifest after GitHub artifact
+metadata has been recorded:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_evidence_retention_manifest.py \
+  --output deploy/runtime/protected-evidence-retention/2026-06-05-rc1 \
+  --required-components protected-run-decision,signoff-package,release-readiness,certification-result-matrix,github-artifact-metadata,protected-artifact-summary,release-retention-evidence \
+  --strict \
+  --fail-on-warning
+```
+
+The retention manifest fingerprints every retained file in the final decision,
+sign-off package, release-readiness JSON, certification matrix, artifact
+summary, release-retention evidence, and GitHub artifact metadata. It writes
+`protected-evidence-retention-manifest.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md`. The post-upload protected sidecar artifact
+includes this folder beside `github-artifact-metadata`.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:
@@ -1722,9 +1744,9 @@ Optional tools:
   protection, tenant operations, and security scan references.
 - Run `make github-step-summary` or `scripts/export_github_step_summary.py`
   after production ops, post-run verification, artifact summary,
-  protected-run-decision, and sign-off evidence exist to render the same
-  Markdown summary that the protected GitHub workflow appends to
-  `GITHUB_STEP_SUMMARY`. When artifact upload outputs are
+  protected-run-decision, protected evidence retention, and sign-off evidence
+  exist to render the same Markdown summary that the protected GitHub workflow
+  appends to `GITHUB_STEP_SUMMARY`. When artifact upload outputs are
   available, pass or export `TIJARA_UPLOADED_ARTIFACT_ID`,
   `TIJARA_UPLOADED_ARTIFACT_URL`, `TIJARA_UPLOADED_ARTIFACT_DIGEST`, and
   `TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS` to include the post-upload metadata.

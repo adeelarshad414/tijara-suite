@@ -8403,3 +8403,89 @@ Status: Complete
 - Continue live protected-run execution once staging URLs, credentials,
   hardware, PSP/FBR providers, backup artifacts, and monitoring endpoints are
   available.
+
+## Iteration 115: Protected Evidence Retention Manifest
+
+### Scope
+
+- Add a final post-upload protected evidence retention manifest that fingerprints
+  the protected release decision, sign-off package, release-readiness evidence,
+  certification matrix, protected artifact summary, release-retention evidence,
+  and GitHub artifact upload metadata for audit retention.
+
+### Completed
+
+- Added `scripts/export_protected_evidence_retention_manifest.py`.
+- Added `make protected-evidence-retention`.
+- The exporter fingerprints every file in each required evidence component,
+  records SHA-256 hashes, file counts, byte totals, per-component manifest
+  hashes, component decisions, warning/blocker state, and uploaded artifact
+  metadata.
+- The exporter writes `protected-evidence-retention-manifest.json`,
+  `status.tsv`, `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-evidence-retention/<run-id>/`.
+- Required and optional components are configurable with
+  `TIJARA_PROTECTED_EVIDENCE_RETENTION_REQUIRED_COMPONENTS` and
+  `TIJARA_PROTECTED_EVIDENCE_RETENTION_OPTIONAL_COMPONENTS`.
+- Warning behavior is configurable with
+  `TIJARA_PROTECTED_EVIDENCE_RETENTION_FAIL_ON_WARNING`.
+- Wired the protected GitHub workflow to generate the retention manifest after
+  protected artifact upload metadata and before the post-upload GitHub summary.
+- Added `protected-evidence-retention` to protected sidecar artifact upload
+  paths, first-run expected artifacts, runbook review order, public-safe GitHub
+  environment variables, generated handoff defaults, and generated checklist
+  defaults.
+- Extended `scripts/export_github_step_summary.py` to include Protected evidence
+  retention as a verdict row when the manifest is available.
+- Extended protected artifact summary recognition for
+  `protected-evidence-retention-manifest.json`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_evidence_retention_manifest.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports the protected evidence
+  retention component configuration successfully.
+- Approved strict retention fixture writes `decision=passed` and
+  `ci_status=pass`.
+- Missing required component fixture exits `1` and writes `decision=failed` and
+  `ci_status=fail`.
+- Explicit non-strict missing-only fixture exits `0` and writes
+  `decision=warning` and `ci_status=pass_with_warnings`.
+- GitHub step summary fixture includes Protected evidence retention as a verdict
+  row.
+- Protected artifact summary fixture recognizes
+  `protected-evidence-retention-manifest.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-evidence-retention` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories exist under `addons`, `scripts`, or `tests`.
+- No temporary `http.server`, `ThreadingHTTPServer`, evidence-retention fixture
+  server, offline snapshot fixture server, or probe server process remains
+  running.
+
+### Known Gaps
+
+- The retention manifest is ready for protected CI, but it still needs real
+  post-upload GitHub artifact metadata from the protected runner.
+- Live staging evidence, PSP/FBR provider credentials, certified hardware
+  evidence, monitoring/alerting, restore drills, load tests, dependency and
+  container scans, and secret-manager rollout remain production blockers until
+  real protected evidence is attached.
+
+### Next Iteration
+
+- Add live protected-run evidence replay/reporting or upload-sidecar verification
+  against actual GitHub artifact metadata.
+- Continue live staging execution once real URLs, credentials, hardware,
+  PSP/FBR providers, backup artifacts, and monitoring endpoints are available.

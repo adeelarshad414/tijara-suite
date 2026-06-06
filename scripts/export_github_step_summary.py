@@ -98,6 +98,7 @@ def _summary_lines(args):
     artifact_summary, artifact_summary_source = _read_json(args.artifact_summary)
     post_run, post_run_source = _read_json(args.post_run_verification)
     run_decision, run_decision_source = _read_json(args.run_decision)
+    evidence_retention, evidence_retention_source = _read_json(args.evidence_retention) if args.evidence_retention else ({}, "")
 
     lines = [
         "# Tijara Protected Release Summary",
@@ -115,8 +116,10 @@ def _summary_lines(args):
         _verdict_row("Protected post-run verification", post_run, post_run_source),
         _verdict_row("Protected artifact summary", artifact_summary, artifact_summary_source),
         _verdict_row("Protected run decision", run_decision, run_decision_source),
-        "",
     ]
+    if args.evidence_retention:
+        lines.append(_verdict_row("Protected evidence retention", evidence_retention, evidence_retention_source))
+    lines.append("")
 
     blockers = []
     warnings = []
@@ -133,6 +136,13 @@ def _summary_lines(args):
             warnings.append("%s: evidence JSON is missing" % label)
         if payload.get("_read_error"):
             blockers.append("%s: could not read evidence JSON: %s" % (label, payload["_read_error"]))
+    if args.evidence_retention:
+        blockers.extend("evidence-retention: %s" % item for item in evidence_retention.get("blockers") or [])
+        warnings.extend("evidence-retention: %s" % item for item in evidence_retention.get("warnings") or [])
+        if evidence_retention.get("_missing"):
+            warnings.append("evidence-retention: evidence JSON is missing")
+        if evidence_retention.get("_read_error"):
+            blockers.append("evidence-retention: could not read evidence JSON: %s" % evidence_retention["_read_error"])
 
     blocker_items, blocker_extra = _limit(blockers, args.max_items)
     warning_items, warning_extra = _limit(warnings, args.max_items)
@@ -188,6 +198,7 @@ def main():
     parser.add_argument("--artifact-summary", default=os.environ.get("TIJARA_SUMMARY_ARTIFACT_SUMMARY", ""))
     parser.add_argument("--post-run-verification", default=os.environ.get("TIJARA_SUMMARY_POST_RUN", ""))
     parser.add_argument("--run-decision", default=os.environ.get("TIJARA_SUMMARY_RUN_DECISION", ""))
+    parser.add_argument("--evidence-retention", default=os.environ.get("TIJARA_SUMMARY_EVIDENCE_RETENTION", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
     parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
@@ -212,6 +223,10 @@ def main():
         args.post_run_verification = "deploy/runtime/protected-post-run-verification/%s/protected-post-run-verification.json" % args.run_id
     if not args.run_decision:
         args.run_decision = "deploy/runtime/protected-run-decision/%s/protected-run-decision.json" % args.run_id
+    if not args.evidence_retention:
+        default_retention = "deploy/runtime/protected-evidence-retention/%s/protected-evidence-retention-manifest.json" % args.run_id
+        if _resolve(default_retention).is_file():
+            args.evidence_retention = default_retention
 
     summary = _summary_lines(args)
     if args.output:

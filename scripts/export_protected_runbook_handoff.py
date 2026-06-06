@@ -21,6 +21,7 @@ DEFAULT_REVIEW_ORDER = [
     "protected-offline-pilot",
     "protected-artifact-summary",
     "protected-run-decision",
+    "protected-evidence-retention",
     "release-evidence",
     "protected-e2e",
     "e2e-execution",
@@ -236,6 +237,7 @@ def _artifact_review_rows(review_order):
         "protected-runner-bootstrap-verification": "protected-runner-bootstrap-verification.json, tool-correlation.tsv",
         "protected-artifact-summary": "protected-artifact-summary.json, summary.md",
         "protected-run-decision": "protected-run-decision.json, summary.md",
+        "protected-evidence-retention": "protected-evidence-retention-manifest.json, summary.md",
         "release-evidence": "release-candidate.json, status.tsv, summary.md",
         "protected-e2e": "summary.md, status.tsv, e2e execution artifacts",
         "protected-offline-pilot": "offline-pos-pilot-evidence.json, status.tsv",
@@ -592,6 +594,7 @@ def main():
         "protected-first-run",
         "protected-artifact-summary",
         "protected-run-decision",
+        "protected-evidence-retention",
         "signoff-packages",
     }
     missing_review = sorted(required_artifacts - set(review_order))

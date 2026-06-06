@@ -37,6 +37,7 @@ DEFAULT_ARTIFACTS = [
     "github-artifact-metadata",
     "protected-artifact-summary",
     "protected-run-decision",
+    "protected-evidence-retention",
 ]
 
 
