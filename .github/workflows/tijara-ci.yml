@@ -148,9 +148,9 @@ jobs:
       TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF: ${{ vars.TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF }}
       TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF: ${{ vars.TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF }}
       TIJARA_FIRST_RUN_BACKUP_REF: ${{ vars.TIJARA_FIRST_RUN_BACKUP_REF || vars.TIJARA_BACKUP_ARTIFACT_REF }}
-      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification' }}
+      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification,protected-evidence-bundle-score' }}
       TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS: ${{ vars.TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS || '0' }}
-      TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,protected-artifact-summary,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
+      TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,protected-artifact-summary,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification,protected-evidence-bundle-score,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
       TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata' }}
       TIJARA_PROTECTED_RUN_DECISION_REQUIRED_COMPONENTS: ${{ vars.TIJARA_PROTECTED_RUN_DECISION_REQUIRED_COMPONENTS || 'release-readiness,production-ops-readiness,protected-post-run-verification,protected-artifact-summary,certification-result-matrix,e2e-execution,protected-offline-pilot,operations-release-bundle,ops-tool-evidence' }}
       TIJARA_PROTECTED_RUN_DECISION_FAIL_ON_WARNING: ${{ vars.TIJARA_PROTECTED_RUN_DECISION_FAIL_ON_WARNING || '1' }}
@@ -174,6 +174,9 @@ jobs:
       TIJARA_PROTECTED_ARCHIVE_UPLOAD_EXPECTED_FILES: ${{ vars.TIJARA_PROTECTED_ARCHIVE_UPLOAD_EXPECTED_FILES || 'protected-closure-result-verification.json,closure-result.md,protected-release-archive-manifest.json,archive-index.md' }}
       TIJARA_PROTECTED_ARCHIVE_UPLOAD_MIN_RETENTION_DAYS: ${{ vars.TIJARA_PROTECTED_ARCHIVE_UPLOAD_MIN_RETENTION_DAYS || vars.TIJARA_GITHUB_ARTIFACT_RETENTION_DAYS || '30' }}
       TIJARA_PROTECTED_ARCHIVE_UPLOAD_FAIL_ON_WARNING: ${{ vars.TIJARA_PROTECTED_ARCHIVE_UPLOAD_FAIL_ON_WARNING || '1' }}
+      TIJARA_PROTECTED_BUNDLE_SCORE_REQUIRED_COMPONENTS: ${{ vars.TIJARA_PROTECTED_BUNDLE_SCORE_REQUIRED_COMPONENTS || 'protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification' }}
+      TIJARA_PROTECTED_BUNDLE_SCORE_MINIMUM: ${{ vars.TIJARA_PROTECTED_BUNDLE_SCORE_MINIMUM || '90' }}
+      TIJARA_PROTECTED_BUNDLE_SCORE_FAIL_ON_WARNING: ${{ vars.TIJARA_PROTECTED_BUNDLE_SCORE_FAIL_ON_WARNING || '1' }}
       TIJARA_SERVICE_CHECKS_PROBE: ${{ vars.TIJARA_SERVICE_CHECKS_PROBE || '0' }}
       TIJARA_SERVICE_CHECKS_REQUIRE_PROBES: ${{ vars.TIJARA_SERVICE_CHECKS_REQUIRE_PROBES || '0' }}
       TIJARA_SERVICE_CHECKS_TIMEOUT: ${{ vars.TIJARA_SERVICE_CHECKS_TIMEOUT || '8' }}
@@ -1251,6 +1254,22 @@ jobs:
             --expected-files "$TIJARA_PROTECTED_ARCHIVE_UPLOAD_EXPECTED_FILES" \
             "${ARCHIVE_UPLOAD_ARGS[@]}" \
             --strict
+      - name: Export protected evidence bundle score
+        if: always()
+        continue-on-error: true
+        run: |
+          BUNDLE_SCORE_ARGS=()
+          if [[ "${TIJARA_PROTECTED_BUNDLE_SCORE_FAIL_ON_WARNING:-1}" == "1" ]]; then
+            BUNDLE_SCORE_ARGS+=(--fail-on-warning)
+          fi
+          python3 scripts/export_protected_evidence_bundle_score.py \
+            --run-id "$TIJARA_PROTECTED_RUN_ID" \
+            --target-environment "$TIJARA_TARGET_ENVIRONMENT" \
+            --output "deploy/runtime/protected-evidence-bundle-score/$TIJARA_PROTECTED_RUN_ID" \
+            --required-components "$TIJARA_PROTECTED_BUNDLE_SCORE_REQUIRED_COMPONENTS" \
+            --minimum-score "$TIJARA_PROTECTED_BUNDLE_SCORE_MINIMUM" \
+            "${BUNDLE_SCORE_ARGS[@]}" \
+            --strict
       - name: Publish protected archive upload GitHub summary
         if: always()
         continue-on-error: true
@@ -1275,3 +1294,4 @@ jobs:
           if-no-files-found: warn
           path: |
             deploy/runtime/protected-archive-upload-verification/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/protected-evidence-bundle-score/${{ env.TIJARA_PROTECTED_RUN_ID }}

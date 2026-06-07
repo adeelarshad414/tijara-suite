@@ -152,6 +152,7 @@ make protected-release-closure
 make protected-closure-result-verification
 make protected-release-archive
 make protected-archive-upload-verification
+make protected-evidence-bundle-score
 make github-step-summary
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -588,6 +589,13 @@ The detailed policy and dependency intake checklist are maintained in
   closure-result artifact upload metadata after the archive manifest is
   included, then write `protected-archive-upload-verification.json` under
   `deploy/runtime/protected-archive-upload-verification/`.
+- `scripts/export_protected_evidence_bundle_score.py` and
+  `make protected-evidence-bundle-score` score protected release evidence
+  completeness across run decision, retention, sidecar, replay, evidence index,
+  closure, archive, and archive-upload verification, then write
+  `protected-evidence-bundle-score.json` and
+  `release-owner-risk-matrix.md` under
+  `deploy/runtime/protected-evidence-bundle-score/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or

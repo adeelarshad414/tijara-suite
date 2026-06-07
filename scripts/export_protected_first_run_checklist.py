@@ -45,6 +45,7 @@ DEFAULT_ARTIFACTS = [
     "protected-closure-result-verification",
     "protected-release-archive",
     "protected-archive-upload-verification",
+    "protected-evidence-bundle-score",
 ]
 
 

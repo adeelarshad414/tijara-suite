@@ -9070,3 +9070,101 @@ Status: Complete
 - Continue live protected-run execution with real credentials, providers,
   hardware, backups, monitoring endpoints, and release-owner approvals when
   available.
+
+## Iteration 123: Protected Evidence Bundle Scorecard
+
+### Objective
+
+- Add a release-owner scorecard and risk matrix that turns protected run
+  decision, retention, sidecar, replay, evidence index, closure,
+  closure-result, archive, and archive-upload evidence into one scored
+  completeness/readiness view.
+
+### Completed
+
+- Added `scripts/export_protected_evidence_bundle_score.py`.
+- Added `make protected-evidence-bundle-score`.
+- The exporter reads the protected run decision, evidence retention, sidecar
+  verification, evidence replay, evidence index, release closure,
+  closure-result verification, release archive, and archive-upload
+  verification.
+- The exporter calculates a bundle score, enforces a configurable minimum
+  score, separates evidence completeness from release risk, and writes
+  release-outcome blockers for `blocked` closure decisions while allowing the
+  evidence bundle itself to remain fully traceable.
+- The exporter writes `protected-evidence-bundle-score.json`,
+  `release-owner-risk-matrix.md`, `scorecard.tsv`, `status.tsv`,
+  `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-evidence-bundle-score/<run-id>/`.
+- Wired the protected GitHub workflow to export the score after archive-upload
+  verification and before the final archive-upload GitHub summary.
+- Included the scorecard directory in the final
+  `tijara-protected-archive-upload-<environment>-<run>` artifact upload.
+- Added `TIJARA_PROTECTED_BUNDLE_SCORE_REQUIRED_COMPONENTS`,
+  `TIJARA_PROTECTED_BUNDLE_SCORE_MINIMUM`, and
+  `TIJARA_PROTECTED_BUNDLE_SCORE_FAIL_ON_WARNING` to protected workflow
+  defaults and `deploy/config/github-protected-vars.example`.
+- Added `protected-evidence-bundle-score` to first-run expected artifacts,
+  runbook review order, generated handoff defaults, generated checklist
+  defaults, and public-safe protected GitHub variables.
+- Extended `scripts/export_github_step_summary.py` to include Protected bundle
+  score as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-evidence-bundle-score.json`.
+- Updated `README.md` and `DEPLOY.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_evidence_bundle_score.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports bundle-score
+  configuration and includes `protected-evidence-bundle-score` in protected
+  artifact lists.
+- Approved promotion-ready score fixture writes `decision=passed`,
+  `ci_status=pass`, and `score_percent=100.0`.
+- Watch closure fixture writes `decision=warning`, `ci_status=pass_with_warnings`,
+  and `score_percent=100.0`.
+- Blocked closure fixture exits `1`, writes `decision=failed`,
+  `ci_status=fail`, and keeps `score_percent=100.0` to show complete evidence
+  with blocked release risk.
+- Warning fixture writes `decision=warning`, `ci_status=pass_with_warnings`,
+  and `score_percent=94.4`.
+- Warning fixture with `--fail-on-warning` exits `1` and writes
+  `decision=failed`, `ci_status=fail`, and `score_percent=94.4`.
+- Missing evidence fixture exits `1`, writes `decision=failed`,
+  `ci_status=fail`, and `score_percent=88.9`.
+- GitHub step summary fixture includes Protected bundle score as a verdict row.
+- Protected artifact summary fixture recognizes
+  `protected-evidence-bundle-score.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-evidence-bundle-score` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories were left under `addons`, `scripts`, or `tests`.
+- No lingering bundle-score fixture, `http.server`, or `ThreadingHTTPServer`
+  processes were detected.
+
+### Known Gaps
+
+- The bundle scorecard is ready for protected CI, but it still needs execution
+  against real protected-run artifact outputs from a protected runner.
+- Real staging execution, PSP/FBR provider credentials, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real evidence is attached.
+
+### Next Iteration
+
+- Add protected evidence bundle drift/regression comparison so release owners
+  can compare the current protected run against the previous approved run and
+  see newly introduced blockers, warnings, score drops, or missing artifacts.
+- Continue live protected-run execution with real credentials, providers,
+  hardware, backups, monitoring endpoints, and release-owner approvals when
+  available.

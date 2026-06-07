@@ -1231,7 +1231,7 @@ closure-result summary including the archive verdict, and uploads
 `tijara-protected-closure-result-<environment>-<run>`. It then verifies that
 final closure-result artifact upload under
 `deploy/runtime/protected-archive-upload-verification/<run-id>/`, appends a
-protected archive upload summary, and uploads
+protected archive upload summary with the protected evidence bundle score, and uploads
 `tijara-protected-archive-upload-<environment>-<run>`. After the main
 upload metadata is recorded, the workflow also appends a second GitHub Actions
 summary and writes `github-step-summary-post-upload.md` under
@@ -1563,6 +1563,26 @@ The upload verifier writes `protected-archive-upload-verification.json`,
 confirms the uploaded closure-result artifact metadata is present, the archive
 manifest and closure-result verifier agree on the closure decision, and the
 expected archive files were present in the final upload paths.
+
+Export the protected evidence bundle score once archive-upload verification is
+available:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_evidence_bundle_score.py \
+  --output deploy/runtime/protected-evidence-bundle-score/2026-06-05-rc1 \
+  --required-components protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification \
+  --minimum-score 90 \
+  --strict \
+  --fail-on-warning
+```
+
+The score exporter writes `protected-evidence-bundle-score.json`,
+`release-owner-risk-matrix.md`, `scorecard.tsv`, `status.tsv`,
+`env-summary.txt`, and `summary.md`. It separates evidence completeness from
+release risk: a blocked closure can be fully traceable, but the scorecard still
+marks the release outcome as blocked for release-owner review.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:
