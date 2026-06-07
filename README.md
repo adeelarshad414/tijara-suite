@@ -149,6 +149,7 @@ make protected-sidecar-verification
 make protected-evidence-replay
 make protected-release-evidence-index
 make protected-release-closure
+make protected-closure-result-verification
 make github-step-summary
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -568,6 +569,12 @@ The detailed policy and dependency intake checklist are maintained in
   plan, and incident channel, then write the final
   `protected-release-closure-decision.json` promotion-ready/blocked decision
   under `deploy/runtime/protected-release-closure/`.
+- `scripts/export_protected_closure_result_verification.py` and
+  `make protected-closure-result-verification` verify the final uploaded
+  sidecar artifact ID, URL, digest, retained closure decision, promotion
+  checklist, evidence index, replay report, and sidecar verification, then write
+  `protected-closure-result-verification.json` under
+  `deploy/runtime/protected-closure-result-verification/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or

@@ -1220,7 +1220,13 @@ release evidence index under
 protected release closure gate under
 `deploy/runtime/protected-release-closure/<run-id>/`, appends a final GitHub
 Actions summary, and uploads
-`tijara-protected-sidecar-verification-<environment>-<run>`. After the main
+`tijara-protected-sidecar-verification-<environment>-<run>`. After that final
+upload, it verifies the returned artifact ID, URL, digest, retained closure
+decision, promotion checklist, evidence index, replay report, and sidecar
+verification under
+`deploy/runtime/protected-closure-result-verification/<run-id>/`, appends a
+closure-result summary, and uploads
+`tijara-protected-closure-result-<environment>-<run>`. After the main
 upload metadata is recorded, the workflow also appends a second GitHub Actions
 summary and writes `github-step-summary-post-upload.md` under
 `deploy/runtime/github-artifact-metadata/<run-id>/`, including artifact ID,
@@ -1482,6 +1488,30 @@ The closure gate writes `protected-release-closure-decision.json`,
 It returns `promotion_ready` only when the evidence index is passing, required
 artifact links and review files are present, approvals are attached, and no
 warnings are being treated as blockers.
+
+Verify the uploaded closure result after the final protected sidecar artifact
+has uploaded:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_closure_result_verification.py \
+  --output deploy/runtime/protected-closure-result-verification/2026-06-05-rc1 \
+  --final-artifact-name tijara-protected-sidecar-verification-staging-123456 \
+  --final-artifact-id 1122334455 \
+  --final-artifact-url https://github.com/org/repo/actions/runs/123456/artifacts/1122334455 \
+  --final-artifact-digest sha256:example \
+  --final-retention-days 30 \
+  --minimum-retention-days 30 \
+  --strict \
+  --fail-on-warning
+```
+
+The closure result verifier writes
+`protected-closure-result-verification.json`, `closure-result.md`,
+`status.tsv`, `env-summary.txt`, and `summary.md`. A `blocked` closure can
+still pass this verifier when the blocked decision is captured and uploaded
+correctly.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:

@@ -8801,3 +8801,88 @@ Status: Complete
 - Continue live protected-run execution with real credentials, providers,
   hardware, backups, monitoring endpoints, and release-owner approvals when
   available.
+
+## Iteration 120: Protected Closure Result Verification
+
+### Scope
+
+- Add a post-upload verifier that confirms the final protected closure decision
+  and promotion checklist are retained in the uploaded final evidence artifact
+  and that the artifact metadata points release owners to the
+  `promotion_ready`, `watch`, or `blocked` result.
+
+### Completed
+
+- Added `scripts/export_protected_closure_result_verification.py`.
+- Added `make protected-closure-result-verification`.
+- The verifier reads `protected-release-closure-decision.json`, validates the
+  final uploaded artifact ID, URL, digest, retention policy, final upload paths,
+  expected closure files, and release-owner pointers to the closure decision,
+  promotion checklist, evidence index, run decision, release readiness, and
+  certification matrix.
+- The verifier writes `protected-closure-result-verification.json`,
+  `closure-result.md`, `status.tsv`, `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-closure-result-verification/<run-id>/`.
+- The verifier treats a retained `blocked` closure as a valid audited outcome
+  when the blocked decision is uploaded and traceable.
+- Wired the protected GitHub workflow to run the verifier after the final
+  sidecar verification artifact upload returns artifact ID, URL, and digest.
+- Added a final protected closure-result GitHub summary and
+  `tijara-protected-closure-result-<environment>-<run>` artifact upload.
+- Added `protected-closure-result-verification` to first-run expected artifacts,
+  runbook review order, generated handoff defaults, generated checklist
+  defaults, and public-safe protected GitHub variables.
+- Extended `scripts/export_github_step_summary.py` to include Protected closure
+  result as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-closure-result-verification.json`.
+- Updated `README.md`, `DEPLOY.md`, and
+  `deploy/config/github-protected-vars.example`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_closure_result_verification.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports closure-result
+  verifier configuration successfully.
+- Approved strict closure-result fixture writes `decision=passed` and
+  `ci_status=pass`.
+- Blocked closure fixture still writes `decision=passed` and `ci_status=pass`
+  when the blocked result is uploaded and traceable.
+- Missing final upload metadata fixture exits `1` and writes
+  `decision=failed` and `ci_status=fail`.
+- Explicit non-strict missing metadata fixture exits `0` and writes
+  `decision=warning` and `ci_status=pass_with_warnings`.
+- GitHub step summary fixture includes Protected closure result as a verdict
+  row.
+- Protected artifact summary fixture recognizes
+  `protected-closure-result-verification.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-closure-result-verification` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+
+### Known Gaps
+
+- The closure-result verifier is ready for protected CI, but it still needs
+  execution against real GitHub artifact upload outputs from a protected runner.
+- Real staging execution, PSP/FBR provider credentials, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real evidence is attached.
+
+### Next Iteration
+
+- Add a protected release evidence archive manifest that correlates all uploaded
+  artifact IDs, URLs, closure decisions, and retention expiries into one
+  long-term audit archive record.
+- Continue live protected-run execution with real credentials, providers,
+  hardware, backups, monitoring endpoints, and release-owner approvals when
+  available.

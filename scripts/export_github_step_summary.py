@@ -105,6 +105,7 @@ def _summary_lines(args):
     evidence_replay, evidence_replay_source = _read_json(args.evidence_replay) if args.evidence_replay else ({}, "")
     evidence_index, evidence_index_source = _read_json(args.evidence_index) if args.evidence_index else ({}, "")
     closure_gate, closure_gate_source = _read_json(args.closure_gate) if args.closure_gate else ({}, "")
+    closure_result, closure_result_source = _read_json(args.closure_result) if args.closure_result else ({}, "")
 
     lines = [
         "# Tijara Protected Release Summary",
@@ -133,6 +134,8 @@ def _summary_lines(args):
         lines.append(_verdict_row("Protected evidence index", evidence_index, evidence_index_source))
     if args.closure_gate:
         lines.append(_verdict_row("Protected closure gate", closure_gate, closure_gate_source))
+    if args.closure_result:
+        lines.append(_verdict_row("Protected closure result", closure_result, closure_result_source))
     lines.append("")
 
     blockers = []
@@ -185,6 +188,13 @@ def _summary_lines(args):
             warnings.append("closure-gate: evidence JSON is missing")
         if closure_gate.get("_read_error"):
             blockers.append("closure-gate: could not read evidence JSON: %s" % closure_gate["_read_error"])
+    if args.closure_result:
+        blockers.extend("closure-result: %s" % item for item in closure_result.get("blockers") or [])
+        warnings.extend("closure-result: %s" % item for item in closure_result.get("warnings") or [])
+        if closure_result.get("_missing"):
+            warnings.append("closure-result: evidence JSON is missing")
+        if closure_result.get("_read_error"):
+            blockers.append("closure-result: could not read evidence JSON: %s" % closure_result["_read_error"])
 
     blocker_items, blocker_extra = _limit(blockers, args.max_items)
     warning_items, warning_extra = _limit(warnings, args.max_items)
@@ -245,6 +255,7 @@ def main():
     parser.add_argument("--evidence-replay", default=os.environ.get("TIJARA_SUMMARY_EVIDENCE_REPLAY", ""))
     parser.add_argument("--evidence-index", default=os.environ.get("TIJARA_SUMMARY_EVIDENCE_INDEX", ""))
     parser.add_argument("--closure-gate", default=os.environ.get("TIJARA_SUMMARY_CLOSURE_GATE", ""))
+    parser.add_argument("--closure-result", default=os.environ.get("TIJARA_SUMMARY_CLOSURE_RESULT", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
     parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
@@ -289,6 +300,10 @@ def main():
         default_closure = "deploy/runtime/protected-release-closure/%s/protected-release-closure-decision.json" % args.run_id
         if _resolve(default_closure).is_file():
             args.closure_gate = default_closure
+    if not args.closure_result:
+        default_result = "deploy/runtime/protected-closure-result-verification/%s/protected-closure-result-verification.json" % args.run_id
+        if _resolve(default_result).is_file():
+            args.closure_result = default_result
 
     summary = _summary_lines(args)
     if args.output:
