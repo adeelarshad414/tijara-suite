@@ -43,6 +43,7 @@ DEFAULT_ARTIFACTS = [
     "protected-release-evidence-index",
     "protected-release-closure",
     "protected-closure-result-verification",
+    "protected-release-archive",
 ]
 
 

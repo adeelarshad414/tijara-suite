@@ -1224,8 +1224,10 @@ Actions summary, and uploads
 upload, it verifies the returned artifact ID, URL, digest, retained closure
 decision, promotion checklist, evidence index, replay report, and sidecar
 verification under
-`deploy/runtime/protected-closure-result-verification/<run-id>/`, appends a
-closure-result summary, and uploads
+`deploy/runtime/protected-closure-result-verification/<run-id>/`, exports a
+protected release archive manifest under
+`deploy/runtime/protected-release-archive/<run-id>/`, appends a
+closure-result summary including the archive verdict, and uploads
 `tijara-protected-closure-result-<environment>-<run>`. After the main
 upload metadata is recorded, the workflow also appends a second GitHub Actions
 summary and writes `github-step-summary-post-upload.md` under
@@ -1512,6 +1514,27 @@ The closure result verifier writes
 `status.tsv`, `env-summary.txt`, and `summary.md`. A `blocked` closure can
 still pass this verifier when the blocked decision is captured and uploaded
 correctly.
+
+Export the long-term protected release archive after closure-result
+verification:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_release_archive_manifest.py \
+  --output deploy/runtime/protected-release-archive/2026-06-05-rc1 \
+  --minimum-retention-days 30 \
+  --strict \
+  --fail-on-warning
+```
+
+The archive exporter writes `protected-release-archive-manifest.json`,
+`archive-index.md`, `status.tsv`, `env-summary.txt`, and `summary.md`. It
+correlates the primary GitHub artifact, retention manifest, sidecar artifact,
+replay report, evidence index, closure gate, closure-result verification, and
+release-retention policy so release owners can reconstruct the exact protected
+decision later, including valid `promotion_ready`, `watch`, or `blocked`
+outcomes.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:

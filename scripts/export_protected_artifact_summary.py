@@ -29,6 +29,7 @@ INTERESTING_JSON_NAMES = {
     "protected-release-evidence-index.json",
     "protected-release-closure-decision.json",
     "protected-closure-result-verification.json",
+    "protected-release-archive-manifest.json",
     "e2e-execution-evidence.json",
     "e2e-readiness.json",
     "e2e-seed-evidence.json",

@@ -8886,3 +8886,94 @@ Status: Complete
 - Continue live protected-run execution with real credentials, providers,
   hardware, backups, monitoring endpoints, and release-owner approvals when
   available.
+
+## Iteration 121: Protected Release Evidence Archive Manifest
+
+### Objective
+
+- Add a long-term protected release archive manifest that correlates uploaded
+  artifact IDs, URLs, digests, retention policy, replay/index evidence, and the
+  final closure decision so release owners can reconstruct protected release
+  outcomes during audit.
+
+### Completed
+
+- Added `scripts/export_protected_release_archive_manifest.py`.
+- Added `make protected-release-archive`.
+- The exporter reads GitHub artifact metadata, protected evidence retention,
+  sidecar verification, evidence replay, protected release evidence index,
+  release closure, closure-result verification, and release-retention evidence.
+- The exporter validates artifact ID/URL presence, digest availability,
+  minimum retention days, primary artifact chain consistency across metadata,
+  retention, sidecar, replay, and evidence index, sidecar artifact chain
+  consistency across replay and index, closure-result/gate decision matching,
+  closure owner pointers, and release-retention policy days.
+- The exporter writes `protected-release-archive-manifest.json`,
+  `archive-index.md`, `status.tsv`, `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-release-archive/<run-id>/`.
+- Wired the protected GitHub workflow to export the archive after
+  closure-result verification and include the archive directory in the final
+  protected closure-result artifact upload.
+- Added `TIJARA_PROTECTED_ARCHIVE_MIN_RETENTION_DAYS` and
+  `TIJARA_PROTECTED_ARCHIVE_FAIL_ON_WARNING` to protected workflow defaults and
+  `deploy/config/github-protected-vars.example`.
+- Added `protected-release-archive` to first-run expected artifacts, runbook
+  review order, generated handoff defaults, generated checklist defaults, and
+  public-safe protected GitHub variables.
+- Extended `scripts/export_github_step_summary.py` to include Protected release
+  archive as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-release-archive-manifest.json`.
+- Updated `README.md` and `DEPLOY.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_release_archive_manifest.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports archive verifier
+  configuration and includes `protected-release-archive` in protected artifact
+  lists.
+- Approved strict archive fixture writes `decision=passed` and
+  `ci_status=pass`.
+- Blocked closure archive fixture still writes `decision=passed` and
+  `ci_status=pass` when the blocked result is uploaded, matched, and traceable.
+- Missing final artifact metadata fixture exits `1` and writes
+  `decision=failed` and `ci_status=fail`.
+- Explicit non-strict missing final artifact fixture exits `0` and writes
+  `decision=warning` and `ci_status=pass_with_warnings`.
+- GitHub step summary fixture includes Protected release archive as a verdict
+  row.
+- Protected artifact summary fixture recognizes
+  `protected-release-archive-manifest.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-release-archive` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories were left under `addons`, `scripts`, or `tests`.
+- No lingering archive fixture, `http.server`, or `ThreadingHTTPServer`
+  processes were detected.
+
+### Known Gaps
+
+- The archive exporter is ready for protected CI, but it still needs execution
+  against real GitHub artifact upload outputs from a protected runner.
+- Real staging execution, PSP/FBR provider credentials, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real evidence is attached.
+
+### Next Iteration
+
+- Add protected archive upload/result verification so the final closure-result
+  artifact proves the archive manifest itself was uploaded with artifact ID,
+  URL, digest, retention, and expected archive files.
+- Continue live protected-run execution with real credentials, providers,
+  hardware, backups, monitoring endpoints, and release-owner approvals when
+  available.

@@ -27,6 +27,7 @@ DEFAULT_REVIEW_ORDER = [
     "protected-release-evidence-index",
     "protected-release-closure",
     "protected-closure-result-verification",
+    "protected-release-archive",
     "release-evidence",
     "protected-e2e",
     "e2e-execution",
@@ -248,6 +249,7 @@ def _artifact_review_rows(review_order):
         "protected-release-evidence-index": "protected-release-evidence-index.json, operator-index.md",
         "protected-release-closure": "protected-release-closure-decision.json, promotion-checklist.md",
         "protected-closure-result-verification": "protected-closure-result-verification.json, closure-result.md",
+        "protected-release-archive": "protected-release-archive-manifest.json, archive-index.md",
         "release-evidence": "release-candidate.json, status.tsv, summary.md",
         "protected-e2e": "summary.md, status.tsv, e2e execution artifacts",
         "protected-offline-pilot": "offline-pos-pilot-evidence.json, status.tsv",
@@ -610,6 +612,7 @@ def main():
         "protected-release-evidence-index",
         "protected-release-closure",
         "protected-closure-result-verification",
+        "protected-release-archive",
         "signoff-packages",
     }
     missing_review = sorted(required_artifacts - set(review_order))
