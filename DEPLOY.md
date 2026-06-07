@@ -1228,7 +1228,11 @@ verification under
 protected release archive manifest under
 `deploy/runtime/protected-release-archive/<run-id>/`, appends a
 closure-result summary including the archive verdict, and uploads
-`tijara-protected-closure-result-<environment>-<run>`. After the main
+`tijara-protected-closure-result-<environment>-<run>`. It then verifies that
+final closure-result artifact upload under
+`deploy/runtime/protected-archive-upload-verification/<run-id>/`, appends a
+protected archive upload summary, and uploads
+`tijara-protected-archive-upload-<environment>-<run>`. After the main
 upload metadata is recorded, the workflow also appends a second GitHub Actions
 summary and writes `github-step-summary-post-upload.md` under
 `deploy/runtime/github-artifact-metadata/<run-id>/`, including artifact ID,
@@ -1535,6 +1539,30 @@ replay report, evidence index, closure gate, closure-result verification, and
 release-retention policy so release owners can reconstruct the exact protected
 decision later, including valid `promotion_ready`, `watch`, or `blocked`
 outcomes.
+
+Verify the final closure-result artifact upload after GitHub returns its
+artifact metadata:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_archive_upload_verification.py \
+  --output deploy/runtime/protected-archive-upload-verification/2026-06-05-rc1 \
+  --final-artifact-name tijara-protected-closure-result-staging-123456 \
+  --final-artifact-id 2233445566 \
+  --final-artifact-url https://github.com/org/repo/actions/runs/123456/artifacts/2233445566 \
+  --final-artifact-digest sha256:example \
+  --final-retention-days 30 \
+  --minimum-retention-days 30 \
+  --strict \
+  --fail-on-warning
+```
+
+The upload verifier writes `protected-archive-upload-verification.json`,
+`archive-upload.md`, `status.tsv`, `env-summary.txt`, and `summary.md`. It
+confirms the uploaded closure-result artifact metadata is present, the archive
+manifest and closure-result verifier agree on the closure decision, and the
+expected archive files were present in the final upload paths.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:

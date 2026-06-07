@@ -44,6 +44,7 @@ DEFAULT_ARTIFACTS = [
     "protected-release-closure",
     "protected-closure-result-verification",
     "protected-release-archive",
+    "protected-archive-upload-verification",
 ]
 
 

@@ -8977,3 +8977,96 @@ Status: Complete
 - Continue live protected-run execution with real credentials, providers,
   hardware, backups, monitoring endpoints, and release-owner approvals when
   available.
+
+## Iteration 122: Protected Archive Upload Verification
+
+### Objective
+
+- Verify the final protected closure-result artifact upload after the archive
+  manifest is included, so release owners have artifact ID, URL, digest,
+  retention, closure decision matching, and expected archive file evidence for
+  the terminal protected upload.
+
+### Completed
+
+- Added `scripts/export_protected_archive_upload_verification.py`.
+- Added `make protected-archive-upload-verification`.
+- The verifier reads `protected-closure-result-verification.json` and
+  `protected-release-archive-manifest.json`, validates both decisions, compares
+  closure decisions across closure-result and archive evidence, checks final
+  artifact name, ID, URL, digest, retention days, and confirms expected archive
+  files were present in the final upload paths.
+- The verifier writes `protected-archive-upload-verification.json`,
+  `archive-upload.md`, `status.tsv`, `env-summary.txt`, and `summary.md` under
+  `deploy/runtime/protected-archive-upload-verification/<run-id>/`.
+- Wired the protected GitHub workflow to give the final closure-result upload
+  an action ID, export archive-upload verification from its returned artifact
+  metadata, append a protected archive-upload GitHub summary, and upload
+  `tijara-protected-archive-upload-<environment>-<run>`.
+- Added `TIJARA_PROTECTED_ARCHIVE_UPLOAD_EXPECTED_FILES`,
+  `TIJARA_PROTECTED_ARCHIVE_UPLOAD_MIN_RETENTION_DAYS`, and
+  `TIJARA_PROTECTED_ARCHIVE_UPLOAD_FAIL_ON_WARNING` to protected workflow
+  defaults and `deploy/config/github-protected-vars.example`.
+- Added `protected-archive-upload-verification` to first-run expected
+  artifacts, runbook review order, generated handoff defaults, generated
+  checklist defaults, and public-safe protected GitHub variables.
+- Extended `scripts/export_github_step_summary.py` to include Protected archive
+  upload as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-archive-upload-verification.json`.
+- Updated `README.md` and `DEPLOY.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_archive_upload_verification.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` exports archive-upload
+  verifier configuration and includes `protected-archive-upload-verification`
+  in protected artifact lists.
+- Approved strict archive-upload fixture writes `decision=passed` and
+  `ci_status=pass`.
+- Blocked closure archive-upload fixture still writes `decision=passed` and
+  `ci_status=pass` when the blocked result is uploaded, matched, and traceable.
+- Missing archive file fixture exits `1` and writes `decision=failed` and
+  `ci_status=fail`.
+- Explicit non-strict missing archive file fixture exits `0` and writes
+  `decision=warning` and `ci_status=pass_with_warnings`.
+- Closure mismatch fixture exits `1` and writes `decision=failed` and
+  `ci_status=fail`.
+- GitHub step summary fixture includes Protected archive upload as a verdict
+  row.
+- Protected artifact summary fixture recognizes
+  `protected-archive-upload-verification.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-archive-upload-verification` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories were left under `addons`, `scripts`, or `tests`.
+- No lingering archive-upload fixture, `http.server`, or
+  `ThreadingHTTPServer` processes were detected.
+
+### Known Gaps
+
+- The archive-upload verifier is ready for protected CI, but it still needs
+  execution against real GitHub artifact upload outputs from a protected
+  runner.
+- Real staging execution, PSP/FBR provider credentials, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real evidence is attached.
+
+### Next Iteration
+
+- Add protected release evidence bundle completeness scoring that produces a
+  release-owner dashboard/risk matrix from run decision, retention, sidecar,
+  replay, index, closure, archive, and archive-upload evidence.
+- Continue live protected-run execution with real credentials, providers,
+  hardware, backups, monitoring endpoints, and release-owner approvals when
+  available.

@@ -107,6 +107,7 @@ def _summary_lines(args):
     closure_gate, closure_gate_source = _read_json(args.closure_gate) if args.closure_gate else ({}, "")
     closure_result, closure_result_source = _read_json(args.closure_result) if args.closure_result else ({}, "")
     release_archive, release_archive_source = _read_json(args.release_archive) if args.release_archive else ({}, "")
+    archive_upload, archive_upload_source = _read_json(args.archive_upload) if args.archive_upload else ({}, "")
 
     lines = [
         "# Tijara Protected Release Summary",
@@ -139,6 +140,8 @@ def _summary_lines(args):
         lines.append(_verdict_row("Protected closure result", closure_result, closure_result_source))
     if args.release_archive:
         lines.append(_verdict_row("Protected release archive", release_archive, release_archive_source))
+    if args.archive_upload:
+        lines.append(_verdict_row("Protected archive upload", archive_upload, archive_upload_source))
     lines.append("")
 
     blockers = []
@@ -205,6 +208,13 @@ def _summary_lines(args):
             warnings.append("release-archive: evidence JSON is missing")
         if release_archive.get("_read_error"):
             blockers.append("release-archive: could not read evidence JSON: %s" % release_archive["_read_error"])
+    if args.archive_upload:
+        blockers.extend("archive-upload: %s" % item for item in archive_upload.get("blockers") or [])
+        warnings.extend("archive-upload: %s" % item for item in archive_upload.get("warnings") or [])
+        if archive_upload.get("_missing"):
+            warnings.append("archive-upload: evidence JSON is missing")
+        if archive_upload.get("_read_error"):
+            blockers.append("archive-upload: could not read evidence JSON: %s" % archive_upload["_read_error"])
 
     blocker_items, blocker_extra = _limit(blockers, args.max_items)
     warning_items, warning_extra = _limit(warnings, args.max_items)
@@ -267,6 +277,7 @@ def main():
     parser.add_argument("--closure-gate", default=os.environ.get("TIJARA_SUMMARY_CLOSURE_GATE", ""))
     parser.add_argument("--closure-result", default=os.environ.get("TIJARA_SUMMARY_CLOSURE_RESULT", ""))
     parser.add_argument("--release-archive", default=os.environ.get("TIJARA_SUMMARY_RELEASE_ARCHIVE", ""))
+    parser.add_argument("--archive-upload", default=os.environ.get("TIJARA_SUMMARY_ARCHIVE_UPLOAD", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
     parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
@@ -319,6 +330,10 @@ def main():
         default_archive = "deploy/runtime/protected-release-archive/%s/protected-release-archive-manifest.json" % args.run_id
         if _resolve(default_archive).is_file():
             args.release_archive = default_archive
+    if not args.archive_upload:
+        default_archive_upload = "deploy/runtime/protected-archive-upload-verification/%s/protected-archive-upload-verification.json" % args.run_id
+        if _resolve(default_archive_upload).is_file():
+            args.archive_upload = default_archive_upload
 
     summary = _summary_lines(args)
     if args.output:

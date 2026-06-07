@@ -151,6 +151,7 @@ make protected-release-evidence-index
 make protected-release-closure
 make protected-closure-result-verification
 make protected-release-archive
+make protected-archive-upload-verification
 make github-step-summary
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -582,6 +583,11 @@ The detailed policy and dependency intake checklist are maintained in
   gate, closure-result verification, and release-retention policy into
   `protected-release-archive-manifest.json` and `archive-index.md` under
   `deploy/runtime/protected-release-archive/`.
+- `scripts/export_protected_archive_upload_verification.py` and
+  `make protected-archive-upload-verification` verify the final
+  closure-result artifact upload metadata after the archive manifest is
+  included, then write `protected-archive-upload-verification.json` under
+  `deploy/runtime/protected-archive-upload-verification/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or
