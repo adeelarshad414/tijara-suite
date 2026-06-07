@@ -191,6 +191,7 @@ make protected-closure-result-verification
 make protected-release-archive
 make protected-archive-upload-verification
 make protected-evidence-bundle-score
+make protected-evidence-bundle-drift
 make github-step-summary
 make staging-release-signoff
 make production-deployment-gate READINESS=deploy/runtime/signoff-packages/<run-id>/release-readiness.json
@@ -646,6 +647,13 @@ The detailed policy and dependency intake checklist are maintained in
   `protected-evidence-bundle-score.json` and
   `release-owner-risk-matrix.md` under
   `deploy/runtime/protected-evidence-bundle-score/`.
+- `scripts/export_protected_evidence_bundle_drift.py` and
+  `make protected-evidence-bundle-drift` compare the current protected bundle
+  score with a previous approved baseline, detecting score drops, release
+  outcome regressions, new blockers, new warnings, missing components, and
+  component status regressions, then write
+  `protected-evidence-bundle-drift.json` and `drift-report.md` under
+  `deploy/runtime/protected-evidence-bundle-drift/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
   collect PSP, FBR, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or

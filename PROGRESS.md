@@ -9245,3 +9245,100 @@ Status: Complete
   authenticated screenshot/E2E flows when a seeded staging database is
   available.
 - Convert `docs/LOCAL_SETUP_GUIDE.md` to a verified `.docx` artifact.
+
+## Iteration 125: Protected Evidence Bundle Drift Report
+
+### Objective
+
+- Add protected release evidence drift/regression comparison so release owners
+  can compare the current protected bundle score with a previous approved
+  baseline before promotion.
+
+### Completed
+
+- Added `scripts/export_protected_evidence_bundle_drift.py`.
+- Added `make protected-evidence-bundle-drift`.
+- The exporter compares current and baseline
+  `protected-evidence-bundle-score.json` manifests for score drops, decision
+  regressions, CI status regressions, release-outcome regressions, component
+  status regressions, missing components, new blockers, new warnings, and
+  resolved baseline issues.
+- The exporter writes `protected-evidence-bundle-drift.json`,
+  `drift-report.md`, `comparison.tsv`, `status.tsv`, `env-summary.txt`, and
+  `summary.md` under `deploy/runtime/protected-evidence-bundle-drift/<run-id>/`.
+- Added first-run-safe protected defaults:
+  `TIJARA_PROTECTED_BUNDLE_DRIFT_ALLOW_MISSING_BASELINE=1`,
+  `TIJARA_PROTECTED_BUNDLE_DRIFT_FAIL_ON_WARNING=0`, and
+  `TIJARA_PROTECTED_BUNDLE_DRIFT_SCORE_DROP_THRESHOLD=5`.
+- Wired the protected GitHub workflow to export drift after the bundle
+  scorecard and before the final protected archive-upload summary.
+- Included the drift directory in the final protected archive-upload artifact.
+- Added `protected-evidence-bundle-drift` to first-run expected artifacts,
+  runbook review order, generated handoff defaults, generated checklist
+  defaults, and protected GitHub variable templates.
+- Extended `scripts/export_github_step_summary.py` to include Protected bundle
+  drift as a verdict row when available.
+- Extended protected artifact summary recognition for
+  `protected-evidence-bundle-drift.json`.
+- Updated `README.md`, `DEPLOY.md`, and `docs/COMMANDS_QUICKREF.md`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_protected_evidence_bundle_drift.py
+  scripts/export_github_step_summary.py
+  scripts/export_protected_artifact_summary.py
+  scripts/export_protected_first_run_checklist.py
+  scripts/export_protected_runbook_handoff.py` passes.
+- `.github/workflows/tijara-ci.yml` parses successfully with PyYAML.
+- `deploy/config/github-protected-vars.example` sources successfully, exports
+  drift defaults, and includes `protected-evidence-bundle-drift` in protected
+  artifact lists.
+- Clean baseline/current fixture exits `0` and writes `decision=passed`,
+  `ci_status=pass`, and `current_score=100.0`.
+- New warning fixture exits `0` and writes `decision=warning`,
+  `ci_status=pass_with_warnings`.
+- New warning with `--fail-on-warning` exits `1` and writes
+  `decision=failed`.
+- Score-drop fixture exits `1` when current score drops from `100.0` to `94.0`
+  with a `5` percent threshold.
+- Blocked release-outcome fixture exits `1` and writes `decision=failed`.
+- Missing baseline in strict mode exits `1`; missing baseline with
+  `--allow-missing-baseline` exits `0` with warning status.
+- Component status regression fixture exits `1`.
+- Resolved warning fixture exits `0` and writes `decision=passed`.
+- GitHub step summary fixture includes Protected bundle drift as a verdict row.
+- Protected artifact summary fixture recognizes
+  `protected-evidence-bundle-drift.json` and writes `decision=passed`.
+- First-run checklist and runbook handoff fixtures accept
+  `protected-evidence-bundle-drift` in expected/review artifact lists.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+
+### Known Gaps
+
+- Drift comparison is ready for protected CI, but it still needs execution
+  against real protected-run score manifests from approved staging or
+  production runs.
+- Release owners need to set
+  `TIJARA_PROTECTED_BUNDLE_DRIFT_BASELINE_SCORE` once an approved baseline
+  scorecard exists.
+- Real staging execution, PSP/FBR provider credentials, physical hardware
+  certification, monitoring/alerting, restore drills, load tests,
+  dependency/container scans, and secret-manager rollout remain production
+  blockers until real evidence is attached.
+- Odoo demo users and the verified `.docx` local setup guide from the pasted
+  master pipeline remain pending.
+
+### Next Iteration
+
+- Add or map deterministic Odoo demo users from `docs/TEST_CREDENTIALS.csv`
+  into the demo/staging seed path so authenticated screenshot and browser E2E
+  flows can run without manual user setup.
+- Convert `docs/LOCAL_SETUP_GUIDE.md` into a verified `.docx` artifact for the
+  specs-driven delivery pack.
+- Continue live protected-run execution with real credentials, providers,
+  hardware, backups, monitoring endpoints, and release-owner approvals when
+  available.

@@ -30,6 +30,7 @@ DEFAULT_REVIEW_ORDER = [
     "protected-release-archive",
     "protected-archive-upload-verification",
     "protected-evidence-bundle-score",
+    "protected-evidence-bundle-drift",
     "release-evidence",
     "protected-e2e",
     "e2e-execution",
@@ -254,6 +255,7 @@ def _artifact_review_rows(review_order):
         "protected-release-archive": "protected-release-archive-manifest.json, archive-index.md",
         "protected-archive-upload-verification": "protected-archive-upload-verification.json, archive-upload.md",
         "protected-evidence-bundle-score": "protected-evidence-bundle-score.json, release-owner-risk-matrix.md",
+        "protected-evidence-bundle-drift": "protected-evidence-bundle-drift.json, drift-report.md",
         "release-evidence": "release-candidate.json, status.tsv, summary.md",
         "protected-e2e": "summary.md, status.tsv, e2e execution artifacts",
         "protected-offline-pilot": "offline-pos-pilot-evidence.json, status.tsv",
@@ -619,6 +621,7 @@ def main():
         "protected-release-archive",
         "protected-archive-upload-verification",
         "protected-evidence-bundle-score",
+        "protected-evidence-bundle-drift",
         "signoff-packages",
     }
     missing_review = sorted(required_artifacts - set(review_order))

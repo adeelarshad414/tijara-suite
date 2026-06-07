@@ -109,6 +109,7 @@ def _summary_lines(args):
     release_archive, release_archive_source = _read_json(args.release_archive) if args.release_archive else ({}, "")
     archive_upload, archive_upload_source = _read_json(args.archive_upload) if args.archive_upload else ({}, "")
     bundle_score, bundle_score_source = _read_json(args.bundle_score) if args.bundle_score else ({}, "")
+    bundle_drift, bundle_drift_source = _read_json(args.bundle_drift) if args.bundle_drift else ({}, "")
 
     lines = [
         "# Tijara Protected Release Summary",
@@ -145,6 +146,8 @@ def _summary_lines(args):
         lines.append(_verdict_row("Protected archive upload", archive_upload, archive_upload_source))
     if args.bundle_score:
         lines.append(_verdict_row("Protected bundle score", bundle_score, bundle_score_source))
+    if args.bundle_drift:
+        lines.append(_verdict_row("Protected bundle drift", bundle_drift, bundle_drift_source))
     lines.append("")
 
     blockers = []
@@ -225,6 +228,13 @@ def _summary_lines(args):
             warnings.append("bundle-score: evidence JSON is missing")
         if bundle_score.get("_read_error"):
             blockers.append("bundle-score: could not read evidence JSON: %s" % bundle_score["_read_error"])
+    if args.bundle_drift:
+        blockers.extend("bundle-drift: %s" % item for item in bundle_drift.get("blockers") or [])
+        warnings.extend("bundle-drift: %s" % item for item in bundle_drift.get("warnings") or [])
+        if bundle_drift.get("_missing"):
+            warnings.append("bundle-drift: evidence JSON is missing")
+        if bundle_drift.get("_read_error"):
+            blockers.append("bundle-drift: could not read evidence JSON: %s" % bundle_drift["_read_error"])
 
     blocker_items, blocker_extra = _limit(blockers, args.max_items)
     warning_items, warning_extra = _limit(warnings, args.max_items)
@@ -289,6 +299,7 @@ def main():
     parser.add_argument("--release-archive", default=os.environ.get("TIJARA_SUMMARY_RELEASE_ARCHIVE", ""))
     parser.add_argument("--archive-upload", default=os.environ.get("TIJARA_SUMMARY_ARCHIVE_UPLOAD", ""))
     parser.add_argument("--bundle-score", default=os.environ.get("TIJARA_SUMMARY_BUNDLE_SCORE", ""))
+    parser.add_argument("--bundle-drift", default=os.environ.get("TIJARA_SUMMARY_BUNDLE_DRIFT", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
     parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
@@ -349,6 +360,10 @@ def main():
         default_bundle_score = "deploy/runtime/protected-evidence-bundle-score/%s/protected-evidence-bundle-score.json" % args.run_id
         if _resolve(default_bundle_score).is_file():
             args.bundle_score = default_bundle_score
+    if not args.bundle_drift:
+        default_bundle_drift = "deploy/runtime/protected-evidence-bundle-drift/%s/protected-evidence-bundle-drift.json" % args.run_id
+        if _resolve(default_bundle_drift).is_file():
+            args.bundle_drift = default_bundle_drift
 
     summary = _summary_lines(args)
     if args.output:

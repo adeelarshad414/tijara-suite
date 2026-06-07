@@ -103,6 +103,8 @@ make operations-release-bundle
 make production-ops-readiness
 make ops-tool-evidence
 make signoff-pack
+make protected-evidence-bundle-score
+make protected-evidence-bundle-drift
 make github-step-summary
 ```
 
@@ -1607,6 +1609,28 @@ The score exporter writes `protected-evidence-bundle-score.json`,
 `env-summary.txt`, and `summary.md`. It separates evidence completeness from
 release risk: a blocked closure can be fully traceable, but the scorecard still
 marks the release outcome as blocked for release-owner review.
+
+Compare the protected evidence bundle score against a previous approved
+baseline before release-owner approval:
+
+```bash
+TIJARA_PROTECTED_RUN_ID=2026-06-05-rc2 \
+TIJARA_TARGET_ENVIRONMENT=staging \
+python3 scripts/export_protected_evidence_bundle_drift.py \
+  --current-score deploy/runtime/protected-evidence-bundle-score/2026-06-05-rc2/protected-evidence-bundle-score.json \
+  --baseline-score deploy/runtime/protected-evidence-bundle-score/2026-06-05-rc1/protected-evidence-bundle-score.json \
+  --output deploy/runtime/protected-evidence-bundle-drift/2026-06-05-rc2 \
+  --score-drop-threshold 5 \
+  --strict
+```
+
+The drift exporter writes `protected-evidence-bundle-drift.json`,
+`drift-report.md`, `comparison.tsv`, `status.tsv`, `env-summary.txt`, and
+`summary.md`. Protected CI allows a missing baseline by default for the first
+run using `TIJARA_PROTECTED_BUNDLE_DRIFT_ALLOW_MISSING_BASELINE=1`; once a
+previous approved run exists, set `TIJARA_PROTECTED_BUNDLE_DRIFT_BASELINE_SCORE`
+to the baseline score manifest path and optionally tighten
+`TIJARA_PROTECTED_BUNDLE_DRIFT_FAIL_ON_WARNING=1`.
 
 Run the protected preflight locally before a protected workflow if you want to
 check the non-secret environment surface without executing release gates:

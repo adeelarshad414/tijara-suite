@@ -118,3 +118,4 @@ docker compose --env-file .env --env-file secrets/.env.secrets down -v
 | Protected browser E2E evidence | `make protected-browser-e2e` |
 | Protected release closure | `make protected-release-closure` |
 | Protected evidence bundle score | `make protected-evidence-bundle-score` |
+| Protected evidence bundle drift | `make protected-evidence-bundle-drift` |
