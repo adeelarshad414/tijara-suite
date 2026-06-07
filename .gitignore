@@ -18,6 +18,10 @@ odoo-data/
 postgres-data/
 logs/
 docs/PRODUCT_DEMO.mp4
+docs/PRODUCT_DEMO_CUSTOMER.mp4
+docs/PRODUCT_DEMO_CUSTOMER.webm
+docs/PRODUCT_DEMO_CUSTOMER.m4v
+docs/PRODUCT_DEMO_CUSTOMER.avi
 docs/video-clips/
 docs/screenshots/**/*.png
 docs/screenshots/**/*-error.png

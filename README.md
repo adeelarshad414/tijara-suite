@@ -207,11 +207,18 @@ Generated demo/spec artifacts:
 make capture-screenshots
 make record-demo
 make assemble-video
+make customer-demo-video
 ```
 
 See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
 `docs/TEST_CREDENTIALS.csv`, `docs/LOCAL_SETUP_GUIDE.md`,
 `docs/VIDEO_SCRIPT.md`, and `docs/VOICEOVER_RECORDING_GUIDE.md`.
+
+`make customer-demo-video` generates a customer-facing narrated WebM at
+`docs/PRODUCT_DEMO_CUSTOMER.webm` using local Chrome slide rendering, macOS
+text-to-speech voiceover, and browser MediaRecorder encoding. The generated
+video and intermediate slide/audio files are ignored so the public repo keeps
+the repeatable source script instead of bulky generated media.
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
 rollback guidance.

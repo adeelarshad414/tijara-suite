@@ -115,6 +115,7 @@ pipeline:
 bash scripts/dev-start.sh
 node scripts/capture-screenshots.js
 node scripts/record-demo.js
+python3 scripts/generate_customer_demo_video.py
 bash scripts/assemble-video.sh
 bash scripts/dev-stop.sh
 ```
@@ -123,6 +124,11 @@ Use `TIJARA_DEV_START_HARDWARE=1` to include the local hardware bridge profile
 and `TIJARA_DEV_START_MONITORING=1` to include Prometheus, Alertmanager, Loki,
 and Grafana. The scripts keep generated logs and runtime process metadata under
 `logs/`, which is intentionally ignored by git.
+
+For customer-facing sales handoff, run `make customer-demo-video` on macOS with
+Chrome, `say`, `afconvert`, Node, and Node dependencies installed. It writes
+`docs/PRODUCT_DEMO_CUSTOMER.webm` with generated voiceover; keep that generated
+media out of git and share it as a release, sales, or customer deliverable.
 
 Direct Compose usage should include both env files:
 

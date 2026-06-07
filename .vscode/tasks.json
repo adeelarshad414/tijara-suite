@@ -53,6 +53,13 @@
       "command": "node scripts/record-demo.js",
       "group": "test",
       "problemMatcher": []
+    },
+    {
+      "label": "Generate Customer Demo Video",
+      "type": "shell",
+      "command": "python3 scripts/generate_customer_demo_video.py",
+      "group": "test",
+      "problemMatcher": []
     }
   ]
 }

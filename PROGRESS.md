@@ -9342,3 +9342,64 @@ Status: Complete
 - Continue live protected-run execution with real credentials, providers,
   hardware, backups, monitoring endpoints, and release-owner approvals when
   available.
+
+## Iteration 126: Customer Demo Video With Voiceover
+
+### Objective
+
+- Generate a customer-facing demo video with voiceover and make the generation
+  process repeatable from the repo without requiring a live Odoo instance.
+
+### Completed
+
+- Added `scripts/generate_customer_demo_video.py`.
+- Added `make customer-demo-video`.
+- Added `npm run demo:customer-video`.
+- Added a VS Code task named `Generate Customer Demo Video`.
+- The generator renders eight customer-demo scenes with local headless Chrome:
+  intro, POS, restaurant/kiosk, inventory, customer displays, back office,
+  analytics, and closing.
+- The generator synthesizes customer-facing narration with macOS `say`,
+  converts narration with `afconvert`, and records a narrated WebM through
+  Chrome MediaRecorder.
+- Optimized the generator so default WebM creation only requires the tools it
+  actually uses; BMP/AVI intermediates stay behind an optional environment flag.
+- Generated `docs/PRODUCT_DEMO_CUSTOMER.webm` locally.
+- Updated `.gitignore` so generated customer video and intermediate media stay
+  out of the public source repo while the repeatable generator is committed.
+- Updated `README.md`, `DEPLOY.md`, and `docs/COMMANDS_QUICKREF.md`.
+
+### Validation
+
+- `docs/PRODUCT_DEMO_CUSTOMER.webm` exists locally and is `7.1M`.
+- `file docs/PRODUCT_DEMO_CUSTOMER.webm` reports `WebM`.
+- Container string inspection confirms both `V_VP9` video and `A_OPUS` audio
+  tracks.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/generate_customer_demo_video.py` passes.
+- `python3 -m json.tool package.json` passes.
+- `python3 -m json.tool .vscode/tasks.json` passes.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+
+### Known Gaps
+
+- Homebrew `ffmpeg` installation failed because GitHub container download
+  endpoints were unreachable from this environment, so the deliverable is WebM
+  rather than MP4.
+- Browser metadata verification hung in local headless Chrome, but direct
+  container inspection confirms the generated WebM has video and audio tracks.
+- Generated customer video is intentionally ignored by git; share
+  `docs/PRODUCT_DEMO_CUSTOMER.webm` as a local/customer deliverable or attach it
+  to a release.
+
+### Next Iteration
+
+- Add or map deterministic Odoo demo users from `docs/TEST_CREDENTIALS.csv`
+  into the demo/staging seed path so authenticated screenshot and browser E2E
+  flows can run without manual user setup.
+- Convert `docs/LOCAL_SETUP_GUIDE.md` into a verified `.docx` artifact.
+- When network access is stable, optionally add an MP4 conversion path for the
+  generated customer video.

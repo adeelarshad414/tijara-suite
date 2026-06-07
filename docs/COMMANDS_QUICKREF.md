@@ -22,6 +22,7 @@
 | Run Playwright E2E | `make e2e` |
 | Capture screenshots | `node scripts/capture-screenshots.js` |
 | Record demo clips | `node scripts/record-demo.js` |
+| Generate customer demo with voiceover | `make customer-demo-video` |
 | Assemble demo video | `bash scripts/assemble-video.sh` |
 | Run security audit | `make security-audit` |
 | Run JS checks | `make js-check` |
@@ -106,6 +107,7 @@ docker compose --env-file .env --env-file secrets/.env.secrets down -v
 | Capture against staging URL | `TIJARA_SCREENSHOT_BASE_URL=https://staging.example.com node scripts/capture-screenshots.js` |
 | Record public route clips | `node scripts/record-demo.js` |
 | Record against staging URL | `TIJARA_DEMO_BASE_URL=https://staging.example.com node scripts/record-demo.js` |
+| Generate customer demo with voiceover | `make customer-demo-video` |
 | Assemble clips with ffmpeg | `bash scripts/assemble-video.sh` |
 
 ## Protected Release Evidence
