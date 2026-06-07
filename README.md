@@ -80,14 +80,52 @@ deploy/
 hardware-bridge/               Local shop-machine device bridge foundation
 docs/                          Architecture, roadmap, analytics, inventory, QA
                                retail operations, hardware, and data exchange
+docs/COMMANDS_QUICKREF.md      Generated local run/test command sheet
+docs/SPEC_MAP.json             Machine-readable app, persona, and screen map
+docs/TEST_CREDENTIALS.csv      Deterministic demo/staging account matrix
 secrets/                       Ignored local/staging secrets, example included
 scripts/                       Operational helper scripts
+scripts/dev-start.sh           Universal local startup script
+scripts/dev-stop.sh            Universal local shutdown script
+scripts/dev-restart.sh         Local restart wrapper
 tests/e2e/                     Playwright browser E2E staging scaffolds
 DEPLOY.md                      Deployment, secrets, release, and rollback guide
 LICENSE                        Root LGPL-3.0 project license notice
 ```
 
 ## Local Development
+
+For the generated local developer pipeline, run:
+
+```bash
+bash scripts/dev-start.sh
+```
+
+The script checks Docker Compose, Node/npm, and Python availability, creates
+missing `.env` and `secrets/.env.secrets` files from the public templates,
+starts the core Odoo/PostgreSQL services, waits for the Odoo login route, writes
+runtime metadata under `logs/`, and prints service URLs plus demo credential
+hints from `docs/TEST_CREDENTIALS.csv`.
+
+Optional startup flags:
+
+```bash
+TIJARA_DEV_START_HARDWARE=1 bash scripts/dev-start.sh
+TIJARA_DEV_START_MONITORING=1 bash scripts/dev-start.sh
+TIJARA_DEV_INSTALL_SUITE=1 TIJARA_DEV_SEED_POS_DEMO=1 bash scripts/dev-start.sh
+```
+
+Stop or restart everything with:
+
+```bash
+bash scripts/dev-stop.sh
+bash scripts/dev-restart.sh
+```
+
+Windows PowerShell equivalents live in `scripts/dev-start.ps1` and
+`scripts/dev-stop.ps1`, and VS Code tasks are available in `.vscode/tasks.json`.
+
+Manual Compose flow:
 
 1. Copy `.env.example` to `.env`.
 2. Copy `secrets/.env.secrets.example` to `secrets/.env.secrets`.
@@ -161,6 +199,18 @@ make production-smoke
 make tenant-smoke
 make tenant-rollout
 ```
+
+Generated demo/spec artifacts:
+
+```bash
+make capture-screenshots
+make record-demo
+make assemble-video
+```
+
+See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
+`docs/TEST_CREDENTIALS.csv`, `docs/LOCAL_SETUP_GUIDE.md`,
+`docs/VIDEO_SCRIPT.md`, and `docs/VOICEOVER_RECORDING_GUIDE.md`.
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
 rollback guidance.

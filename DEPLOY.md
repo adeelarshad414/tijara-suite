@@ -17,7 +17,13 @@ deploy/nginx/tijara.conf              Reverse proxy baseline
 deploy/postgres/                      Database backup, restore drill, operations
 hardware-bridge/                      Local shop-machine bridge service
 docs/RETAIL_OPERATIONS_DATA.md        Hardware, templates, scanning, CSV notes
+docs/COMMANDS_QUICKREF.md             Generated local and staging command sheet
+docs/SPEC_MAP.json                    Machine-readable app/persona/screen map
+docs/TEST_CREDENTIALS.csv             Public-safe demo/staging account matrix
 docker-compose.yml                    Development and small deployment runtime
+scripts/dev-start.sh                  Local bootstrap/start script
+scripts/dev-stop.sh                   Local stop and port verification script
+scripts/dev-restart.sh                Local restart wrapper
 Makefile                              Operator shortcuts
 ```
 
@@ -59,6 +65,8 @@ exist.
 make validate
 make js-check
 make security-audit
+make dev-start
+make dev-stop
 make config
 make up
 make ps
@@ -97,6 +105,22 @@ make ops-tool-evidence
 make signoff-pack
 make github-step-summary
 ```
+
+For a developer workstation or sales-engineer demo, prefer the generated
+pipeline:
+
+```bash
+bash scripts/dev-start.sh
+node scripts/capture-screenshots.js
+node scripts/record-demo.js
+bash scripts/assemble-video.sh
+bash scripts/dev-stop.sh
+```
+
+Use `TIJARA_DEV_START_HARDWARE=1` to include the local hardware bridge profile
+and `TIJARA_DEV_START_MONITORING=1` to include Prometheus, Alertmanager, Loki,
+and Grafana. The scripts keep generated logs and runtime process metadata under
+`logs/`, which is intentionally ignored by git.
 
 Direct Compose usage should include both env files:
 

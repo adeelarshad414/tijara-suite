@@ -1,0 +1,319 @@
+{
+  "app": {
+    "name": "Tijara Suite",
+    "package_name": "tijara-suite",
+    "version": "0.17.0",
+    "type": "Odoo Community SaaS web application",
+    "license": "LGPL-3.0-or-later",
+    "market": "Pakistan retail, restaurant, wholesale, and back-office operations"
+  },
+  "base_urls": {
+    "web": "http://localhost:8069",
+    "longpolling": "http://localhost:8072",
+    "hardware_bridge": "http://localhost:9109",
+    "prometheus": "http://localhost:9090",
+    "grafana": "http://localhost:3000"
+  },
+  "services": [
+    {
+      "name": "odoo",
+      "runtime": "Docker Compose service",
+      "port": 8069,
+      "health_url": "/web/login",
+      "required": true
+    },
+    {
+      "name": "postgres",
+      "runtime": "Docker Compose service",
+      "port": 5432,
+      "required": true
+    },
+    {
+      "name": "hardware_bridge",
+      "runtime": "Docker Compose hardware profile",
+      "port": 9109,
+      "required": false
+    },
+    {
+      "name": "prometheus",
+      "runtime": "Docker Compose monitoring profile",
+      "port": 9090,
+      "required": false
+    },
+    {
+      "name": "grafana",
+      "runtime": "Docker Compose monitoring profile",
+      "port": 3000,
+      "required": false
+    }
+  ],
+  "personas": [
+    {
+      "role": "platform_superadmin",
+      "email": "superadmin@demo.tijara-suite.local",
+      "permissions": [
+        "platform operations",
+        "tenant provisioning",
+        "SaaS plans",
+        "release evidence",
+        "protected runner sign-off"
+      ],
+      "key_workflows": [
+        "Create SaaS plan",
+        "Provision tenant",
+        "Review protected release artifacts",
+        "Run production readiness gates"
+      ]
+    },
+    {
+      "role": "tenant_admin",
+      "email": "tenant-admin@demo.tijara-suite.local",
+      "permissions": [
+        "Tijara Manager",
+        "business configuration",
+        "feature flags",
+        "staff setup",
+        "reports"
+      ],
+      "key_workflows": [
+        "Configure POS and receipt templates",
+        "Enable queue or customer display",
+        "Review analytics dashboards",
+        "Approve refunds and discounts"
+      ]
+    },
+    {
+      "role": "cashier",
+      "email": "cashier@demo.tijara-suite.local",
+      "permissions": [
+        "POS checkout",
+        "refund scanning",
+        "receipt print",
+        "offline queue submission"
+      ],
+      "key_workflows": [
+        "B2C sale",
+        "B2B sale",
+        "Bill discount",
+        "Refund barcode scan",
+        "Offline capture and replay"
+      ]
+    },
+    {
+      "role": "inventory_manager",
+      "email": "inventory-manager@demo.tijara-suite.local",
+      "permissions": [
+        "product maintenance",
+        "stock positions",
+        "expiry and low-stock alerts",
+        "bulk import export"
+      ],
+      "key_workflows": [
+        "Import products",
+        "Review low stock",
+        "Assign racks shelves bins",
+        "Resolve expiry alerts"
+      ]
+    },
+    {
+      "role": "accountant",
+      "email": "accountant@demo.tijara-suite.local",
+      "permissions": [
+        "settlement review",
+        "refund and chargeback cases",
+        "draft moves",
+        "FBR queue review"
+      ],
+      "key_workflows": [
+        "Reconcile PSP settlement",
+        "Review chargeback",
+        "Create draft finance move",
+        "Approve FBR queue evidence"
+      ]
+    },
+    {
+      "role": "restaurant_operator",
+      "email": "restaurant@demo.tijara-suite.local",
+      "permissions": [
+        "kiosk orders",
+        "queue tickets",
+        "kitchen tickets",
+        "dine-in takeaway pickup"
+      ],
+      "key_workflows": [
+        "Accept kiosk order",
+        "Advance queue ticket",
+        "Manage kitchen status",
+        "Operate menu board"
+      ]
+    }
+  ],
+  "screen_inventory": [
+    {
+      "name": "Odoo Login",
+      "route_path": "/web/login",
+      "auth": "public",
+      "personas": [],
+      "description": "Odoo authentication entry point."
+    },
+    {
+      "name": "Odoo App Shell",
+      "route_path": "/odoo",
+      "auth": "authenticated",
+      "personas": [
+        "platform_superadmin",
+        "tenant_admin",
+        "cashier",
+        "inventory_manager",
+        "accountant",
+        "restaurant_operator"
+      ],
+      "description": "Authenticated Odoo web app shell for backend modules and POS access."
+    },
+    {
+      "name": "Kiosk Display",
+      "route_path": "/tijara/display/demo-kiosk",
+      "auth": "public",
+      "personas": [
+        "restaurant_operator"
+      ],
+      "description": "Self-ordering kiosk route backed by display screen slug."
+    },
+    {
+      "name": "Kiosk Checkout API",
+      "route_path": "/tijara/display/demo-kiosk/checkout",
+      "auth": "public",
+      "personas": [
+        "restaurant_operator"
+      ],
+      "description": "JSON endpoint for kiosk cart checkout."
+    },
+    {
+      "name": "Menu Board",
+      "route_path": "/tijara/display/demo-menu",
+      "auth": "public",
+      "personas": [
+        "restaurant_operator"
+      ],
+      "description": "Public menu board route for restaurants and bakeries."
+    },
+    {
+      "name": "Deals Board",
+      "route_path": "/tijara/display/demo-deals",
+      "auth": "public",
+      "personas": [
+        "tenant_admin",
+        "restaurant_operator"
+      ],
+      "description": "Public deals and promotions display."
+    },
+    {
+      "name": "Customer Display",
+      "route_path": "/tijara/display/demo-customer-display",
+      "auth": "public",
+      "personas": [
+        "cashier",
+        "tenant_admin"
+      ],
+      "description": "Customer-facing live cart and totals display."
+    },
+    {
+      "name": "Queue Display",
+      "route_path": "/tijara/display/demo-queue",
+      "auth": "public",
+      "personas": [
+        "restaurant_operator",
+        "tenant_admin"
+      ],
+      "description": "Public queue number and pickup status display."
+    },
+    {
+      "name": "Payment Webhook",
+      "route_path": "/tijara/saas/payment/webhook/generic",
+      "auth": "signed_public",
+      "personas": [
+        "accountant",
+        "platform_superadmin"
+      ],
+      "description": "Provider payment webhook endpoint requiring shared and native signatures."
+    }
+  ],
+  "feature_inventory": [
+    "B2B and B2C POS price handling",
+    "Bill-level percentage and amount discount synchronization",
+    "Refund and exchange workflows with invoice barcode scanning",
+    "Receipt and invoice template customization",
+    "CSV import export for operational data",
+    "Hardware bridge for printers scanners drawers scales labels and customer displays",
+    "Kiosk menu deals promotion queue and customer-display public routes",
+    "Offline POS capture replay and conflict review",
+    "SaaS feature flags for B2B queue promotion display and customer display",
+    "Tenant database provisioning and operations manifests",
+    "Subscription billing payment webhooks settlements dunning and suspension",
+    "FBR adapter queue and provider readiness evidence",
+    "Inventory low-stock expiry rack shelf bin and warehouse intelligence",
+    "Analytics dashboards reports trends and daily KPI collectors",
+    "Protected release evidence gates and production readiness reports"
+  ],
+  "verticals": [
+    "superstore",
+    "grocery",
+    "bakery",
+    "cloth",
+    "pharmacy",
+    "restaurant",
+    "garments",
+    "electronics",
+    "wholesale"
+  ],
+  "environment_variables": {
+    "non_secret": [
+      "COMPOSE_PROJECT_NAME",
+      "TIJARA_ENV",
+      "TIJARA_PUBLIC_URL",
+      "ODOO_IMAGE",
+      "POSTGRES_IMAGE",
+      "POSTGRES_DB",
+      "POSTGRES_USER",
+      "ODOO_DB_HOST",
+      "ODOO_DB_PORT",
+      "ODOO_DB_USER",
+      "HTTP_PORT",
+      "LONGPOLLING_PORT",
+      "TIJARA_BRIDGE_PORT",
+      "TIJARA_SAAS_ENFORCEMENT_ENABLED",
+      "TIJARA_PAYMENT_REQUIRE_NATIVE_SIGNATURES",
+      "FBR_ADAPTER_MODE",
+      "PROMETHEUS_PORT",
+      "GRAFANA_PORT"
+    ],
+    "secret": [
+      "POSTGRES_PASSWORD",
+      "ODOO_DB_PASSWORD",
+      "ODOO_MASTER_PASSWORD",
+      "BACKUP_ENCRYPTION_KEY",
+      "ODOO_SESSION_SECRET",
+      "GRAFANA_ADMIN_PASSWORD",
+      "FBR_CLIENT_SECRET",
+      "PAYMENT_GATEWAY_SECRET",
+      "TIJARA_PAYMENT_WEBHOOK_SECRET",
+      "TIJARA_BRIDGE_SHARED_SECRET"
+    ]
+  },
+  "demo_data": {
+    "module": "tijara_demo_pos",
+    "seed_command": "make seed-pos-demo",
+    "notes": "Seeds POS config, open session, demo products, B2B and B2C customers, screens, kiosk profile, queue ticket, and promotions. Demo login users must be created or mapped in staging before authenticated E2E."
+  },
+  "commands": {
+    "start": "bash scripts/dev-start.sh",
+    "stop": "bash scripts/dev-stop.sh",
+    "restart": "bash scripts/dev-restart.sh",
+    "validate": "make validate",
+    "install_suite": "make install-suite",
+    "seed_pos_demo": "make seed-pos-demo",
+    "screenshots": "node scripts/capture-screenshots.js",
+    "record_demo": "node scripts/record-demo.js",
+    "assemble_video": "bash scripts/assemble-video.sh"
+  }
+}

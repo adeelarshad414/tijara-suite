@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start App All Services",
+      "type": "shell",
+      "command": "bash scripts/dev-start.sh",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "panel": "new",
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop App Kill All",
+      "type": "shell",
+      "command": "bash scripts/dev-stop.sh",
+      "group": "build",
+      "presentation": {
+        "panel": "shared",
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Restart App",
+      "type": "shell",
+      "command": "bash scripts/dev-restart.sh",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Seed POS Demo",
+      "type": "shell",
+      "command": "make seed-pos-demo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Capture Screenshots",
+      "type": "shell",
+      "command": "node scripts/capture-screenshots.js",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Record Demo Video",
+      "type": "shell",
+      "command": "node scripts/record-demo.js",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -9168,3 +9168,80 @@ Status: Complete
 - Continue live protected-run execution with real credentials, providers,
   hardware, backups, monitoring endpoints, and release-owner approvals when
   available.
+
+## Iteration 124: Specs-Driven Developer Pipeline Pack
+
+### Objective
+
+- Apply the attached specs-driven agentic pipeline prompt to the Tijara repo by
+  adding a generated local start/stop/test/demo command layer, deterministic
+  spec metadata, and demo capture scaffolds that make the project easier for
+  DevOps, QA, sales engineers, and community contributors to run.
+
+### Completed
+
+- Added `scripts/dev-start.sh`, `scripts/dev-stop.sh`, and
+  `scripts/dev-restart.sh`.
+- Added Windows PowerShell equivalents: `scripts/dev-start.ps1` and
+  `scripts/dev-stop.ps1`.
+- Added VS Code task shortcuts in `.vscode/tasks.json`.
+- Added `make dev-start`, `make dev-stop`, `make dev-restart`,
+  `make capture-screenshots`, `make record-demo`, and `make assemble-video`.
+- Added npm aliases for local start/stop/restart and demo capture.
+- Added `docs/COMMANDS_QUICKREF.md` with terminal, VS Code, PowerShell, stop,
+  log, browser capture, and protected release evidence commands.
+- Added `docs/SPEC_MAP.json` and `docs/SPEC_MAP.md` covering app type, ports,
+  services, personas, screen inventory, features, verticals, env vars, demo
+  data, and generated commands.
+- Added `docs/TEST_CREDENTIALS.csv` with deterministic demo/staging personas
+  for platform, tenant, cashier, inventory, accounting, restaurant, and public
+  display workflows.
+- Added `scripts/capture-screenshots.js` to drive Playwright screenshot capture
+  from the spec map and refresh `docs/screenshots/INDEX.md`.
+- Added `scripts/record-demo.js`, `scripts/assemble-video.sh`,
+  `docs/VIDEO_SCRIPT.md`, and `docs/VOICEOVER_RECORDING_GUIDE.md` for sales
+  demo video capture and assembly.
+- Added `docs/LOCAL_SETUP_GUIDE.md`.
+- Updated `.gitignore` for generated logs, screenshots, video clips, and demo
+  MP4 outputs.
+- Updated `README.md` and `DEPLOY.md`.
+
+### Validation
+
+- `bash -n scripts/dev-start.sh`, `scripts/dev-stop.sh`,
+  `scripts/dev-restart.sh`, and `scripts/assemble-video.sh` pass.
+- `node --check scripts/capture-screenshots.js` and
+  `node --check scripts/record-demo.js` pass.
+- `python3 -m json.tool package.json`, `package-lock.json`,
+  `.vscode/tasks.json`, and `docs/SPEC_MAP.json` pass.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` passes.
+- `git diff --check` passes.
+- No `__pycache__` directories were left under `addons`, `scripts`, or
+  `tests`.
+- No lingering screenshot/demo fixture, `http.server`, or
+  `ThreadingHTTPServer` processes were detected.
+- PowerShell script execution was not run because `pwsh` is not installed in
+  this local environment.
+
+### Known Gaps
+
+- The generated pipeline creates deterministic demo credential metadata, but
+  Odoo demo users still need to be created or mapped in the local/staging
+  database before authenticated browser E2E can log in with those accounts.
+- Screenshot and demo-video scripts require a running local or staging Odoo
+  instance with seeded display slugs before real media can be captured.
+- `docs/LOCAL_SETUP_GUIDE.docx` from the pasted master prompt is not generated
+  yet; the Markdown guide is in place for conversion in a future iteration.
+- The previous protected evidence bundle drift/regression comparison remains
+  the next production-release hardening item.
+
+### Next Iteration
+
+- Add protected evidence bundle drift/regression comparison against a previous
+  approved protected run.
+- Add or map Odoo demo users for the deterministic personas and wire them into
+  authenticated screenshot/E2E flows when a seeded staging database is
+  available.
+- Convert `docs/LOCAL_SETUP_GUIDE.md` to a verified `.docx` artifact.

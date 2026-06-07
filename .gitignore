@@ -16,3 +16,9 @@ playwright-report/
 blob-report/
 odoo-data/
 postgres-data/
+logs/
+docs/PRODUCT_DEMO.mp4
+docs/video-clips/
+docs/screenshots/**/*.png
+docs/screenshots/**/*-error.png
+docs/screenshots/CAPTURE_ERROR.txt
