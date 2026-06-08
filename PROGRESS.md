@@ -9403,3 +9403,63 @@ Status: Complete
 - Convert `docs/LOCAL_SETUP_GUIDE.md` into a verified `.docx` artifact.
 - When network access is stable, optionally add an MP4 conversion path for the
   generated customer video.
+
+## Iteration 127: All-User Application Guide
+
+### Objective
+
+- Create a practical document that explains how all major Tijara Suite user
+  roles should access and use the application for local demo, pilot training,
+  and business operations.
+
+### Completed
+
+- Added `docs/USER_GUIDE_ALL_USERS.md` as the Markdown source guide.
+- Added `docs/Tijara_Suite_All_User_Guide.docx` as a polished Word document
+  for sharing with users and customers.
+- Covered local access, project directory, demo credential file location, demo
+  role accounts, first-login checklist, and daily responsibilities.
+- Added role guidance for platform superadmin, tenant admin, cashier, inventory
+  manager, accountant, restaurant operator, display/kiosk operator, and business
+  owner or manager.
+- Added operational workflows for POS checkout, bill-level percentage/amount
+  discount behavior, refund/exchange with invoice barcode scanning,
+  low-stock/expiry review, bulk import/export, restaurant dine-in/takeaway/
+  pickup, queue status, dashboards, SaaS feature flags, hardware usage,
+  common problems, and escalation.
+- Updated `README.md` so users can find both the Markdown guide and DOCX
+  training document from the main repository documentation list.
+
+### Validation
+
+- Rendered `docs/Tijara_Suite_All_User_Guide.docx` to PNG pages and PDF with
+  the Documents render workflow.
+- Visually inspected all 7 rendered DOCX pages for clipping, table overflow,
+  orphaned sections, header/footer issues, and spacing problems.
+- `file docs/Tijara_Suite_All_User_Guide.docx` reports `Microsoft OOXML`.
+- `git diff --check` passes.
+- `make validate` passes and parses 74 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` correctly blocks because this local machine
+  currently has ignored non-example runtime secrets under `secrets/`.
+- `git check-ignore -v secrets/.env.secrets` confirms the local secret file is
+  ignored by `.gitignore` and is not part of the public source commit.
+
+### Known Gaps
+
+- The guide is English-first. A full Urdu version or bilingual user handbook is
+  still pending.
+- Demo credentials are documented for local training only; production users
+  must be created with real identities, strong passwords, MFA where available,
+  and tenant-specific permissions.
+- Some guide sections describe readiness foundations that still require real
+  provider, hardware, staging, and production certification before launch.
+
+### Next Iteration
+
+- Add a bilingual Urdu/English quick-start guide for cashiers and tenant admins.
+- Convert `docs/LOCAL_SETUP_GUIDE.md` into a verified `.docx` artifact for the
+  setup/training pack.
+- Add or map deterministic Odoo demo users from `docs/TEST_CREDENTIALS.csv`
+  into the demo/staging seed path so authenticated screenshot and browser E2E
+  flows can run without manual user setup.

@@ -1,0 +1,470 @@
+# Tijara Suite All-User Guide
+
+Version: 2026-06-08  
+Audience: platform owners, tenant admins, cashiers, inventory teams, accountants, restaurant operators, display/kiosk operators, and business managers.
+
+## 1. Purpose
+
+Tijara Suite is a Pakistan-focused retail and restaurant business platform built
+on Odoo Community. It supports POS, B2B/B2C selling, inventory, procurement,
+customers, suppliers, refunds, exchanges, restaurant dine-in/takeaway/pickup,
+kiosk, queue screens, customer display, promotion/menu/deal screens, analytics,
+hardware bridge readiness, and SaaS feature control.
+
+This guide explains how each user role should use the application during daily
+operations. It is written for local demo, pilot, and training use.
+
+## 2. Local Access
+
+Open the application:
+
+```text
+http://localhost:8069/web/login?db=tijara_dev
+```
+
+Project directory:
+
+```text
+/Users/adeel.arshad/Documents/Codex/2026-06-04/what-do-you-know-about-odoo/outputs/tijara-suite
+```
+
+Credentials file:
+
+```text
+docs/TEST_CREDENTIALS.csv
+```
+
+Start the local application:
+
+```bash
+bash scripts/dev-start.sh
+```
+
+Start, install modules, and seed POS demo data:
+
+```bash
+TIJARA_DEV_INSTALL_SUITE=1 TIJARA_DEV_SEED_POS_DEMO=1 bash scripts/dev-start.sh
+```
+
+Stop the local application:
+
+```bash
+bash scripts/dev-stop.sh
+```
+
+## 3. Demo Users
+
+Use these local demo accounts for training and testing. These credentials are
+for local demo only and must not be used in production.
+
+| Role | Login | Password | Main Use |
+|---|---|---|---|
+| Platform Superadmin | `superadmin@demo.tijara-suite.local` | `Demo@Superadmin2024!` | Platform setup, SaaS plans, tenants, release evidence, settings |
+| Tenant Admin | `tenant-admin@demo.tijara-suite.local` | `Demo@TenantAdmin2024!` | Business setup, users, plans, inventory/POS configuration |
+| Cashier | `cashier@demo.tijara-suite.local` | `Demo@Cashier2024!` | POS checkout, refund, exchange, receipt printing |
+| Inventory Manager | `inventory-manager@demo.tijara-suite.local` | `Demo@InventoryManager2024!` | Products, stock, racks, shelves, expiry and low-stock alerts |
+| Accountant | `accountant@demo.tijara-suite.local` | `Demo@Accountant2024!` | Invoices, settlements, refunds, chargebacks, FBR queue review |
+| Restaurant Operator | `restaurant@demo.tijara-suite.local` | `Demo@Restaurant2024!` | Dine-in, takeaway, pickup, kiosk, queue and kitchen tickets |
+| Public Display | `public-display@demo.tijara-suite.local` | `Demo@Display2024!` | Public display route smoke testing; many display URLs are public |
+
+## 4. First Login Checklist
+
+1. Open the login URL and select database `tijara_dev` if prompted.
+2. Enter the assigned email and password.
+3. Confirm the main Odoo dashboard loads.
+4. Use the app launcher/menu to open the assigned area: POS, Inventory, Tijara,
+   Analytics, Restaurant, SaaS Control, or Accounting.
+5. If the expected menu is missing, ask the tenant admin or platform admin to
+   verify user groups and SaaS feature flags.
+
+## 5. Role Responsibilities
+
+### Platform Superadmin
+
+Owns the platform-level configuration and production-readiness controls.
+
+Primary tasks:
+
+- Manage SaaS plans, feature flags, tenant readiness, and platform settings.
+- Review protected release evidence, certification status, operations reports,
+  and security/DevOps readiness notes.
+- Confirm that production secrets, provider credentials, backups, monitoring,
+  and incident runbooks are configured before a real customer launch.
+- Keep demo/staging users separate from production users.
+
+Daily checks:
+
+- SaaS feature flags are correct for each tenant.
+- Protected evidence bundles and release gates are current.
+- No placeholder credentials are used outside local demo.
+- Monitoring, backups, and restore drills are scheduled for production.
+
+### Tenant Admin
+
+Owns business setup for one company or tenant.
+
+Primary tasks:
+
+- Configure business details, branches, warehouses, POS settings, receipt
+  profiles, users, payment methods, and allowed SaaS features.
+- Enable vertical-specific workflows such as superstore, grocery, bakery,
+  restaurant, pharmacy, cloth, garments, and electronics.
+- Assign user permissions and review cashier/inventory/accounting activity.
+- Maintain customer, supplier, product, tax, and price setup.
+
+Setup checklist:
+
+- Confirm company name, Urdu name, NTN/STRN, branch code, and receipt language.
+- Configure B2C and B2B product prices.
+- Configure receipt/invoice templates and return policy text.
+- Configure POS sessions, cash shifts, payment methods, and barcode settings.
+- Configure warehouses, racks, shelves, bins, and expiry tracking.
+- Enable subscribed SaaS features such as B2B POS, queue display, customer
+  display, and promotion/menu/deal screens.
+
+### Cashier
+
+Runs the counter POS for retail and wholesale customers.
+
+Primary tasks:
+
+- Open the assigned POS session.
+- Scan products with barcode scanner or search manually.
+- Select B2C or B2B selling mode when available.
+- Add customer when required for B2B, refund, exchange, invoice, or loyalty.
+- Apply line discounts or overall bill discount by percentage or amount.
+- Collect payment and print or share receipt.
+- Process refunds and exchanges using invoice barcode scan where available.
+
+Checkout workflow:
+
+1. Open POS.
+2. Confirm cashier name, active session, and correct shop/branch.
+3. Scan product barcode or select item from the product list.
+4. Confirm quantity, price, discount, and tax.
+5. Select customer if required.
+6. For B2B sale, switch to B2B price mode before payment.
+7. Add overall bill discount if approved.
+8. Take payment.
+9. Print receipt and close the order.
+
+Bill discount rule:
+
+- If percentage is entered, amount should update automatically.
+- If amount is entered, percentage should update automatically.
+- Always confirm manager approval for high-value discounts.
+
+Refund and exchange workflow:
+
+1. Open the refund/exchange screen.
+2. Scan the invoice barcode or enter invoice/reference manually.
+3. Confirm original order, date, customer, items, and payment method.
+4. Select return reason.
+5. For refund, choose returned items and refund amount.
+6. For exchange, add replacement items and confirm price difference.
+7. Ask manager approval when policy requires it.
+8. Print refund/exchange receipt.
+
+Cashier safety rules:
+
+- Do not share login credentials.
+- Do not leave a POS session unattended.
+- Count cash drawer before and after shift.
+- Escalate failed payments, suspicious refunds, and printer issues.
+
+### Inventory Manager
+
+Maintains stock quality, location accuracy, and bulk product data.
+
+Primary tasks:
+
+- Create and maintain products, barcodes, categories, B2C/B2B prices, units,
+  expiry dates, and storage positions.
+- Track warehouse, store, rack, shelf, bin, aisle, and placement.
+- Review low-stock and expiry alerts.
+- Import/export product and inventory data for bulk updates.
+- Coordinate receiving, transfers, stock adjustments, and cycle counts.
+
+Product setup checklist:
+
+- Product name and Urdu/local display name where needed.
+- Barcode/QR code.
+- Category and vertical fields.
+- B2C price and B2B price.
+- Cost, vendor, tax, and unit of measure.
+- Expiry tracking for pharmacy, grocery, bakery, and perishable items.
+- Warehouse/store/rack/shelf/bin placement.
+- Low-stock threshold and reorder quantity.
+
+Low-stock workflow:
+
+1. Open Inventory Intelligence.
+2. Review low-stock alerts.
+3. Check current stock, reserved stock, and incoming purchase orders.
+4. Create replenishment request or purchase order.
+5. Update alert notes after action.
+
+Expiry workflow:
+
+1. Open expiry alerts.
+2. Filter by date, category, branch, or supplier.
+3. Move near-expiry items to review, promotion, return, or wastage workflow.
+4. Record action taken for audit.
+
+Bulk import/export:
+
+- Export current data before bulk changes.
+- Use CSV templates where available.
+- Validate barcode uniqueness.
+- Import in small batches first.
+- Recheck stock, price, and category after import.
+
+### Accountant
+
+Reviews financial records, invoices, settlements, refunds, disputes, and FBR
+readiness evidence.
+
+Primary tasks:
+
+- Review invoices, payments, refunds, exchanges, settlements, and chargebacks.
+- Monitor draft accounting actions from payment adapters.
+- Review FBR invoice queue and submission status.
+- Reconcile payment provider statements.
+- Validate tax, accounts, journals, and audit records.
+
+Daily checks:
+
+- POS cash and digital payments match end-of-day records.
+- Refunds and exchanges have approved reasons.
+- Settlement batches are reconciled.
+- Chargebacks/disputes have assigned owner and next action.
+- FBR queue has no unexpected failed records.
+
+Settlement workflow:
+
+1. Open payment settlement batches.
+2. Import or review provider statement.
+3. Match provider transaction reference to POS/order/payment event.
+4. Mark matched, partial, disputed, or failed.
+5. Create draft accounting action where required.
+6. Submit for finance approval.
+
+FBR queue workflow:
+
+1. Open FBR invoice queue.
+2. Filter pending, failed, dry-run, or live-mode records.
+3. Review invoice payload and business identifiers.
+4. Retry only when provider credentials and endpoint are configured.
+5. Keep dry-run evidence separate from live compliance evidence.
+
+### Restaurant Operator
+
+Runs restaurant, bakery, and food-service operations.
+
+Primary tasks:
+
+- Manage dine-in, takeaway, and pickup orders.
+- Use kiosk/self-order flow for customer ordering where enabled.
+- Track queue tickets and kitchen status.
+- Update menu, deals, and promotion display screens.
+- Coordinate tables, service type, and order readiness.
+
+Service workflow:
+
+1. Select service type: dine-in, takeaway, or pickup.
+2. For dine-in, assign table or service area.
+3. Add menu items and modifiers.
+4. Confirm order and send to kitchen queue.
+5. Move status from waiting to preparing, ready, and called.
+6. Close order after payment or pickup.
+
+Kiosk workflow:
+
+1. Confirm kiosk profile is enabled for the tenant.
+2. Customer selects dine-in, takeaway, or pickup.
+3. Customer chooses menu items and deals.
+4. Customer confirms order.
+5. Queue ticket is created.
+6. Staff prepares and calls order.
+
+Queue display workflow:
+
+- Waiting means order is received.
+- Preparing means kitchen or counter is working.
+- Ready means order can be collected.
+- Called means the customer has been notified.
+
+### Display And Kiosk Operator
+
+Maintains customer-facing screens and public routes.
+
+Primary tasks:
+
+- Open customer display, queue display, menu board, deals board, and promotion
+  display routes.
+- Confirm screens are on the correct tenant, branch, and profile.
+- Keep browser full screen on display devices.
+- Refresh screens after profile, promotion, or menu changes.
+
+Display checklist:
+
+- Customer display shows current cart lines, totals, and receipt context.
+- Queue display shows latest ticket status.
+- Menu screen shows correct branch menu.
+- Deals screen shows active deals only.
+- Promotion screen shows current campaign.
+- No private admin data is visible on public display devices.
+
+### Business Owner Or Manager
+
+Uses dashboards, reports, and audit records to run the business.
+
+Primary tasks:
+
+- Review sales trends, margin, inventory movement, low stock, expiry, refunds,
+  discounts, queue performance, and promotion performance.
+- Compare B2C and B2B sales.
+- Review daily cash and settlement status.
+- Use analytics for branch, category, cashier, and vertical decisions.
+
+Daily dashboard checklist:
+
+- Total sales and order count.
+- Cash, card, wallet, and other payment totals.
+- Top-selling and slow-moving products.
+- Low-stock and near-expiry items.
+- Refunds, exchanges, voids, and high discounts.
+- Queue wait time and restaurant order status.
+- Promotion/deal performance.
+
+## 6. SaaS Feature Flags
+
+Some features should be enabled or disabled per tenant plan. Typical SaaS
+controlled features include:
+
+- B2B selling mode.
+- Queue system and queue display.
+- Customer display.
+- Promotion display.
+- Menu and deals display screens.
+- Kiosk/self-ordering.
+- Advanced analytics.
+- Hardware bridge access.
+
+If a screen is not available, check the tenant plan and feature flag before
+assuming the user has a permission problem.
+
+## 7. Hardware Usage
+
+Supported integration foundation:
+
+- Barcode scanner.
+- QR code and barcode receipt scanning.
+- Receipt printer.
+- Invoice/receipt template printing.
+- Customer display.
+- Cash drawer.
+- Scale.
+- CUPS/ESC-POS/ZPL readiness through the hardware bridge foundation.
+
+Hardware checklist:
+
+1. Confirm the device is connected to the local shop machine.
+2. Confirm the hardware bridge is running if required.
+3. Confirm the device profile is registered.
+4. Run a test print/scan/display job.
+5. Record certification result for real production devices.
+
+Troubleshooting:
+
+- If scanner does not work, test it in a text field first.
+- If receipt does not print, check printer power, paper, queue, and bridge logs.
+- If cash drawer does not open, confirm printer/drawer cable and command profile.
+- If scale does not report weight, confirm serial/USB configuration.
+
+## 8. Reports And Analytics
+
+Use analytics to understand trends, history, and business performance.
+
+Important reports:
+
+- Daily sales summary.
+- Cashier sales report.
+- B2C versus B2B sales.
+- Product/category performance.
+- Inventory movement.
+- Low-stock and expiry report.
+- Refund/exchange report.
+- Discount audit report.
+- Queue and restaurant service report.
+- Promotion/deal performance report.
+- Payment settlement and dispute report.
+- FBR queue readiness report.
+
+Good reporting practice:
+
+- Review operational dashboards daily.
+- Export reports before major stock or price changes.
+- Keep audit records for refunds, high discounts, and stock adjustments.
+- Compare trends by branch, category, cashier, and service type.
+
+## 9. Security Rules For All Users
+
+- Use your own login only.
+- Do not share passwords.
+- Do not save demo passwords in production browsers.
+- Lock the device when leaving the counter or office.
+- Report suspicious refunds, discounts, failed payments, or admin changes.
+- Use production secret managers for real deployments.
+- Keep customer and payment data private.
+
+## 10. Common Problems
+
+| Problem | What To Check |
+|---|---|
+| Cannot log in | Correct database, email, password, and active user status |
+| Menu is missing | User groups, SaaS feature flags, installed modules |
+| POS will not open | POS config, open session, cashier permissions |
+| Product not found | Barcode, product active status, category, POS availability |
+| Wrong price | B2C/B2B mode, price list, product price, discount |
+| Receipt does not print | Printer profile, hardware bridge, browser permissions, paper |
+| Refund cannot find invoice | Invoice barcode, order reference, database, customer |
+| Stock looks wrong | Warehouse/location filter, pending transfers, stock adjustments |
+| Expiry alert missing | Expiry date, tracking settings, alert cron/configuration |
+| Display screen empty | Public route, tenant feature flag, screen profile, active content |
+| FBR submit fails | Adapter mode, credentials, endpoint, provider status, payload |
+
+## 11. Local Demo Notes
+
+The local environment is for development and demonstration:
+
+- Local URL: `http://localhost:8069/web/login?db=tijara_dev`
+- Local DB: `tijara_dev`
+- Local services: Odoo, PostgreSQL, optional hardware bridge and monitoring.
+- Demo credentials are in `docs/TEST_CREDENTIALS.csv`.
+- Generated local secrets are ignored by git.
+- Real production needs real passwords, provider credentials, backups,
+  monitoring, hardware certification, and compliance testing.
+
+## 12. Escalation Guide
+
+Escalate to the tenant admin when:
+
+- User permissions or menus are missing.
+- Product, price, tax, or receipt configuration is wrong.
+- POS session or cash shift is blocked.
+- Discount, refund, or exchange needs approval.
+
+Escalate to the platform superadmin when:
+
+- SaaS feature flags or plans are wrong.
+- Tenant provisioning, billing, or release evidence is blocked.
+- Production monitoring, backups, secrets, or provider integrations fail.
+
+Escalate to technical support when:
+
+- Docker/Odoo services are down.
+- Hardware bridge does not respond.
+- Database, module upgrade, or schema errors appear.
+- Browser E2E, security, load, or deployment checks fail.
+
