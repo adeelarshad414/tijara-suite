@@ -173,7 +173,8 @@ class TestTijaraDisplayRoutes(TransactionCase):
         )
 
         self.assertEqual(order.state, "submitted")
-        self.assertEqual(order.amount_total, 240)
+        self.assertAlmostEqual(order.amount_tax, 43.2)
+        self.assertAlmostEqual(order.amount_total, 283.2)
         self.assertEqual(order.queue_ticket_id.source, "kiosk")
         self.assertEqual(order.queue_ticket_id.state, "waiting")
 

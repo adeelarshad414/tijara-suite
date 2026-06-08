@@ -1,0 +1,3 @@
+<odoo>
+    <function model="tijara.localization.setup" name="ensure_pakistan_defaults"/>
+</odoo>

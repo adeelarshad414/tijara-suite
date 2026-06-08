@@ -8,8 +8,11 @@ class TijaraPosDemoSeed(models.AbstractModel):
     @api.model
     def seed_demo(self):
         company = self.env.company
+        setup = self.env["tijara.localization.setup"].sudo()
+        setup.ensure_pakistan_defaults()
+        standard_sale_tax = setup.get_standard_sale_tax(company)
         category = self._ensure_pos_category("Tijara Demo")
-        products = self._seed_products(category)
+        products = self._seed_products(category, standard_sale_tax)
         customers = self._seed_customers(company)
         screens = self._seed_display_surfaces(company)
         self._seed_promotion(company, products)
@@ -26,7 +29,7 @@ class TijaraPosDemoSeed(models.AbstractModel):
             return category
         return self.env["pos.category"].sudo().create({"name": name})
 
-    def _seed_products(self, pos_category):
+    def _seed_products(self, pos_category, standard_sale_tax=False):
         specs = [
             {
                 "name": "Tijara Demo Basmati Rice 5kg",
@@ -96,7 +99,6 @@ class TijaraPosDemoSeed(models.AbstractModel):
                 "purchase_ok": True,
                 "available_in_pos": True,
                 "pos_categ_ids": [Command.link(pos_category.id)],
-                "taxes_id": [Command.clear()],
                 "supplier_taxes_id": [Command.clear()],
                 "tijara_urdu_name": spec["urdu"],
                 "tijara_local_sku": spec["sku"],
@@ -112,6 +114,8 @@ class TijaraPosDemoSeed(models.AbstractModel):
                 "tijara_allow_refund": True,
                 "tijara_allow_exchange": True,
             }
+            if spec["tax_category"] == "standard" and standard_sale_tax:
+                values["taxes_id"] = [Command.set([standard_sale_tax.id])]
             if template:
                 template.write(values)
             else:

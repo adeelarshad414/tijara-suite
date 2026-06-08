@@ -9463,3 +9463,64 @@ Status: Complete
 - Add or map deterministic Odoo demo users from `docs/TEST_CREDENTIALS.csv`
   into the demo/staging seed path so authenticated screenshot and browser E2E
   flows can run without manual user setup.
+
+## Iteration 128: Pakistan Currency and GST Defaults
+
+### Objective
+
+- Fix the local/demo behavior where Odoo monetary widgets could show USD and
+  demo POS products could run without Pakistan GST, even though the suite is for
+  Pakistan and should use PKR with GST 18%.
+
+### Completed
+
+- Added `tijara.localization.setup` in `tijara_base`.
+- The setup helper activates the `PKR` currency, configures symbol/rounding,
+  assigns PKR to companies when there are no posted accounting entries, and
+  sets Pakistan as the company country when missing.
+- Added a base setup XML function so Pakistan defaults run on install/update.
+- Added a retail-core setup XML function so, after `account` is available, the
+  suite creates `GST 18% Sales (PK)` per company.
+- The GST tax is configured as a sales percentage tax, set as the company
+  default sales tax when the field is available, and assigned to standard
+  saleable products that do not already have a company sales tax.
+- Updated `tijara_demo_pos` so demo products no longer clear sales taxes and
+  instead use the standard GST 18% sale tax.
+- Updated `scripts/e2e_seed.py` so staging/browser seeds apply PKR/GST, export
+  seeded currency/tax metadata, and use GST-inclusive totals for seeded display
+  and report orders.
+- Updated the offline POS browser E2E payload so a PKR 120 item pays PKR 141.60
+  when GST 18% is enabled.
+- Updated the kiosk route test expectation for GST-inclusive totals.
+- Updated `README.md` with the PKR and GST 18% default behavior.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  addons/tijara_base/models/localization_setup.py
+  addons/tijara_demo_pos/models/pos_demo_seed.py` passes.
+- `make validate` passes and parses 76 XML files.
+- `bash scripts/js_check.sh` passes.
+- `git diff --check` passes.
+- `bash scripts/security_audit.sh` still blocks because this local machine has
+  ignored non-example runtime secrets under `secrets/`, which is the expected
+  public-repo safety behavior.
+
+### Known Gaps
+
+- Existing local/staging databases need a module upgrade for `tijara_base`,
+  `tijara_retail_core`, and `tijara_demo_pos` before the corrected PKR/GST data
+  appears in Odoo.
+- Companies that already have posted accounting entries are intentionally not
+  force-switched to PKR to avoid corrupting accounting history.
+- GST 18% is implemented because that is the requested Pakistan demo default;
+  production tax treatment still needs accountant/FBR/provider sign-off per
+  business and province/service scenario.
+
+### Next Iteration
+
+- Start the local stack when needed and upgrade the affected modules in
+  `tijara_dev` to apply PKR/GST defaults to the running demo database.
+- Add a settings screen or admin action for reviewing Pakistan localization
+  defaults, including currency, country, GST tax, and product tax assignment.
+- Add a bilingual Urdu/English quick-start guide for cashiers and tenant admins.

@@ -251,7 +251,10 @@ scanning, CSV bulk import/export, inventory intelligence, analytics/reporting
 foundations, and vertical packs are in place. The Tijara invoice/receipt
 template configuration now renders through backend QWeb PDF/HTML reports for
 customer invoices and POS orders, and the browser POS receipt screen consumes
-the configured POS receipt profile during cashier checkout. The open-source
+the configured POS receipt profile during cashier checkout. Pakistan defaults
+now activate PKR as the company currency where safe, create a GST 18% sales tax
+profile after accounting is available, set it as the default sales tax, and
+apply it to standard demo/staging products. The open-source
 local hardware bridge foundation can accept signed dry-run jobs from Odoo
 hardware records, and configured POS receipt printers can receive the rendered
 browser receipt print payload through the bridge. The bridge now includes

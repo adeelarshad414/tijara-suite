@@ -53,8 +53,11 @@ test("authenticated offline POS capture route replays a paid browser order", asy
 
   await login(page);
   const sourceOrderUid = `e2e-offline-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+  const subtotal = 120;
+  const gstRate = Number(process.env.TIJARA_E2E_GST_RATE || "18");
+  const total = Number((subtotal * (1 + gstRate / 100)).toFixed(2));
   const response = await page.evaluate(
-    async ({ configId, productId, paymentMethodId, sourceOrderUid }) => {
+    async ({ configId, productId, paymentMethodId, sourceOrderUid, total }) => {
       const result = await fetch("/tijara/offline-pos/capture", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,12 +71,12 @@ test("authenticated offline POS capture route replays a paid browser order", asy
             audience: "b2c",
             order_type: "takeaway",
             payment_status: "paid",
-            amount_total: 120,
-            amount_paid: 120,
+            amount_total: total,
+            amount_paid: total,
             payment_method_id: Number(paymentMethodId),
             payments: [
               {
-                amount: 120,
+                amount: total,
                 payment_method_id: Number(paymentMethodId),
                 payment_reference: sourceOrderUid,
                 payment_status: "paid"
@@ -97,7 +100,8 @@ test("authenticated offline POS capture route replays a paid browser order", asy
       configId: process.env.TIJARA_POS_CONFIG_ID,
       productId: process.env.TIJARA_E2E_PRODUCT_ID,
       paymentMethodId: process.env.TIJARA_E2E_PAYMENT_METHOD_ID,
-      sourceOrderUid
+      sourceOrderUid,
+      total
     }
   );
 

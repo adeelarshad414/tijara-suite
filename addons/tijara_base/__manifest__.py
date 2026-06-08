@@ -9,6 +9,7 @@
     "data": [
         "security/tijara_security.xml",
         "security/ir.model.access.csv",
+        "data/pakistan_defaults.xml",
         "views/tijara_menus.xml",
         "views/res_company_views.xml",
         "views/res_partner_views.xml",
@@ -17,4 +18,3 @@
     "installable": True,
     "application": False,
 }
-

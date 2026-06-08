@@ -17,6 +17,7 @@
         "security/ir.model.access.csv",
         "data/tijara_sequences.xml",
         "data/refund_reasons.xml",
+        "data/pakistan_tax_defaults.xml",
         "views/tijara_retail_menus.xml",
         "views/hardware_device_views.xml",
         "views/hardware_certification_views.xml",
