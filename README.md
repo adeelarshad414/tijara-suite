@@ -86,6 +86,10 @@ docs/TEST_CREDENTIALS.csv      Deterministic demo/staging account matrix
 docs/USER_GUIDE_ALL_USERS.md   All-user application usage guide
 docs/Tijara_Suite_All_User_Guide.docx
                                Polished all-user training document
+docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md
+                               Step-by-step visual guide for all roles/functions
+docs/Tijara_Suite_Visual_User_Guide.docx
+                               Polished visual workflow training document
 secrets/                       Ignored local/staging secrets, example included
 scripts/                       Operational helper scripts
 scripts/dev-start.sh           Universal local startup script
@@ -215,14 +219,23 @@ make customer-demo-video
 
 See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
 `docs/TEST_CREDENTIALS.csv`, `docs/USER_GUIDE_ALL_USERS.md`,
-`docs/Tijara_Suite_All_User_Guide.docx`, `docs/LOCAL_SETUP_GUIDE.md`,
-`docs/VIDEO_SCRIPT.md`, and `docs/VOICEOVER_RECORDING_GUIDE.md`.
+`docs/Tijara_Suite_All_User_Guide.docx`,
+`docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`,
+`docs/Tijara_Suite_Visual_User_Guide.docx`,
+`docs/LOCAL_SETUP_GUIDE.md`, `docs/VIDEO_SCRIPT.md`, and
+`docs/VOICEOVER_RECORDING_GUIDE.md`.
 
 The all-user guide covers platform superadmins, tenant admins, cashiers,
 inventory managers, accountants, restaurant operators, display/kiosk operators,
 and business managers, including local access, demo accounts, POS checkout,
 refund/exchange, inventory alerts, SaaS feature flags, hardware usage,
 troubleshooting, and escalation.
+
+The visual guide adds workflow lanes and step cards for first login, tenant
+setup, product setup, POS checkout, refunds/exchanges, restaurant service,
+kiosk, customer display, queue/menu/deal/promotion screens, inventory alerts,
+bulk import/export, hardware, analytics, SaaS controls, settlements, FBR queue,
+offline POS, security, troubleshooting, and escalation.
 
 `make customer-demo-video` generates a customer-facing narrated WebM at
 `docs/PRODUCT_DEMO_CUSTOMER.webm` using local Chrome slide rendering, macOS

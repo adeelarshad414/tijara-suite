@@ -9524,3 +9524,62 @@ Status: Complete
 - Add a settings screen or admin action for reviewing Pakistan localization
   defaults, including currency, country, GST tax, and product tax assignment.
 - Add a bilingual Urdu/English quick-start guide for cashiers and tenant admins.
+
+## Iteration 129: Step-by-Step Visual User Guide
+
+### Objective
+
+- Create a visual guide document that all users can follow to learn the system
+  role by role and workflow by workflow.
+
+### Completed
+
+- Added `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md` as the Markdown source.
+- Added `docs/Tijara_Suite_Visual_User_Guide.docx` as the polished visual
+  training document.
+- Built the guide around visual workflow lanes, role maps, feature-control
+  maps, step cards, success signals, and troubleshooting panels instead of long
+  prose.
+- Covered first login, tenant setup, product/price/tax setup, POS checkout,
+  B2C/B2B mode, bill discounts, refunds/exchanges, restaurant dine-in/
+  takeaway/pickup, kiosk self-ordering, customer display, queue/menu/deals/
+  promotion screens, inventory alerts and stock placement, bulk import/export,
+  hardware setup/testing, analytics/reporting, SaaS feature flags, payments/
+  settlements/chargebacks, FBR queue, offline POS capture/conflict review,
+  security, troubleshooting, and escalation.
+- Included a troubleshooting wall for login, POS, USD/PKR, GST, B2B/B2C price,
+  receipt printing, scanner, refund barcode, display route, and FBR queue
+  issues.
+- Updated `README.md` to link both the Markdown and DOCX visual guide.
+
+### Validation
+
+- Generated the Markdown and DOCX through the visual guide builder.
+- Rendered `docs/Tijara_Suite_Visual_User_Guide.docx` to 15 PNG pages and PDF
+  using the Documents render workflow.
+- Inspected the rendered contact sheet for all pages.
+- Inspected the dense offline/security/troubleshooting pages individually.
+- Fixed an awkward split where the security workflow table continued alone on
+  the next page, then rerendered and rechecked the corrected pages.
+- `file docs/Tijara_Suite_Visual_User_Guide.docx` reports `Microsoft OOXML`.
+- `git diff --check` passes.
+- `make validate` passes and parses 76 XML files.
+- `bash scripts/js_check.sh` passes.
+- `bash scripts/security_audit.sh` still blocks because this local machine has
+  ignored non-example runtime secrets under `secrets/`, which is the expected
+  public-repo safety behavior.
+
+### Known Gaps
+
+- The guide uses visual workflow maps rather than live app screenshots because
+  local services are currently stopped.
+- A screenshot-based version can be produced later after the local/staging app
+  is running with upgraded modules and seeded demo users.
+- A full bilingual Urdu/English guide remains pending.
+
+### Next Iteration
+
+- Start the local stack when needed, upgrade the affected modules, and capture
+  real screenshots for a screenshot-based training edition.
+- Add bilingual Urdu/English cashier and tenant-admin quick-start pages.
+- Add an in-app help/menu entry that links to the visual guide documents.
