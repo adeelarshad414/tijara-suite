@@ -11725,3 +11725,96 @@ Status: Complete
   hardware into the protected release chain artifact bundle.
 - Run the protected browser POS matrix and load/security scans against seeded
   staging, then require those artifacts in the final protected run decision.
+
+## Iteration 155: Protected POS Checkout/Refund/Print/Offline Matrix Gate
+
+### Scope Completed
+
+- Added `scripts/export_protected_pos_matrix_evidence.py`.
+- Added `make protected-pos-matrix-evidence` and
+  `TIJARA_PROTECTED_POS_MATRIX_FLAGS`.
+- The new exporter reads authenticated Playwright results, E2E readiness,
+  E2E execution evidence, browser matrix evidence, protected offline replay,
+  protected offline pilot, and protected E2E orchestration status.
+- The matrix now requires these POS workflows by default:
+  - checkout
+  - refund
+  - print
+  - offline replay
+- The exporter proves each workflow from passed authenticated Playwright specs,
+  reports proof counts, blocks failed/missing workflows, blocks Playwright
+  unexpected/interrupted results, and rejects local/CI evidence in strict
+  staging/production unless explicitly allowed.
+- Wired `.github/workflows/tijara-ci.yml` so the protected workflow:
+  - enables direct POS, refund, validation, mobile offline, and browser matrix
+    flags by default for protected runs
+  - runs the POS matrix after offline replay and offline pilot evidence
+  - uploads `deploy/runtime/protected-pos-matrix/<run-id>`
+  - uploads `deploy/runtime/browser-e2e-matrix/<run-id>`
+  - includes POS matrix evidence in sign-off, release retention, post-run
+    verification, artifact summary, GitHub summary, and protected run decision
+- Updated `scripts/generate_signoff_pack.py` so the sign-off package includes
+  Protected POS Matrix Evidence and release-readiness JSON exposes
+  `protected_pos_matrix_reviews`.
+- Updated protected run-decision defaults so `protected-pos-matrix` is a
+  required component.
+- Updated protected artifact summary, post-run verification, one-command
+  release chain, GitHub step summary, `.env.example`,
+  `deploy/config/github-protected-vars.example`, `README.md`, `DEPLOY.md`,
+  `docs/COMMANDS_QUICKREF.md`, `docs/CONFIGURATION_AND_SECRETS.md`,
+  `docs/PRODUCTION_READINESS_CHECKLIST.md`, `docs/SPEC_MAP.md`, and
+  `docs/SPEC_MAP.json`.
+
+### Evidence Generated
+
+- Local POS matrix validation using the latest successful local E2E run:
+  `deploy/runtime/protected-pos-matrix/20260609-protected-pos-matrix-local/`
+  with `decision=warning`, `ci_status=pass_with_warnings`.
+- The local validation proved all four workflows:
+  - checkout: 3 proof(s)
+  - refund: 4 proof(s)
+  - print: 5 proof(s)
+  - offline replay: 2 proof(s)
+- Strict local rejection smoke:
+  `deploy/runtime/protected-pos-matrix/20260609-protected-pos-matrix-strict-local-block/`
+  correctly returned `decision=blocked`, `ci_status=fail` without local
+  evidence allowance.
+
+### Validation
+
+- `env PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile`
+  passed for the new exporter and touched evidence/signoff tools.
+- Local exporter run parsed
+  `deploy/runtime/e2e-evidence/local-e2e-20260609T073524Z/playwright-results.json`
+  and proved checkout, refund, print, and offline replay.
+- Strict local rejection run failed as expected.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 84%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 84%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 88%
+- Overall production readiness: around 77-81%
+
+### Known Gaps
+
+- The new POS matrix is wired into the protected workflow, but a real
+  self-hosted protected staging run still must execute with seeded users,
+  staging credentials, and protected approvals to replace local evidence.
+- Hardware, FBR, PSP, courier, backup, monitoring, load, and security evidence
+  still require real certified provider/device or protected-runner artifacts.
+
+### Next Iteration
+
+- Dispatch and monitor the protected GitHub Actions run on the
+  `tijara-protected` runner.
+- Attach the resulting protected artifact URL, artifact ID, digest, and POS
+  matrix summary to release evidence.
+- Replace local warning-mode POS matrix proof with real protected staging
+  `ready/pass` evidence.

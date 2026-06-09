@@ -449,6 +449,27 @@ with:
 TIJARA_PROTECTED_E2E_MATRIX=1 make protected-browser-e2e
 ```
 
+To turn the protected run into an explicit cashier-workflow gate, export the POS
+checkout/refund/print/offline replay matrix after protected browser and offline
+evidence:
+
+```bash
+TIJARA_PROTECTED_POS_MATRIX_REQUIRED_WORKFLOWS=checkout,refund,print,offline-replay
+TIJARA_PROTECTED_POS_MATRIX_REQUIRE_BROWSER_MATRIX=1
+TIJARA_PROTECTED_POS_MATRIX_STRICT=1
+TIJARA_PROTECTED_POS_MATRIX_FAIL_ON_WARNING=1
+make protected-pos-matrix-evidence
+```
+
+This writes `protected-pos-matrix-evidence.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
+`deploy/runtime/protected-pos-matrix/<run-id>/`. In strict staging/production it
+rejects local/CI evidence unless `TIJARA_PROTECTED_POS_MATRIX_ALLOW_LOCAL=1` is
+set intentionally, requires a clean Playwright JSON and E2E execution evidence,
+requires every listed workflow to have at least one passed authenticated proof,
+and treats missing browser-matrix/offline support artifacts as release blockers
+when `TIJARA_PROTECTED_POS_MATRIX_FAIL_ON_WARNING=1`.
+
 `make verify-pkr-gst` writes ignored runtime evidence under
 `deploy/runtime/pkr-gst-verification/`, and `make seed-demo-users` writes
 ignored runtime evidence under `deploy/runtime/demo-users/`.
@@ -2363,6 +2384,7 @@ Protected Browser E2E handoff is controlled with:
 TIJARA_PROTECTED_E2E_SEED=0
 TIJARA_PROTECTED_E2E_PROFILE=1
 TIJARA_PROTECTED_E2E_RUN_BROWSER=1
+TIJARA_PROTECTED_E2E_MATRIX=1
 TIJARA_PROTECTED_E2E_EXECUTION_EVIDENCE=1
 TIJARA_PROTECTED_E2E_STRICT=1
 ```
@@ -2447,6 +2469,28 @@ queues, zero conflicts/failures, and queue age within
 `TIJARA_OFFLINE_PILOT_MAX_QUEUE_AGE_THRESHOLD_MINUTES`. The sign-off package
 adds `offline_pilot_reviews` to `release-readiness.json` and an Offline POS
 Pilot Evidence section to `evidence-summary.md`.
+
+Protected POS checkout/refund/print/offline replay matrix evidence is controlled
+with:
+
+```bash
+TIJARA_PROTECTED_POS_MATRIX_REQUIRED_WORKFLOWS=checkout,refund,print,offline-replay
+TIJARA_PROTECTED_POS_MATRIX_REQUIRE_BROWSER_MATRIX=1
+TIJARA_PROTECTED_POS_MATRIX_STRICT=1
+TIJARA_PROTECTED_POS_MATRIX_FAIL_ON_WARNING=1
+TIJARA_PROTECTED_POS_MATRIX_ALLOW_LOCAL=0
+```
+
+`make protected-pos-matrix-evidence` reads
+`deploy/runtime/e2e-evidence/<run-id>/playwright-results.json`,
+`deploy/runtime/e2e-execution/<run-id>/e2e-execution-evidence.json`,
+`deploy/runtime/browser-e2e-matrix/<run-id>/browser-e2e-matrix-evidence.json`,
+and the protected offline replay/pilot artifacts. It outputs
+`protected-pos-matrix-evidence.json`, `status.tsv`, `env-summary.txt`, and
+`summary.md` under `deploy/runtime/protected-pos-matrix/<run-id>/`. The
+protected GitHub workflow now runs this after offline pilot evidence, uploads
+the folder, includes it in release-retention/sign-off evidence paths, and makes
+`protected-pos-matrix` a required protected-run-decision component.
 
 After the protected readiness check, the workflow runs
 `scripts/export_protected_artifact_summary.py`. The generated `summary.md`

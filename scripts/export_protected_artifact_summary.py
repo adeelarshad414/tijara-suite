@@ -19,6 +19,8 @@ INTERESTING_JSON_NAMES = {
     "protected-payment-lifecycle-evidence.json",
     "protected-offline-replay-evidence.json",
     "offline-pos-pilot-evidence.json",
+    "protected-pos-matrix-evidence.json",
+    "browser-e2e-matrix-evidence.json",
     "psp-readiness.json",
     "fbr-readiness.json",
     "protected-post-run-verification.json",

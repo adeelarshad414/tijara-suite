@@ -116,6 +116,9 @@ def _summary_lines(args):
     ci_artifact_bundle, ci_artifact_bundle_source = (
         _read_json(args.ci_artifact_bundle) if args.ci_artifact_bundle else ({}, "")
     )
+    protected_pos_matrix, protected_pos_matrix_source = (
+        _read_json(args.protected_pos_matrix) if args.protected_pos_matrix else ({}, "")
+    )
 
     lines = [
         "# Tijara Protected Release Summary",
@@ -134,6 +137,8 @@ def _summary_lines(args):
         _verdict_row("Protected artifact summary", artifact_summary, artifact_summary_source),
         _verdict_row("Protected run decision", run_decision, run_decision_source),
     ]
+    if args.protected_pos_matrix:
+        lines.append(_verdict_row("Protected POS matrix", protected_pos_matrix, protected_pos_matrix_source))
     if args.protected_release_chain:
         lines.append(_verdict_row("Protected release chain", protected_chain, protected_chain_source))
     if args.ci_artifact_bundle:
@@ -259,6 +264,13 @@ def _summary_lines(args):
             warnings.append("ci-artifact-bundle: evidence JSON is missing")
         if ci_artifact_bundle.get("_read_error"):
             blockers.append("ci-artifact-bundle: could not read evidence JSON: %s" % ci_artifact_bundle["_read_error"])
+    if args.protected_pos_matrix:
+        blockers.extend("protected-pos-matrix: %s" % item for item in protected_pos_matrix.get("blockers") or [])
+        warnings.extend("protected-pos-matrix: %s" % item for item in protected_pos_matrix.get("warnings") or [])
+        if protected_pos_matrix.get("_missing"):
+            warnings.append("protected-pos-matrix: evidence JSON is missing")
+        if protected_pos_matrix.get("_read_error"):
+            blockers.append("protected-pos-matrix: could not read evidence JSON: %s" % protected_pos_matrix["_read_error"])
 
     blocker_items, blocker_extra = _limit(blockers, args.max_items)
     warning_items, warning_extra = _limit(warnings, args.max_items)
@@ -326,6 +338,7 @@ def main():
     parser.add_argument("--bundle-drift", default=os.environ.get("TIJARA_SUMMARY_BUNDLE_DRIFT", ""))
     parser.add_argument("--protected-release-chain", default=os.environ.get("TIJARA_SUMMARY_PROTECTED_RELEASE_CHAIN", ""))
     parser.add_argument("--ci-artifact-bundle", default=os.environ.get("TIJARA_SUMMARY_CI_ARTIFACT_BUNDLE", ""))
+    parser.add_argument("--protected-pos-matrix", default=os.environ.get("TIJARA_SUMMARY_PROTECTED_POS_MATRIX", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
     parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
@@ -398,6 +411,10 @@ def main():
         default_bundle = "deploy/runtime/protected-release-chain/%s/ci-artifact-bundle.json" % args.run_id
         if _resolve(default_bundle).is_file():
             args.ci_artifact_bundle = default_bundle
+    if not args.protected_pos_matrix:
+        default_pos_matrix = "deploy/runtime/protected-pos-matrix/%s/protected-pos-matrix-evidence.json" % args.run_id
+        if _resolve(default_pos_matrix).is_file():
+            args.protected_pos_matrix = default_pos_matrix
 
     summary = _summary_lines(args)
     if args.output:

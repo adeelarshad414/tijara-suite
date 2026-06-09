@@ -153,6 +153,8 @@ Required for production:
 - [ ] `make test-odoo` passed.
 - [ ] `make e2e` passed.
 - [ ] `make protected-browser-e2e-matrix` passed.
+- [ ] `make protected-pos-matrix-evidence` passed for checkout, refund, print,
+      and offline replay with strict staging/protected evidence.
 - [ ] `make load-smoke` passed.
 - [ ] `make monitoring-evidence` passed.
 - [ ] `make production-ops-readiness` passed.

@@ -732,6 +732,14 @@ The detailed policy and dependency intake checklist are maintained in
   and `npm run test:e2e:execution` correlate seed, profile, readiness,
   Playwright JSON, E2E summary, sign-off readiness, and staging orchestration
   evidence under one Browser E2E execution decision.
+- `scripts/export_protected_pos_matrix_evidence.py` and
+  `make protected-pos-matrix-evidence` export the protected POS
+  checkout/refund/print/offline replay matrix under
+  `deploy/runtime/protected-pos-matrix/`. The exporter proves each workflow
+  from authenticated Playwright results, ties in Browser E2E matrix and offline
+  replay/pilot artifacts, rejects local evidence in strict staging/production,
+  and is included in protected run decision, sign-off, post-run verification,
+  artifact upload, and GitHub summaries.
 - `scripts/export_staging_e2e_profile.py`, `make staging-e2e-profile`, and
   `npm run test:e2e:profile` validate live staging E2E profile readiness,
   including seed env/evidence, required credentials, selected specs, optional

@@ -378,12 +378,16 @@ def _evidence_group(entry):
         or "e2e-seed/" in relative_lower
         or "e2e-profile/" in relative_lower
         or "e2e-execution/" in relative_lower
+        or "browser-e2e-matrix/" in relative_lower
+        or "protected-pos-matrix" in relative_lower
         or "protected-e2e" in relative_lower
         or filename in {
             "e2e-readiness.json",
             "e2e-seed-evidence.json",
             "staging-e2e-profile.json",
             "e2e-execution-evidence.json",
+            "browser-e2e-matrix-evidence.json",
+            "protected-pos-matrix-evidence.json",
         }
     ):
         return "Browser E2E"
@@ -897,6 +901,49 @@ def _e2e_execution_reviews(evidence_entries):
                 "playwright_skipped": (playwright.get("stats") or {}).get("skipped", 0),
                 "signoff_decision": signoff.get("decision", ""),
                 "orchestration_failed_steps": orchestration.get("failed_steps") or [],
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
+def _protected_pos_matrix_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "protected-pos-matrix-evidence.json":
+            continue
+        payload = _read_json(path)
+        context = payload.get("context") or {}
+        evidence_reviews = payload.get("evidence_reviews") or {}
+        workflow_reviews = payload.get("workflow_reviews") or []
+        workflow_statuses = {
+            item.get("workflow", ""): item.get("status", "")
+            for item in workflow_reviews
+            if item.get("workflow")
+        }
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "run_id": context.get("run_id", ""),
+                "target_environment": context.get("target_environment", ""),
+                "strict": bool(context.get("strict")),
+                "fail_on_warning": bool(context.get("fail_on_warning")),
+                "require_browser_matrix": bool(context.get("require_browser_matrix")),
+                "required_workflows": payload.get("required_workflows") or [],
+                "proven_workflows": payload.get("proven_workflows") or [],
+                "workflow_statuses": workflow_statuses,
+                "workflow_reviews": workflow_reviews,
+                "playwright_stats": (payload.get("playwright") or {}).get("stats") or {},
+                "readiness_state": (evidence_reviews.get("readiness") or {}).get("state", ""),
+                "execution_state": (evidence_reviews.get("execution") or {}).get("state", ""),
+                "browser_matrix_state": (evidence_reviews.get("browser_matrix") or {}).get("state", ""),
+                "offline_replay_state": (evidence_reviews.get("offline_replay") or {}).get("state", ""),
+                "offline_pilot_state": (evidence_reviews.get("offline_pilot") or {}).get("state", ""),
+                "orchestration_failed_steps": (evidence_reviews.get("orchestration") or {}).get("failed_steps") or [],
                 "blockers": payload.get("blockers") or [],
                 "warnings": payload.get("warnings") or [],
             }
@@ -1627,6 +1674,7 @@ def _evidence_summary(context, evidence_entries):
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
+    protected_pos_matrix_reviews = _protected_pos_matrix_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     ops_harness_reviews = _ops_harness_reviews(evidence_entries)
     offline_pilot_reviews = _offline_pilot_reviews(evidence_entries)
@@ -2009,6 +2057,66 @@ def _evidence_summary(context, evidence_entries):
         e2e_execution_lines.append("")
     if not e2e_execution_lines:
         e2e_execution_lines = ["- No `e2e-execution-evidence.json` files were attached.", ""]
+
+    protected_pos_matrix_lines = []
+    for review in protected_pos_matrix_reviews:
+        stats = review["playwright_stats"]
+        protected_pos_matrix_lines.append("### `%s`" % review["path"])
+        protected_pos_matrix_lines.append("- Decision: %s" % (review["decision"] or "unknown"))
+        protected_pos_matrix_lines.append("- CI status: %s" % (review["ci_status"] or "unknown"))
+        protected_pos_matrix_lines.append(
+            "- Run/environment/strict/fail-on-warning/browser-matrix-required: %s/%s/%s/%s/%s"
+            % (
+                review["run_id"] or "unset",
+                review["target_environment"] or "unset",
+                "yes" if review["strict"] else "no",
+                "yes" if review["fail_on_warning"] else "no",
+                "yes" if review["require_browser_matrix"] else "no",
+            )
+        )
+        protected_pos_matrix_lines.append(
+            "- Required/proven workflows: %s / %s"
+            % (
+                ", ".join(review["required_workflows"]) or "none",
+                ", ".join(review["proven_workflows"]) or "none",
+            )
+        )
+        protected_pos_matrix_lines.append(
+            "- Workflow statuses: %s"
+            % (
+                ", ".join(
+                    "%s=%s" % (workflow, status)
+                    for workflow, status in sorted(review["workflow_statuses"].items())
+                )
+                or "none"
+            )
+        )
+        protected_pos_matrix_lines.append(
+            "- Playwright expected/unexpected/interrupted/skipped: %s/%s/%s/%s"
+            % (
+                stats.get("expected", 0),
+                stats.get("unexpected", 0),
+                stats.get("interrupted", 0),
+                stats.get("skipped", 0),
+            )
+        )
+        protected_pos_matrix_lines.append(
+            "- Supporting states readiness/execution/browser-matrix/offline-replay/offline-pilot: %s/%s/%s/%s/%s"
+            % (
+                review["readiness_state"] or "unset",
+                review["execution_state"] or "unset",
+                review["browser_matrix_state"] or "unset",
+                review["offline_replay_state"] or "unset",
+                review["offline_pilot_state"] or "unset",
+            )
+        )
+        protected_pos_matrix_lines.append(
+            "- Failed orchestration steps: %s"
+            % (", ".join(review["orchestration_failed_steps"]) or "none")
+        )
+        protected_pos_matrix_lines.append("")
+    if not protected_pos_matrix_lines:
+        protected_pos_matrix_lines = ["- No `protected-pos-matrix-evidence.json` files were attached.", ""]
 
     e2e_readiness_lines = []
     for review in e2e_readiness_reviews:
@@ -2659,6 +2767,9 @@ def _evidence_summary(context, evidence_entries):
 ## Browser E2E Execution Evidence
 
 {chr(10).join(e2e_execution_lines)}
+## Protected POS Matrix Evidence
+
+{chr(10).join(protected_pos_matrix_lines)}
 ## Browser E2E Readiness Evidence
 
 {chr(10).join(e2e_readiness_lines)}
@@ -2735,6 +2846,7 @@ def _release_readiness(context, evidence_entries, group_counts):
     e2e_seed_reviews = _e2e_seed_reviews(evidence_entries)
     e2e_profile_reviews = _e2e_profile_reviews(evidence_entries)
     e2e_execution_reviews = _e2e_execution_reviews(evidence_entries)
+    protected_pos_matrix_reviews = _protected_pos_matrix_reviews(evidence_entries)
     e2e_readiness_reviews = _e2e_readiness_reviews(evidence_entries)
     ops_harness_reviews = _ops_harness_reviews(evidence_entries)
     offline_pilot_reviews = _offline_pilot_reviews(evidence_entries)
@@ -2914,6 +3026,19 @@ def _release_readiness(context, evidence_entries, group_counts):
             blockers.append("Browser E2E execution %s is %s" % (review["path"], review["decision"]))
         elif decision in {"warning", "warn"}:
             warnings.append("Browser E2E execution %s is %s" % (review["path"], review["decision"]))
+
+    for review in protected_pos_matrix_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"blocked", "failed"}:
+            blockers.append("Protected POS matrix %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Protected POS matrix %s is %s" % (review["path"], review["decision"]))
+        for workflow, status in sorted((review.get("workflow_statuses") or {}).items()):
+            if str(status or "").lower() in {"failed", "blocked"}:
+                blockers.append(
+                    "Protected POS matrix workflow %s in %s is %s"
+                    % (workflow, review["path"], status)
+                )
 
     for review in e2e_readiness_reviews:
         decision = str(review.get("decision") or "").lower()
@@ -3121,6 +3246,7 @@ def _release_readiness(context, evidence_entries, group_counts):
         "e2e_seed_reviews": e2e_seed_reviews,
         "e2e_profile_reviews": e2e_profile_reviews,
         "e2e_execution_reviews": e2e_execution_reviews,
+        "protected_pos_matrix_reviews": protected_pos_matrix_reviews,
         "e2e_readiness_reviews": e2e_readiness_reviews,
         "ops_harness_reviews": ops_harness_reviews,
         "offline_pilot_reviews": offline_pilot_reviews,

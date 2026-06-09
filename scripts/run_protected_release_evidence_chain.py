@@ -28,6 +28,8 @@ INTERESTING_JSON_NAMES = {
     "infra-provider-readiness.json",
     "production-ops-readiness.json",
     "release-readiness.json",
+    "protected-pos-matrix-evidence.json",
+    "browser-e2e-matrix-evidence.json",
     "deployment-decision.json",
     "rollback-decision.json",
     "ci-artifact-bundle.json",
@@ -46,10 +48,12 @@ DEFAULT_PROTECTED_EVIDENCE_DIRS = [
     "deploy/runtime/protected-e2e/{run_id}",
     "deploy/runtime/protected-offline-replay/{run_id}",
     "deploy/runtime/protected-offline-pilot/{run_id}",
+    "deploy/runtime/protected-pos-matrix/{run_id}",
     "deploy/runtime/e2e-seed/{run_id}",
     "deploy/runtime/e2e-profile/{run_id}",
     "deploy/runtime/e2e-evidence/{run_id}",
     "deploy/runtime/e2e-execution/{run_id}",
+    "deploy/runtime/browser-e2e-matrix/{run_id}",
     "deploy/runtime/certification-evidence/{run_id}",
 ]
 

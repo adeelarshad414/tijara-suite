@@ -186,6 +186,7 @@ docker compose --env-file .env --env-file secrets/.env.secrets down -v
 | Protected service checks | `make protected-service-checks` |
 | Protected browser E2E evidence | `make protected-browser-e2e` |
 | Protected browser matrix evidence | `make protected-browser-e2e-matrix` |
+| Protected POS checkout/refund/print/offline matrix evidence | `make protected-pos-matrix-evidence` |
 | One-command protected release chain | `make protected-release-chain` |
 | Local assumption-mode chain smoke | `TIJARA_PROTECTED_CHAIN_FLAGS="--run-id local-chain --target-environment local --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --allow-assumptions --assume-provider all --non-strict --signoff-required-group ops" make protected-release-chain` |
 | Protected release closure | `make protected-release-closure` |
