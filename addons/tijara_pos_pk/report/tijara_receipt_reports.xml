@@ -41,6 +41,18 @@
             <field name="domain" eval="[('move_type', 'in', ('out_invoice', 'out_refund'))]"/>
         </record>
 
+        <record id="action_report_tijara_inventory_label" model="ir.actions.report">
+            <field name="name">Tijara Inventory Label</field>
+            <field name="model">product.template</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">tijara_pos_pk.report_tijara_inventory_label</field>
+            <field name="report_file">tijara_pos_pk.report_tijara_inventory_label</field>
+            <field name="print_report_name">'Tijara Label - %s' % (object.default_code or object.name)</field>
+            <field name="binding_model_id" ref="product.model_product_template"/>
+            <field name="binding_type">report</field>
+            <field name="paperformat_id" ref="paperformat_tijara_receipt_80mm"/>
+        </record>
+
         <template id="report_tijara_pos_receipt">
             <t t-call="web.html_container">
                 <t t-foreach="docs" t-as="doc">
@@ -59,13 +71,103 @@
             </t>
         </template>
 
+        <template id="report_tijara_inventory_label">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-set="profile" t-value="doc.tijara_get_inventory_label_profile()"/>
+                    <t t-set="barcode_url" t-value="doc.tijara_inventory_barcode_url(profile, 'Code128', 480, 100)"/>
+                    <t t-set="qr_url" t-value="doc.tijara_inventory_barcode_url(profile, 'QR', 160, 160)"/>
+                    <div t-attf-class="page tijara-inventory-label tijara-width-#{profile.printer_width if profile else '80'} tijara-language-#{profile.language_mode if profile else 'en'}">
+                        <style>
+                            .tijara-inventory-label {
+                                color: #111827;
+                                font-family: Arial, Helvetica, sans-serif;
+                                font-size: 11px;
+                                line-height: 1.25;
+                                margin: 0 auto;
+                                max-width: 74mm;
+                                padding: 4px;
+                            }
+                            .tijara-inventory-label.tijara-width-a4,
+                            .tijara-inventory-label.tijara-width-custom {
+                                max-width: 95mm;
+                            }
+                            .tijara-label-title {
+                                font-size: 14px;
+                                font-weight: 700;
+                                text-align: center;
+                            }
+                            .tijara-label-urdu {
+                                direction: rtl;
+                                font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", Arial, Helvetica, sans-serif;
+                                font-size: 13px;
+                                font-weight: 700;
+                                text-align: center;
+                            }
+                            .tijara-label-meta {
+                                border-top: 1px solid #d1d5db;
+                                margin-top: 5px;
+                                padding-top: 5px;
+                            }
+                            .tijara-label-code {
+                                color: #4b5563;
+                                font-size: 10px;
+                                text-align: center;
+                            }
+                            .tijara-label-barcode,
+                            .tijara-label-qr {
+                                margin-top: 5px;
+                                text-align: center;
+                            }
+                            .tijara-label-barcode img,
+                            .tijara-label-qr img {
+                                max-width: 100%;
+                            }
+                        </style>
+                        <t t-if="profile and profile.custom_css">
+                            <style><t t-out="profile.custom_css"/></style>
+                        </t>
+                        <div t-if="not profile or profile.tijara_show_english()" class="tijara-label-title" t-out="doc.tijara_inventory_label_english_name()"/>
+                        <div t-if="profile and profile.tijara_show_urdu() and doc.tijara_inventory_label_urdu_name()" class="tijara-label-urdu" t-out="doc.tijara_inventory_label_urdu_name()"/>
+                        <div class="tijara-label-meta">
+                            <div t-if="doc.default_code">
+                                <strong>SKU:</strong>
+                                <span t-out="doc.default_code"/>
+                            </div>
+                            <div t-if="doc.tijara_retail_unit">
+                                <strong>Unit:</strong>
+                                <span t-out="doc.tijara_retail_unit"/>
+                            </div>
+                            <div>
+                                <strong>Price:</strong>
+                                <span t-out="doc.list_price" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                            </div>
+                            <div t-if="doc.tijara_tax_category">
+                                <strong>Tax:</strong>
+                                <span t-out="doc.tijara_tax_category_label()"/>
+                            </div>
+                        </div>
+                        <div t-if="(profile.show_barcode if profile else True) and barcode_url" class="tijara-label-barcode">
+                            <img t-att-src="barcode_url"/>
+                            <div class="tijara-label-code" t-out="doc.tijara_inventory_barcode_value(profile)"/>
+                        </div>
+                        <div t-if="(profile.show_qr if profile else True) and qr_url" class="tijara-label-qr">
+                            <img t-att-src="qr_url"/>
+                        </div>
+                        <div t-if="profile and profile.footer_english and profile.tijara_show_english()" class="tijara-label-code" t-out="profile.footer_english"/>
+                        <div t-if="profile and profile.footer_urdu and profile.tijara_show_urdu()" class="tijara-label-urdu" t-out="profile.footer_urdu"/>
+                    </div>
+                </t>
+            </t>
+        </template>
+
         <template id="report_tijara_document_body">
             <t t-set="lines" t-value="doc.tijara_report_lines()"/>
             <t t-set="payments" t-value="doc.tijara_payment_summary()"/>
             <t t-set="barcode_url" t-value="doc.tijara_barcode_url(profile, 'Code128', 600, 120)"/>
             <t t-set="qr_url" t-value="doc.tijara_barcode_url(profile, 'QR', 180, 180)"/>
             <t t-set="show_discount" t-value="(profile.show_discount_breakdown if profile else True) and any(line.get('discount') for line in lines)"/>
-            <div t-attf-class="page tijara-document tijara-layout-#{profile.template_layout if profile else 'standard'} tijara-width-#{profile.printer_width if profile else 'a4'}">
+            <div t-attf-class="page tijara-document tijara-layout-#{profile.template_layout if profile else 'standard'} tijara-width-#{profile.printer_width if profile else 'a4'} tijara-language-#{profile.language_mode if profile else 'en'}">
                 <style>
                     .tijara-document {
                         color: #111827;
@@ -90,7 +192,7 @@
                     }
                     .tijara-urdu {
                         direction: rtl;
-                        font-family: Arial, Helvetica, sans-serif;
+                        font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", Arial, Helvetica, sans-serif;
                         text-align: right;
                     }
                     .tijara-muted {
@@ -146,25 +248,49 @@
                     <t t-if="(profile.show_logo if profile else True) and doc.company_id.logo">
                         <img t-att-src="image_data_uri(doc.company_id.logo)" style="max-height: 56px; max-width: 160px;"/>
                     </t>
-                    <h1>
+                    <h1 t-if="not profile or profile.tijara_show_english()">
                         <t t-if="profile and profile.receipt_title_english" t-out="profile.receipt_title_english"/>
                         <t t-else="">Tijara Document</t>
                     </h1>
-                    <div t-if="profile and profile.receipt_title_urdu" class="tijara-urdu" t-out="profile.receipt_title_urdu"/>
+                    <div t-if="profile and profile.tijara_show_urdu() and profile.receipt_title_urdu" class="tijara-urdu" t-out="profile.receipt_title_urdu"/>
                     <div><strong t-out="doc.company_id.display_name"/></div>
                     <div class="tijara-muted" t-if="(profile.show_company_ntn_strn if profile else True)">
                         <span t-if="doc.company_id.tijara_ntn">NTN: <t t-out="doc.company_id.tijara_ntn"/></span>
                         <span t-if="doc.company_id.tijara_strn"> STRN: <t t-out="doc.company_id.tijara_strn"/></span>
                     </div>
-                    <div t-if="profile and profile.header_english" t-out="profile.header_english"/>
-                    <div t-if="profile and profile.header_urdu" class="tijara-urdu" t-out="profile.header_urdu"/>
+                    <div t-if="profile and profile.tijara_show_english() and profile.header_english" t-out="profile.header_english"/>
+                    <div t-if="profile and profile.tijara_show_urdu() and profile.header_urdu" class="tijara-urdu" t-out="profile.header_urdu"/>
                 </div>
 
                 <div class="tijara-meta">
-                    <div><strong>No:</strong> <span t-out="doc.tijara_document_number()"/></div>
-                    <div><strong>Date:</strong> <span t-out="doc.tijara_document_date()"/></div>
-                    <div t-if="profile.show_customer if profile else True"><strong>Customer:</strong> <span t-out="doc.tijara_document_partner_name()"/></div>
-                    <div t-if="profile.show_cashier if profile else True"><strong>Cashier:</strong> <span t-out="doc.tijara_document_user_name()"/></div>
+                    <div>
+                        <strong>
+                            <t t-if="not profile or profile.tijara_show_english()">No:</t>
+                            <span t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">نمبر:</span>
+                        </strong>
+                        <span t-out="doc.tijara_document_number()"/>
+                    </div>
+                    <div>
+                        <strong>
+                            <t t-if="not profile or profile.tijara_show_english()">Date:</t>
+                            <span t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">تاریخ:</span>
+                        </strong>
+                        <span t-out="doc.tijara_document_date()"/>
+                    </div>
+                    <div t-if="profile.show_customer if profile else True">
+                        <strong>
+                            <t t-if="not profile or profile.tijara_show_english()">Customer:</t>
+                            <span t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">کسٹمر:</span>
+                        </strong>
+                        <span t-out="doc.tijara_document_partner_name()"/>
+                    </div>
+                    <div t-if="profile.show_cashier if profile else True">
+                        <strong>
+                            <t t-if="not profile or profile.tijara_show_english()">Cashier:</t>
+                            <span t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">کیشئر:</span>
+                        </strong>
+                        <span t-out="doc.tijara_document_user_name()"/>
+                    </div>
                 </div>
 
                 <div t-if="profile and profile.template_layout == 'custom' and profile.custom_body_html" class="tijara-custom-body" t-out="doc.tijara_render_custom_body(profile)"/>
@@ -172,16 +298,34 @@
                 <table class="tijara-table">
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th class="tijara-right">Qty</th>
-                            <th class="tijara-right">Rate</th>
-                            <th t-if="show_discount" class="tijara-right">Disc</th>
-                            <th class="tijara-right">Total</th>
+                            <th>
+                                <t t-if="not profile or profile.tijara_show_english()">Description</t>
+                                <div t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">تفصیل</div>
+                            </th>
+                            <th class="tijara-right">
+                                <t t-if="not profile or profile.tijara_show_english()">Qty</t>
+                                <div t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">تعداد</div>
+                            </th>
+                            <th class="tijara-right">
+                                <t t-if="not profile or profile.tijara_show_english()">Rate</t>
+                                <div t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">ریٹ</div>
+                            </th>
+                            <th t-if="show_discount" class="tijara-right">
+                                <t t-if="not profile or profile.tijara_show_english()">Disc</t>
+                                <div t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">رعایت</div>
+                            </th>
+                            <th class="tijara-right">
+                                <t t-if="not profile or profile.tijara_show_english()">Total</t>
+                                <div t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">کل</div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr t-foreach="lines" t-as="line">
-                            <td t-out="line['name']"/>
+                            <td>
+                                <div t-if="not profile or profile.tijara_show_english()" t-out="line.get('name_english') or line.get('name')"/>
+                                <div t-if="profile and profile.tijara_show_urdu() and line.get('name_urdu')" class="tijara-urdu" t-out="line.get('name_urdu')"/>
+                            </td>
                             <td class="tijara-right" t-out="line['quantity']"/>
                             <td class="tijara-right">
                                 <span t-out="line['price_unit']" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
@@ -198,15 +342,22 @@
 
                 <div class="tijara-totals">
                     <div class="tijara-right" t-if="profile.show_tax_breakdown if profile else True">
-                        Tax: <span t-out="doc.amount_tax" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                        <t t-if="not profile or profile.tijara_show_english()">Tax:</t>
+                        <span t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">ٹیکس:</span>
+                        <span t-out="doc.amount_tax" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
                     </div>
                     <div class="tijara-right tijara-total-row">
-                        Total: <span t-out="doc.amount_total" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                        <t t-if="not profile or profile.tijara_show_english()">Total:</t>
+                        <span t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">کل رقم:</span>
+                        <span t-out="doc.amount_total" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
                     </div>
                 </div>
 
                 <div t-if="(profile.show_payment_summary if profile else True) and payments" class="tijara-payment-summary">
-                    <strong>Payment Summary</strong>
+                    <strong>
+                        <t t-if="not profile or profile.tijara_show_english()">Payment Summary</t>
+                        <span t-if="profile and profile.tijara_show_urdu()" class="tijara-urdu">ادائیگی کی تفصیل</span>
+                    </strong>
                     <div t-foreach="payments" t-as="payment">
                         <span t-out="payment['name']"/>:
                         <span t-out="payment['amount']" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
@@ -222,12 +373,12 @@
                 </div>
 
                 <div class="tijara-policy" t-if="profile and profile.show_return_policy">
-                    <div t-if="profile.terms_english" t-out="profile.terms_english"/>
-                    <div t-if="profile.terms_urdu" class="tijara-urdu" t-out="profile.terms_urdu"/>
+                    <div t-if="profile.tijara_show_english() and profile.terms_english" t-out="profile.terms_english"/>
+                    <div t-if="profile.tijara_show_urdu() and profile.terms_urdu" class="tijara-urdu" t-out="profile.terms_urdu"/>
                 </div>
                 <div class="tijara-center tijara-muted">
-                    <div t-if="profile and profile.footer_english" t-out="profile.footer_english"/>
-                    <div t-if="profile and profile.footer_urdu" class="tijara-urdu" t-out="profile.footer_urdu"/>
+                    <div t-if="profile and profile.tijara_show_english() and profile.footer_english" t-out="profile.footer_english"/>
+                    <div t-if="profile and profile.tijara_show_urdu() and profile.footer_urdu" class="tijara-urdu" t-out="profile.footer_urdu"/>
                 </div>
             </div>
         </template>

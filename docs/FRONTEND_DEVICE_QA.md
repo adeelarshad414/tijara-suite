@@ -12,6 +12,10 @@ display, promotion/deals display, menu display, and back-office workflows.
 - Barcode scanner input must work as keyboard-wedge input without stealing focus
   from payment, search, or quantity controls.
 - Numeric entry must be usable from touch keyboards and physical keyboards.
+- POS cashier workflows must remain operable with keyboard only when touch or
+  mouse input is unavailable: product lookup/scanner input, Enter flow,
+  payment navigation, receipt print, quantity changes, B2B/B2C switch, and
+  service-mode cycling.
 - Critical cashier flows must avoid horizontal scrolling.
 - Dialogs, drawers, and popovers must fit at 360 px width.
 - Text must wrap cleanly and must not overlap buttons, price fields, order
@@ -47,11 +51,15 @@ POS:
 
 - Product grid, search, cart, quantity, discount, customer, payment, refund, and
   exchange actions are reachable by touch.
-- B2B/B2C mode and dine-in/takeaway/pickup controls are visible without layout
-  collisions.
+- B2B/B2C mode and dine-in/takeaway/pickup/delivery controls are visible
+  without layout collisions and remain keyboard reachable.
 - Receipt, QR, barcode, and customer-facing totals are readable.
 - Browser POS receipt screens render configured Tijara receipt profile content,
   including Urdu text and custom body tokens, without breaking checkout.
+- POS keyboard cashier mode supports scanner-style typed product lookup,
+  `Enter` primary action flow, `F2` search focus, `F4` payment, `F5` receipt
+  print, `F7` B2B/B2C toggle, `F8` service-mode cycle, arrow line selection,
+  plus/minus quantity changes, and delete/backspace line removal.
 - Browser-bridge device actions can health-check the local bridge and submit a
   signed dry-run job without exposing Odoo database credentials.
 - When a bridge receipt printer is assigned to POS configuration, the POS
@@ -102,15 +110,17 @@ Playwright or browser tests should cover:
 - Login and back-office navigation.
 - POS load and product search.
 - POS checkout to receipt with Tijara receipt profile rendering.
+- Keyboard-only POS checkout path, including product scan/search, quantity
+  adjustment, payment navigation, and receipt print.
 - Hardware bridge health and signed dry-run job submission.
 - POS receipt print-to-bridge submission and bridge print audit fields.
 - B2B/B2C price mode switching.
-- Dine-in/takeaway/pickup selection.
+- Dine-in/takeaway/pickup/delivery selection.
 - Kiosk order creation.
 - Queue display update.
 - Customer display totals update.
 - Refund and exchange workflow.
-- Urdu receipt/display rendering.
+- Urdu receipt/display rendering and Urdu/bilingual inventory-label rendering.
 
 The `tijara_pos_experience` module includes
 `static/src/scss/touch_responsive.scss` as the shared touch baseline for future

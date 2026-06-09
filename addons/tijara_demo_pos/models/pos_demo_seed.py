@@ -17,6 +17,7 @@ class TijaraPosDemoSeed(models.AbstractModel):
         customers = self._seed_customers(company)
         screens = self._seed_display_surfaces(company)
         receipt_profiles = self._seed_receipt_invoice_templates(company)
+        self._assign_inventory_label_profile(products, receipt_profiles.get("inventory_label"))
         self._seed_promotion(company, products)
         self._seed_display_content(company, screens, products)
         config = self._seed_pos_config(company, screens, receipt_profiles)
@@ -396,8 +397,11 @@ class TijaraPosDemoSeed(models.AbstractModel):
                 "receipt_title_english": "Tijara Sales Receipt",
                 "receipt_title_urdu": "تجارہ سیلز رسید",
                 "header_english": "Demo receipt for cashier, refund, exchange, GST, loyalty, and FBR readiness testing.",
+                "header_urdu": "کیشئر، ری فنڈ، ایکسچینج، جی ایس ٹی، لائلٹی اور ایف بی آر ٹیسٹنگ کے لیے ڈیمو رسید۔",
                 "footer_english": "Thank you for shopping with us.",
+                "footer_urdu": "خریداری کا شکریہ۔",
                 "terms_english": "Refunds and exchanges require the invoice barcode/QR and manager approval where configured.",
+                "terms_urdu": "ری فنڈ اور ایکسچینج کے لیے انوائس بارکوڈ/کیو آر اور جہاں لازم ہو منیجر منظوری درکار ہے۔",
             },
             {
                 "name": "Tijara Demo A4 Customer Invoice",
@@ -408,8 +412,11 @@ class TijaraPosDemoSeed(models.AbstractModel):
                 "receipt_title_english": "Tijara Customer Invoice",
                 "receipt_title_urdu": "تجارہ کسٹمر انوائس",
                 "header_english": "A4 invoice template for B2B/B2C sales, customer details, GST, barcode, and QR testing.",
+                "header_urdu": "بی ٹو بی/بی ٹو سی سیلز، کسٹمر تفصیل، جی ایس ٹی، بارکوڈ اور کیو آر ٹیسٹنگ کے لیے A4 انوائس۔",
                 "footer_english": "This public-demo template is safe to customize per tenant.",
+                "footer_urdu": "یہ پبلک ڈیمو ٹیمپلیٹ ہر ٹیننٹ کے لیے محفوظ طریقے سے تبدیل کیا جا سکتا ہے۔",
                 "terms_english": "Payment, delivery, and return terms are configurable by tenant.",
+                "terms_urdu": "ادائیگی، ڈیلیوری اور واپسی کی شرائط ہر ٹیننٹ کے مطابق سیٹ ہو سکتی ہیں۔",
             },
             {
                 "name": "Tijara Demo Refund Exchange Slip",
@@ -420,8 +427,11 @@ class TijaraPosDemoSeed(models.AbstractModel):
                 "receipt_title_english": "Refund / Exchange Slip",
                 "receipt_title_urdu": "ری فنڈ / ایکسچینج سلپ",
                 "header_english": "Refund and exchange evidence linked to invoice barcode scanning.",
+                "header_urdu": "انوائس بارکوڈ اسکیننگ سے منسلک ری فنڈ اور ایکسچینج ثبوت۔",
                 "footer_english": "Keep this slip with the original invoice.",
+                "footer_urdu": "یہ سلپ اصل انوائس کے ساتھ رکھیں۔",
                 "terms_english": "Returned items must follow tenant policy and approval controls.",
+                "terms_urdu": "واپس کی گئی اشیا ٹیننٹ پالیسی اور منظوری کنٹرولز کے مطابق ہوں۔",
             },
             {
                 "name": "Tijara Demo Quotation",
@@ -432,8 +442,26 @@ class TijaraPosDemoSeed(models.AbstractModel):
                 "receipt_title_english": "Tijara Quotation",
                 "receipt_title_urdu": "تجارہ کوٹیشن",
                 "header_english": "Quotation template for B2B customers and wholesale pricing.",
+                "header_urdu": "بی ٹو بی کسٹمرز اور ہول سیل قیمتوں کے لیے کوٹیشن ٹیمپلیٹ۔",
                 "footer_english": "Prices and availability are subject to confirmation.",
+                "footer_urdu": "قیمتیں اور دستیابی تصدیق سے مشروط ہیں۔",
                 "terms_english": "Quotation validity and tax settings are tenant configurable.",
+                "terms_urdu": "کوٹیشن مدت اور ٹیکس سیٹنگز ٹیننٹ کے مطابق قابل ترتیب ہیں۔",
+            },
+            {
+                "name": "Tijara Demo Bilingual Inventory Label",
+                "template_scope": "inventory_label",
+                "template_layout": "compact",
+                "language_mode": "both",
+                "printer_width": "58",
+                "receipt_title_english": "Inventory Label",
+                "receipt_title_urdu": "انوینٹری لیبل",
+                "header_english": "Bilingual product label for stock, shelf, barcode, and counter lookup.",
+                "header_urdu": "اسٹاک، شیلف، بارکوڈ اور کاؤنٹر تلاش کے لیے دو زبانی پروڈکٹ لیبل۔",
+                "footer_english": "Scan for inventory or POS lookup.",
+                "footer_urdu": "انوینٹری یا POS تلاش کے لیے اسکین کریں۔",
+                "terms_english": "Price, GST, and shelf placement follow tenant configuration.",
+                "terms_urdu": "قیمت، جی ایس ٹی اور شیلف جگہ ٹیننٹ کنفیگریشن کے مطابق ہے۔",
             },
         ]
         profiles = {}
@@ -468,6 +496,12 @@ class TijaraPosDemoSeed(models.AbstractModel):
                 profile = model.create(values)
             profiles[spec["template_scope"]] = profile
         return profiles
+
+    def _assign_inventory_label_profile(self, products, profile):
+        if not profile:
+            return
+        for product in products:
+            product.product_tmpl_id.write({"tijara_inventory_label_profile_id": profile.id})
 
     def _seed_promotion(self, company, products):
         model = self.env["tijara.promotion"].sudo()

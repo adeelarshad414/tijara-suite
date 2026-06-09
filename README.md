@@ -19,6 +19,13 @@ text. The first local hardware bridge foundation is also included for signed
 dry-run printer, scanner, cash-drawer, scale, and customer-display jobs, and the
 browser POS receipt print action can submit the rendered receipt payload to a
 configured local bridge receipt printer.
+Invoice, POS receipt, refund/exchange, quotation, and inventory-label templates
+now support explicit English-only, Urdu-only, or bilingual printing, including
+Urdu product names on printable line items and barcode/QR inventory labels.
+The POS counter flow also includes a keyboard-first cashier mode for product
+lookup/scanner entry, Enter-based primary actions, payment navigation, receipt
+printing, quantity changes, B2B/B2C switching, and service-mode cycling when a
+cashier cannot rely on touch or mouse input.
 
 The first market verticals are:
 
@@ -440,6 +447,9 @@ The retail operations layer now includes:
 - First-pass live browser POS receipt rendering from Tijara receipt profiles,
   including Urdu text, custom body tokens, QR/barcode values, return policy, and
   footer content.
+- Backend QWeb printing for POS receipts, customer invoices, refund/exchange
+  documents, quotations, and inventory product labels with English, Urdu, or
+  bilingual output modes.
 - Browser POS receipt print-to-bridge support for configured local bridge
   receipt printers, with POS order audit fields for bridge print status, job id,
   result JSON, and printed timestamp.
@@ -455,9 +465,12 @@ The retail operations layer now includes:
 - Public browser routes for kiosk, menu board, deals board, promotion display,
   customer display, and queue display screens.
 - Kiosk self-ordering checkout foundation with cart, customer/mobile capture,
-  B2B/B2C price selection, dine-in/takeaway/pickup selection, kiosk order
-  records, queue-ticket creation when entitled, and optional linked Odoo POS
-  order/payment creation from mapped kiosk profiles.
+  B2B/B2C price selection, dine-in/takeaway/pickup/delivery selection, kiosk
+  order records, queue-ticket creation when entitled, and optional linked Odoo
+  POS order/payment creation from mapped kiosk profiles.
+- Keyboard-first POS cashier controls for scanner-style product entry, Enter
+  flow, payment/receipt shortcuts, quantity adjustment, B2B/B2C switching, and
+  dine-in/takeaway/pickup/delivery cycling.
 - Customer-display live order state records with line/totals payloads for POS
   customer-facing screens plus best-effort POS frontend live publishing.
 - Provider-aware payment webhook normalization for JazzCash, Easypaisa, Stripe,

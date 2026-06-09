@@ -10011,3 +10011,93 @@ Status: Complete
   for a staging release candidate.
 - Continue tenant provisioning automation for DNS, ingress, admin bootstrap,
   backups, monitoring, and subscription billing operations.
+
+## Iteration 135: Bilingual Printing And Keyboard-First POS Cashier Flow
+
+### Objective
+
+- Add explicit English, Urdu, and bilingual print options for invoices and
+  inventory/product labels.
+- Make the POS counter workflow usable by keyboard and Enter when touch or
+  mouse input is unavailable.
+- Keep demo seed, verifier, documentation, and tests aligned with the new
+  print and cashier workflow behavior.
+
+### Completed
+
+- Extended `tijara.receipt.profile` with an `inventory_label` scope and helper
+  methods for English/Urdu/bilingual visibility.
+- Added a product-level inventory label template option, default profile
+  fallback, barcode/QR helpers, and the `Tijara Inventory Label` report action.
+- Updated backend QWeb reports so POS receipts, customer invoices,
+  refund/exchange slips, quotations, and inventory labels respect
+  English-only, Urdu-only, or bilingual language mode.
+- Added Urdu product names to printable POS order and customer invoice line
+  metadata where product Urdu names are configured.
+- Added open-source Urdu font preferences for PDF and browser POS receipt
+  rendering, with deployment notes for installing Urdu fonts in production.
+- Added a POS keyboard cashier controller with scanner-style typed product
+  entry, `Enter` primary flow, `F2` search focus, `F4` payment, `F5` receipt
+  print, `F6` new order, `F7` B2B/B2C toggle, `F8` service-mode cycle, arrow
+  line navigation, plus/minus quantity changes, and delete/backspace line
+  removal.
+- Added a POS configuration switch for keyboard cashier flow and loaded it into
+  the browser POS session.
+- Added delivery to the POS service-mode frontend toggle to match the existing
+  backend order type.
+- Loaded Urdu/local product fields into POS product data for keyboard lookup and
+  counter display support.
+- Seeded a bilingual inventory-label profile and assigned it to demo products.
+- Updated enterprise seed verification to require the inventory-label template
+  scope and product label template assignments.
+- Added Odoo transaction coverage for language-mode helpers, inventory label
+  profile/barcode helpers, and QWeb inventory-label rendering with English and
+  Urdu text.
+- Added opt-in Playwright coverage for keyboard-only POS product entry,
+  B2B/B2C/service-mode shortcuts, and payment navigation.
+- Updated `README.md`, `DEPLOY.md`, `docs/RETAIL_OPERATIONS_DATA.md`,
+  `docs/FRONTEND_DEVICE_QA.md`, `docs/USER_GUIDE_ALL_USERS.md`, and
+  `tests/e2e/README.md`.
+
+### Validation
+
+- Python compile checks passed for modified Odoo models, tests, demo seed, and
+  seed verifier.
+- JavaScript syntax checks passed for the new keyboard cashier controller,
+  order options patch, receipt profile patch, and updated Playwright spec.
+- `make validate` passed and parsed 79 XML files.
+- `bash scripts/js_check.sh` passed.
+- `git diff --check` passed.
+- Focused Odoo test DB `tijara_test_bilingual_keyboard_render` passed 17
+  post-install tests across `tijara_pos_pk` and `tijara_pos_experience` with
+  0 failures and 0 errors; the new test renders the inventory-label QWeb report
+  and asserts English and Urdu text output.
+- Local `tijara_dev` upgrade passed for the current suite upgrade path.
+- `make verify-enterprise-seed DB=tijara_dev` passed with status `ready` and
+  receipt/template scopes:
+  `customer_invoice,inventory_label,pos_receipt,quotation,refund_exchange`.
+- `make verify-pkr-gst DB=tijara_dev` passed with country `PK`, currency `PKR`,
+  and `GST 18% Sales (PK)`.
+
+### Known Gaps
+
+- Real Urdu thermal printing still needs physical verification on ESC/POS, ZPL,
+  CUPS, browser-print, and label-printer devices with installed Urdu fonts or
+  raster/image rendering where the device cannot shape Urdu text natively.
+- The keyboard-only browser E2E is opt-in and still needs a protected staging
+  run with a real POS register and seeded cashier user.
+- Advanced customization of the native Odoo POS line/tax/payment receipt block
+  remains future polish; the Tijara profile controls header/footer/policy,
+  backend reports, and inventory labels now.
+
+### Next Iteration
+
+- Run protected staging browser matrix with
+  `TIJARA_RUN_DIRECT_POS_KEYBOARD_E2E=1` against a single seeded database.
+- Capture screenshot/video evidence for Urdu invoice and inventory-label
+  printing.
+- Add hardware-bridge/raster print evidence for Urdu receipts and labels, then
+  replace assumptions with physical printer certification.
+- Continue production hardening for monitoring, restore drills, load testing,
+  security scans, FBR/PSP certification, tenant automation, and subscription
+  operations.

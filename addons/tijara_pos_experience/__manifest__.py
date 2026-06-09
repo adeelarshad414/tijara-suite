@@ -35,6 +35,7 @@
             "tijara_pos_experience/static/src/app/order_options/**/*",
             "tijara_pos_experience/static/src/app/customer_display/**/*",
             "tijara_pos_experience/static/src/app/offline_pos/**/*",
+            "tijara_pos_experience/static/src/app/keyboard_cashier/**/*",
         ],
         "web.assets_backend": [
             "tijara_pos_experience/static/src/scss/touch_responsive.scss",

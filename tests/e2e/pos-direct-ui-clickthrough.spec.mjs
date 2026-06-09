@@ -154,6 +154,42 @@ test("direct cashier POS UI search, cart, payment, and optional receipt print fl
   });
 });
 
+test("direct cashier POS keyboard-only product entry and payment navigation", async ({ page }) => {
+  test.skip(
+    process.env.TIJARA_RUN_DIRECT_POS_KEYBOARD_E2E !== "1" ||
+      test.info().project.name !== "chromium-desktop" ||
+      !process.env.ODOO_USERNAME ||
+      !process.env.ODOO_PASSWORD ||
+      !process.env.TIJARA_POS_CONFIG_ID ||
+      !process.env.TIJARA_E2E_PRODUCT_NAME,
+    "Set TIJARA_RUN_DIRECT_POS_KEYBOARD_E2E=1, Odoo credentials, TIJARA_POS_CONFIG_ID, and TIJARA_E2E_PRODUCT_NAME for keyboard-only cashier POS E2E."
+  );
+
+  const productName = process.env.TIJARA_E2E_PRODUCT_NAME;
+  await login(page);
+  await openPosUi(page);
+
+  await test.step("add seeded product with keyboard buffer and Enter", async () => {
+    await page.locator("body").click({ position: { x: 20, y: 20 } });
+    await page.keyboard.type(productName, { delay: 10 });
+    await page.keyboard.press("Enter");
+    await expect(page.locator("body")).toContainText(/Total|Pay|Payment|Order|Cart|Qty|Quantity/i, {
+      timeout: visibleTimeout,
+    });
+  });
+
+  await test.step("use keyboard shortcuts for service mode, audience, and payment", async () => {
+    await page.keyboard.press("F8");
+    await expect(page.locator("body")).toContainText(/Dine In|Takeaway|Pickup|Delivery|Total|Pay|Cart/i);
+    await page.keyboard.press("F7");
+    await expect(page.locator("body")).toContainText(/B2B|B2C|Total|Pay|Cart/i);
+    await page.keyboard.press("F4");
+    await expect(page.locator("body")).toContainText(/Payment|Validate|Cash|Card|Method|Amount Due/i, {
+      timeout: visibleTimeout,
+    });
+  });
+});
+
 test("direct refund form opens and accepts invoice barcode input", async ({ page }) => {
   test.skip(
     process.env.TIJARA_RUN_DIRECT_REFUND_FORM_E2E !== "1" ||

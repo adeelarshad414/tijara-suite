@@ -206,9 +206,13 @@ class PosOrder(models.Model):
         for line in self.lines:
             if not line.product_id or (discount_product and line.product_id == discount_product):
                 continue
+            template = line.product_id.product_tmpl_id
+            english_name = template.tijara_label_name or line.product_id.display_name
             lines.append(
                 {
-                    "name": line.product_id.display_name,
+                    "name": english_name,
+                    "name_english": english_name,
+                    "name_urdu": template.tijara_urdu_name or "",
                     "quantity": line.qty,
                     "price_unit": line.price_unit,
                     "discount": line.discount,

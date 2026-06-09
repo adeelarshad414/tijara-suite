@@ -15,6 +15,7 @@ class TijaraReceiptProfile(models.Model):
             ("customer_invoice", "Customer Invoice"),
             ("refund_exchange", "Refund / Exchange"),
             ("quotation", "Quotation"),
+            ("inventory_label", "Inventory Label"),
         ],
         default="pos_receipt",
         required=True,
@@ -83,6 +84,23 @@ class TijaraReceiptProfile(models.Model):
     custom_body_html = fields.Html(string="Custom Body HTML")
     custom_css = fields.Text(string="Custom CSS")
     internal_notes = fields.Text()
+
+    def tijara_show_english(self):
+        self.ensure_one()
+        return self.language_mode in ("en", "both")
+
+    def tijara_show_urdu(self):
+        self.ensure_one()
+        return self.language_mode in ("ur", "both")
+
+    def tijara_bilingual_label(self, english, urdu=False, separator=" / "):
+        self.ensure_one()
+        values = []
+        if self.tijara_show_english() and english:
+            values.append(str(english))
+        if self.tijara_show_urdu() and urdu:
+            values.append(str(urdu))
+        return separator.join(values) if values else str(english or urdu or "")
 
     @api.model
     def _load_pos_data_domain(self, data, config):

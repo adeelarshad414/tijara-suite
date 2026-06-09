@@ -65,8 +65,12 @@ receipt_scopes = set(
     .mapped("template_scope")
 )
 require(
-    {"pos_receipt", "customer_invoice", "refund_exchange", "quotation"}.issubset(receipt_scopes),
+    {"pos_receipt", "customer_invoice", "refund_exchange", "quotation", "inventory_label"}.issubset(receipt_scopes),
     "Invoice/receipt templates are incomplete.",
+)
+require(
+    products.filtered("tijara_inventory_label_profile_id"),
+    "Demo products are missing inventory label template assignment.",
 )
 
 kiosk = env["tijara.kiosk.profile"].sudo().search([("name", "=", "Tijara Demo Kiosk Profile")], limit=1)

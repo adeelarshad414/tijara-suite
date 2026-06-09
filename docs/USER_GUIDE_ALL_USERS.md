@@ -151,6 +151,17 @@ Checkout workflow:
 8. Take payment.
 9. Print receipt and close the order.
 
+Keyboard-only counter workflow:
+
+- Use barcode scanner input or type a product barcode/SKU/name, then press
+  `Enter` to add the product when the POS screen is focused.
+- Use `F2` to focus product search, `F4` for payment, and `F5` for receipt
+  print.
+- Use arrow keys to move between cart lines, `+`/`-` to adjust quantity, and
+  `Delete`/`Backspace` to remove the selected line.
+- Use `F7` to switch B2B/B2C pricing and `F8` to cycle dine-in, takeaway,
+  pickup, and delivery service mode where enabled.
+
 Bill discount rule:
 
 - If percentage is entered, amount should update automatically.
@@ -187,11 +198,14 @@ Primary tasks:
 - Review low-stock and expiry alerts.
 - Import/export product and inventory data for bulk updates.
 - Coordinate receiving, transfers, stock adjustments, and cycle counts.
+- Print inventory barcode/QR labels in English, Urdu, or bilingual mode.
 
 Product setup checklist:
 
 - Product name and Urdu/local display name where needed.
 - Barcode/QR code.
+- Inventory label template when a product needs a specific Urdu or bilingual
+  print layout.
 - Category and vertical fields.
 - B2C price and B2B price.
 - Cost, vendor, tax, and unit of measure.
@@ -441,7 +455,8 @@ Supported integration foundation:
 - Barcode scanner.
 - QR code and barcode receipt scanning.
 - Receipt printer.
-- Invoice/receipt template printing.
+- Invoice/receipt/inventory-label template printing in English, Urdu, or
+  bilingual mode.
 - Customer display.
 - Cash drawer.
 - Scale.

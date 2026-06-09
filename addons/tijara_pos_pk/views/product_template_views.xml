@@ -1,0 +1,12 @@
+<odoo>
+    <record id="product_template_form_view_tijara_inventory_label" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.inventory.label</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="tijara_base.product_template_form_view_tijara"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tijara_label_name']" position="after">
+                <field name="tijara_inventory_label_profile_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

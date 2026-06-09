@@ -5,8 +5,8 @@ barcode/QR return scanning, scanner/printer setup, and bulk import/export.
 
 ## Invoice and Receipt Templates
 
-Managers can configure invoice, receipt, refund/exchange, and quotation
-templates from:
+Managers can configure invoice, receipt, refund/exchange, quotation, and
+inventory-label templates from:
 
 ```text
 Tijara > Configuration > Retail Configuration > Invoice and Receipt Templates
@@ -14,7 +14,8 @@ Tijara > Configuration > Retail Configuration > Invoice and Receipt Templates
 
 Template records support:
 
-- Template scope: POS receipt, customer invoice, refund/exchange, or quotation.
+- Template scope: POS receipt, customer invoice, refund/exchange, quotation, or
+  inventory label.
 - Layout: compact, standard, detailed, or custom HTML.
 - Language mode: English, Urdu, or bilingual.
 - Printer width: 58 mm, 80 mm, A4, or custom dimensions.
@@ -28,21 +29,28 @@ Template records support:
 
 Current implementation stores and exposes these settings in Odoo backend views
 and CSV import/export. The configured profile renders through backend QWeb
-PDF/HTML reports for customer invoices and POS orders, and the live browser POS
-receipt screen now consumes the configured POS receipt profile during cashier
-checkout. A POS configuration can also select a local bridge receipt printer;
-when that printer is configured, the browser POS print action submits the
-rendered receipt HTML/text payload to Odoo, Odoo signs the bridge request, and
-the POS order stores the bridge print status, job id, response JSON, and printed
-timestamp. The remaining receipt work is deeper thermal print payload
-replacement and advanced control over the standard Odoo line, tax, and payment
-summary layout.
+PDF/HTML reports for customer invoices, POS orders, and inventory product
+labels. English-only, Urdu-only, and bilingual modes are enforced in the report
+body, including title/header/footer/policy text and product line names where an
+Urdu product name is configured. The live browser POS receipt screen consumes
+the configured POS receipt profile during cashier checkout and respects the
+same header/footer language mode. A POS configuration can also select a local
+bridge receipt printer; when that printer is configured, the browser POS print
+action submits the rendered receipt HTML/text payload to Odoo, Odoo signs the
+bridge request, and the POS order stores the bridge print status, job id,
+response JSON, and printed timestamp. The remaining receipt work is deeper
+thermal print payload replacement and advanced control over the standard Odoo
+line, tax, and payment summary layout.
 
 Template actions:
 
 - Use the `Tijara Invoice` button on customer invoices and credit notes.
 - Use the `Tijara Receipt` button on POS orders.
+- Use the `Tijara Inventory Label` report/action on product templates to print
+  product barcode/QR labels in English, Urdu, or bilingual mode.
 - Assign a default POS receipt template on the POS configuration.
+- Assign an inventory label template on the product form when a product needs a
+  specific Urdu/bilingual label profile.
 - Assign a local bridge receipt printer on the POS configuration when the
   browser POS print button should submit receipts through the bridge.
 - Optionally assign a specific customer invoice template on the invoice form.

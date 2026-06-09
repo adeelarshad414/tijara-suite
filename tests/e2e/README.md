@@ -111,6 +111,9 @@ Useful environment variables:
 - `TIJARA_RUN_DIRECT_POS_CLICKTHROUGH=1` to opt into direct cashier POS UI
   search/add-to-cart/payment-screen selectors. This requires
   `TIJARA_E2E_PRODUCT_NAME`.
+- `TIJARA_RUN_DIRECT_POS_KEYBOARD_E2E=1` to opt into the keyboard-only cashier
+  POS drill for typed/scanner product entry, `Enter`, `F4`, `F7`, and `F8`
+  workflows in Chromium desktop staging.
 - `TIJARA_RUN_DIRECT_POS_VALIDATE_E2E=1` to let the direct POS UI test validate
   the browser sale and exercise receipt print controls on a staging register
   prepared for real browser sales.
@@ -156,4 +159,6 @@ proves duplicate replay handling plus offline status reporting.
 selector drill. It searches the seeded product in the POS UI, adds it to the
 cart, opens payment, optionally selects the seeded payment method, optionally
 validates the sale and clicks receipt print, and can separately exercise refund
-form barcode entry.
+form barcode entry. The same file also includes an opt-in keyboard-only drill
+that types/scans a product into the POS, presses `Enter`, cycles service mode
+and B2B/B2C selection, and opens payment from the keyboard.

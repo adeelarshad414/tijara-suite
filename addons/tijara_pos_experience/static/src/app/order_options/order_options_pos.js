@@ -14,6 +14,7 @@ const ORDER_TYPE_LABELS = {
     dine_in: _t("Dine In"),
     takeaway: _t("Takeaway"),
     pickup: _t("Pickup"),
+    delivery: _t("Delivery"),
 };
 
 patch(PosOrder.prototype, {
@@ -114,6 +115,12 @@ patch(ControlButtons.prototype, {
                 label: _t("Pickup"),
                 isSelected: order.tijara_order_type === "pickup",
                 item: "pickup",
+            },
+            {
+                id: "delivery",
+                label: _t("Delivery"),
+                isSelected: order.tijara_order_type === "delivery",
+                item: "delivery",
             },
         ];
         const payload = await makeAwaitable(this.dialog, SelectionPopup, {

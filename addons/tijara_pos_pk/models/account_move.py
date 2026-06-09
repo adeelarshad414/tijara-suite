@@ -78,17 +78,27 @@ class AccountMove(models.Model):
 
     def tijara_report_lines(self):
         self.ensure_one()
-        return [
-            {
-                "name": line.name or line.product_id.display_name,
-                "quantity": line.quantity,
-                "price_unit": line.price_unit,
-                "discount": line.discount,
-                "subtotal": line.price_subtotal,
-                "total": line.price_total,
-            }
-            for line in self.invoice_line_ids.filtered(lambda line: line.display_type == "product")
-        ]
+        lines = []
+        for line in self.invoice_line_ids.filtered(lambda invoice_line: invoice_line.display_type == "product"):
+            template = line.product_id.product_tmpl_id if line.product_id else False
+            english_name = (
+                (template.tijara_label_name if template else False)
+                or line.name
+                or line.product_id.display_name
+            )
+            lines.append(
+                {
+                    "name": english_name,
+                    "name_english": english_name,
+                    "name_urdu": (template.tijara_urdu_name if template else False) or "",
+                    "quantity": line.quantity,
+                    "price_unit": line.price_unit,
+                    "discount": line.discount,
+                    "subtotal": line.price_subtotal,
+                    "total": line.price_total,
+                }
+            )
+        return lines
 
     def tijara_payment_summary(self):
         self.ensure_one()

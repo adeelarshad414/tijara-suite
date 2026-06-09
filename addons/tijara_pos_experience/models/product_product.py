@@ -8,6 +8,11 @@ class ProductProduct(models.Model):
     def _load_pos_data_fields(self, config):
         field_names = super()._load_pos_data_fields(config)
         tijara_fields = [
+            "default_code",
+            "barcode",
+            "tijara_urdu_name",
+            "tijara_label_name",
+            "tijara_barcode_alias",
             "tijara_b2c_price",
             "tijara_b2b_price",
             "tijara_b2b_min_qty",

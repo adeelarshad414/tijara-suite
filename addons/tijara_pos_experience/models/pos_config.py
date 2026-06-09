@@ -71,6 +71,11 @@ class PosConfig(models.Model):
         string="Manager Approval for Bill Discount",
         help="Foundation flag for future POS approval enforcement.",
     )
+    tijara_keyboard_shortcuts_enabled = fields.Boolean(
+        string="Enable Keyboard Cashier Flow",
+        default=True,
+        help="Allow counter users to operate common POS actions with keyboard, Enter, and scanner-style input.",
+    )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -123,6 +128,29 @@ class PosConfig(models.Model):
             if value and not company.tijara_has_saas_feature(feature_code):
                 missing.append("%s (%s)" % (label, feature_code))
         return missing
+
+    @api.model
+    def _load_pos_data_fields(self, config):
+        field_names = super()._load_pos_data_fields(config)
+        tijara_fields = [
+            "tijara_allow_b2c",
+            "tijara_allow_b2b",
+            "tijara_default_audience",
+            "tijara_show_audience_toggle",
+            "tijara_queue_enabled",
+            "tijara_kiosk_enabled",
+            "tijara_customer_display_enabled",
+            "tijara_keyboard_shortcuts_enabled",
+            "tijara_bill_discount_enabled",
+            "tijara_bill_discount_default_mode",
+            "tijara_bill_discount_max_percent",
+            "tijara_bill_discount_requires_manager",
+            "tijara_menu_board_id",
+            "tijara_deals_board_id",
+            "tijara_customer_display_id",
+            "tijara_queue_display_id",
+        ]
+        return field_names + [field for field in tijara_fields if field not in field_names]
 
     def _sync_tijara_bill_discount_flags(self):
         discount_product = self.env.ref(

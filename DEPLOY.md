@@ -298,9 +298,18 @@ back-office workflows against:
 - 360 px, 390 px, 768 px, 1024 px, 1366 px, and 1920 px viewport widths.
 - Urdu and English layouts.
 - Barcode scanner keyboard-wedge input.
+- Keyboard-only POS cashier operation for product lookup, Enter flow, payment,
+  receipt print, quantity changes, B2B/B2C switching, and service-mode cycling.
 - Receipt printer and customer display hardware paths where available.
 
 See `docs/FRONTEND_DEVICE_QA.md` for the acceptance standard.
+
+For Urdu PDF and label printing, install and verify open-source Urdu/Arabic
+fonts in the Odoo report-rendering runtime before staging sign-off, for example
+Noto Naskh Arabic or Noto Nastaliq Urdu. Confirm generated POS receipts,
+customer invoices, refund/exchange slips, quotations, and inventory labels show
+Urdu text correctly in browser print, PDF, ESC/POS raster, ZPL/image-label, and
+CUPS paths where those paths are used.
 
 ## Hardware Bridge Readiness
 

@@ -55,36 +55,46 @@ patch(OrderReceipt.prototype, {
         return profile ? Boolean(profile[fieldName]) : fallback;
     },
 
+    get tijaraShowEnglish() {
+        const mode = this.tijaraProfile?.language_mode || "en";
+        return mode === "en" || mode === "both";
+    },
+
+    get tijaraShowUrdu() {
+        const mode = this.tijaraProfile?.language_mode || "en";
+        return mode === "ur" || mode === "both";
+    },
+
     get tijaraTitleEnglish() {
-        return this.tijaraProfile?.receipt_title_english || "";
+        return this.tijaraShowEnglish ? this.tijaraProfile?.receipt_title_english || "" : "";
     },
 
     get tijaraTitleUrdu() {
-        return this.tijaraProfile?.receipt_title_urdu || "";
+        return this.tijaraShowUrdu ? this.tijaraProfile?.receipt_title_urdu || "" : "";
     },
 
     get tijaraHeaderEnglish() {
-        return this.tijaraProfile?.header_english || "";
+        return this.tijaraShowEnglish ? this.tijaraProfile?.header_english || "" : "";
     },
 
     get tijaraHeaderUrdu() {
-        return this.tijaraProfile?.header_urdu || "";
+        return this.tijaraShowUrdu ? this.tijaraProfile?.header_urdu || "" : "";
     },
 
     get tijaraTermsEnglish() {
-        return this.tijaraProfile?.terms_english || "";
+        return this.tijaraShowEnglish ? this.tijaraProfile?.terms_english || "" : "";
     },
 
     get tijaraTermsUrdu() {
-        return this.tijaraProfile?.terms_urdu || "";
+        return this.tijaraShowUrdu ? this.tijaraProfile?.terms_urdu || "" : "";
     },
 
     get tijaraFooterEnglish() {
-        return this.tijaraProfile?.footer_english || "";
+        return this.tijaraShowEnglish ? this.tijaraProfile?.footer_english || "" : "";
     },
 
     get tijaraFooterUrdu() {
-        return this.tijaraProfile?.footer_urdu || "";
+        return this.tijaraShowUrdu ? this.tijaraProfile?.footer_urdu || "" : "";
     },
 
     get tijaraCustomCss() {

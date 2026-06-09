@@ -11,6 +11,7 @@
                         <field name="tijara_allow_b2b"/>
                         <field name="tijara_default_audience"/>
                         <field name="tijara_show_audience_toggle"/>
+                        <field name="tijara_keyboard_shortcuts_enabled"/>
                     </group>
                     <group>
                         <field name="tijara_queue_enabled"/>
