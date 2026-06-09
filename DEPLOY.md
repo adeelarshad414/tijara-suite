@@ -80,6 +80,8 @@ make seed-e2e DB=tijara_dev
 make local-e2e-evidence
 make test-odoo
 make e2e
+make browser-e2e-matrix
+make protected-browser-e2e-matrix
 make bridge-up
 make bridge-logs
 make backup-db
@@ -188,6 +190,30 @@ correlated execution decision. The latest local run
 `local-e2e-20260609T073524Z` passed with no blockers; generated evidence is
 ignored under `deploy/runtime/local-e2e/`,
 `deploy/runtime/e2e-evidence/`, and `deploy/runtime/e2e-execution/`.
+
+For protected/staging cross-browser and touch evidence, seed the staging E2E
+profile, load the generated non-secret seed env plus the real password from the
+secret manager, then run:
+
+```bash
+make browser-e2e-matrix
+```
+
+By default this runs the Playwright projects `chromium-desktop`,
+`mobile-touch`, `firefox-desktop`, `webkit-desktop`, and `tablet-touch`, then
+writes aggregate evidence under `deploy/runtime/browser-e2e-matrix/<run-id>/`.
+Limit the matrix when debugging with:
+
+```bash
+TIJARA_BROWSER_E2E_PROJECTS="chromium-desktop mobile-touch" make browser-e2e-matrix
+```
+
+Protected runners can include the matrix in the existing protected browser lane
+with:
+
+```bash
+TIJARA_PROTECTED_E2E_MATRIX=1 make protected-browser-e2e
+```
 
 `make verify-pkr-gst` writes ignored runtime evidence under
 `deploy/runtime/pkr-gst-verification/`, and `make seed-demo-users` writes

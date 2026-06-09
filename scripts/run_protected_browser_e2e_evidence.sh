@@ -16,6 +16,7 @@ EXECUTION_DIR="${TIJARA_E2E_EXECUTION_OUTPUT:-$RUNTIME_ROOT/e2e-execution/$RUN_I
 SEED_E2E="${TIJARA_PROTECTED_E2E_SEED:-0}"
 PROFILE_E2E="${TIJARA_PROTECTED_E2E_PROFILE:-1}"
 RUN_BROWSER_E2E="${TIJARA_PROTECTED_E2E_RUN_BROWSER:-1}"
+RUN_MATRIX_E2E="${TIJARA_PROTECTED_E2E_MATRIX:-0}"
 EXECUTION_EVIDENCE="${TIJARA_PROTECTED_E2E_EXECUTION_EVIDENCE:-1}"
 STRICT="${TIJARA_PROTECTED_E2E_STRICT:-1}"
 STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -68,6 +69,7 @@ run_step() {
   echo "seed_e2e=$SEED_E2E"
   echo "profile_e2e=$PROFILE_E2E"
   echo "run_browser_e2e=$RUN_BROWSER_E2E"
+  echo "run_matrix_e2e=$RUN_MATRIX_E2E"
   echo "execution_evidence=$EXECUTION_EVIDENCE"
   echo "strict=$STRICT"
   echo "started_at=$STARTED_AT"
@@ -123,6 +125,17 @@ if truthy "$RUN_BROWSER_E2E"; then
     make e2e-staging
 else
   record_status "e2e-browser" "skipped" "0" "" "browser E2E not requested"
+fi
+
+if truthy "$RUN_MATRIX_E2E"; then
+  run_step "e2e-browser-matrix" \
+    env \
+    TIJARA_BROWSER_E2E_RUN_ID="$RUN_ID" \
+    TIJARA_TARGET_ENVIRONMENT="$TARGET_ENVIRONMENT" \
+    TIJARA_BROWSER_E2E_SEED_ENV="$SEED_DIR/e2e-seed.env" \
+    make browser-e2e-matrix
+else
+  record_status "e2e-browser-matrix" "skipped" "0" "" "browser E2E matrix not requested"
 fi
 
 if truthy "$EXECUTION_EVIDENCE"; then

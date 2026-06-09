@@ -83,6 +83,7 @@ docs/                          Architecture, roadmap, analytics, inventory, QA
 docs/COMMANDS_QUICKREF.md      Generated local run/test command sheet
 docs/SPEC_MAP.json             Machine-readable app, persona, and screen map
 docs/TEST_CREDENTIALS.csv      Deterministic demo/staging account matrix
+docs/BILINGUAL_QUICK_STARTS.md Urdu/English quick starts for key roles
 docs/USER_GUIDE_ALL_USERS.md   All-user application usage guide
 docs/Tijara_Suite_All_User_Guide.docx
                                Polished all-user training document
@@ -184,6 +185,7 @@ make js-check
 make security-audit
 make hardware-cert-smoke
 make e2e
+make browser-e2e-matrix
 make load-smoke
 make load-enterprise-surfaces
 make load-profile-matrix-evidence
@@ -238,7 +240,8 @@ make customer-demo-video
 ```
 
 See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
-`docs/TEST_CREDENTIALS.csv`, `docs/USER_GUIDE_ALL_USERS.md`,
+`docs/TEST_CREDENTIALS.csv`, `docs/BILINGUAL_QUICK_STARTS.md`,
+`docs/USER_GUIDE_ALL_USERS.md`,
 `docs/Tijara_Suite_All_User_Guide.docx`,
 `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`,
 `docs/Tijara_Suite_Visual_User_Guide.docx`,
@@ -252,6 +255,10 @@ inventory managers, accountants, restaurant operators, display/kiosk operators,
 and business managers, including local access, demo accounts, POS checkout,
 refund/exchange, inventory alerts, SaaS feature flags, hardware usage,
 troubleshooting, and escalation.
+
+The bilingual quick-start guide gives English/Urdu operating steps for
+cashiers, tenant admins, inventory managers, restaurant operators,
+accountants/owners, and DevOps/support.
 
 The visual guide adds workflow lanes and step cards for first login, tenant
 setup, product setup, POS checkout, refunds/exchanges, restaurant service,
@@ -295,6 +302,10 @@ The local evidence harness run `local-e2e-20260609T073524Z` also passed all
 stages: Compose startup, Odoo readiness, PKR/GST module upgrade, live PKR/GST
 verification, demo-user seeding, browser E2E seed, full Playwright browser E2E,
 and execution-evidence export.
+The staging/protected browser evidence lane now also has a matrix runner for
+Chromium desktop, Firefox desktop, WebKit/Safari desktop profile, mobile touch,
+and tablet touch projects, with aggregate evidence under
+`deploy/runtime/browser-e2e-matrix/`.
 
 The current code is an enterprise product foundation: models, security access,
 menus, backend views, SaaS plans/features, Pakistan localization fields, POS

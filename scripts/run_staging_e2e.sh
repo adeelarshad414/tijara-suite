@@ -160,6 +160,20 @@ write_summary() {
     } > "$SUMMARY_FILE"
 }
 
+wait_for_base_url() {
+    local elapsed=0
+    local max_seconds="${TIJARA_E2E_HEALTH_WAIT_SECONDS:-45}"
+    local step_seconds="${TIJARA_E2E_HEALTH_RETRY_SECONDS:-3}"
+    while [[ "$elapsed" -le "$max_seconds" ]]; do
+        if curl -fsS --max-time "${TIJARA_E2E_HEALTH_TIMEOUT:-10}" "$BASE_URL/web/login" > /dev/null; then
+            return 0
+        fi
+        sleep "$step_seconds"
+        elapsed=$((elapsed + step_seconds))
+    done
+    return 1
+}
+
 if (( ${#missing[@]} > 0 )); then
     {
         echo "Missing required staging E2E environment variables:"
@@ -177,7 +191,7 @@ if [[ "$readiness_status" -ne 0 ]]; then
     exit "$readiness_status"
 fi
 
-if ! curl -fsS --max-time "${TIJARA_E2E_HEALTH_TIMEOUT:-10}" "$BASE_URL/web/login" > /dev/null; then
+if ! wait_for_base_url; then
     echo "Odoo login page is not reachable at $BASE_URL/web/login" | tee -a "$LOG_FILE" >&2
     write_summary "blocked: base URL unreachable" 2
     exit 2

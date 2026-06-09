@@ -85,7 +85,19 @@ Back Office:
 
 ## Automated QA Direction
 
-Future Playwright or browser tests should cover:
+Run the staging/protected browser matrix with:
+
+```bash
+make browser-e2e-matrix
+```
+
+The default matrix covers `chromium-desktop`, `firefox-desktop`,
+`webkit-desktop`, `mobile-touch`, and `tablet-touch`. The matrix must be run
+against seeded staging credentials and a real staging URL before production
+sign-off. Use `TIJARA_BROWSER_E2E_PROJECTS="chromium-desktop mobile-touch"` only
+for fast debugging, not final release approval.
+
+Playwright or browser tests should cover:
 
 - Login and back-office navigation.
 - POS load and product search.

@@ -9740,3 +9740,78 @@ Status: Complete
 - Attach monitoring, alerting, backup restore-drill, load-test, security-scan,
   tenant-rollout, PSP, FBR, and hardware-certification evidence to the release
   sign-off package.
+
+## Iteration 132: Browser Matrix Evidence And Bilingual Quick Starts
+
+### Objective
+
+- Move from single-project local browser proof toward protected/staging
+  browser-device matrix evidence and add Urdu/English quick-start training for
+  core business roles.
+
+### Completed
+
+- Added `scripts/run_browser_e2e_matrix.sh` for repeatable browser/device
+  matrix execution.
+- Added `scripts/export_browser_e2e_matrix_evidence.py` to aggregate per-project
+  Playwright, readiness, and execution evidence into one decision report.
+- Added Makefile targets `browser-e2e-matrix` and
+  `protected-browser-e2e-matrix`.
+- Added npm script `test:e2e:matrix`.
+- Expanded Playwright projects to include `chromium-desktop`,
+  `firefox-desktop`, `webkit-desktop`, `mobile-touch`, and `tablet-touch`.
+- Updated `scripts/run_protected_browser_e2e_evidence.sh` so protected runners
+  can include the matrix by setting `TIJARA_PROTECTED_E2E_MATRIX=1`.
+- Hardened `scripts/run_staging_e2e.sh` with retry-based Odoo login health
+  checks before Playwright starts.
+- Added `docs/BILINGUAL_QUICK_STARTS.md` with English/Urdu workflows for
+  cashiers, tenant admins, inventory managers, restaurant operators,
+  accountants/owners, and DevOps/support.
+- Updated `README.md`, `DEPLOY.md`, `docs/COMMANDS_QUICKREF.md`, and
+  `docs/FRONTEND_DEVICE_QA.md` with the matrix evidence lane and bilingual
+  guide.
+
+### Validation
+
+- `bash -n scripts/run_staging_e2e.sh scripts/run_browser_e2e_matrix.sh
+  scripts/run_protected_browser_e2e_evidence.sh` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/export_browser_e2e_matrix_evidence.py` passes.
+- `node --check playwright.config.mjs` passes.
+- `node -e "JSON.parse(require('fs').readFileSync('package.json','utf8'))"`
+  passes.
+- `make validate` passes and parses 76 XML files.
+- `bash scripts/js_check.sh` passes.
+- `git diff --check` passes.
+- Local focused matrix smoke `matrix-smoke-20260609T075114Z` passed for
+  `chromium-desktop`.
+- Local two-project matrix `matrix-local-20260609T075158Z` passed for
+  `chromium-desktop` and `mobile-touch`; aggregate matrix evidence reports
+  `decision=ready` and `ci_status=pass` with no blockers.
+- `bash scripts/security_audit.sh` still blocks because this workstation has
+  ignored non-example runtime secrets under `secrets/`, which is the expected
+  public-repo safety behavior.
+
+### Known Gaps
+
+- The full matrix with Firefox, WebKit/Safari profile, and tablet touch still
+  needs protected/staging execution where those Playwright browsers are
+  installed and the staging URL is reachable.
+- Local matrix evidence used existing seeded local data from
+  `local-e2e-20260609T073524Z`; final release evidence must use fresh protected
+  seed/profile evidence tied to the same protected run ID.
+- Physical hardware certification, FBR provider certification, PSP settlement/
+  refund/chargeback certification, tenant DNS/TLS/ingress execution, monitoring,
+  backup restore drills, load tests, and security scans remain production
+  blockers.
+
+### Next Iteration
+
+- Run the full protected/staging browser matrix with all five projects and
+  attach it to release sign-off.
+- Generate or verify production operations evidence: monitoring, alerting,
+  backup restore drill, load profile matrix, tenant rollout, secret runtime,
+  security scan, and incident runbook evidence.
+- Start provider/device certification work for FBR, JazzCash, Easypaisa,
+  Stripe, receipt printers, barcode scanners, cash drawers, scales, and
+  customer displays.

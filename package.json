@@ -13,6 +13,7 @@
     "test:e2e": "playwright test",
     "test:e2e:local-evidence": "bash scripts/run_local_browser_e2e_evidence.sh",
     "test:e2e:staging": "bash scripts/run_staging_e2e.sh",
+    "test:e2e:matrix": "bash scripts/run_browser_e2e_matrix.sh",
     "test:e2e:profile": "python3 scripts/export_staging_e2e_profile.py",
     "test:e2e:execution": "python3 scripts/export_e2e_execution_evidence.py",
     "ops:staging": "bash scripts/run_staging_ops_checks.sh",

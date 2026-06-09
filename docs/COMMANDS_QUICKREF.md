@@ -24,6 +24,7 @@
 | Run full local browser E2E evidence | `make local-e2e-evidence` |
 | Run Odoo tests | `make test-odoo` |
 | Run Playwright E2E | `make e2e` |
+| Run browser/device E2E matrix | `make browser-e2e-matrix` |
 | Capture screenshots | `node scripts/capture-screenshots.js` |
 | Generate screenshot user guide | `make screenshot-user-guide` |
 | Record demo clips | `node scripts/record-demo.js` |
@@ -125,6 +126,15 @@ docker compose --env-file .env --env-file secrets/.env.secrets down -v
 | Limit local evidence to display routes | `TIJARA_E2E_SCOPE=display make local-e2e-evidence` |
 | Limit local evidence to POS flows | `TIJARA_E2E_SCOPE=pos make local-e2e-evidence` |
 
+## Browser Matrix Evidence
+
+| Action | Command |
+|---|---|
+| Run default staging/protected browser matrix | `make browser-e2e-matrix` |
+| Run only desktop Chromium and mobile touch | `TIJARA_BROWSER_E2E_PROJECTS="chromium-desktop mobile-touch" make browser-e2e-matrix` |
+| Use a generated seed env file | `TIJARA_BROWSER_E2E_SEED_ENV=deploy/runtime/e2e-seed/<run-id>/e2e-seed.env make browser-e2e-matrix` |
+| Include matrix in protected browser lane | `TIJARA_PROTECTED_E2E_MATRIX=1 make protected-browser-e2e` |
+
 ## Protected Release Evidence
 
 | Action | Command |
@@ -133,6 +143,7 @@ docker compose --env-file .env --env-file secrets/.env.secrets down -v
 | Protected first-run checklist | `make protected-first-run-checklist` |
 | Protected service checks | `make protected-service-checks` |
 | Protected browser E2E evidence | `make protected-browser-e2e` |
+| Protected browser matrix evidence | `make protected-browser-e2e-matrix` |
 | Protected release closure | `make protected-release-closure` |
 | Protected evidence bundle score | `make protected-evidence-bundle-score` |
 | Protected evidence bundle drift | `make protected-evidence-bundle-drift` |
