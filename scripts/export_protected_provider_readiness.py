@@ -140,6 +140,7 @@ def _summary(context, rows, decision, blockers, warnings):
 - Provider readiness manifest: protected-provider-readiness.json
 - PSP readiness folder: psp-readiness/
 - FBR readiness folder: fbr-readiness/
+- Infrastructure provider readiness folder: infra-provider-readiness/
 - Status table: status.tsv
 - Environment summary: env-summary.txt
 """
@@ -182,6 +183,40 @@ def main():
         or _truthy(os.environ.get("TIJARA_PROVIDER_READINESS_REQUIRE_LIVE")),
     )
     parser.add_argument(
+        "--require-infra",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_PROVIDER_READINESS_REQUIRE_INFRA")),
+    )
+    parser.add_argument(
+        "--infra-provider",
+        action="append",
+        default=[],
+        help="Infrastructure provider to verify: cloudflare, route53, cert-manager, postgres.",
+    )
+    parser.add_argument(
+        "--production-infra-evidence",
+        action="append",
+        default=_csv_items(os.environ.get("TIJARA_PROVIDER_READINESS_PRODUCTION_INFRA_EVIDENCE")),
+    )
+    parser.add_argument(
+        "--deployment-decision",
+        default=os.environ.get("TIJARA_PROVIDER_READINESS_DEPLOYMENT_DECISION", ""),
+    )
+    parser.add_argument(
+        "--rollback-decision",
+        default=os.environ.get("TIJARA_PROVIDER_READINESS_ROLLBACK_DECISION", ""),
+    )
+    parser.add_argument(
+        "--allow-infra-assumptions",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_PROVIDER_READINESS_ALLOW_INFRA_ASSUMPTIONS")),
+    )
+    parser.add_argument(
+        "--require-real-infra-approvals",
+        action="store_true",
+        default=_truthy(os.environ.get("TIJARA_PROVIDER_READINESS_REQUIRE_REAL_INFRA_APPROVALS")),
+    )
+    parser.add_argument(
         "--fail-on-warning",
         action="store_true",
         default=_truthy(os.environ.get("TIJARA_PROVIDER_READINESS_FAIL_ON_WARNING")),
@@ -197,6 +232,7 @@ def main():
     certification_groups = set(_csv_items(os.environ.get("TIJARA_PROTECTED_CERTIFICATION_GROUPS", "")))
     require_psp = args.require_psp or "psp" in certification_groups
     require_fbr = args.require_fbr or "fbr" in certification_groups
+    require_infra = args.require_infra or "infra" in certification_groups or "infrastructure" in certification_groups
     psp_providers = _dedupe(args.psp_provider + _csv_items(args.psp_providers))
 
     output = Path(args.output) if args.output else ROOT_DIR / "deploy/runtime/protected-provider-readiness" / args.run_id
@@ -285,6 +321,51 @@ def main():
     else:
         rows.append(_row("fbr-readiness", "passed", "FBR readiness is not required for this protected run."))
 
+    if require_infra or args.production_infra_evidence:
+        infra_output = output / "infra-provider-readiness"
+        command = [
+            "python3",
+            "scripts/export_infra_provider_readiness.py",
+            "--run-id",
+            args.run_id,
+            "--target-environment",
+            args.target_environment,
+            "--output",
+            str(infra_output),
+        ]
+        for provider in args.infra_provider:
+            command.extend(["--provider", provider])
+        for evidence_path in args.production_infra_evidence:
+            command.extend(["--production-infra-evidence", evidence_path])
+        if args.deployment_decision:
+            command.extend(["--deployment-decision", args.deployment_decision])
+        if args.rollback_decision:
+            command.extend(["--rollback-decision", args.rollback_decision])
+        if args.allow_infra_assumptions:
+            command.append("--allow-assumptions")
+            command.extend(["--assume-provider", "all"])
+        if args.require_real_infra_approvals:
+            command.append("--require-real-approvals")
+        if args.non_strict:
+            command.append("--non-strict")
+        else:
+            command.append("--strict")
+        run = _run_command(command)
+        payload = _read_json(infra_output / "infra-provider-readiness.json")
+        status = _result_status(payload, run["exit_code"], args.fail_on_warning)
+        runs.append({"name": "infra-provider-readiness", "status": status, "output": str(infra_output), "payload": payload, **run})
+        message = "Infrastructure provider readiness decision is %s/%s." % (
+            payload.get("decision") or "unknown",
+            payload.get("ci_status") or "unknown",
+        )
+        rows.append(_row("infra-provider-readiness", status, message))
+        if status == "failed" and (require_infra or strict):
+            blockers.append(message)
+        elif status != "passed":
+            warnings.append(message)
+    else:
+        rows.append(_row("infra-provider-readiness", "passed", "Infrastructure provider readiness is not required for this protected run."))
+
     blockers = _dedupe(blockers)
     warnings = _dedupe(warnings)
     if blockers:
@@ -304,8 +385,11 @@ def main():
         "output": str(output),
         "require_psp": bool(require_psp),
         "require_fbr": bool(require_fbr),
+        "require_infra": bool(require_infra),
         "require_live_fbr": bool(args.require_live_fbr),
         "require_native_signatures": bool(args.require_native_signatures or require_psp),
+        "allow_infra_assumptions": bool(args.allow_infra_assumptions),
+        "require_real_infra_approvals": bool(args.require_real_infra_approvals),
         "fail_on_warning": bool(args.fail_on_warning),
     }
     manifest = {
@@ -324,8 +408,11 @@ def main():
             "target_environment=%s" % args.target_environment,
             "require_psp=%s" % int(require_psp),
             "require_fbr=%s" % int(require_fbr),
+            "require_infra=%s" % int(require_infra),
             "require_live_fbr=%s" % int(args.require_live_fbr),
             "psp_providers=%s" % (",".join(psp_providers) or "<none>"),
+            "infra_providers=%s" % (",".join(args.infra_provider) or "<default>"),
+            "production_infra_evidence=%s" % (",".join(args.production_infra_evidence) or "<unset>"),
             "run_count=%s" % len(runs),
             "metadata_keys=%s" % (",".join(sorted(metadata)) or "<none>"),
             "decision=%s" % decision,

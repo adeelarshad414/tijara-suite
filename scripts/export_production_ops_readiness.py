@@ -388,6 +388,8 @@ def main():
     parser.add_argument("--secret-runtime-evidence", default=os.environ.get("TIJARA_PROD_OPS_SECRET_RUNTIME_EVIDENCE", ""))
     parser.add_argument("--deployment-environment-evidence", default=os.environ.get("TIJARA_PROD_OPS_DEPLOYMENT_ENVIRONMENT_EVIDENCE", ""))
     parser.add_argument("--tenant-ops-evidence", default=os.environ.get("TIJARA_PROD_OPS_TENANT_OPS_EVIDENCE", ""))
+    parser.add_argument("--production-infra-evidence", action="append", default=_csv_items(os.environ.get("TIJARA_PROD_OPS_PRODUCTION_INFRA_EVIDENCE")))
+    parser.add_argument("--infra-provider-readiness-evidence", default=os.environ.get("TIJARA_PROD_OPS_INFRA_PROVIDER_READINESS_EVIDENCE", ""))
     parser.add_argument("--ops-tool-evidence", action="append", default=_csv_items(os.environ.get("TIJARA_PROD_OPS_TOOL_EVIDENCE")))
     parser.add_argument("--ops-status", action="append", default=_csv_items(os.environ.get("TIJARA_PROD_OPS_STATUS")))
     parser.add_argument("--release-readiness", default=os.environ.get("TIJARA_PROD_OPS_RELEASE_READINESS", ""))
@@ -397,6 +399,8 @@ def main():
     parser.add_argument("--dependency-scan-ref", default=os.environ.get("TIJARA_PROD_OPS_DEPENDENCY_SCAN_REF", ""))
     parser.add_argument("--container-scan-ref", default=os.environ.get("TIJARA_PROD_OPS_CONTAINER_SCAN_REF", ""))
     parser.add_argument("--require-tenant-ops", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_REQUIRE_TENANT_OPS", "1")))
+    parser.add_argument("--require-production-infra", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_REQUIRE_PRODUCTION_INFRA", "1")))
+    parser.add_argument("--require-infra-provider-readiness", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_REQUIRE_INFRA_PROVIDER_READINESS", "1")))
     parser.add_argument("--require-secret-runtime", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_REQUIRE_SECRET_RUNTIME", "1")))
     parser.add_argument("--require-release-readiness", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_REQUIRE_RELEASE_READINESS", "0")))
     parser.add_argument("--strict", action="store_true", default=_truthy(os.environ.get("TIJARA_PROD_OPS_STRICT", "0")))
@@ -425,7 +429,13 @@ def main():
     secret_runtime, secret_runtime_path = _read_json(args.secret_runtime_evidence)
     deployment_environment, deployment_environment_path = _read_json(args.deployment_environment_evidence)
     tenant_ops, tenant_ops_path = _read_json(args.tenant_ops_evidence)
+    infra_provider_readiness, infra_provider_readiness_path = _read_json(args.infra_provider_readiness_evidence)
     release_readiness, release_readiness_path = _read_json(args.release_readiness)
+    production_infra_payloads = []
+    for raw_path in args.production_infra_evidence:
+        target = _resolve(raw_path)
+        payload, source = _read_json(str(target / "production-infra-automation.json") if target and target.is_dir() else raw_path)
+        production_infra_payloads.append((payload, source))
     ops_tool_payloads = []
     for raw_path in args.ops_tool_evidence:
         payload, source = _read_json(raw_path)
@@ -441,12 +451,15 @@ def main():
         "secret_runtime": secret_runtime_path,
         "deployment_environment": deployment_environment_path,
         "tenant_ops": tenant_ops_path,
+        "infra_provider_readiness": infra_provider_readiness_path,
         "release_readiness": release_readiness_path,
     }.items():
         if value:
             evidence_refs[key] = value
     if ops_tool_payloads:
         evidence_refs["ops_tool"] = [source for _payload, source in ops_tool_payloads if source]
+    if production_infra_payloads:
+        evidence_refs["production_infra"] = [source for _payload, source in production_infra_payloads if source]
 
     required = bool(args.strict)
     components.append(_component("operations-bundle", "Operations release bundle", operations_bundle, operations_bundle_path, required))
@@ -458,6 +471,39 @@ def main():
     components.append(_component("secret-runtime", "Secret runtime evidence", secret_runtime, secret_runtime_path, required and args.require_secret_runtime))
     components.append(_component("deployment-environment", "Deployment environment evidence", deployment_environment, deployment_environment_path, required))
     components.append(_component("tenant-ops", "Tenant operations evidence", tenant_ops, tenant_ops_path, required and args.require_tenant_ops))
+    components.append(
+        _component(
+            "infra-provider-readiness",
+            "Infrastructure provider readiness evidence",
+            infra_provider_readiness,
+            infra_provider_readiness_path,
+            required and args.require_infra_provider_readiness,
+        )
+    )
+    for index, (payload, source) in enumerate(production_infra_payloads, start=1):
+        components.append(
+            _component(
+                "production-infra-%s" % index,
+                "Production infrastructure automation %s" % index,
+                payload,
+                source,
+                required and args.require_production_infra,
+            )
+        )
+    if not production_infra_payloads:
+        components.append(
+            {
+                "name": "production-infra",
+                "label": "Production infrastructure automation",
+                "status": "failed" if required and args.require_production_infra else "warning",
+                "required": required and args.require_production_infra,
+                "source": "",
+                "evidence_type": "json",
+                "decision": "",
+                "ci_status": "",
+                "message": "No production infrastructure automation evidence path was attached.",
+            }
+        )
     if args.require_release_readiness or release_readiness_path:
         components.append(
             _component(
@@ -600,6 +646,8 @@ def main():
         "strict": bool(args.strict),
         "fail_on_warning": bool(args.fail_on_warning),
         "require_tenant_ops": bool(args.require_tenant_ops),
+        "require_production_infra": bool(args.require_production_infra),
+        "require_infra_provider_readiness": bool(args.require_infra_provider_readiness),
         "require_secret_runtime": bool(args.require_secret_runtime),
         "require_release_readiness": bool(args.require_release_readiness),
         "allow_warning_exception": bool(args.allow_warning_exception),
@@ -621,6 +669,8 @@ def main():
             "security_audit_ref_present": bool(args.security_audit_ref),
             "dependency_scan_ref_present": bool(dependency_ref),
             "container_scan_ref_present": bool(container_ref),
+            "production_infra_present": bool(production_infra_payloads),
+            "infra_provider_readiness_present": bool(infra_provider_readiness),
         },
         "warning_exception": warning_exception,
         "blockers": blockers,
@@ -646,6 +696,8 @@ def main():
             "secret_runtime_evidence=%s" % (secret_runtime_path or "<unset>"),
             "deployment_environment_evidence=%s" % (deployment_environment_path or "<unset>"),
             "tenant_ops_evidence=%s" % (tenant_ops_path or "<unset>"),
+            "production_infra_evidence=%s" % (",".join(args.production_infra_evidence) or "<unset>"),
+            "infra_provider_readiness_evidence=%s" % (infra_provider_readiness_path or "<unset>"),
             "ops_tool_evidence=%s" % (",".join(args.ops_tool_evidence) or "<unset>"),
             "ops_status=%s" % (",".join(ops_status_sources) or "<unset>"),
             "backup_artifact_ref=%s" % ("<set>" if args.backup_artifact_ref else "<unset>"),

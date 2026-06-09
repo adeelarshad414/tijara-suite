@@ -1066,6 +1066,12 @@ The detailed policy and dependency intake checklist are maintained in
   cert-manager/Kubernetes TLS, and PostgreSQL backup/restore runners through
   `deploy/config/production-infra-templates/`, with real execution gated by
   `CONFIRM_PROVIDER_ACTION=YES`.
+- `scripts/export_infra_provider_readiness.py`,
+  `make infra-provider-readiness`, and protected provider readiness now verify
+  Cloudflare, Route53, cert-manager, and PostgreSQL backup/restore prerequisites
+  against production-infra evidence, redacted provider credential presence,
+  required CLIs, and deployment/rollback approval evidence. Production
+  operations readiness and sign-off packages now extract provider infra reviews.
 - `deploy/monitoring/`, `deploy/logging/`, and `deploy/postgres/restore-drill.sh`
   provide Prometheus, Pushgateway, Blackbox, Alertmanager, Grafana, Loki,
   logging, and restore-drill baselines. Grafana dashboard provisioning now loads the

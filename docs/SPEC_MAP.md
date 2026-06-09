@@ -106,6 +106,9 @@ agentic development pipeline.
 - Production DNS/TLS/backup/restore wrapper generation from tenant ops artifacts.
 - Provider-specific Cloudflare, Route53, cert-manager, and PostgreSQL
   backup/restore template packs with dry-run-first runner scripts.
+- Infrastructure provider readiness evidence for Cloudflare, Route53,
+  cert-manager, and PostgreSQL backup/restore, wired into production operations
+  readiness and release sign-off reviews.
 
 ## Configuration Source Of Truth
 
@@ -147,6 +150,7 @@ bash scripts/tijara-stop.sh --force-kill-ports
 bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite
 bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict
+make infra-provider-readiness
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite

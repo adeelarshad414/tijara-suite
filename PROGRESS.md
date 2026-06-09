@@ -11523,3 +11523,95 @@ Status: Complete
   matrix against seeded staging with real users.
 - Continue replacing assumed FBR, PSP, courier, and hardware certification
   evidence with certified provider/device artifacts.
+
+## Iteration 153: Infra Provider Readiness And Sign-Off Wiring
+
+### Scope Completed
+
+- Added `scripts/export_infra_provider_readiness.py` for Cloudflare, Route53,
+  cert-manager, and PostgreSQL backup/restore readiness evidence.
+- Added `make infra-provider-readiness` and
+  `TIJARA_INFRA_PROVIDER_READINESS_FLAGS`.
+- Extended `scripts/export_protected_provider_readiness.py` so protected
+  provider readiness can include infrastructure providers alongside PSP/FBR.
+- Extended `scripts/export_production_ops_readiness.py` with:
+  - `--production-infra-evidence`
+  - `--infra-provider-readiness-evidence`
+  - `--require-production-infra`
+  - `--require-infra-provider-readiness`
+- Extended `scripts/generate_signoff_pack.py` so production infra and infra
+  provider readiness are grouped as Operations evidence and extracted into
+  `release-readiness.json` as:
+  - `production_infra_reviews`
+  - `infra_provider_readiness_reviews`
+- Updated `.env.example`, `README.md`, `DEPLOY.md`,
+  `docs/COMMANDS_QUICKREF.md`, `docs/CONFIGURATION_AND_SECRETS.md`,
+  `docs/PRODUCTION_READINESS_CHECKLIST.md`, `docs/SPEC_MAP.md`,
+  `docs/SPEC_MAP.json`, and `deploy/config/github-protected-vars.example`.
+
+### Evidence Generated
+
+- Infrastructure provider readiness:
+  `deploy/runtime/infra-provider-readiness/20260609-infra-provider-readiness/`
+  with `decision=passed`, `ci_status=pass`.
+- Protected provider readiness with infra lane:
+  `deploy/runtime/protected-provider-readiness/20260609-protected-provider-infra/`
+  with `decision=passed`, `ci_status=pass` when run as infra-only.
+- Production operations readiness with provider infra components attached:
+  `deploy/runtime/production-ops-readiness/20260609-infra-ops-readiness/`.
+  The new components passed:
+  `infra-provider-readiness`, `production-infra-1`, and
+  `production-infra-2`.
+- Sign-off package verification:
+  `deploy/runtime/signoff-packages/20260609-infra-signoff/` includes
+  two `production_infra_reviews` and one
+  `infra_provider_readiness_reviews` entry in `release-readiness.json`.
+
+### Validation
+
+- `python3 scripts/export_infra_provider_readiness.py ... --strict` passed
+  with explicit local assumptions enabled.
+- `python3 scripts/export_protected_provider_readiness.py ... --require-infra`
+  passed in infra-only mode.
+- `python3 scripts/export_production_ops_readiness.py ...` included provider
+  infra components; those components passed.
+- `python3 scripts/generate_signoff_pack.py ...` generated sign-off evidence
+  and extracted the new infra review sections.
+
+### Current Enterprise Status
+
+- Architecture: 92%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 83%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 82%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 85%
+- Overall production readiness: around 74-78%
+
+### Known Gaps
+
+- Local infra readiness uses explicit assumption mode for missing provider
+  credentials and missing `aws`/`kubectl` tools; production must disable
+  assumption mode and require credentials/tools.
+- Deployment and rollback decisions are still local assumed JSON in this
+  workstation evidence; production must use `run_production_deployment_gate.py`
+  and `run_production_rollback.py` output from the protected runner.
+- Real FBR, PSP, courier, and hardware certification artifacts are still
+  required before production go-live.
+- Production ops readiness still needs complete secret-manager, runtime
+  secret, deployment environment, tenant ops, and ops status evidence attached
+  in one strict protected run.
+
+### Next Iteration
+
+- Add a protected release wrapper that generates production-infra plans,
+  infra-provider readiness, production-ops readiness, and sign-off package in
+  one command.
+- Add CI workflow wiring for the new infra readiness flags and artifacts.
+- Replace local assumption-mode provider checks with real Cloudflare/Route53,
+  Kubernetes, and PostgreSQL backup credentials on a protected runner.
+- Continue replacing assumed FBR, PSP, courier, and hardware certification
+  evidence with certified provider/device artifacts.

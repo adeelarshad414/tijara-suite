@@ -397,6 +397,8 @@ def _evidence_group(entry):
         or "load-profile-matrix" in relative_lower
         or "operations-release-bundle" in relative_lower
         or "production-ops-readiness" in relative_lower
+        or "production-infra" in relative_lower
+        or "infra-provider-readiness" in relative_lower
         or "ops-tool-evidence" in relative_lower
         or "protected-runbook-handoff" in relative_lower
         or "protected-first-run" in relative_lower
@@ -423,6 +425,8 @@ def _evidence_group(entry):
         or filename == "load-profile-matrix.json"
         or filename == "operations-release-bundle.json"
         or filename == "production-ops-readiness.json"
+        or filename == "production-infra-automation.json"
+        or filename == "infra-provider-readiness.json"
         or filename == "ops-tool-evidence.json"
         or filename == "ops-evidence.json"
         or filename == "protected-runbook-handoff.json"
@@ -1198,6 +1202,76 @@ def _production_ops_readiness_reviews(evidence_entries):
     return reviews
 
 
+def _production_infra_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "production-infra-automation.json":
+            continue
+        payload = _read_json(path)
+        tenant_plans = payload.get("tenant_plans") or []
+        execute_counts = {}
+        for plan in tenant_plans:
+            status = plan.get("execute_status") or "unknown"
+            execute_counts[status] = execute_counts.get(status, 0) + 1
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "provider_template_sources": payload.get("provider_template_sources") or [],
+                "provider_template_actions": payload.get("provider_template_actions") or [],
+                "tenant_plan_count": len(tenant_plans),
+                "execute_counts": execute_counts,
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
+def _infra_provider_readiness_reviews(evidence_entries):
+    reviews = []
+    for entry in evidence_entries:
+        path = Path(entry["path"])
+        if path.name != "infra-provider-readiness.json":
+            continue
+        payload = _read_json(path)
+        payload_context = payload.get("context") or {}
+        providers = payload.get("providers") or []
+        provider_statuses = {
+            provider.get("provider") or "unknown": provider.get("decision") or "unknown"
+            for provider in providers
+        }
+        assumption_providers = [
+            provider.get("provider") or "unknown"
+            for provider in providers
+            if provider.get("assumption_mode")
+        ]
+        reviews.append(
+            {
+                "path": entry["relative_path"],
+                "decision": payload.get("decision", ""),
+                "ci_status": payload.get("ci_status", ""),
+                "target_environment": payload_context.get("target_environment", ""),
+                "strict": bool(payload_context.get("strict")),
+                "allow_assumptions": bool(payload_context.get("allow_assumptions")),
+                "require_real_approvals": bool(payload_context.get("require_real_approvals")),
+                "provider_count": len(providers),
+                "provider_statuses": provider_statuses,
+                "assumption_providers": assumption_providers,
+                "production_infra_evidence_count": len(payload.get("production_infra_reviews") or []),
+                "deployment_decision_attached": bool((payload.get("deployment_decision") or {}).get("attached")),
+                "deployment_decision_assumption": bool((payload.get("deployment_decision") or {}).get("assumption_mode")),
+                "rollback_decision_attached": bool((payload.get("rollback_decision") or {}).get("attached")),
+                "rollback_decision_assumption": bool((payload.get("rollback_decision") or {}).get("assumption_mode")),
+                "blockers": payload.get("blockers") or [],
+                "warnings": payload.get("warnings") or [],
+            }
+        )
+    return reviews
+
+
 def _ops_tool_reviews(evidence_entries):
     reviews = []
     for entry in evidence_entries:
@@ -1562,6 +1636,8 @@ def _evidence_summary(context, evidence_entries):
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     production_ops_readiness_reviews = _production_ops_readiness_reviews(evidence_entries)
+    production_infra_reviews = _production_infra_reviews(evidence_entries)
+    infra_provider_readiness_reviews = _infra_provider_readiness_reviews(evidence_entries)
     ops_tool_reviews = _ops_tool_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
     secret_manager_reviews = _secret_manager_reviews(evidence_entries)
@@ -2668,6 +2744,8 @@ def _release_readiness(context, evidence_entries, group_counts):
     load_matrix_reviews = _load_matrix_reviews(evidence_entries)
     operations_bundle_reviews = _operations_bundle_reviews(evidence_entries)
     production_ops_readiness_reviews = _production_ops_readiness_reviews(evidence_entries)
+    production_infra_reviews = _production_infra_reviews(evidence_entries)
+    infra_provider_readiness_reviews = _infra_provider_readiness_reviews(evidence_entries)
     ops_tool_reviews = _ops_tool_reviews(evidence_entries)
     release_retention_reviews = _release_retention_reviews(evidence_entries)
     secret_manager_reviews = _secret_manager_reviews(evidence_entries)
@@ -2900,6 +2978,20 @@ def _release_readiness(context, evidence_entries, group_counts):
         elif decision in {"warning", "warn"}:
             warnings.append("Production operations readiness %s is %s" % (review["path"], review["decision"]))
 
+    for review in production_infra_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Production infrastructure automation %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Production infrastructure automation %s is %s" % (review["path"], review["decision"]))
+
+    for review in infra_provider_readiness_reviews:
+        decision = str(review.get("decision") or "").lower()
+        if decision in {"failed", "blocked"}:
+            blockers.append("Infrastructure provider readiness %s is %s" % (review["path"], review["decision"]))
+        elif decision in {"warning", "warn"}:
+            warnings.append("Infrastructure provider readiness %s is %s" % (review["path"], review["decision"]))
+
     for review in ops_tool_reviews:
         decision = str(review.get("decision") or "").lower()
         if decision in {"failed", "blocked"}:
@@ -3038,6 +3130,8 @@ def _release_readiness(context, evidence_entries, group_counts):
         "load_matrix_reviews": load_matrix_reviews,
         "operations_bundle_reviews": operations_bundle_reviews,
         "production_ops_readiness_reviews": production_ops_readiness_reviews,
+        "production_infra_reviews": production_infra_reviews,
+        "infra_provider_readiness_reviews": infra_provider_readiness_reviews,
         "ops_tool_reviews": ops_tool_reviews,
         "release_retention_reviews": release_retention_reviews,
         "secret_manager_reviews": secret_manager_reviews,

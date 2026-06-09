@@ -110,6 +110,12 @@ Required for production:
 - [ ] cert-manager/Kubernetes TLS template pack is selected and reviewed.
 - [ ] PostgreSQL backup/restore runner pack is selected and dry-run evidence
       passes before `CONFIRM_PROVIDER_ACTION=YES` is allowed.
+- [ ] `make infra-provider-readiness` passes with real provider credentials,
+      required CLIs, and real deployment/rollback approval evidence.
+- [ ] `make production-ops-readiness` includes production-infra and
+      infra-provider-readiness components as passed.
+- [ ] `make signoff-pack` extracts `production_infra_reviews` and
+      `infra_provider_readiness_reviews` into `release-readiness.json`.
 - [ ] Incident runbook is reviewed.
 - [ ] Rollback process is tested.
 

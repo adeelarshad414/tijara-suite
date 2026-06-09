@@ -62,6 +62,7 @@
 | Generate production DNS/TLS/backup wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001"` |
 | Generate Cloudflare/cert-manager/Postgres wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict"` |
 | Generate Route53/cert-manager/Postgres wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template route53-cert-manager-postgres --strict"` |
+| Export infra provider readiness | `make infra-provider-readiness TIJARA_INFRA_PROVIDER_READINESS_FLAGS="--production-infra-evidence deploy/runtime/production-infra/20260609-provider-templates-cloudflare --allow-assumptions --assume-provider all --strict"` |
 | Run full operations evidence bundle | `make operations-release-bundle` |
 | Run release candidate gate | `make release-candidate` |
 | Generate signoff pack | `make signoff-pack` |

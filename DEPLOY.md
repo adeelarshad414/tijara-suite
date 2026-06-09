@@ -746,6 +746,42 @@ Individual packs are also available for partial rollouts:
 `postgres-backup-restore`. The generator records loaded template sources and
 rendered actions in `production-infra-automation.json`.
 
+Export infrastructure provider readiness after generating provider plans:
+
+```bash
+python3 scripts/export_infra_provider_readiness.py \
+  --run-id 20260609-infra-provider-readiness \
+  --target-environment staging \
+  --production-infra-evidence deploy/runtime/production-infra/20260609-provider-templates-cloudflare \
+  --production-infra-evidence deploy/runtime/production-infra/20260609-provider-templates-route53 \
+  --deployment-decision deploy/runtime/deployment-gates/<run-id>/deployment-decision.json \
+  --rollback-decision deploy/runtime/rollbacks/<run-id>/rollback-decision.json \
+  --require-provider-credentials \
+  --require-tools \
+  --require-real-approvals \
+  --strict
+```
+
+For local public-repo drills only, dummy/assumed credentials can be marked with
+`--allow-assumptions --assume-provider all`. Production must keep assumptions
+disabled and use real protected-runner deployment and rollback decision JSON
+from `run_production_deployment_gate.py` and `run_production_rollback.py`.
+
+Attach the resulting `infra-provider-readiness.json` and the
+`production-infra-automation.json` files to production operations readiness:
+
+```bash
+python3 scripts/export_production_ops_readiness.py \
+  --production-infra-evidence deploy/runtime/production-infra/20260609-provider-templates-cloudflare \
+  --production-infra-evidence deploy/runtime/production-infra/20260609-provider-templates-route53 \
+  --infra-provider-readiness-evidence deploy/runtime/infra-provider-readiness/20260609-infra-provider-readiness/infra-provider-readiness.json
+```
+
+`generate_signoff_pack.py` now extracts both `production_infra_reviews` and
+`infra_provider_readiness_reviews` into `release-readiness.json`, so release
+owners can see provider template sources, rendered action coverage, assumption
+mode, and approval evidence status in the sign-off package.
+
 Export tenant operations evidence before pilot, staging, or production
 sign-off:
 
