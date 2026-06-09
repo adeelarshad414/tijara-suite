@@ -9,6 +9,18 @@ The core suite is intended for a public community repository, so product
 architecture must prefer open-source tools, Odoo Community extension points, and
 redistributable assets.
 
+## Diagram Pack
+
+`docs/DIAGRAMS.md` is the canonical visual architecture pack. It contains the
+deployment architecture, local development topology, system context, component
+architecture, Odoo module map, data model UML, POS/ecommerce/restaurant user
+flows, offline POS activity, hardware print sequence, tenant provisioning,
+analytics pipeline, and release evidence flow diagrams.
+
+Update that file whenever topology, module ownership, component boundaries,
+UML, user journeys, activity flows, analytics movement, or DevOps release flow
+changes.
+
 ## Tenancy Strategy
 
 Preferred SaaS model: database per tenant.

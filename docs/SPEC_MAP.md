@@ -16,6 +16,7 @@ agentic development pipeline.
 | Hardware bridge | `http://localhost:9109` |
 | Database | PostgreSQL via Docker Compose |
 | Optional profiles | `hardware`, `monitoring` |
+| Diagram pack | `docs/DIAGRAMS.md` |
 
 ## Personas
 

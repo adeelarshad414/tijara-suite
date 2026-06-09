@@ -15,6 +15,13 @@ control.
 This guide explains how each user role should use the application during daily
 operations. It is written for local demo, pilot, and training use.
 
+## System And Workflow Diagrams
+
+Use `docs/DIAGRAMS.md` when training users or reviewing a rollout. It includes
+deployment architecture, system design, module/component diagrams, UML, POS
+checkout, ecommerce checkout, restaurant/kiosk, offline POS, hardware print,
+tenant provisioning, analytics, and release evidence flows.
+
 ## 2. Local Access
 
 Open the application:

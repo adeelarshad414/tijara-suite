@@ -10327,3 +10327,67 @@ Status: Complete
   provider adapter scaffolding.
 - Continue FBR live adapter certification, hardware certification, monitoring,
   restore drills, load testing, and security hardening.
+
+## Iteration 139: Architecture And Workflow Diagram Pack
+
+### Objective
+
+- Add a complete source-controlled visual design pack for deployment
+  architecture, system design, user flows, activity flows, UML, module maps,
+  component diagrams, analytics, tenant provisioning, hardware, and release
+  evidence.
+- Link the diagram pack from operator, deployment, architecture, user, visual
+  guide, and spec-map documents so DevOps, QA, business users, and developers
+  can find the same canonical diagrams.
+
+### Completed
+
+- Added `docs/DIAGRAMS.md` with 14 Mermaid diagrams:
+  deployment architecture, local development deployment, system context,
+  component architecture, Odoo module map, data model UML, POS checkout user
+  flow, ecommerce checkout user flow, restaurant/kiosk activity, offline POS
+  activity, hardware print sequence, tenant provisioning activity, analytics
+  pipeline, and release/evidence flow.
+- Updated `README.md` with the diagram pack in the project layout, the user
+  documentation list, the production operations overview, and the iteration
+  documentation contract.
+- Updated `DEPLOY.md` with `docs/DIAGRAMS.md` in the deployment layout and
+  deployment handoff guidance.
+- Updated `docs/ARCHITECTURE.md` with the diagram pack as the canonical visual
+  architecture reference.
+- Updated `docs/USER_GUIDE_ALL_USERS.md` and
+  `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md` with user-facing workflow diagram
+  references.
+- Updated `docs/SPEC_MAP.md` so the generated operator map points to the
+  diagram pack.
+
+### Validation
+
+- `git diff --check` passed.
+- Mermaid/Markdown fence sanity check passed: 14 Mermaid diagrams and balanced
+  fences.
+- `make validate` passed: 86 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+
+### Known Gaps
+
+- The diagrams are source-controlled design documentation; they do not replace
+  live protected staging evidence.
+- Physical hardware certification still needs real printers, scanners, drawers,
+  scales, label printers, and customer-facing displays.
+- FBR and PSP flows still need certified provider credentials, sandbox sign-off,
+  live compliance testing, refunds, chargebacks, and reconciliation evidence.
+- Full protected browser matrix, monitoring/alerting evidence, backup restore
+  drills, load testing, and deeper security scans still need current staging or
+  production execution proof.
+
+### Next Iteration
+
+- Run protected browser matrix with seeded ecommerce/display/POS data across
+  Chromium, Firefox, WebKit, tablet, and mobile profiles.
+- Add customer portal/order tracking and delivery-provider scaffolding for
+  ecommerce orders.
+- Expand PSP/FBR fixture evidence toward certified provider adapters and
+  reconciliation reports.
+- Continue hardware certification evidence, monitoring/alerting proof, restore
+  drills, load tests, and security hardening.

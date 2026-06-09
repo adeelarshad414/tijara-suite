@@ -7,8 +7,9 @@ release behavior changes.
 Every implementation iteration must keep the public operator record aligned:
 update `README.md` for product/setup/module changes, this `DEPLOY.md` for
 deployment/runtime/release changes, `PROGRESS.md` for completed work and
-validation, and `docs/USER_GUIDE_ALL_USERS.md` plus
-`docs/TEST_CREDENTIALS.csv` whenever personas, credentials, or workflows change.
+validation, `docs/DIAGRAMS.md` for topology/flow changes, and
+`docs/USER_GUIDE_ALL_USERS.md` plus `docs/TEST_CREDENTIALS.csv` whenever
+personas, credentials, or workflows change.
 
 ## Deployment Layout
 
@@ -23,6 +24,8 @@ deploy/nginx/tijara.conf              Reverse proxy baseline
 deploy/postgres/                      Database backup, restore drill, operations
 hardware-bridge/                      Local shop-machine bridge service
 docs/RETAIL_OPERATIONS_DATA.md        Hardware, templates, scanning, CSV notes
+docs/DIAGRAMS.md                      Deployment, system, UML, module,
+                                      component, activity, and user-flow diagrams
 docs/COMMANDS_QUICKREF.md             Generated local and staging command sheet
 docs/SPEC_MAP.json                    Machine-readable app/persona/screen map
 docs/TEST_CREDENTIALS.csv             Public-safe demo/staging account matrix
@@ -35,6 +38,10 @@ Makefile                              Operator shortcuts
 
 Do not put passwords, API keys, database passwords, backup keys, FBR credentials,
 payment credentials, or JWT/session material in committed configuration files.
+
+Deployment topology and runtime flow diagrams are maintained in
+`docs/DIAGRAMS.md`. Use that pack during DevOps handoff, architecture review,
+tenant onboarding, release readiness review, and incident exercises.
 
 ## Environment Files
 

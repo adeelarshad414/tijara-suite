@@ -1,8 +1,8 @@
 # Tijara Suite Step-by-Step Visual User Guide
 
-Version: 2026-06-08
+Version: 2026-06-09
 
-Audience: platform owners, tenant admins, cashiers, inventory teams, accountants, restaurant operators, display/kiosk operators, and business managers.
+Audience: platform owners, tenant admins, cashiers, inventory teams, ecommerce teams, accountants, restaurant operators, display/kiosk operators, and business managers.
 
 This guide uses visual maps, workflow lanes, step cards, and quick checks so every user knows where to go, what to do, what success looks like, and when to escalate.
 
@@ -27,6 +27,10 @@ This guide uses visual maps, workflow lanes, step cards, and quick checks so eve
 | 4. Fulfill | Receipt, queue, delivery/pickup, hardware |
 | 5. Control | Refunds, exchange, settlements, FBR queue |
 | 6. Improve | Dashboards, reports, trends, alerts |
+
+For architecture, module, UML, activity, deployment, POS, ecommerce, kiosk,
+offline, hardware, tenant, analytics, and release diagrams, use
+`docs/DIAGRAMS.md` as the canonical visual design pack.
 
 ## Role Map
 

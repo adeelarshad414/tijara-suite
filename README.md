@@ -95,6 +95,8 @@ deploy/
 hardware-bridge/               Local shop-machine device bridge foundation
 docs/                          Architecture, roadmap, analytics, inventory, QA
                                retail operations, hardware, and data exchange
+docs/DIAGRAMS.md               Deployment, system, UML, module, component,
+                               activity, and user-flow diagram pack
 docs/COMMANDS_QUICKREF.md      Generated local run/test command sheet
 docs/SPEC_MAP.json             Machine-readable app, persona, and screen map
 docs/TEST_CREDENTIALS.csv      Deterministic demo/staging account matrix
@@ -266,7 +268,8 @@ FBR, fixture, and hardware dry-run evidence under
 need for real hardware, FBR, and PSP sign-off before production.
 
 See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
-`docs/TEST_CREDENTIALS.csv`, `docs/BILINGUAL_QUICK_STARTS.md`,
+`docs/DIAGRAMS.md`, `docs/TEST_CREDENTIALS.csv`,
+`docs/BILINGUAL_QUICK_STARTS.md`,
 `docs/USER_GUIDE_ALL_USERS.md`,
 `docs/Tijara_Suite_All_User_Guide.docx`,
 `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`,
@@ -937,6 +940,9 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/container_scan.sh` and `scripts/dependency_scan.sh` provide
   production security scan hooks for Trivy, npm audit, and pip-audit.
 - `DEPLOY.md` is the maintained deployment runbook.
+- `docs/DIAGRAMS.md` is the maintained visual architecture pack for deployment,
+  system context, component/module boundaries, UML, user flows, activity flows,
+  analytics, tenant provisioning, hardware, and release evidence.
 
 ## Touch and Browser Support
 
@@ -982,6 +988,9 @@ Every implementation iteration must update:
   changes.
 - `DEPLOY.md` when deployment, configuration, secrets, runtime operations,
   provisioning, test execution, or release behavior changes.
+- `docs/DIAGRAMS.md` when deployment topology, module ownership, component
+  boundaries, UML, activity flows, user journeys, analytics pipelines, or
+  release evidence flows change.
 - `PROGRESS.md` with completed work, validation results, risks, and the next
   planned build step.
 - `docs/USER_GUIDE_ALL_USERS.md` and `docs/TEST_CREDENTIALS.csv` whenever
