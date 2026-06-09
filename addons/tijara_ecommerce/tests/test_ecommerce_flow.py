@@ -396,3 +396,34 @@ class TestTijaraEcommerceFlow(TransactionCase):
         self.assertIn("courier_success_rate", metric_types)
         self.assertIn("cod_receivable_aging", metric_types)
         self.assertIn("delivery_reconciliation_variance", metric_types)
+
+    def test_prometheus_business_metrics_exporter_contract(self):
+        order = self.channel.tijara_create_order(
+            {
+                "audience": "b2c",
+                "fulfillment_method": "delivery",
+                "payment_method": "cod",
+                "customer": {
+                    "name": "Metrics Ecommerce Customer",
+                    "mobile": "03001234671",
+                    "email": "metrics-ecommerce@example.com",
+                    "delivery_address": "Metrics test address",
+                },
+                "lines": [{"product_id": self.product.id, "quantity": 1}],
+            }
+        )
+        self.assertEqual(order.tijara_delivery_provider_id, self.provider)
+
+        metrics = self.env["tijara.monitoring.metrics"].sudo().tijara_prometheus_payload()
+        self.assertIn("# HELP tijara_ecommerce_orders_total", metrics)
+        self.assertIn("tijara_ecommerce_orders_total", metrics)
+        self.assertIn("tijara_ecommerce_delivery_orders_total", metrics)
+        self.assertIn("TIJARA-TEST-DELIVERY", metrics)
+        self.assertIn("tijara_delivery_retry_pending", metrics)
+        self.assertIn("tijara_delivery_sla_breach_rate_percent", metrics)
+        self.assertIn("tijara_payment_events_total", metrics)
+        self.assertIn("tijara_payment_settlement_variance_pkr", metrics)
+        self.assertIn("tijara_fbr_queue_total", metrics)
+        self.assertIn("tijara_hardware_certifications_total", metrics)
+        self.assertIn('tijara_external_assumption_mode{integration="fbr"} 1.000000', metrics)
+        self.assertIn('tijara_external_assumption_mode{integration="psp"} 1.000000', metrics)

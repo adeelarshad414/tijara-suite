@@ -31,3 +31,11 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox:9115
+
+  - job_name: tijara-odoo-business
+    metrics_path: /tijara/monitoring/metrics
+    params:
+      db: [tijara_dev]
+      token: [dummy-prometheus-token-change-me]
+    static_configs:
+      - targets: ["odoo:8069"]

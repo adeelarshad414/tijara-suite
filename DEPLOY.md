@@ -28,6 +28,9 @@ docs/DIAGRAMS.md                      Deployment, system, UML, module,
                                       component, activity, and user-flow diagrams
 docs/diagrams/png/                    Rendered PNG exports of architecture diagrams
 docs/COMMANDS_QUICKREF.md             Generated local and staging command sheet
+docs/SETUP_STEP_BY_STEP.md            Step-by-step setup guide
+docs/HOW_TO_USE_GUIDELINES.md         Daily usage guidelines
+docs/PRODUCTION_READINESS_CHECKLIST.md Go-live checklist
 docs/SPEC_MAP.json                    Machine-readable app/persona/screen map
 docs/TEST_CREDENTIALS.csv             Public-safe demo/staging account matrix
 docker-compose.yml                    Development and small deployment runtime
@@ -182,6 +185,9 @@ foundation for open-source/local/staging execution:
 - Prometheus/Alertmanager delivery alert rules in
   `deploy/monitoring/tijara-delivery-alerts.yml`, with dummy metric examples in
   `deploy/monitoring/tijara-delivery-metrics.example.prom`.
+- Token-protected Prometheus business metrics at
+  `/tijara/monitoring/metrics`, using `TIJARA_METRICS_TOKEN` or Odoo system
+  parameter `tijara.monitoring.prometheus_token`.
 
 The retry queue and SLA monitor are installed as Odoo crons. In local/demo mode
 they process assumed HTTP JSON responses without making live courier network
@@ -297,12 +303,14 @@ Compose requires these secret values before startup:
 - `ODOO_MASTER_PASSWORD`
 - `TIJARA_BRIDGE_SHARED_SECRET` for hardware bridge deployments
 - `TIJARA_PAYMENT_WEBHOOK_SECRET` for public payment webhook validation
+- `TIJARA_METRICS_TOKEN` for the Odoo Prometheus business metrics endpoint
 - Delivery webhook secrets for certified providers, loaded into the Odoo config
   parameter namespace `tijara.delivery.webhook.<PROVIDER_CODE>.secret`
 - `GRAFANA_ADMIN_PASSWORD` for the monitoring profile
 
 The startup script refuses to start production if placeholder or development
-secret values are still present.
+secret values are still present. It also refuses production startup when
+`TIJARA_METRICS_TOKEN` is set to a dummy or placeholder value.
 
 For single-database local development, `POSTGRES_PASSWORD` and
 `ODOO_DB_PASSWORD` should match the active password for the `POSTGRES_USER` role.
@@ -918,6 +926,20 @@ make monitoring-up
 This launches Prometheus, Blackbox Exporter, Alertmanager, Loki, and Grafana
 with Odoo login and hardware bridge health checks. See
 `deploy/monitoring/README.md`.
+
+The local Prometheus config also scrapes Odoo business metrics:
+
+```text
+http://localhost:8069/tijara/monitoring/metrics?db=tijara_dev&token=dummy-prometheus-token-change-me
+```
+
+For production, replace `dummy-prometheus-token-change-me`, restrict the route
+at the reverse proxy or network layer, and set the database/query/token values
+in an environment-specific Prometheus config or secret-managed scrape config.
+Odoo must also select the target tenant database before module routes are
+mapped. Use a single-database deployment, `ODOO_DB_FILTER=<tenant_db>`, or a
+host-based dbfilter per tenant; do not rely on the `db=` query parameter alone
+when one Odoo service exposes multiple databases.
 
 Logging guidance is in `deploy/logging/README.md`. Production should centralize
 Odoo, PostgreSQL, Nginx/ingress, hardware bridge, FBR adapter, and backup job

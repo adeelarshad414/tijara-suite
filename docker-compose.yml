@@ -42,6 +42,7 @@ services:
       TIJARA_BRIDGE_TIMEOUT_SECONDS: ${TIJARA_BRIDGE_TIMEOUT_SECONDS:-5}
       TIJARA_SAAS_ENFORCEMENT_ENABLED: ${TIJARA_SAAS_ENFORCEMENT_ENABLED:-False}
       TIJARA_PAYMENT_WEBHOOK_SECRET: ${TIJARA_PAYMENT_WEBHOOK_SECRET:-}
+      TIJARA_METRICS_TOKEN: ${TIJARA_METRICS_TOKEN:-}
       FBR_ADAPTER_MODE: ${FBR_ADAPTER_MODE:-dry_run}
       FBR_ADAPTER_ENDPOINT: ${FBR_ADAPTER_ENDPOINT:-}
       FBR_CLIENT_ID: ${FBR_CLIENT_ID:-}
@@ -104,6 +105,7 @@ services:
     volumes:
       - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./deploy/monitoring/tijara-alerts.yml:/etc/prometheus/rules/tijara-alerts.yml:ro
+      - ./deploy/monitoring/tijara-delivery-alerts.yml:/etc/prometheus/rules/tijara-delivery-alerts.yml:ro
       - tijara-prometheus-data:/prometheus
 
   alertmanager:

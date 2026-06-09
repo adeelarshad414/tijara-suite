@@ -22,6 +22,10 @@ deployment architecture, system design, module/component diagrams, UML, POS
 checkout, ecommerce checkout, restaurant/kiosk, offline POS, hardware print,
 tenant provisioning, analytics, and release evidence flows.
 
+Use `docs/HOW_TO_USE_GUIDELINES.md` for concise daily operating rules,
+`docs/SETUP_STEP_BY_STEP.md` for setup, and
+`docs/PRODUCTION_READINESS_CHECKLIST.md` before approving a production launch.
+
 ## 2. Local Access
 
 Open the application:

@@ -5,6 +5,7 @@ from . import delivery_exception
 from . import delivery_provider
 from . import delivery_reconciliation
 from . import delivery_retry
+from . import monitoring_metrics
 from . import product_template
 from . import queue_ticket
 from . import sale_order

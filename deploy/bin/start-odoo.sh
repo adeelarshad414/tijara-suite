@@ -35,6 +35,10 @@ if [[ "${TIJARA_ENV:-development}" == "production" ]]; then
             exit 1
         fi
     done
+    if [[ -n "${TIJARA_METRICS_TOKEN:-}" && ( "${TIJARA_METRICS_TOKEN}" == dummy-* || "${TIJARA_METRICS_TOKEN}" == replace-with-* ) ]]; then
+        echo "Refusing to start production with a placeholder TIJARA_METRICS_TOKEN." >&2
+        exit 1
+    fi
 fi
 
 python3 - "$CONFIG_TEMPLATE" "$RUNTIME_CONFIG" <<'PY'

@@ -32,6 +32,11 @@ in-house rider profiles, retry/backoff queue records, SLA breach exception
 monitoring, delivery reconciliation reports, signed/dry-run webhook evidence,
 delivery analytics/alerting contracts, and customer account portals for order
 history, saved addresses, and return/exchange requests.
+The monitoring layer now also includes a token-protected Odoo business metrics
+endpoint for Prometheus, covering ecommerce orders, delivery exceptions/retries,
+PSP settlement lifecycle, FBR queue state, hardware certification state, and
+explicit dummy/assumption-mode markers for integrations still awaiting live
+certification.
 
 The first market verticals are:
 
@@ -107,6 +112,10 @@ docs/COMMANDS_QUICKREF.md      Generated local run/test command sheet
 docs/SPEC_MAP.json             Machine-readable app, persona, and screen map
 docs/TEST_CREDENTIALS.csv      Deterministic demo/staging account matrix
 docs/BILINGUAL_QUICK_STARTS.md Urdu/English quick starts for key roles
+docs/SETUP_STEP_BY_STEP.md     Step-by-step local/staging/production setup
+docs/HOW_TO_USE_GUIDELINES.md  Daily operating guidelines for every role
+docs/PRODUCTION_READINESS_CHECKLIST.md
+                               Go-live checklist for product, ops, security
 docs/USER_GUIDE_ALL_USERS.md   All-user application usage guide
 docs/Tijara_Suite_All_User_Guide.docx
                                Polished all-user training document
@@ -278,6 +287,9 @@ See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
 `docs/DIAGRAMS.md`, `docs/diagrams/README.md`,
 `docs/TEST_CREDENTIALS.csv`,
 `docs/BILINGUAL_QUICK_STARTS.md`,
+`docs/SETUP_STEP_BY_STEP.md`,
+`docs/HOW_TO_USE_GUIDELINES.md`,
+`docs/PRODUCTION_READINESS_CHECKLIST.md`,
 `docs/USER_GUIDE_ALL_USERS.md`,
 `docs/Tijara_Suite_All_User_Guide.docx`,
 `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`,
@@ -294,6 +306,10 @@ managers, restaurant operators, display/kiosk operators, and business managers,
 including local access, demo accounts, POS checkout, online storefront checkout,
 refund/exchange, inventory alerts, SaaS feature flags, hardware usage,
 troubleshooting, and escalation.
+
+The setup and readiness guides give a new operator a direct path from machine
+prep to local startup, seeded demo workflows, monitoring, dummy integration
+rules, and production go/no-go checks.
 
 The bilingual quick-start guide gives English/Urdu operating steps for
 cashiers, tenant admins, inventory managers, restaurant operators,
@@ -342,6 +358,10 @@ enterprise seed verification reports 15 users, 14 verticals, 10 dashboards, 11
 reports, one ecommerce channel, and 15 ecommerce products.
 Live browser screenshots now back the screenshot-based guide, including the
 ecommerce storefront.
+Odoo business metrics are now available through
+`/tijara/monitoring/metrics` when `TIJARA_METRICS_TOKEN` or the matching Odoo
+system parameter is configured. Local demo Prometheus uses the dummy token from
+`secrets/.env.secrets.example`; production must replace it before startup.
 The local evidence harness run `local-e2e-20260609T073524Z` also passed all
 stages: Compose startup, Odoo readiness, PKR/GST module upgrade, live PKR/GST
 verification, demo-user seeding, browser E2E seed, full Playwright browser E2E,

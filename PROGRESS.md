@@ -10530,6 +10530,8 @@ Status: Complete
 - Python compile passed for touched ecommerce model/controller/test files with
   a sandbox-safe pycache path.
 - `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `docker compose --env-file .env --env-file secrets/.env.secrets config --quiet`
+  passed after adding the metrics token environment and delivery alert mount.
 - `git diff --check` passed.
 - Local `tijara_dev` was upgraded with `tijara_ecommerce`, loading the new
   delivery event model, security access, views, provider fields, sale order
@@ -10828,3 +10830,112 @@ Status: Complete
 - Continue certified courier, PSP, FBR, and hardware evidence work.
 - Continue production monitoring, backup restore drill, load, and security scan
   evidence.
+
+## Iteration 145: Business Metrics Exporter, Setup Guides, And Production Checklist
+
+### Objective
+
+- Proceed with the production-hardening items that are possible without real
+  hardware, PSP, FBR, or courier credentials.
+- Use dummy/assumed values for unavailable real-world integrations while making
+  those assumptions explicit in code, deployment config, and operator docs.
+- Update `README.md`, `DEPLOY.md`, `PROGRESS.md`, usage guidance, setup guide,
+  and production checklist, then validate, commit, and push.
+
+### Completed
+
+- Added `tijara.monitoring.metrics`, a read-only Odoo Prometheus/OpenMetrics
+  exporter service for:
+  ecommerce orders, ecommerce delivery orders, delivery exceptions, delivery
+  retry backlog, retry aging, SLA breach rate, courier webhook failures, COD
+  reconciliation variance, payment webhook lifecycle events, payment settlement
+  variance, FBR queue state, hardware certifications, hardware device state,
+  and explicit assumption-mode markers for courier, FBR, hardware, and PSP.
+- Added token-protected HTTP route `/tijara/monitoring/metrics`.
+  The route accepts `Authorization: Bearer <token>`,
+  `X-Tijara-Monitoring-Token`, or `token=<value>`.
+- The metrics route reads the expected token from Odoo system parameter
+  `tijara.monitoring.prometheus_token` or environment variable
+  `TIJARA_METRICS_TOKEN`.
+- Added production startup protection so `deploy/bin/start-odoo.sh` refuses
+  production startup when `TIJARA_METRICS_TOKEN` is still a dummy/placeholder
+  value.
+- Added `TIJARA_METRICS_TOKEN` to `secrets/.env.secrets.example` and Odoo
+  Compose environment.
+- Fixed the monitoring Compose profile to mount
+  `deploy/monitoring/tijara-delivery-alerts.yml`, which was already referenced
+  by Prometheus.
+- Added local Prometheus scrape config for the Odoo business metrics endpoint
+  using dummy local token and `db=tijara_dev`.
+- Updated `deploy/monitoring/tijara-delivery-metrics.example.prom` so sample
+  metrics match the live exporter labels and include ecommerce, PSP, FBR,
+  hardware, and assumption-mode examples.
+- Added Odoo transaction coverage for the Prometheus business metrics exporter
+  contract.
+- Added `docs/SETUP_STEP_BY_STEP.md` for machine prep, central config, local
+  startup, seeding, validation, monitoring, dummy integration rules, and
+  production cutover.
+- Added `docs/HOW_TO_USE_GUIDELINES.md` for daily role workflows covering POS,
+  restaurant/cafe, inventory, ecommerce, customer account portal, displays,
+  finance, dashboards, and DevOps/support.
+- Added `docs/PRODUCTION_READINESS_CHECKLIST.md` for product, Pakistan
+  localization, SaaS controls, external integrations, monitoring, security, QA,
+  and go/no-go sign-off.
+- Updated `README.md`, `DEPLOY.md`, `deploy/monitoring/README.md`,
+  `docs/LOCAL_SETUP_GUIDE.md`, and `docs/USER_GUIDE_ALL_USERS.md` to link the
+  new setup, usage, metrics, and readiness material.
+
+### Assumptions And Dummy Values
+
+- Local/demo Prometheus uses `dummy-prometheus-token-change-me`; production
+  must rotate `TIJARA_METRICS_TOKEN`.
+- Courier, FBR, PSP, and hardware production metrics include assumption-mode
+  markers until certified live evidence is attached.
+- Real provider endpoints, hardware models, and PSP/FBR credentials remain
+  outside the public repo and must be supplied through a protected secret
+  manager or production environment.
+
+### Validation
+
+- `make validate` passed: 103 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- Python compile passed for the new metrics exporter, ecommerce controller, and
+  ecommerce transaction tests using
+  `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `git diff --check` passed.
+- Local `tijara_dev` was upgraded with `tijara_ecommerce`, loading the
+  monitoring exporter model and route code.
+- Focused Odoo ecommerce transaction tests initially exposed a many2one label
+  formatter bug for records without `code`; fixed by using defensive
+  `getattr(..., "code", False)`/`name`/`display_name` label fallback.
+- Focused Odoo ecommerce transaction tests then passed against fresh database
+  `tijara_test_monitoring_metrics_2`: 7 post-test methods, 0 failures,
+  0 errors; Odoo stats reported `tijara_ecommerce: 9 tests`.
+- Live in-container metrics route smoke passed after running Odoo with
+  `ODOO_DB_FILTER=tijara_dev` and temporary dummy token
+  `dummy-prometheus-token-change-me`; `/tijara/monitoring/metrics` returned
+  ecommerce order, delivery order, and `tijara_external_assumption_mode`
+  OpenMetrics lines.
+- Local Odoo service was restored to the normal Compose environment after the
+  temporary metrics smoke-test overrides.
+
+### Known Gaps
+
+- Production still needs certified courier, PSP, FBR, and physical hardware
+  sign-off evidence.
+- Metrics endpoint needs production dbfilter/host routing, network restrictions,
+  WAF/rate limits, and alert routing evidence.
+- PostgreSQL exporter, log shippers, production Grafana dashboards, restore
+  drill evidence, load evidence, dependency/container scans, and security
+  review evidence still need execution against the target environment.
+
+### Next Iteration
+
+- Run full protected/staging evidence after the metrics exporter upgrade.
+- Add Grafana dashboard JSON/provisioning for the new ecommerce, delivery, PSP,
+  FBR, hardware, and assumption-mode metrics.
+- Add reverse-proxy rate-limit examples for public ecommerce/account routes and
+  metrics endpoint.
+- Continue real-world certification evidence work for courier, PSP, FBR, and
+  hardware.

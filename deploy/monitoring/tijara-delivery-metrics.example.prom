@@ -1,8 +1,15 @@
-# Example OpenMetrics payload for a future Odoo/business-metrics exporter.
+# Example OpenMetrics payload for staging runbooks and alert-rule tests.
+# The live Odoo exporter is /tijara/monitoring/metrics.
 # Values here are dummy/assumed and are not scraped by default.
-tijara_delivery_open_exceptions{provider="TIJARA-INHOUSE",severity="critical"} 0
+tijara_delivery_open_exceptions{provider="TIJARA-INHOUSE",severity="critical",category="sla_breach",state="open"} 0
 tijara_delivery_retry_pending{provider="TIJARA-INHOUSE"} 0
 tijara_delivery_retry_oldest_seconds{provider="TIJARA-INHOUSE"} 0
 tijara_delivery_sla_breach_rate_percent{provider="TIJARA-INHOUSE"} 0
 tijara_delivery_webhook_failures_total{provider="TIJARA-INHOUSE"} 0
 tijara_delivery_cod_variance_amount{provider="TIJARA-INHOUSE"} 0
+tijara_ecommerce_orders_total{company="Tijara Demo",channel="Tijara Web Store",fulfillment="delivery",payment_method="cod",payment_status="cod",state="sale"} 1
+tijara_payment_events_total{company="Tijara Demo",provider="jazzcash",payment_event_type="payment",status="applied",signature_status="valid",reconciliation_status="matched"} 1
+tijara_fbr_queue_total{company="Tijara Demo",state="submitted",adapter_mode="dry_run",compliance_status="sandbox_passed",certification_environment="sandbox"} 1
+tijara_hardware_certifications_total{company="Tijara Demo",device_type="receipt_printer",certification_type="dry_run",result="passed"} 1
+tijara_external_assumption_mode{integration="fbr"} 1
+tijara_external_assumption_mode{integration="psp"} 1

@@ -63,6 +63,7 @@ agentic development pipeline.
 | Ecommerce Return Request API | `/tijara/ecommerce/tijara-demo-web/account/return` | Authenticated JSON | Create return/exchange requests from ecommerce account orders |
 | Ecommerce Delivery Webhook | `/tijara/ecommerce/delivery/webhook/TIJARA-INHOUSE` | Signed public JSON | Dry-run/certified provider delivery status webhook ingestion |
 | Payment Webhook | `/tijara/saas/payment/webhook/generic` | Signed public | PSP webhook ingestion |
+| Prometheus Business Metrics | `/tijara/monitoring/metrics` | Token public | OpenMetrics endpoint for ecommerce, delivery, PSP, FBR, hardware, and assumption-mode monitoring |
 
 ## Feature Inventory
 
@@ -80,7 +81,7 @@ agentic development pipeline.
   retry/backoff queue, SLA exception dashboard, delivery reconciliation
   reports, dry-run delivery provider assignment, label/manifest actions,
   signed/dry-run delivery webhooks, adapter event audit records, delivery
-  alert rules, and ecommerce analytics templates.
+  alert rules, ecommerce analytics templates, and Prometheus business metrics.
 - Offline POS capture, replay, and conflict review.
 - SaaS feature flags and runtime enforcement.
 - Tenant provisioning and operations manifests.

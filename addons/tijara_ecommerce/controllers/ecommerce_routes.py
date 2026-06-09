@@ -1,5 +1,7 @@
+import hmac
 import html
 import json
+import os
 
 from odoo import http
 from odoo.exceptions import UserError, ValidationError
@@ -13,6 +15,41 @@ class TijaraEcommerceController(http.Controller):
             headers=[("Content-Type", "application/json; charset=utf-8")],
             status=status,
         )
+
+    def _text_response(self, payload, status=200, content_type="text/plain; charset=utf-8"):
+        return request.make_response(
+            payload,
+            headers=[("Content-Type", content_type)],
+            status=status,
+        )
+
+    def _monitoring_expected_token(self, env=None):
+        env = env or request.env
+        return (
+            env["ir.config_parameter"]
+            .sudo()
+            .get_param("tijara.monitoring.prometheus_token", "")
+            or os.environ.get("TIJARA_METRICS_TOKEN", "")
+        )
+
+    def _monitoring_request_token(self, kwargs):
+        authorization = request.httprequest.headers.get("Authorization", "")
+        if authorization.lower().startswith("bearer "):
+            return authorization[7:].strip()
+        return (
+            request.httprequest.headers.get("X-Tijara-Monitoring-Token")
+            or kwargs.get("token")
+            or ""
+        )
+
+    def _validate_monitoring_token(self, kwargs, env=None):
+        expected = self._monitoring_expected_token(env=env)
+        if not expected:
+            return False, self._text_response("tijara_metrics_token_not_configured\n", status=503)
+        supplied = self._monitoring_request_token(kwargs)
+        if not supplied or not hmac.compare_digest(str(supplied), str(expected)):
+            return False, self._text_response("forbidden\n", status=403)
+        return True, None
 
     def _request_json_payload(self):
         body = request.httprequest.get_data(as_text=True) or "{}"
@@ -815,3 +852,20 @@ loadAccount().catch(error => setStatus(error.message));
         except (UserError, ValidationError, ValueError) as error:
             return self._json_response({"status": "error", "message": str(error)}, status=400)
         return self._json_response(result)
+
+    @http.route(
+        "/tijara/monitoring/metrics",
+        type="http",
+        methods=["GET"],
+        auth="public",
+        csrf=False,
+    )
+    def tijara_monitoring_metrics(self, **kwargs):
+        allowed, response = self._validate_monitoring_token(kwargs)
+        if not allowed:
+            return response
+        payload = request.env["tijara.monitoring.metrics"].sudo().tijara_prometheus_payload()
+        return self._text_response(
+            payload,
+            content_type="text/plain; version=0.0.4; charset=utf-8",
+        )

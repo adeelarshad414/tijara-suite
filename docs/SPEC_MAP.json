@@ -622,6 +622,16 @@
         "platform_superadmin"
       ],
       "description": "Provider payment webhook endpoint requiring shared and native signatures."
+    },
+    {
+      "name": "Prometheus Business Metrics",
+      "route_path": "/tijara/monitoring/metrics",
+      "auth": "token_public",
+      "personas": [
+        "platform_superadmin",
+        "analytics_manager"
+      ],
+      "description": "Token-protected OpenMetrics endpoint for ecommerce, delivery, payment, FBR, hardware, and assumption-mode monitoring."
     }
   ],
   "feature_inventory": [
@@ -636,7 +646,7 @@
     "CSV import export for operational data",
     "Hardware bridge for printers scanners drawers scales labels and customer displays",
     "Kiosk menu deals promotion queue and customer-display public routes",
-    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff customer tracking order history authenticated account portal saved addresses customer returns Pakistan courier fixtures retry queue SLA exceptions delivery reconciliation dry-run delivery provider assignment label manifest signed webhook adapter events delivery alerts and ecommerce analytics templates",
+    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff customer tracking order history authenticated account portal saved addresses customer returns Pakistan courier fixtures retry queue SLA exceptions delivery reconciliation dry-run delivery provider assignment label manifest signed webhook adapter events delivery alerts ecommerce analytics templates and Prometheus business metrics",
     "Offline POS capture replay and conflict review",
     "SaaS feature flags for B2B queue promotion display and customer display",
     "Tenant database provisioning and operations manifests",
@@ -694,6 +704,7 @@
       "FBR_CLIENT_SECRET",
       "PAYMENT_GATEWAY_SECRET",
       "TIJARA_PAYMENT_WEBHOOK_SECRET",
+      "TIJARA_METRICS_TOKEN",
       "TIJARA_BRIDGE_SHARED_SECRET"
     ]
   },

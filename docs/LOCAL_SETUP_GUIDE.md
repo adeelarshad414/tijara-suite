@@ -1,5 +1,9 @@
 # Local Setup Guide
 
+For the complete operator path, also read `docs/SETUP_STEP_BY_STEP.md`.
+For role workflows, read `docs/HOW_TO_USE_GUIDELINES.md`. For production
+go-live checks, read `docs/PRODUCTION_READINESS_CHECKLIST.md`.
+
 ## Prerequisites
 
 Install these tools before running the suite locally:
@@ -117,5 +121,6 @@ powershell -File scripts/dev-start.ps1 -Hardware -Monitoring
 | Screenshot script cannot log in | Create or map the users listed in `docs/TEST_CREDENTIALS.csv` |
 | Hardware bridge does not respond | Start it with `TIJARA_DEV_START_HARDWARE=1 bash scripts/dev-start.sh` |
 | Grafana login fails | Set `GRAFANA_ADMIN_PASSWORD` in `secrets/.env.secrets` |
+| Prometheus business scrape fails | Confirm `TIJARA_METRICS_TOKEN` matches the token in `deploy/monitoring/prometheus.yml` |
 | Odoo modules do not appear | Run `make install-suite` against the target DB |
 | Production secret warning appears | Replace all placeholder secret values before staging or production |
