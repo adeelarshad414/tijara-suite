@@ -18,6 +18,7 @@ agentic development pipeline.
 | Optional profiles | `hardware`, `monitoring` |
 | Diagram pack | `docs/DIAGRAMS.md` |
 | Configuration guide | `docs/CONFIGURATION_AND_SECRETS.md` |
+| Grafana dashboards | `deploy/monitoring/grafana/dashboards/` |
 
 ## Personas
 
@@ -93,6 +94,8 @@ agentic development pipeline.
 - Back-office expenses, salary batches, loyalty, vertical retail mix, and
   cafe/restaurant charge-policy dashboards.
 - Protected release evidence gates and production readiness reports.
+- Provisioned Grafana dashboards for owner/DevOps, ecommerce delivery,
+  finance/PSP/FBR compliance, and hardware/integration risk.
 
 ## Configuration Source Of Truth
 

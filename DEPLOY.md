@@ -20,6 +20,7 @@ deploy/config/odoo.conf.template      Secret-free Odoo runtime config template
 deploy/bin/start-odoo.sh              Renders the runtime Odoo config
 deploy/logging/                       Logging aggregation and retention notes
 deploy/monitoring/                    Prometheus and Blackbox Exporter baseline
+deploy/monitoring/grafana/dashboards/ Provisioned Grafana dashboard JSON
 deploy/nginx/tijara.conf              Reverse proxy baseline
 deploy/postgres/                      Database backup, restore drill, operations
 hardware-bridge/                      Local shop-machine bridge service
@@ -194,6 +195,8 @@ make provision-tenant TENANT_DB=tijara_customer_001 TENANT_NAME="Customer 001"
 make provision-tenant-ops TENANT_DB=tijara_customer_001 TENANT_DOMAIN=customer.example.com ADMIN_EMAIL=admin@example.com
 make hardware-cert-smoke
 make monitoring-up
+make monitoring-dashboards
+make monitoring-dashboards-check
 make load-smoke
 make load-enterprise-surfaces
 make load-profile-matrix-evidence
@@ -1008,8 +1011,22 @@ make monitoring-up
 ```
 
 This launches Prometheus, Blackbox Exporter, Alertmanager, Loki, and Grafana
-with Odoo login and hardware bridge health checks. See
-`deploy/monitoring/README.md`.
+with Odoo login and hardware bridge health checks. Grafana automatically loads
+the `Tijara Suite` folder with:
+
+- `Tijara Owner And DevOps Overview`
+- `Tijara Ecommerce And Delivery Operations`
+- `Tijara Finance, PSP, And FBR Compliance`
+- `Tijara Hardware And Integration Risk`
+
+Regenerate or validate the committed dashboards with:
+
+```bash
+make monitoring-dashboards
+make monitoring-dashboards-check
+```
+
+See `deploy/monitoring/README.md`.
 
 The local Prometheus config also scrapes Odoo business metrics:
 

@@ -147,6 +147,8 @@ services:
       - "${GRAFANA_PORT:-3000}:3000"
     volumes:
       - ./deploy/monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/tijara.yml:ro
+      - ./deploy/monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/tijara.yml:ro
+      - ./deploy/monitoring/grafana/dashboards:/var/lib/grafana/dashboards/tijara:ro
       - tijara-grafana-data:/var/lib/grafana
 
 volumes:

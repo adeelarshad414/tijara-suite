@@ -36,7 +36,9 @@ The monitoring layer now also includes a token-protected Odoo business metrics
 endpoint for Prometheus, covering ecommerce orders, delivery exceptions/retries,
 PSP settlement lifecycle, FBR queue state, hardware certification state, and
 explicit dummy/assumption-mode markers for integrations still awaiting live
-certification.
+certification. Grafana now provisions Tijara Suite dashboards for owner/DevOps
+overview, ecommerce delivery operations, finance/PSP/FBR compliance, and
+hardware/integration risk directly from the monitoring profile.
 
 The first market verticals are:
 
@@ -100,6 +102,7 @@ deploy/
   config/                      Secret-free runtime config templates
   logging/                     Logging retention and aggregation notes
   monitoring/                  Prometheus and Blackbox Exporter baseline
+    grafana/dashboards/        Provisioned Tijara Suite Grafana dashboards
   nginx/                       Reverse proxy configuration
   postgres/                    Database notes, backup hooks, restore drills
 hardware-bridge/               Local shop-machine device bridge foundation
@@ -255,6 +258,7 @@ make fbr-readiness-evidence
 make fbr-fixture-smoke
 make assumed-certification-evidence
 make monitoring-evidence
+make monitoring-dashboards-check
 make incident-runbook-evidence
 make release-retention-evidence
 make secret-manager-evidence
@@ -1017,7 +1021,10 @@ The detailed policy and dependency intake checklist are maintained in
   admin, backup, and monitoring artifacts for DevOps handoff.
 - `deploy/monitoring/`, `deploy/logging/`, and `deploy/postgres/restore-drill.sh`
   provide Prometheus, Blackbox, Alertmanager, Grafana, Loki, logging, and
-  restore-drill baselines.
+  restore-drill baselines. Grafana dashboard provisioning now loads the
+  `Tijara Suite` folder with owner/DevOps, ecommerce delivery, finance/PSP/FBR,
+  and hardware/integration-risk dashboards from
+  `deploy/monitoring/grafana/dashboards/`.
 - `scripts/container_scan.sh` and `scripts/dependency_scan.sh` provide
   production security scan hooks for Trivy, npm audit, and pip-audit.
 - `DEPLOY.md` is the maintained deployment runbook.

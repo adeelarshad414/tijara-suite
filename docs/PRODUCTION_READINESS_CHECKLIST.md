@@ -88,6 +88,9 @@ Required for production:
 - [ ] Delivery alert rules are loaded.
 - [ ] Blackbox probes cover Odoo and hardware bridge.
 - [ ] Grafana dashboards are reachable.
+- [ ] Grafana `Tijara Suite` folder contains owner/DevOps, delivery, finance,
+      and hardware/integration-risk dashboards.
+- [ ] `make monitoring-dashboards-check` passes.
 - [ ] Alertmanager routes alerts to the support/on-call channel.
 - [ ] Logs are collected for Odoo, PostgreSQL, Nginx/ingress, hardware bridge,
       FBR, PSP, and background jobs.

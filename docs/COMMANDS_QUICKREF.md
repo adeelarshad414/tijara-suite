@@ -48,6 +48,8 @@
 | Run JS checks | `make js-check` |
 | Start hardware bridge only | `make bridge-up` |
 | Start monitoring profile | `make monitoring-up` |
+| Regenerate Grafana dashboards | `make monitoring-dashboards` |
+| Validate Grafana dashboards | `make monitoring-dashboards-check` |
 | Run release candidate gate | `make release-candidate` |
 | Generate signoff pack | `make signoff-pack` |
 

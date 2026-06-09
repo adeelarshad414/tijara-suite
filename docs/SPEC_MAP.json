@@ -14,6 +14,12 @@
     "prometheus": "http://localhost:9090",
     "grafana": "http://localhost:3000"
   },
+  "grafana_dashboards": [
+    "Tijara Owner And DevOps Overview",
+    "Tijara Ecommerce And Delivery Operations",
+    "Tijara Finance, PSP, And FBR Compliance",
+    "Tijara Hardware And Integration Risk"
+  ],
   "configuration_sources": {
     "guide": "docs/CONFIGURATION_AND_SECRETS.md",
     "non_secret_template": ".env.example",
@@ -731,6 +737,8 @@
     "python_status": "python3 scripts/tijara_services.py status",
     "server_preflight": "python3 scripts/tijara_host.py preflight --all-profiles",
     "server_deploy": "python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite",
+    "monitoring_dashboards": "make monitoring-dashboards",
+    "monitoring_dashboards_check": "make monitoring-dashboards-check",
     "validate": "make validate",
     "install_suite": "make install-suite",
     "seed_pos_demo": "make seed-pos-demo",

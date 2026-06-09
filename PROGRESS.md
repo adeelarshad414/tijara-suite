@@ -11069,3 +11069,67 @@ Status: Complete
 - Add production DNS/TLS/backup automation wrappers around the Python host
   script for specific deployment targets.
 - Run protected/staging evidence after the new Python operations path.
+
+## Iteration 148: Grafana Dashboard Provisioning And Monitoring Integration
+
+### Objective
+
+- Turn the Prometheus business metrics exporter into visible enterprise
+  dashboards for owners, DevOps, finance, delivery, FBR, PSP, hardware, and
+  operations.
+- Wire Grafana dashboard provisioning into the existing monitoring Docker
+  Compose profile.
+- Keep dashboard JSON reproducible and documented.
+
+### Completed
+
+- Added `scripts/generate_grafana_dashboards.py` to generate committed Grafana
+  dashboard JSON from a repeatable Python source.
+- Added Grafana dashboard provisioning file
+  `deploy/monitoring/grafana-dashboards.yml`.
+- Added dashboard JSON files under `deploy/monitoring/grafana/dashboards/`:
+  `Tijara Owner And DevOps Overview`,
+  `Tijara Ecommerce And Delivery Operations`,
+  `Tijara Finance, PSP, And FBR Compliance`, and
+  `Tijara Hardware And Integration Risk`.
+- Updated `deploy/monitoring/grafana-datasources.yml` with stable datasource
+  UIDs for Prometheus and Loki.
+- Updated `docker-compose.yml` so the monitoring profile mounts the Grafana
+  dashboard provider and dashboard folder.
+- Added Makefile targets `monitoring-dashboards` and
+  `monitoring-dashboards-check`.
+- Updated `README.md`, `DEPLOY.md`, `deploy/monitoring/README.md`,
+  `docs/COMMANDS_QUICKREF.md`, `docs/PRODUCTION_READINESS_CHECKLIST.md`,
+  `docs/SPEC_MAP.md`, and `docs/SPEC_MAP.json`.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile scripts/generate_grafana_dashboards.py`
+  passed.
+- `python3 scripts/generate_grafana_dashboards.py --check` passed.
+- `python3 -m json.tool` passed for all four generated Grafana dashboard JSON
+  files.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `docker compose --env-file .env.example --env-file secrets/.env.secrets.example --profile monitoring config --quiet`
+  passed, validating the monitoring profile with Grafana datasource and
+  dashboard provisioning mounts.
+- `make monitoring-dashboards-check` passed.
+- `make validate` passed: 103 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- `git diff --check` passed.
+
+### Known Gaps
+
+- Dashboards are provisioned and query the committed Prometheus metric
+  contract, but full visual verification still needs a running seeded Odoo
+  database, Prometheus scrape data, and Grafana browser review.
+- Production alert routing, retention, PostgreSQL exporter, log shipper, and
+  tenant-level SLO dashboards still need environment-specific setup.
+
+### Next Iteration
+
+- Run the monitoring profile against seeded `tijara_dev`, open Grafana, and
+  capture dashboard screenshots/evidence.
+- Add production DNS/TLS/backup automation wrappers around the Python host
+  script for specific deployment targets.
+- Run protected/staging evidence after the new monitoring dashboard layer.

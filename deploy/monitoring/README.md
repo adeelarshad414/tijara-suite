@@ -28,7 +28,31 @@ Current checks:
   reconciliation variance.
 - Alertmanager local receiver baseline.
 - Grafana Prometheus and Loki datasources.
+- Grafana dashboard provider for the `Tijara Suite` folder.
 - Loki local filesystem retention baseline.
+
+Provisioned Grafana dashboards:
+
+- `Tijara Owner And DevOps Overview`: Odoo availability, business scrape
+  health, ecommerce order count/value, endpoint health, and external
+  assumption-mode markers.
+- `Tijara Ecommerce And Delivery Operations`: delivery orders, exceptions,
+  retry backlog, retry age, SLA breach rate, courier webhook failures, and COD
+  reconciliation variance.
+- `Tijara Finance, PSP, And FBR Compliance`: payment webhook lifecycle,
+  settlement variance, FBR queue state, certification environment, and PSP/FBR
+  assumption markers.
+- `Tijara Hardware And Integration Risk`: device inventory, certification
+  results, bridge probe health, endpoint latency, and external certification
+  assumptions.
+
+Dashboard files live under `deploy/monitoring/grafana/dashboards/` and are
+loaded by `deploy/monitoring/grafana-dashboards.yml`. Regenerate them with:
+
+```bash
+make monitoring-dashboards
+make monitoring-dashboards-check
+```
 
 Production teams should add:
 
