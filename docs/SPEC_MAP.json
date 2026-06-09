@@ -14,6 +14,15 @@
     "prometheus": "http://localhost:9090",
     "grafana": "http://localhost:3000"
   },
+  "configuration_sources": {
+    "guide": "docs/CONFIGURATION_AND_SECRETS.md",
+    "non_secret_template": ".env.example",
+    "local_non_secret_file": ".env",
+    "secret_template": "secrets/.env.secrets.example",
+    "local_secret_file": "secrets/.env.secrets",
+    "production_secret_source": "managed secret store using the same variable names",
+    "rule": "Add every runtime variable to exactly one central template; do not create ad-hoc runtime env files."
+  },
   "services": [
     {
       "name": "odoo",

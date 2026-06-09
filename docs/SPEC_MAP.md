@@ -17,6 +17,7 @@ agentic development pipeline.
 | Database | PostgreSQL via Docker Compose |
 | Optional profiles | `hardware`, `monitoring` |
 | Diagram pack | `docs/DIAGRAMS.md` |
+| Configuration guide | `docs/CONFIGURATION_AND_SECRETS.md` |
 
 ## Personas
 
@@ -92,6 +93,15 @@ agentic development pipeline.
 - Back-office expenses, salary batches, loyalty, vertical retail mix, and
   cafe/restaurant charge-policy dashboards.
 - Protected release evidence gates and production readiness reports.
+
+## Configuration Source Of Truth
+
+- Non-secret runtime variables belong in `.env.example` and local `.env`.
+- Secret runtime variables belong in `secrets/.env.secrets.example` and local
+  `secrets/.env.secrets`, or in the production secret manager using the same
+  names.
+- Protected-runner and GitHub example files are CI/CD templates only, not app
+  runtime sources.
 
 ## Demo Data
 

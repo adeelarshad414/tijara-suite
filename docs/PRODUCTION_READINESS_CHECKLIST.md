@@ -98,6 +98,14 @@ Required for production:
 
 ## F. Security
 
+- [ ] `docs/CONFIGURATION_AND_SECRETS.md` has been reviewed for this release.
+- [ ] Every runtime non-secret variable is defined in `.env.example` or the
+      deployment platform variable set.
+- [ ] Every runtime secret variable is defined in
+      `secrets/.env.secrets.example` and supplied from the production secret
+      manager.
+- [ ] No ad-hoc `.env.local`, `.env.production`, shell export, service config,
+      screenshot, log, or evidence file contains runtime secrets.
 - [ ] Placeholder secrets are removed.
 - [ ] Secret manager or protected secret store is used.
 - [ ] Production startup refuses placeholder secrets.

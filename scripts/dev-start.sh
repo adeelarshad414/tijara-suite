@@ -120,6 +120,7 @@ fi
 
 copy_env_if_missing
 
+echo "Config guide: docs/CONFIGURATION_AND_SECRETS.md"
 echo "Validating Docker Compose configuration..."
 compose_cmd config >/dev/null
 

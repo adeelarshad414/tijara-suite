@@ -109,6 +109,8 @@ docs/DIAGRAMS.md               Deployment, system, UML, module, component,
                                activity, and user-flow diagram pack
 docs/diagrams/png/             Rendered PNG exports of the Mermaid diagrams
 docs/COMMANDS_QUICKREF.md      Generated local run/test command sheet
+docs/CONFIGURATION_AND_SECRETS.md
+                               Central config and secret handling rules
 docs/SPEC_MAP.json             Machine-readable app, persona, and screen map
 docs/TEST_CREDENTIALS.csv      Deterministic demo/staging account matrix
 docs/BILINGUAL_QUICK_STARTS.md Urdu/English quick starts for key roles
@@ -337,7 +339,8 @@ video and intermediate slide/audio files are ignored so the public repo keeps
 the repeatable source script instead of bulky generated media.
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
-rollback guidance.
+rollback guidance. See `docs/CONFIGURATION_AND_SECRETS.md` before adding or
+changing any environment variable or secret.
 
 ## Current Status
 
@@ -606,6 +609,12 @@ The detailed policy and dependency intake checklist are maintained in
 
 - `.env.example` is the central non-secret configuration template.
 - `secrets/.env.secrets.example` is the central secret configuration template.
+- `docs/CONFIGURATION_AND_SECRETS.md` is the source-of-truth guide for what
+  belongs in each file, how production secret managers inject values, and the
+  checklist for adding new variables.
+- New runtime variables must be added to one of the two central templates; do
+  not add ad-hoc `.env.local`, `.env.production`, shell export files, or
+  service-specific secret files.
 - `deploy/config/odoo.conf.template` is safe to commit and contains no raw
   secrets.
 - `deploy/bin/start-odoo.sh` renders the real Odoo config inside the container at
@@ -1037,6 +1046,8 @@ Every implementation iteration must update:
   changes.
 - `DEPLOY.md` when deployment, configuration, secrets, runtime operations,
   provisioning, test execution, or release behavior changes.
+- `docs/CONFIGURATION_AND_SECRETS.md` when configuration ownership, secret
+  handling, environment variable names, or secret-manager practices change.
 - `docs/DIAGRAMS.md` when deployment topology, module ownership, component
   boundaries, UML, activity flows, user journeys, analytics pipelines, or
   release evidence flows change.

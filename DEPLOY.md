@@ -23,6 +23,7 @@ deploy/monitoring/                    Prometheus and Blackbox Exporter baseline
 deploy/nginx/tijara.conf              Reverse proxy baseline
 deploy/postgres/                      Database backup, restore drill, operations
 hardware-bridge/                      Local shop-machine bridge service
+docs/CONFIGURATION_AND_SECRETS.md      Central config/secret source-of-truth
 docs/RETAIL_OPERATIONS_DATA.md        Hardware, templates, scanning, CSV notes
 docs/DIAGRAMS.md                      Deployment, system, UML, module,
                                       component, activity, and user-flow diagrams
@@ -52,15 +53,27 @@ them with `npm run docs:diagrams:png`.
 
 ## Environment Files
 
-Use two centered files per environment:
+Use exactly two centered runtime files per local or staging environment:
 
 - `.env`: non-secret runtime configuration, copied from `.env.example`.
 - `secrets/.env.secrets`: secret runtime configuration, copied from
   `secrets/.env.secrets.example`.
 
+All new runtime variables must be added to one of those two templates. Do not
+add `.env.local`, `.env.production`, shell export files, or service-specific
+secret files for application runtime. Template consumers such as
+`docker-compose.yml`, `deploy/config/odoo.conf.template`, protected-runner
+examples, monitoring config, and nginx config may reference variables, but they
+must not become stores for raw secrets.
+
 For production, plain env files should be replaced by a secret manager such as
 Vault, SOPS, Kubernetes Secrets, Docker secrets, Doppler, 1Password Secrets
 Automation, AWS Secrets Manager, Azure Key Vault, or Google Secret Manager.
+Use the same variable names documented in `.env.example` and
+`secrets/.env.secrets.example`.
+
+The full ownership, rotation, and variable-addition checklist is maintained in
+`docs/CONFIGURATION_AND_SECRETS.md`.
 
 Local bootstrap:
 
@@ -2110,8 +2123,10 @@ The exporter checks that `.env.example` contains no secret-like assignments,
 `secrets/.env.secrets.example` contains placeholder secret keys, critical
 Compose secrets use required `:?` guards, the Odoo startup script refuses
 missing or placeholder production secrets, and no non-example secret files are
-present under `secrets/`. It writes `secret-manager-evidence.json`,
-`status.tsv`, `env-summary.txt`, and `summary.md` under
+tracked by git under `secrets/`. Ignored local runtime secret files such as
+`secrets/.env.secrets` are recorded as path-only warnings without exposing
+values. It writes `secret-manager-evidence.json`, `status.tsv`,
+`env-summary.txt`, and `summary.md` under
 `deploy/runtime/secret-manager-evidence/<run-id>/`. Include that directory in
 `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the `security` evidence group for
 production release sign-off; the sign-off package extracts it under

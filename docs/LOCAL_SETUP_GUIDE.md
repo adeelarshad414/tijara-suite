@@ -1,8 +1,10 @@
 # Local Setup Guide
 
 For the complete operator path, also read `docs/SETUP_STEP_BY_STEP.md`.
-For role workflows, read `docs/HOW_TO_USE_GUIDELINES.md`. For production
-go-live checks, read `docs/PRODUCTION_READINESS_CHECKLIST.md`.
+For central configuration and secret handling, read
+`docs/CONFIGURATION_AND_SECRETS.md`. For role workflows, read
+`docs/HOW_TO_USE_GUIDELINES.md`. For production go-live checks, read
+`docs/PRODUCTION_READINESS_CHECKLIST.md`.
 
 ## Prerequisites
 
@@ -28,7 +30,8 @@ cp secrets/.env.secrets.example secrets/.env.secrets
 ```
 
 For local development, update placeholder values in `secrets/.env.secrets`.
-Never commit copied secret files.
+Never commit copied secret files, and do not create ad-hoc runtime env files
+outside this two-file pattern.
 
 ## Start The App
 

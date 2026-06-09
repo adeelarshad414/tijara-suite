@@ -3,6 +3,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -129,6 +130,20 @@ def _status_tsv(rows):
     lines = ["check\tstatus\tmessage"]
     lines.extend("%s\t%s\t%s" % (row["name"], row["status"], row["message"]) for row in rows)
     return "\n".join(lines)
+
+
+def _git_tracked_files(pathspec):
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--", pathspec],
+            cwd=ROOT_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return {line.strip() for line in result.stdout.splitlines() if line.strip()}
 
 
 def _summary(context, rows, decision, blockers, warnings):
@@ -450,17 +465,28 @@ def main():
     else:
         rows.append(_row("startup-secret-guardrails", "passed", "Odoo startup refuses missing or placeholder secrets."))
 
-    real_secret_files = []
+    tracked_secret_files = []
+    local_secret_files = []
     secrets_dir = ROOT_DIR / "secrets"
+    tracked_files = _git_tracked_files("secrets")
     if secrets_dir.is_dir():
         for path in sorted(secrets_dir.rglob("*")):
             if path.is_file() and not path.name.endswith(".example"):
-                real_secret_files.append(_repo_relative(path))
-    if real_secret_files:
-        blockers.append("Committed non-example secret file(s): %s" % ", ".join(real_secret_files))
-        rows.append(_row("committed-secret-files", "failed", ", ".join(real_secret_files)))
+                rel_path = _repo_relative(path)
+                if tracked_files is None or rel_path in tracked_files:
+                    tracked_secret_files.append(rel_path)
+                else:
+                    local_secret_files.append(rel_path)
+    if tracked_secret_files:
+        blockers.append("Tracked non-example secret file(s): %s" % ", ".join(tracked_secret_files))
+        rows.append(_row("committed-secret-files", "failed", ", ".join(tracked_secret_files)))
     else:
-        rows.append(_row("committed-secret-files", "passed", "No non-example secret files are present."))
+        rows.append(_row("committed-secret-files", "passed", "No non-example secret files are tracked by git."))
+    if local_secret_files:
+        warnings.append("Ignored local runtime secret file(s) present: %s" % ", ".join(local_secret_files))
+        rows.append(_row("local-runtime-secret-files", "warning", ", ".join(local_secret_files)))
+    else:
+        rows.append(_row("local-runtime-secret-files", "passed", "No ignored local runtime secret files detected."))
 
     if blockers:
         decision = "failed"
@@ -495,7 +521,8 @@ def main():
         "runtime_config_files": config_files_manifest,
         "compose_guardrails": compose_guardrails,
         "startup_guardrails": startup_guardrails,
-        "real_secret_files": real_secret_files,
+        "real_secret_files": tracked_secret_files,
+        "local_runtime_secret_files": local_secret_files,
         "checks": rows,
         "blockers": blockers,
         "warnings": warnings,

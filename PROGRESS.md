@@ -10939,3 +10939,67 @@ Status: Complete
   metrics endpoint.
 - Continue real-world certification evidence work for courier, PSP, FBR, and
   hardware.
+
+## Iteration 146: Central Configuration And Secret Source Of Truth
+
+### Objective
+
+- Make the configuration and secret ownership model explicit for DevOps,
+  developers, and production operators.
+- Ensure the public repo keeps one central non-secret template and one central
+  secret template for runtime variables.
+- Update `README.md`, `DEPLOY.md`, setup docs, readiness checklist, spec map,
+  and progress tracking, then validate and push.
+
+### Completed
+
+- Added `docs/CONFIGURATION_AND_SECRETS.md` with the source-of-truth table,
+  rules for what belongs in `.env.example` versus
+  `secrets/.env.secrets.example`, template-consumer boundaries, a checklist for
+  adding new variables, secret classes, rotation guidance, and local bootstrap
+  commands.
+- Strengthened `.env.example` and `secrets/.env.secrets.example` headers so
+  future contributors do not create ad-hoc runtime env files.
+- Removed the duplicate `FBR_CLIENT_ID` entry from `.env.example`; FBR client
+  credentials are now represented only in the secret template.
+- Marked protected-runner and GitHub secret examples as CI/CD setup templates,
+  not application runtime config sources.
+- Fixed `scripts/export_secret_manager_evidence.py` so it fails git-tracked
+  non-example secret files while recording ignored local runtime secret files
+  as path-only warnings.
+- Updated `README.md`, `DEPLOY.md`, `docs/SETUP_STEP_BY_STEP.md`,
+  `docs/LOCAL_SETUP_GUIDE.md`, `docs/PRODUCTION_READINESS_CHECKLIST.md`,
+  `docs/SPEC_MAP.md`, and `docs/SPEC_MAP.json` to reference the central
+  configuration and secret handling guide.
+- Updated `scripts/dev-start.sh` to print the config guide during local
+  startup.
+
+### Validation
+
+- `make validate` passed: 103 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile scripts/export_secret_manager_evidence.py`
+  passed.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `docker compose --env-file .env.example --env-file secrets/.env.secrets.example config --quiet`
+  passed, proving the central templates render the Compose runtime contract.
+- `make secret-manager-evidence` passed with expected local warnings for unset
+  production secret-manager references and ignored local
+  `secrets/.env.secrets`; tracked non-example secret-file hygiene passed.
+- `git diff --check` passed.
+
+### Known Gaps
+
+- Ignored local files such as `.env` and `secrets/.env.secrets` may still carry
+  older developer values. They should be reviewed locally against the updated
+  templates and migrated into the same two-file pattern without committing real
+  secrets.
+- Production still needs certified external provider credentials, physical
+  hardware certification, and protected secret-manager evidence before go-live.
+
+### Next Iteration
+
+- Add Grafana dashboard JSON/provisioning for the new business metrics exporter.
+- Run full protected/staging evidence after the central config update.
+- Continue real-world certification evidence for courier, PSP, FBR, and
+  hardware.

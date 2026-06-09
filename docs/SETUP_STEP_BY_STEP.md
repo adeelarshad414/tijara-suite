@@ -36,6 +36,11 @@ mkdir -p secrets
 cp secrets/.env.secrets.example secrets/.env.secrets
 ```
 
+`docs/CONFIGURATION_AND_SECRETS.md` defines the source-of-truth rules. Keep
+non-secret runtime settings in `.env`, keep secrets in
+`secrets/.env.secrets`, and do not create ad-hoc `.env.local`,
+`.env.production`, shell export, or service-specific secret files.
+
 Edit `secrets/.env.secrets` and change at least:
 
 - `POSTGRES_PASSWORD`
