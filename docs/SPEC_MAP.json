@@ -172,7 +172,7 @@
     },
     {
       "name": "Kiosk Display",
-      "route_path": "/tijara/display/demo-kiosk",
+      "route_path": "/tijara/display/tijara-demo-kiosk",
       "auth": "public",
       "personas": [
         "restaurant_operator"
@@ -181,7 +181,7 @@
     },
     {
       "name": "Kiosk Checkout API",
-      "route_path": "/tijara/display/demo-kiosk/checkout",
+      "route_path": "/tijara/display/tijara-demo-kiosk/checkout",
       "auth": "public",
       "personas": [
         "restaurant_operator"
@@ -190,7 +190,7 @@
     },
     {
       "name": "Menu Board",
-      "route_path": "/tijara/display/demo-menu",
+      "route_path": "/tijara/display/tijara-demo-menu-board",
       "auth": "public",
       "personas": [
         "restaurant_operator"
@@ -199,7 +199,7 @@
     },
     {
       "name": "Deals Board",
-      "route_path": "/tijara/display/demo-deals",
+      "route_path": "/tijara/display/tijara-demo-deals-board",
       "auth": "public",
       "personas": [
         "tenant_admin",
@@ -209,7 +209,7 @@
     },
     {
       "name": "Customer Display",
-      "route_path": "/tijara/display/demo-customer-display",
+      "route_path": "/tijara/display/tijara-demo-customer-display",
       "auth": "public",
       "personas": [
         "cashier",
@@ -219,7 +219,7 @@
     },
     {
       "name": "Queue Display",
-      "route_path": "/tijara/display/demo-queue",
+      "route_path": "/tijara/display/tijara-demo-queue-display",
       "auth": "public",
       "personas": [
         "restaurant_operator",

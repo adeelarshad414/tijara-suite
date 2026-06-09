@@ -90,6 +90,9 @@ docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md
                                Step-by-step visual guide for all roles/functions
 docs/Tijara_Suite_Visual_User_Guide.docx
                                Polished visual workflow training document
+docs/SCREENSHOT_USER_GUIDE.md  Live screenshot-based guide source
+docs/Tijara_Suite_Screenshot_User_Guide.docx
+                               Live screenshot-based training document
 secrets/                       Ignored local/staging secrets, example included
 scripts/                       Operational helper scripts
 scripts/dev-start.sh           Universal local startup script
@@ -149,6 +152,10 @@ make up
 
 ```bash
 make install-suite
+make upgrade-pkr-gst
+make verify-pkr-gst
+make seed-pos-demo
+make seed-demo-users
 ```
 
 Run the local scaffold validator from the project root with:
@@ -212,6 +219,7 @@ Generated demo/spec artifacts:
 
 ```bash
 make capture-screenshots
+make screenshot-user-guide
 make record-demo
 make assemble-video
 make customer-demo-video
@@ -222,6 +230,8 @@ See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
 `docs/Tijara_Suite_All_User_Guide.docx`,
 `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`,
 `docs/Tijara_Suite_Visual_User_Guide.docx`,
+`docs/SCREENSHOT_USER_GUIDE.md`,
+`docs/Tijara_Suite_Screenshot_User_Guide.docx`,
 `docs/LOCAL_SETUP_GUIDE.md`, `docs/VIDEO_SCRIPT.md`, and
 `docs/VOICEOVER_RECORDING_GUIDE.md`.
 
@@ -236,6 +246,14 @@ setup, product setup, POS checkout, refunds/exchanges, restaurant service,
 kiosk, customer display, queue/menu/deal/promotion screens, inventory alerts,
 bulk import/export, hardware, analytics, SaaS controls, settlements, FBR queue,
 offline POS, security, troubleshooting, and escalation.
+
+The screenshot guide is generated from a running local Odoo instance after
+upgrading `tijara_base`, `tijara_retail_core`, and `tijara_demo_pos`, verifying
+Pakistan country/PKR/GST 18%, seeding all demo users from
+`docs/TEST_CREDENTIALS.csv`, and capturing live browser screenshots for login,
+app shell, kiosk, customer display, queue display, menu board, and deals board.
+Regenerate it with `make capture-screenshots` followed by
+`make screenshot-user-guide`.
 
 `make customer-demo-video` generates a customer-facing narrated WebM at
 `docs/PRODUCT_DEMO_CUSTOMER.webm` using local Chrome slide rendering, macOS
@@ -255,6 +273,12 @@ templates, and the Odoo service responds at `http://localhost:8069` with the web
 app redirecting to `/odoo`.
 The optional `tijara_demo_pos` module is also installed in the dev database for
 cashier smoke-test data; it is not part of the production suite install.
+The local `tijara_dev` database has also been upgraded after the Pakistan
+currency/tax correction: live verification now reports company country `PK`,
+currency `PKR`, `GST 18% Sales (PK)`, and GST mapped to the seeded demo rice
+product. All seven documented demo personas from `docs/TEST_CREDENTIALS.csv`
+have been created/mapped in the local database, and live browser screenshots
+now back the screenshot-based guide.
 
 The current code is an enterprise product foundation: models, security access,
 menus, backend views, SaaS plans/features, Pakistan localization fields, POS

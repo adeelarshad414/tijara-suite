@@ -215,7 +215,7 @@ class TijaraDisplayController(http.Controller):
                 ("company_id", "=", False),
                 ("company_id", "=", screen.company_id.id),
             ],
-            order="display_name",
+            order="name, default_code, id",
             limit=48,
         )
         items = []
@@ -323,6 +323,7 @@ class TijaraDisplayController(http.Controller):
 <title>{title}</title>
 <style>
 :root {{ color-scheme: light; font-family: Arial, sans-serif; }}
+* {{ box-sizing: border-box; }}
 body {{ margin: 0; background: #f7f7f3; color: #171717; }}
 .screen {{ min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }}
 .header {{ padding: 24px 56px; background: #122620; color: white; display: flex; justify-content: space-between; gap: 24px; align-items: end; }}
@@ -333,9 +334,9 @@ body {{ margin: 0; background: #f7f7f3; color: #171717; }}
 .tile h2 {{ margin: 0 0 10px; font-size: 2rem; letter-spacing: 0; }}
 .tile p {{ margin: 0; font-size: 1.1rem; color: #555; }}
 .price {{ font-size: 2.3rem; font-weight: 700; margin-top: 16px; }}
-.queue {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }}
-.queue .tile {{ text-align: center; min-height: 120px; }}
-.queue-number {{ font-size: 4rem; font-weight: 800; }}
+.queue {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(248px, 1fr)); gap: 16px; min-width: 0; width: 100%; }}
+.queue .tile {{ text-align: center; min-height: 132px; min-width: 0; overflow: hidden; }}
+.queue-number {{ font-size: clamp(1.8rem, 2.9vw, 2.65rem); font-weight: 800; line-height: 1.05; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }}
 .state {{ text-transform: uppercase; font-weight: 700; color: #0f6b56; }}
 .customer-display {{ display: grid; grid-template-columns: 1.2fr .8fr; gap: 20px; width: 100%; }}
 .line {{ display: grid; grid-template-columns: 1fr auto auto; gap: 14px; padding: 14px 0; border-bottom: 1px solid #e2e5df; font-size: 1.25rem; }}
@@ -346,6 +347,7 @@ body {{ margin: 0; background: #f7f7f3; color: #171717; }}
   .header {{ display: block; padding: 20px; }}
   .header h1 {{ font-size: 2.2rem; }}
   .grid {{ grid-template-columns: 1fr; padding: 18px; }}
+  .queue {{ grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }}
   .customer-display {{ grid-template-columns: 1fr; }}
 }}
 </style>

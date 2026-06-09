@@ -17,10 +17,14 @@
 | Show service status | `make ps` |
 | Follow Odoo logs | `make logs` |
 | Install suite modules | `make install-suite` |
+| Upgrade PKR/GST demo modules | `make upgrade-pkr-gst` |
+| Verify live PKR and GST 18% | `make verify-pkr-gst` |
 | Seed POS demo | `make seed-pos-demo` |
+| Seed all demo users | `make seed-demo-users` |
 | Run Odoo tests | `make test-odoo` |
 | Run Playwright E2E | `make e2e` |
 | Capture screenshots | `node scripts/capture-screenshots.js` |
+| Generate screenshot user guide | `make screenshot-user-guide` |
 | Record demo clips | `node scripts/record-demo.js` |
 | Generate customer demo with voiceover | `make customer-demo-video` |
 | Assemble demo video | `bash scripts/assemble-video.sh` |
@@ -105,6 +109,7 @@ docker compose --env-file .env --env-file secrets/.env.secrets down -v
 |---|---|
 | Capture all spec-map screens | `node scripts/capture-screenshots.js` |
 | Capture against staging URL | `TIJARA_SCREENSHOT_BASE_URL=https://staging.example.com node scripts/capture-screenshots.js` |
+| Generate screenshot guide DOCX | `make screenshot-user-guide` |
 | Record public route clips | `node scripts/record-demo.js` |
 | Record against staging URL | `TIJARA_DEMO_BASE_URL=https://staging.example.com node scripts/record-demo.js` |
 | Generate customer demo with voiceover | `make customer-demo-video` |

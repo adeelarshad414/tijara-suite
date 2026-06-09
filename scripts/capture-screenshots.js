@@ -25,31 +25,57 @@ function parseCsv(text) {
 }
 
 function publicScreens(spec) {
-  return (spec.screen_inventory || []).filter((screen) => screen.auth === "public");
+  return (spec.screen_inventory || []).filter(
+    (screen) => screen.auth === "public" && screenCaptureEligible(screen),
+  );
 }
 
 function personaScreens(spec, persona) {
   return (spec.screen_inventory || []).filter((screen) => {
+    if (!screenCaptureEligible(screen)) return false;
     if (screen.auth === "public") return true;
+    if (screen.auth !== "authenticated") return false;
     return (screen.personas || []).includes(persona.persona);
   });
 }
 
-async function login(page, baseUrl, credential) {
-  await page.goto(`${baseUrl}/web/login`, { waitUntil: "domcontentloaded", timeout: 15000 });
+function screenCaptureEligible(screen) {
+  const name = String(screen.name || "").toLowerCase();
+  const route = String(screen.route_path || "").toLowerCase();
+  return !name.includes(" api") && !route.endsWith("/checkout");
+}
+
+function withDatabase(url, database) {
+  if (!database) return url;
+  const target = new URL(url);
+  if (!target.searchParams.has("db")) {
+    target.searchParams.set("db", database);
+  }
+  return target.toString();
+}
+
+async function login(page, baseUrl, credential, database) {
+  await page.goto(withDatabase(`${baseUrl}/web/login`, database), { waitUntil: "domcontentloaded", timeout: 15000 });
   await page.locator('input[name="login"]').fill(credential.email, { timeout: 5000 });
   await page.locator('input[name="password"]').fill(credential.password, { timeout: 5000 });
   await Promise.all([
-    page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {}),
+    page.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(() => {}),
     page.locator('button[type="submit"], input[type="submit"]').first().click(),
   ]);
+  await page.waitForTimeout(1200);
 }
 
-async function captureScreen(page, baseUrl, personaDir, screen) {
-  const target = screen.route_path.startsWith("http") ? screen.route_path : `${baseUrl}${screen.route_path}`;
+async function captureScreen(page, baseUrl, database, personaDir, screen) {
+  const target = withDatabase(screen.route_path.startsWith("http") ? screen.route_path : `${baseUrl}${screen.route_path}`, database);
   const file = path.join(personaDir, `${slug(screen.name || screen.route_path)}.png`);
   try {
-    await page.goto(target, { waitUntil: "networkidle", timeout: 20000 });
+    await page.goto(target, { waitUntil: "domcontentloaded", timeout: 12000 });
+    if (screen.auth === "authenticated") {
+      await page.locator(".o_main_navbar, .o_web_client, body").first().waitFor({ timeout: 8000 }).catch(() => {});
+    } else {
+      await page.locator("body").waitFor({ timeout: 8000 }).catch(() => {});
+    }
+    await page.waitForTimeout(1000);
     await page.keyboard.press("Escape").catch(() => {});
     await page.screenshot({ path: file, fullPage: true });
     return { screen: screen.name, path: file, status: "captured" };
@@ -86,8 +112,13 @@ function writeIndex(results) {
     ? parseCsv(fs.readFileSync(credentialsPath, "utf8"))
     : [];
   const baseUrl = process.env.TIJARA_SCREENSHOT_BASE_URL || spec.base_urls.web || "http://localhost:8069";
+  const database = process.env.TIJARA_SCREENSHOT_DB || spec.database || "tijara_dev";
 
   fs.mkdirSync(outputRoot, { recursive: true });
+  const staleCaptureError = path.join(outputRoot, "CAPTURE_ERROR.txt");
+  if (fs.existsSync(staleCaptureError)) {
+    fs.unlinkSync(staleCaptureError);
+  }
   const browser = await chromium.launch({ headless: process.env.TIJARA_SCREENSHOT_HEADED !== "1" });
   const results = [];
 
@@ -108,7 +139,7 @@ function writeIndex(results) {
       const captured = [];
       try {
         if (!isPublicPersona) {
-          await login(page, baseUrl, credential);
+          await login(page, baseUrl, credential, database);
         }
       } catch (error) {
         captured.push({
@@ -120,7 +151,7 @@ function writeIndex(results) {
         await page.screenshot({ path: captured[0].path, fullPage: true }).catch(() => {});
       }
       for (const screen of screens) {
-        captured.push(await captureScreen(page, baseUrl, personaDir, screen));
+        captured.push(await captureScreen(page, baseUrl, database, personaDir, screen));
       }
       await context.close();
       results.push({ persona: credential.persona, screens: captured });

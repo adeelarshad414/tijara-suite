@@ -9583,3 +9583,90 @@ Status: Complete
   real screenshots for a screenshot-based training edition.
 - Add bilingual Urdu/English cashier and tenant-admin quick-start pages.
 - Add an in-app help/menu entry that links to the visual guide documents.
+
+## Iteration 130: Live PKR/GST Verification, Demo Users, And Screenshot Guide
+
+### Objective
+
+- Start the local Odoo stack, upgrade the affected Pakistan/demo modules,
+  verify PKR/GST 18% in the live `tijara_dev` database, seed all documented
+  demo users, capture real app screenshots, and generate a screenshot-based
+  user guide.
+
+### Completed
+
+- Restarted the local Docker Compose Odoo/PostgreSQL stack.
+- Upgraded `tijara_base`, `tijara_retail_core`, and `tijara_demo_pos` in
+  `tijara_dev`.
+- Tightened Pakistan localization so companies without posted accounting
+  entries are set to Pakistan country as well as PKR currency.
+- Added `scripts/verify_pkr_gst.py` and `scripts/verify_pkr_gst.sh`.
+- Added `make verify-pkr-gst`, which writes ignored runtime evidence under
+  `deploy/runtime/pkr-gst-verification/`.
+- Verified the live local database reports country `PK`, currency `PKR`,
+  `GST 18% Sales (PK)` at 18%, and GST mapped to the seeded demo rice product.
+- Added `scripts/seed_demo_users.py` and `scripts/seed_demo_users.sh`.
+- Added `make seed-demo-users`, which creates/updates all seven personas from
+  `docs/TEST_CREDENTIALS.csv` and maps POS-capable roles to `Tijara Demo POS`.
+- Corrected the screenshot spec routes from old `demo-*` slugs to seeded
+  `tijara-demo-*` display slugs.
+- Updated `scripts/capture-screenshots.js` so browser capture is database-aware,
+  skips non-visual API endpoints, avoids long `networkidle` waits, and clears
+  stale capture-error markers.
+- Fixed the queue display layout so long queue numbers fit inside cards across
+  desktop/mobile display widths.
+- Fixed kiosk fallback products for Odoo 19 by sorting on stored product fields
+  instead of non-stored `display_name`.
+- Captured live screenshots for login, authenticated app shell, kiosk,
+  customer display, queue display, menu board, and deals board.
+- Added `scripts/generate_screenshot_user_guide.py`.
+- Added `docs/SCREENSHOT_USER_GUIDE.md` and
+  `docs/Tijara_Suite_Screenshot_User_Guide.docx`.
+- Added `make screenshot-user-guide`.
+- Updated `README.md`, `DEPLOY.md`, and `docs/COMMANDS_QUICKREF.md` with the
+  new local evidence and screenshot-guide workflow.
+
+### Validation
+
+- `bash -n scripts/seed_demo_users.sh scripts/verify_pkr_gst.sh` passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/seed_demo_users.py scripts/verify_pkr_gst.py` passes.
+- Live module upgrade for `tijara_base`, `tijara_retail_core`, and
+  `tijara_demo_pos` completed successfully against `tijara_dev`.
+- `bash scripts/verify_pkr_gst.sh` passes and exports `TIJARA_PKR_GST_STATUS=verified`.
+- `bash scripts/seed_demo_users.sh` passes and exports `TIJARA_DEMO_USER_COUNT=7`.
+- `node --check scripts/capture-screenshots.js` passes.
+- `node scripts/capture-screenshots.js` captures the live screenshot matrix and
+  writes `docs/screenshots/INDEX.md` with all current screens marked captured.
+- `make validate` passes and parses 76 XML files.
+- `bash scripts/js_check.sh` passes.
+- `git diff --check` passes.
+- `file docs/Tijara_Suite_Screenshot_User_Guide.docx` reports
+  `Microsoft OOXML`.
+- Rendered `docs/Tijara_Suite_Screenshot_User_Guide.docx` to 10 PNG pages and
+  a PDF with the Documents render workflow, then inspected representative pages
+  for clipping, spacing, and screenshot fit.
+- `bash scripts/security_audit.sh` still blocks because this local machine has
+  ignored non-example runtime secrets under `secrets/`, which is the expected
+  public-repo safety behavior.
+
+### Known Gaps
+
+- The screenshot guide is English-only; bilingual Urdu/English user training
+  pages are still pending.
+- Live screenshots cover representative public and authenticated surfaces, not
+  every backend menu form.
+- Physical hardware certification still needs real devices.
+- FBR and PSP production sign-off still need certified credentials, sandbox/live
+  compliance testing, provider reconciliation, refunds, and chargeback evidence.
+- Full staging browser E2E, monitoring/alerting evidence, restore drills, load
+  tests, and security scans still need production-grade execution evidence.
+
+### Next Iteration
+
+- Add bilingual Urdu/English quick-start pages for cashier, tenant admin,
+  inventory manager, and restaurant operator workflows.
+- Add in-app help links to the user guide documents.
+- Run the full staging browser E2E suite against seeded users and capture
+  evidence for POS checkout, refund barcode scan, print-to-bridge, kiosk
+  checkout, offline replay, and customer display.

@@ -72,6 +72,10 @@ make up
 make ps
 make logs
 make install-suite
+make upgrade-pkr-gst
+make verify-pkr-gst
+make seed-pos-demo
+make seed-demo-users
 make seed-e2e DB=tijara_dev
 make test-odoo
 make e2e
@@ -114,6 +118,7 @@ pipeline:
 ```bash
 bash scripts/dev-start.sh
 node scripts/capture-screenshots.js
+python3 scripts/generate_screenshot_user_guide.py
 node scripts/record-demo.js
 python3 scripts/generate_customer_demo_video.py
 bash scripts/assemble-video.sh
@@ -155,6 +160,22 @@ The equivalent direct Compose command is:
 ```bash
 docker compose --env-file .env --env-file secrets/.env.secrets run --rm odoo bash /usr/local/bin/tijara-start-odoo -d tijara_dev -i tijara_base,tijara_retail_core,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery --without-demo --stop-after-init
 ```
+
+For the local Pakistan demo/readiness path after a PKR/GST or demo-data change:
+
+```bash
+docker compose --env-file .env --env-file secrets/.env.secrets up -d
+make upgrade-pkr-gst
+make verify-pkr-gst
+make seed-pos-demo
+make seed-demo-users
+make capture-screenshots
+make screenshot-user-guide
+```
+
+`make verify-pkr-gst` writes ignored runtime evidence under
+`deploy/runtime/pkr-gst-verification/`, and `make seed-demo-users` writes
+ignored runtime evidence under `deploy/runtime/demo-users/`.
 
 ## Runtime Config
 

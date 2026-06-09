@@ -40,9 +40,10 @@ class TijaraLocalizationSetup(models.AbstractModel):
         companies = self.env["res.company"].sudo().search([])
         for company in companies:
             values = {}
-            if country and not company.country_id:
+            has_posted_entries = self._company_has_posted_entries(company)
+            if country and company.country_id != country and not has_posted_entries:
                 values["country_id"] = country.id
-            if company.currency_id != pkr and not self._company_has_posted_entries(company):
+            if company.currency_id != pkr and not has_posted_entries:
                 values["currency_id"] = pkr.id
             if values:
                 company.write(values)

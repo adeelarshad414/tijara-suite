@@ -11,7 +11,7 @@ DB ?= tijara_dev
 TIJARA_MODULES := tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery
 DEMO_MODULES := tijara_demo_pos
 
-.PHONY: dev-start dev-stop dev-restart capture-screenshots record-demo assemble-video customer-demo-video up down logs shell restart ps validate js-check security-audit config install-suite seed-pos-demo seed-e2e staging-e2e-profile e2e-execution-evidence test-odoo e2e e2e-staging protected-browser-e2e ops-staging operations-release-bundle production-ops-readiness ops-tool-evidence release-candidate signoff-pack check-release-readiness staging-release-signoff production-deployment-gate production-rollback production-smoke tenant-smoke tenant-rollout protected-runner-bootstrap protected-runner-bootstrap-verification protected-runbook-handoff protected-first-run-checklist protected-runner-preflight protected-service-checks protected-provider-readiness protected-payment-lifecycle-evidence protected-offline-replay-evidence protected-offline-queue-snapshot protected-offline-pilot-evidence protected-post-run-verification github-artifact-metadata github-step-summary protected-artifact-summary protected-run-decision protected-evidence-retention protected-sidecar-verification protected-evidence-replay protected-release-evidence-index protected-release-closure protected-closure-result-verification protected-release-archive protected-archive-upload-verification protected-evidence-bundle-score protected-evidence-bundle-drift certification-evidence protected-certification-evidence certification-result-matrix psp-readiness-evidence psp-fixture-smoke fbr-readiness-evidence fbr-fixture-smoke monitoring-evidence incident-runbook-evidence release-retention-evidence secret-manager-evidence secret-runtime-evidence deployment-environment-evidence tenant-ops-evidence load-evidence load-profile load-enterprise-surfaces load-profile-matrix-evidence bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill
+.PHONY: dev-start dev-stop dev-restart capture-screenshots screenshot-user-guide record-demo assemble-video customer-demo-video up down logs shell restart ps validate js-check security-audit config install-suite upgrade-pkr-gst seed-pos-demo seed-demo-users verify-pkr-gst seed-e2e staging-e2e-profile e2e-execution-evidence test-odoo e2e e2e-staging protected-browser-e2e ops-staging operations-release-bundle production-ops-readiness ops-tool-evidence release-candidate signoff-pack check-release-readiness staging-release-signoff production-deployment-gate production-rollback production-smoke tenant-smoke tenant-rollout protected-runner-bootstrap protected-runner-bootstrap-verification protected-runbook-handoff protected-first-run-checklist protected-runner-preflight protected-service-checks protected-provider-readiness protected-payment-lifecycle-evidence protected-offline-replay-evidence protected-offline-queue-snapshot protected-offline-pilot-evidence protected-post-run-verification github-artifact-metadata github-step-summary protected-artifact-summary protected-run-decision protected-evidence-retention protected-sidecar-verification protected-evidence-replay protected-release-evidence-index protected-release-closure protected-closure-result-verification protected-release-archive protected-archive-upload-verification protected-evidence-bundle-score protected-evidence-bundle-drift certification-evidence protected-certification-evidence certification-result-matrix psp-readiness-evidence psp-fixture-smoke fbr-readiness-evidence fbr-fixture-smoke monitoring-evidence incident-runbook-evidence release-retention-evidence secret-manager-evidence secret-runtime-evidence deployment-environment-evidence tenant-ops-evidence load-evidence load-profile load-enterprise-surfaces load-profile-matrix-evidence bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill
 
 dev-start:
 	bash scripts/dev-start.sh
@@ -24,6 +24,9 @@ dev-restart:
 
 capture-screenshots:
 	node scripts/capture-screenshots.js
+
+screenshot-user-guide:
+	python3 scripts/generate_screenshot_user_guide.py
 
 record-demo:
 	node scripts/record-demo.js
@@ -67,8 +70,17 @@ config:
 install-suite:
 	$(COMPOSE) run --rm odoo bash /usr/local/bin/tijara-start-odoo -d $(DB) -i $(TIJARA_MODULES) --without-demo --stop-after-init
 
+upgrade-pkr-gst:
+	$(COMPOSE) run --rm odoo bash /usr/local/bin/tijara-start-odoo -d $(DB) -u tijara_base,tijara_retail_core,tijara_demo_pos --without-demo --stop-after-init
+
 seed-pos-demo:
 	$(COMPOSE) run --rm odoo bash /usr/local/bin/tijara-start-odoo -d $(DB) -i $(DEMO_MODULES) --without-demo --stop-after-init
+
+seed-demo-users:
+	bash scripts/seed_demo_users.sh
+
+verify-pkr-gst:
+	bash scripts/verify_pkr_gst.sh
 
 seed-e2e:
 	bash scripts/seed_e2e_odoo.sh

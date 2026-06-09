@@ -34,12 +34,12 @@ agentic development pipeline.
 |---|---|---|---|
 | Odoo Login | `/web/login` | Public | Authentication entry point |
 | Odoo App Shell | `/odoo` | Authenticated | Odoo backend, POS, reports, and module menus |
-| Kiosk Display | `/tijara/display/demo-kiosk` | Public | Self-ordering kiosk route by display slug |
-| Kiosk Checkout API | `/tijara/display/demo-kiosk/checkout` | Public JSON | Kiosk checkout payload submission |
-| Menu Board | `/tijara/display/demo-menu` | Public | Menu display screen |
-| Deals Board | `/tijara/display/demo-deals` | Public | Deals and promotions screen |
-| Customer Display | `/tijara/display/demo-customer-display` | Public | Customer-facing live order display |
-| Queue Display | `/tijara/display/demo-queue` | Public | Queue and pickup status display |
+| Kiosk Display | `/tijara/display/tijara-demo-kiosk` | Public | Self-ordering kiosk route by display slug |
+| Kiosk Checkout API | `/tijara/display/tijara-demo-kiosk/checkout` | Public JSON | Kiosk checkout payload submission |
+| Menu Board | `/tijara/display/tijara-demo-menu-board` | Public | Menu display screen |
+| Deals Board | `/tijara/display/tijara-demo-deals-board` | Public | Deals and promotions screen |
+| Customer Display | `/tijara/display/tijara-demo-customer-display` | Public | Customer-facing live order display |
+| Queue Display | `/tijara/display/tijara-demo-queue-display` | Public | Queue and pickup status display |
 | Payment Webhook | `/tijara/saas/payment/webhook/generic` | Signed public | PSP webhook ingestion |
 
 ## Feature Inventory
@@ -66,10 +66,11 @@ Run:
 
 ```bash
 make seed-pos-demo
+make seed-demo-users
 ```
 
 The optional `tijara_demo_pos` module seeds POS config, an open POS session, demo
 products, B2B/B2C customers, display screens, kiosk profile, queue ticket, and
 promotion/deal records. Demo users in `docs/TEST_CREDENTIALS.csv` are
-deterministic staging accounts that should be created or mapped before
-authenticated browser E2E runs.
+deterministic staging accounts that can be created or mapped with
+`make seed-demo-users` before authenticated browser E2E runs.
