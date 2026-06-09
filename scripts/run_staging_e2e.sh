@@ -24,6 +24,7 @@ public_required=(
     TIJARA_DISPLAY_SLUG
     TIJARA_KIOSK_SLUG
     TIJARA_CUSTOMER_DISPLAY_SLUG
+    TIJARA_ECOMMERCE_SLUG
 )
 
 authenticated_required=(
@@ -44,7 +45,7 @@ authenticated_required=(
 case "$SCOPE" in
     public)
         required_vars=("${public_required[@]}")
-        specs=(tests/e2e/display-kiosk.spec.mjs)
+        specs=(tests/e2e/display-kiosk.spec.mjs tests/e2e/ecommerce-storefront.spec.mjs)
         ;;
     authenticated)
         required_vars=("${authenticated_required[@]}")
@@ -52,7 +53,7 @@ case "$SCOPE" in
         ;;
     full)
         required_vars=("${public_required[@]}" "${authenticated_required[@]}")
-        specs=(tests/e2e/display-kiosk.spec.mjs tests/e2e/backoffice-analytics.spec.mjs tests/e2e/pos-checkout-print.spec.mjs tests/e2e/pos-enterprise-journey.spec.mjs tests/e2e/pos-direct-ui-clickthrough.spec.mjs tests/e2e/refunds-reports.spec.mjs)
+        specs=(tests/e2e/display-kiosk.spec.mjs tests/e2e/ecommerce-storefront.spec.mjs tests/e2e/backoffice-analytics.spec.mjs tests/e2e/pos-checkout-print.spec.mjs tests/e2e/pos-enterprise-journey.spec.mjs tests/e2e/pos-direct-ui-clickthrough.spec.mjs tests/e2e/refunds-reports.spec.mjs)
         ;;
     *)
         echo "Unsupported TIJARA_E2E_SCOPE='$SCOPE'. Use public, authenticated, or full." >&2

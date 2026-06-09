@@ -324,9 +324,13 @@ cashier smoke-test data; it is not part of the production suite install.
 The local `tijara_dev` database has also been upgraded after the Pakistan
 currency/tax correction: live verification now reports company country `PK`,
 currency `PKR`, `GST 18% Sales (PK)`, and GST mapped to the seeded demo rice
-product. All fourteen documented demo personas from
-`docs/TEST_CREDENTIALS.csv` can be created/mapped in the local database, and
-live browser screenshots now back the screenshot-based guide.
+product. The local `tijara_dev` database has now also been upgraded with
+`tijara_ecommerce`; all fourteen documented demo personas from
+`docs/TEST_CREDENTIALS.csv` have been created/mapped in the local database, and
+enterprise seed verification reports 14 users, 14 verticals, 10 dashboards, 11
+reports, one ecommerce channel, and 15 ecommerce products.
+Live browser screenshots now back the screenshot-based guide, including the
+ecommerce storefront.
 The local evidence harness run `local-e2e-20260609T073524Z` also passed all
 stages: Compose startup, Odoo readiness, PKR/GST module upgrade, live PKR/GST
 verification, demo-user seeding, browser E2E seed, full Playwright browser E2E,
@@ -335,6 +339,10 @@ The staging/protected browser evidence lane now also has a matrix runner for
 Chromium desktop, Firefox desktop, WebKit/Safari desktop profile, mobile touch,
 and tablet touch projects, with aggregate evidence under
 `deploy/runtime/browser-e2e-matrix/`.
+The public browser E2E evidence run `20260609-101847` passed locally in
+Chromium with display/kiosk/customer-display coverage plus ecommerce catalog,
+storefront pickup checkout, delivery checkout, charge policy, queue handoff,
+and authenticated ecommerce manager order review.
 
 The current code is an enterprise product foundation: models, security access,
 menus, backend views, SaaS plans/features, Pakistan localization fields, POS

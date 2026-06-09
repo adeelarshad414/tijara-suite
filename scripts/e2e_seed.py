@@ -87,6 +87,10 @@ def screen(slug, name, display_type, price_mode="b2c"):
 menu_screen = screen("tijara-e2e-menu", "Tijara E2E Menu", "menu_board")
 kiosk_screen = screen("tijara-e2e-kiosk", "Tijara E2E Kiosk", "kiosk")
 customer_display = screen("tijara-e2e-customer", "Tijara E2E Customer Display", "customer_display")
+ecommerce_channel = env["tijara.ecommerce.channel"].sudo().search(
+    [("company_id", "=", company.id), ("code", "=", "TIJARA-DEMO-WEB")],
+    limit=1,
+)
 
 product = env["product.product"].sudo().search([("default_code", "=", "TJ-E2E-BUN")], limit=1)
 product_values = {
@@ -277,6 +281,7 @@ print_export("ODOO_DATABASE", env.cr.dbname)
 print_export("TIJARA_DISPLAY_SLUG", "tijara-e2e-menu")
 print_export("TIJARA_KIOSK_SLUG", "tijara-e2e-kiosk")
 print_export("TIJARA_CUSTOMER_DISPLAY_SLUG", "tijara-e2e-customer")
+print_export("TIJARA_ECOMMERCE_SLUG", ecommerce_channel.url_slug if ecommerce_channel else "tijara-demo-web")
 print_export("TIJARA_E2E_PRODUCT_ID", product.id)
 print_export("TIJARA_E2E_PRODUCT_NAME", product.display_name)
 print_export("TIJARA_E2E_CURRENCY", company.currency_id.name)

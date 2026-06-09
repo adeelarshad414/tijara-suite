@@ -1,6 +1,6 @@
 # Tijara Suite Screenshot User Guide
 
-Generated from live local Odoo screenshots on 2026-06-09 09:05 UTC.
+Generated from live local Odoo screenshots on 2026-06-09 10:29 UTC.
 
 ## Live Verification Snapshot
 
@@ -23,6 +23,7 @@ Generated from live local Odoo screenshots on 2026-06-09 09:05 UTC.
 | `loyalty_manager` | `loyalty-manager@demo.tijara-suite.local` | Manage walk-in customers, B2B/B2C details, loyalty tiers, point balances, and retention history. |
 | `vertical_manager` | `vertical-manager@demo.tijara-suite.local` | Maintain vertical catalog settings, B2B/B2C prices, GST, service charge, delivery charge, and food-service tax policy. |
 | `promotion_manager` | `promotion-manager@demo.tijara-suite.local` | Publish promotions, menu boards, deals boards, queue displays, and customer-facing messages. |
+| `ecommerce_manager` | `ecommerce-manager@demo.tijara-suite.local` | Manage storefront channels, online catalog publishing, B2B/B2C ecommerce prices, pickup/delivery orders, and ecommerce reports. |
 | `analytics_manager` | `analytics-manager@demo.tijara-suite.local` | Review dashboards, KPI history, trend charts, vertical sales, loyalty, expenses, salaries, and charge policy analytics. |
 | `restaurant_operator` | `restaurant@demo.tijara-suite.local` | Operate dine-in, takeaway, pickup, kiosk orders, queue tickets, kitchen status, menu boards, and pickup screens. |
 | `public_display` | `public-display@demo.tijara-suite.local` | Run public display routes for kiosk, customer display, queue, menu, deals, and promotions. |
@@ -159,6 +160,16 @@ The deals board highlights discount campaigns and promotion messages for in-stor
 2. Create promotions with display visibility enabled.
 3. Review price, discount, and availability before running the campaign in store.
 
+### Ecommerce Storefront
+
+The ecommerce storefront exposes the online catalog with PKR prices, Urdu/English product names, B2C/B2B pricing, pickup and delivery options, and checkout into Odoo sale orders.
+
+![Ecommerce Storefront](screenshots/ecommerce-manager/ecommerce-storefront.png)
+
+1. Open `/tijara/ecommerce/tijara-demo-web` from the ecommerce manager or public display route.
+2. Review online products, Urdu names, SKU/barcode details, promotions, stock visibility, and B2C/B2B prices.
+3. Add products to the cart, choose pickup or delivery, enter customer details, and place the order for sale-order and queue handoff.
+
 ## Workflow Checklist
 
 ### Back Office Expenses, Salaries, And Approvals
@@ -198,6 +209,14 @@ The deals board highlights discount campaigns and promotion messages for in-stor
 - Send kiosk orders into queue tickets and linked POS payments when the profile has a POS register and payment method.
 - Use queue display for public ticket status and kitchen/operator views for preparation stages.
 - Use menu and deals boards for active promotions, food menus, bakery offers, and pickup announcements.
+
+### Ecommerce Storefront, Catalog, And Online Orders
+
+- Enable the `ecommerce_store` SaaS feature before publishing a tenant storefront.
+- Publish products with B2C/B2B prices, Urdu/English descriptions, SKU, barcode, stock visibility, and active promotions.
+- Use pickup, store pickup, takeaway, delivery, or courier fulfillment according to the channel policy.
+- Review online sale orders, payment status, delivery address, pickup code, queue ticket, estimated GST, delivery charge, and loyalty point award.
+- Run ecommerce Playwright coverage for catalog, storefront checkout, delivery checkout, queue handoff, and authenticated order review before rollout.
 
 ### SaaS Controls And Tenant Operations
 

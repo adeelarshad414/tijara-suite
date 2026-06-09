@@ -249,3 +249,10 @@
   ![Customer Display](public-display/customer-display.png)
 - Queue Display: captured
   ![Queue Display](public-display/queue-display.png)
+- Ecommerce Storefront: captured
+  ![Ecommerce Storefront](public-display/ecommerce-storefront.png)
+
+
+## ecommerce_manager
+- Ecommerce Storefront: captured
+  ![Ecommerce Storefront](ecommerce-manager/ecommerce-storefront.png)

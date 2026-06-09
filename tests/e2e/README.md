@@ -126,6 +126,8 @@ Useful environment variables:
 - `TIJARA_DISPLAY_SLUG` for public display route smoke.
 - `TIJARA_KIOSK_SLUG` for kiosk route smoke.
 - `TIJARA_CUSTOMER_DISPLAY_SLUG` for customer-display live-state smoke.
+- `TIJARA_ECOMMERCE_SLUG` for ecommerce storefront, catalog, checkout, delivery
+  charge, queue handoff, and authenticated online-order review smoke.
 - `TIJARA_E2E_PRODUCT_ID` for authenticated offline POS replay smoke.
 - `TIJARA_E2E_PRODUCT_NAME` for direct POS UI product search and add-to-cart.
 - `TIJARA_E2E_PAYMENT_METHOD_ID` for authenticated offline POS replay smoke.
@@ -137,9 +139,13 @@ Useful environment variables:
 - `TIJARA_REPORT_ORDER_URL` for backend report route smoke.
 - `TIJARA_OFFLINE_QUEUE_ACTION_URL` for offline conflict review route smoke.
 
-The public display, kiosk checkout, and customer-display tests can run without
-credentials after the seed step. The authenticated offline POS replay smoke
-runs when Odoo credentials plus seeded POS config/product/payment IDs are set.
+The public display, kiosk checkout, customer-display, and ecommerce catalog/
+checkout tests can run without credentials after the seed step. The ecommerce
+authenticated order-review assertion runs when `ODOO_USERNAME`,
+`ODOO_PASSWORD`, and `ODOO_DATABASE` are set, preferably with the seeded
+`ecommerce-manager@demo.tijara-suite.local` account. The authenticated offline
+POS replay smoke runs when Odoo credentials plus seeded POS config/product/
+payment IDs are set.
 Authenticated refund barcode scan, receipt report rendering, print-to-bridge
 method coverage, offline conflict review, and POS shell tests run when the seed
 prints the matching IDs/URLs and staging credentials are exported. Direct POS UI
@@ -162,3 +168,9 @@ validates the sale and clicks receipt print, and can separately exercise refund
 form barcode entry. The same file also includes an opt-in keyboard-only drill
 that types/scans a product into the POS, presses `Enter`, cycles service mode
 and B2B/B2C selection, and opens payment from the keyboard.
+
+`tests/e2e/ecommerce-storefront.spec.mjs` covers the ecommerce channel: catalog
+payloads with PKR, Urdu names, promotions, B2C/B2B prices, stock and
+fulfillment; browser pickup checkout from the storefront; API delivery checkout
+with delivery charge and queue number; and authenticated sale-order/queue-ticket
+review by the ecommerce manager.

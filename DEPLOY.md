@@ -273,6 +273,8 @@ Production ecommerce rollout must include:
   request-size limits, bot controls where needed, and log retention.
 - Browser tests for catalog, checkout, sale-order creation, queue handoff, and
   receipt/invoice print paths after each staging upgrade.
+- `TIJARA_ECOMMERCE_SLUG` configured in the Browser E2E environment. The seeded
+  local/demo channel exports `tijara-demo-web`.
 
 ## Production Checklist
 
@@ -1043,6 +1045,9 @@ Public display routes are available for store screens:
 /tijara/kiosk/<slug>
 /tijara/kiosk/<slug>/data
 /tijara/kiosk/<slug>/checkout
+/tijara/ecommerce/<slug>
+/tijara/ecommerce/<slug>/catalog
+/tijara/ecommerce/<slug>/checkout
 ```
 
 Use HTTPS and reverse-proxy rate limiting in production. The baseline Nginx file
@@ -1100,8 +1105,13 @@ The harness verifies the required slugs, credentials, POS config/product/payment
 IDs, refund barcode, report URL, and offline review URL before running. Evidence
 is written to `deploy/runtime/e2e-evidence/<run-id>/` with an environment
 summary, Playwright output, JSON results, and a Markdown summary. Use
-`TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display only or
-`TIJARA_E2E_SCOPE=authenticated` for POS/refund/offline-report routes.
+`TIJARA_E2E_SCOPE=public` for display/kiosk/customer-display/ecommerce routes
+or `TIJARA_E2E_SCOPE=authenticated` for POS/refund/offline-report routes.
+Public scope requires `TIJARA_ECOMMERCE_SLUG`; with seeded demo data use
+`TIJARA_ECOMMERCE_SLUG=tijara-demo-web`. Ecommerce browser coverage verifies
+catalog payloads, PKR/Urdu/B2B/B2C pricing, storefront pickup checkout,
+delivery checkout, charge policy, queue handoff, and authenticated online-order
+review when ecommerce manager credentials are exported.
 Authenticated and full scopes also run the integrated enterprise POS journey:
 paid browser/offline order capture, POS replay, receipt report rendering,
 print-to-bridge method coverage, optional customer-display state assertion,

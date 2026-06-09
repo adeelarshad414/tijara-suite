@@ -15,6 +15,13 @@ function slug(value) {
     .replace(/^-|-$/g, "") || "screen";
 }
 
+function envList(name) {
+  return String(process.env[name] || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 function parseCsv(text) {
   const lines = text.trim().split(/\r?\n/);
   const header = (lines.shift() || "").split(",");
@@ -22,6 +29,22 @@ function parseCsv(text) {
     const values = line.split(",");
     return Object.fromEntries(header.map((key, index) => [key, values[index] || ""]));
   });
+}
+
+function matchesFilter(values, filter) {
+  if (!filter.size) return true;
+  return values.some((value) => {
+    const raw = String(value || "").toLowerCase();
+    return filter.has(raw) || filter.has(slug(raw));
+  });
+}
+
+function screenMatchesFilter(screen, filter) {
+  return matchesFilter([screen.name, screen.route_path], filter);
+}
+
+function personaMatchesFilter(persona, filter) {
+  return matchesFilter([persona.persona, persona.email], filter);
 }
 
 function publicScreens(spec) {
@@ -56,11 +79,25 @@ function withDatabase(url, database) {
 
 async function login(page, baseUrl, credential, database) {
   await page.goto(withDatabase(`${baseUrl}/web/login`, database), { waitUntil: "domcontentloaded", timeout: 15000 });
-  await page.locator('input[name="login"]').fill(credential.email, { timeout: 5000 });
-  await page.locator('input[name="password"]').fill(credential.password, { timeout: 5000 });
+  if (!new URL(page.url()).pathname.includes("/web/login")) {
+    return;
+  }
+  const loginInput = page
+    .locator('.oe_login_form input[name="login"], form[action*="/web/login"] input[name="login"]')
+    .first();
+  if (!(await loginInput.isVisible({ timeout: 3000 }).catch(() => false))) {
+    return;
+  }
+  await loginInput.fill(credential.email, { timeout: 5000 });
+  await page.locator('.oe_login_form input[name="password"], form[action*="/web/login"] input[name="password"]').first().fill(credential.password, { timeout: 5000 });
   await Promise.all([
     page.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(() => {}),
-    page.locator('button[type="submit"], input[type="submit"]').first().click(),
+    page
+      .locator(
+        '.oe_login_form button[type="submit"], .oe_login_form input[type="submit"], form[action*="/web/login"] button[type="submit"], form[action*="/web/login"] input[type="submit"]',
+      )
+      .first()
+      .click(),
   ]);
   await page.waitForTimeout(1200);
 }
@@ -113,6 +150,8 @@ function writeIndex(results) {
     : [];
   const baseUrl = process.env.TIJARA_SCREENSHOT_BASE_URL || spec.base_urls.web || "http://localhost:8069";
   const database = process.env.TIJARA_SCREENSHOT_DB || spec.database || "tijara_dev";
+  const personaFilter = new Set(envList("TIJARA_SCREENSHOT_PERSONAS").map((value) => value.toLowerCase()));
+  const screenFilter = new Set(envList("TIJARA_SCREENSHOT_SCREENS").map((value) => value.toLowerCase()));
 
   fs.mkdirSync(outputRoot, { recursive: true });
   const staleCaptureError = path.join(outputRoot, "CAPTURE_ERROR.txt");
@@ -128,14 +167,21 @@ function writeIndex(results) {
       email: "",
       password: "",
     };
-    const personas = credentials.length ? credentials : [publicPersona];
+    const personas = (credentials.length ? credentials : [publicPersona]).filter(
+      (credential) => personaMatchesFilter(credential, personaFilter),
+    );
     for (const credential of personas) {
       const personaDir = path.join(outputRoot, slug(credential.persona));
       fs.mkdirSync(personaDir, { recursive: true });
       const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
       const page = await context.newPage();
+      if (database) {
+        await page.setExtraHTTPHeaders({ "X-Odoo-Database": database });
+      }
       const isPublicPersona = !credential.email || credential.persona === "public_display";
-      const screens = isPublicPersona ? publicScreens(spec) : personaScreens(spec, credential);
+      const screens = (isPublicPersona ? publicScreens(spec) : personaScreens(spec, credential)).filter(
+        (screen) => screenMatchesFilter(screen, screenFilter),
+      );
       const captured = [];
       try {
         if (!isPublicPersona) {

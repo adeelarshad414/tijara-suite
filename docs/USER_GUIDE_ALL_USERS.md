@@ -177,6 +177,19 @@ Online order workflow:
 6. Staff confirm stock, prepare the order, update queue status, collect or
    reconcile payment, and print invoice/receipt as needed.
 
+Ecommerce smoke-test workflow:
+
+1. Confirm the local/staging database has `tijara_ecommerce` installed and the
+   `ecommerce_store` SaaS feature enabled.
+2. Set `TIJARA_ECOMMERCE_SLUG=tijara-demo-web` for the seeded demo channel.
+3. Use the ecommerce manager account for authenticated review:
+   `ecommerce-manager@demo.tijara-suite.local`.
+4. Run the ecommerce Playwright spec to verify catalog payloads, Urdu names,
+   B2C/B2B prices, pickup checkout, delivery checkout, charge policy, sale
+   order creation, and queue ticket handoff.
+5. Regenerate screenshot guide evidence after checkout routes or storefront
+   copy/layout changes.
+
 ### Cashier
 
 Runs the counter POS for retail and wholesale customers.

@@ -10241,3 +10241,89 @@ Status: Complete
   screenshots for the screenshot-based guide.
 - Add Playwright storefront checkout coverage for B2C, B2B, pickup, delivery,
   and queue-ticket handoff.
+
+## Iteration 138: Live Ecommerce Verification, Browser E2E, And Screenshot Guide
+
+### Objective
+
+- Execute the recommended ecommerce production-readiness iteration against the
+  live local Odoo stack.
+- Upgrade `tijara_dev`, reseed/verify all 14 personas, add ecommerce browser
+  coverage, capture storefront screenshots, regenerate the screenshot guide, and
+  keep deployment/user/operator docs aligned.
+
+### Completed
+
+- Upgraded live `tijara_dev` with the ecommerce-aware upgrade path:
+  `tijara_base,tijara_retail_core,tijara_pos_pk,tijara_pos_experience,tijara_analytics,tijara_ecommerce,tijara_demo_pos`.
+- Restarted the long-running Odoo service so the live web server loaded the
+  upgraded ecommerce registry.
+- Reseeded demo users from `docs/TEST_CREDENTIALS.csv`; the run created/mapped
+  14 personas and assigned the dedicated ecommerce manager account.
+- Verified enterprise seed readiness: 14 demo users, 14 verticals, 10
+  dashboards, 11 reports, one ecommerce channel, and 15 ecommerce products.
+- Verified Pakistan localization after upgrade: company country `PK`, currency
+  `PKR`, and `GST 18% Sales (PK)` mapped to standard seeded demo products.
+- Added `tests/e2e/ecommerce-storefront.spec.mjs` covering:
+  catalog PKR/Urdu/B2C/B2B/stock/promotion payloads, browser pickup checkout,
+  API delivery checkout, delivery charge, queue handoff, and authenticated
+  ecommerce manager sale-order/queue-ticket review.
+- Added `TIJARA_ECOMMERCE_SLUG` to the E2E seed export and the staging browser
+  E2E runner; public/full E2E scopes now include ecommerce storefront coverage.
+- Ran focused ecommerce Chromium E2E: 4 tests passed.
+- Ran standard public staging E2E evidence locally with run ID
+  `20260609-101847`: 9 tests passed across display/kiosk/customer-display and
+  ecommerce specs.
+- Enhanced `scripts/capture-screenshots.js` with persona/screen filters and
+  Odoo database headers for public routes.
+- Captured ecommerce storefront screenshots for the ecommerce manager and
+  public display personas.
+- Updated `scripts/generate_screenshot_user_guide.py` and regenerated
+  `docs/SCREENSHOT_USER_GUIDE.md` plus
+  `docs/Tijara_Suite_Screenshot_User_Guide.docx` with an ecommerce storefront
+  walkthrough.
+- Updated `README.md`, `DEPLOY.md`, `docs/USER_GUIDE_ALL_USERS.md`, and
+  `tests/e2e/README.md`.
+
+### Validation
+
+- Live `tijara_dev` ecommerce module upgrade passed.
+- `bash scripts/seed_demo_users.sh` passed with `TIJARA_DEMO_USER_COUNT=14`.
+- `make verify-enterprise-seed DB=tijara_dev` equivalent passed with
+  `TIJARA_ENTERPRISE_SEED_STATUS=ready`.
+- `bash scripts/verify_pkr_gst.sh` passed with `TIJARA_PKR_GST_STATUS=verified`.
+- `bash scripts/seed_e2e_odoo.sh` passed and exported
+  `TIJARA_ECOMMERCE_SLUG=tijara-demo-web`.
+- Focused Playwright ecommerce Chromium run passed 4/4 tests.
+- Standard public E2E evidence run `20260609-101847` passed 9/9 tests.
+- Screenshot guide generation passed with the bundled workspace Python runtime.
+- `bash scripts/js_check.sh` passed.
+- `make validate` passed: 86 XML files parsed and scaffold validation passed.
+- Python compile passed for the touched Python scripts using a sandbox-safe
+  pycache path.
+- `git diff --check` passed.
+
+### Known Gaps
+
+- The ecommerce browser E2E is proven locally in Chromium; the full protected
+  browser matrix still needs staging execution across Chromium, Firefox, WebKit,
+  mobile, and tablet.
+- Ecommerce payment provider capture is still adapter/foundation level; live
+  JazzCash, Easypaisa, Stripe/card certification, settlement, refunds, and
+  chargebacks remain production blockers.
+- FBR certified-provider credentials and live compliance tests are still
+  pending.
+- Physical hardware certification remains pending for real printers, scanners,
+  drawers, scales, labels, and customer/customer-facing displays.
+- Shipping-provider integration, fraud checks, persistent ecommerce carts, and
+  customer portal polish remain future production hardening.
+
+### Next Iteration
+
+- Run protected browser matrix with `TIJARA_ECOMMERCE_SLUG` on seeded staging.
+- Add ecommerce payment-provider certification fixtures for JazzCash,
+  Easypaisa, Stripe/card refunds, chargebacks, and settlement reconciliation.
+- Add ecommerce customer portal/order tracking polish and optional delivery
+  provider adapter scaffolding.
+- Continue FBR live adapter certification, hardware certification, monitoring,
+  restore drills, load testing, and security hardening.
