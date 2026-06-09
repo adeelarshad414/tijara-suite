@@ -31,8 +31,10 @@ agentic development pipeline.
 | Loyalty manager | `loyalty-manager@demo.tijara-suite.local` | Walk-in capture, B2B/B2C customers, loyalty tiers and points |
 | Vertical manager | `vertical-manager@demo.tijara-suite.local` | Vertical catalogs, B2B/B2C prices, stock policy, business settings |
 | Promotion manager | `promotion-manager@demo.tijara-suite.local` | Promotions, menu/deal screens, customer display, queue display |
+| Ecommerce manager | `ecommerce-manager@demo.tijara-suite.local` | Storefront channels, online catalog, B2B/B2C ecommerce pricing, pickup/delivery orders |
 | Analytics manager | `analytics-manager@demo.tijara-suite.local` | Dashboards, reports, trends, KPI and audit review |
 | Restaurant operator | `restaurant@demo.tijara-suite.local` | Dine-in, takeaway, pickup, kiosk, queue, kitchen tickets |
+| Public display | `public-display@demo.tijara-suite.local` | Kiosk, queue, customer display, menu board, deals board route checks |
 
 ## Screen Inventory
 
@@ -46,6 +48,9 @@ agentic development pipeline.
 | Deals Board | `/tijara/display/tijara-demo-deals-board` | Public | Deals and promotions screen |
 | Customer Display | `/tijara/display/tijara-demo-customer-display` | Public | Customer-facing live order display |
 | Queue Display | `/tijara/display/tijara-demo-queue-display` | Public | Queue and pickup status display |
+| Ecommerce Storefront | `/tijara/ecommerce/tijara-demo-web` | Public | Public online catalog and checkout route |
+| Ecommerce Catalog API | `/tijara/ecommerce/tijara-demo-web/catalog` | Public JSON | B2C/B2B catalog, stock, Urdu/English product payload |
+| Ecommerce Checkout API | `/tijara/ecommerce/tijara-demo-web/checkout` | Public JSON | Online checkout submission into Odoo sale orders |
 | Payment Webhook | `/tijara/saas/payment/webhook/generic` | Signed public | PSP webhook ingestion |
 
 ## Feature Inventory
@@ -57,6 +62,8 @@ agentic development pipeline.
 - CSV import and export for operational data.
 - Hardware bridge for printers, scanners, drawers, scales, labels, and customer displays.
 - Kiosk, menu, deals, promotion, queue, and customer-display routes.
+- Ecommerce storefront, catalog API, checkout API, sale-order sync, pickup/
+  delivery queue handoff, and ecommerce analytics templates.
 - Offline POS capture, replay, and conflict review.
 - SaaS feature flags and runtime enforcement.
 - Tenant provisioning and operations manifests.
@@ -79,8 +86,9 @@ make seed-demo-users
 
 The optional `tijara_demo_pos` module seeds POS config, an open POS session,
 vertical demo products, B2B/B2C customers, loyalty records, display screens,
-kiosk profile, queue ticket, promotion/deal records, invoice/receipt templates,
-back-office expenses, and a salary batch. Demo users in
+kiosk profile, queue ticket, promotion/deal records, ecommerce storefront
+channel, published online products, invoice/receipt templates, back-office
+expenses, and a salary batch. Demo users in
 `docs/TEST_CREDENTIALS.csv` are deterministic staging accounts that can be
 created or mapped with `make seed-demo-users` before authenticated browser E2E
 runs.

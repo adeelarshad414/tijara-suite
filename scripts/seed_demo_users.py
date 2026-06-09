@@ -80,6 +80,13 @@ ROLE_GROUPS = {
         "point_of_sale.group_pos_manager",
         "sales_team.group_sale_manager",
     ],
+    "ecommerce_manager": [
+        "base.group_user",
+        "tijara_base.group_tijara_user",
+        "tijara_base.group_tijara_manager",
+        "stock.group_stock_user",
+        "sales_team.group_sale_manager",
+    ],
     "analytics_manager": [
         "base.group_user",
         "tijara_base.group_tijara_user",

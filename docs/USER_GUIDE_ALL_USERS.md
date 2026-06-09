@@ -1,7 +1,7 @@
 # Tijara Suite All-User Guide
 
 Version: 2026-06-09
-Audience: platform owners, tenant admins, cashiers, inventory teams, accountants, restaurant operators, display/kiosk operators, and business managers.
+Audience: platform owners, tenant admins, cashiers, inventory teams, ecommerce teams, accountants, restaurant operators, display/kiosk operators, and business managers.
 
 ## 1. Purpose
 
@@ -55,8 +55,9 @@ bash scripts/dev-stop.sh
 
 ## 3. Demo Users
 
-Use these local demo accounts for training and testing. These credentials are
-for local demo only and must not be used in production.
+Use these local demo accounts for training and testing. `docs/TEST_CREDENTIALS.csv`
+is the canonical credentials matrix; this guide mirrors it for operators.
+These credentials are for local demo only and must not be used in production.
 
 | Role | Login | Password | Main Use |
 |---|---|---|---|
@@ -65,7 +66,13 @@ for local demo only and must not be used in production.
 | Cashier | `cashier@demo.tijara-suite.local` | `Demo@Cashier2024!` | POS checkout, refund, exchange, receipt printing |
 | Inventory Manager | `inventory-manager@demo.tijara-suite.local` | `Demo@InventoryManager2024!` | Products, stock, racks, shelves, expiry and low-stock alerts |
 | Accountant | `accountant@demo.tijara-suite.local` | `Demo@Accountant2024!` | Invoices, settlements, refunds, chargebacks, FBR queue review |
-| Ecommerce Manager | `promotion-manager@demo.tijara-suite.local` | `Demo@PromotionManager2024!` | Online catalog, promotions, pickup/delivery orders, ecommerce reports |
+| Expense Manager | `expense-manager@demo.tijara-suite.local` | `Demo@Expense2024!` | Back-office expenses, approvals, utility bills, delivery settlements |
+| Salary Manager | `salary-manager@demo.tijara-suite.local` | `Demo@Salary2024!` | Salary batches, deductions, bonuses, monthly payroll evidence |
+| Loyalty Manager | `loyalty-manager@demo.tijara-suite.local` | `Demo@Loyalty2024!` | Customer profiles, walk-in conversion, loyalty points, B2B customer history |
+| Vertical Manager | `vertical-manager@demo.tijara-suite.local` | `Demo@Vertical2024!` | Vertical catalogs, business policies, B2C/B2B prices, stock policy |
+| Promotion Manager | `promotion-manager@demo.tijara-suite.local` | `Demo@Promo2024!` | Promotions, menu boards, deals boards, customer/queue display content |
+| Ecommerce Manager | `ecommerce-manager@demo.tijara-suite.local` | `Demo@Ecommerce2024!` | Online catalog, storefront channels, pickup/delivery orders, ecommerce reports |
+| Analytics Manager | `analytics-manager@demo.tijara-suite.local` | `Demo@Analytics2024!` | Dashboards, trends, reports, KPI history, owner analytics |
 | Restaurant Operator | `restaurant@demo.tijara-suite.local` | `Demo@Restaurant2024!` | Dine-in, takeaway, pickup, kiosk, queue and kitchen tickets |
 | Public Display | `public-display@demo.tijara-suite.local` | `Demo@Display2024!` | Public display route smoke testing; many display URLs are public |
 

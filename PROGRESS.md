@@ -10184,3 +10184,60 @@ Status: Complete
 - Add ecommerce screenshot-guide pages and customer-demo-video scenes.
 - Continue payment provider certification, production reverse-proxy hardening,
   monitoring, load testing, and security scans.
+
+## Iteration 137: Iteration Documentation Governance And Persona Credentials
+
+### Objective
+
+- Make the README, deployment guide, progress log, all-user guide, and
+  credentials matrix stay aligned on every future iteration.
+- Expand demo/staging personas so ecommerce has its own seeded manager account
+  instead of reusing the promotion manager.
+
+### Completed
+
+- Updated `README.md` to require `DEPLOY.md`, `PROGRESS.md`,
+  `docs/USER_GUIDE_ALL_USERS.md`, and `docs/TEST_CREDENTIALS.csv` updates when
+  deployment behavior, personas, credentials, or workflows change.
+- Updated `DEPLOY.md` with the same iteration documentation contract for
+  operators and release owners.
+- Added `ecommerce_manager` to `docs/TEST_CREDENTIALS.csv` with login
+  `ecommerce-manager@demo.tijara-suite.local`.
+- Updated `docs/USER_GUIDE_ALL_USERS.md` so the demo-user table mirrors all 14
+  personas from the credentials CSV and corrected ecommerce credentials.
+- Updated `scripts/seed_demo_users.py` so `ecommerce_manager` receives Tijara
+  manager, stock user, and sales manager access during seeded local/staging
+  setup.
+- Updated `scripts/verify_enterprise_seed.py` so enterprise seed verification
+  now requires the ecommerce manager account.
+- Updated `docs/SPEC_MAP.md` and `docs/SPEC_MAP.json` with the ecommerce
+  manager persona, public display persona, ecommerce storefront route, catalog
+  API, checkout API, and ecommerce demo-data notes.
+
+### Validation
+
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- CSV validation confirmed 14 unique demo personas with required persona,
+  email, and password fields.
+- Python compile passed for `scripts/seed_demo_users.py` and
+  `scripts/verify_enterprise_seed.py` using a sandbox-safe pycache path.
+- `make validate` passed: 86 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- `git diff --check` passed.
+
+### Known Gaps
+
+- Local `tijara_dev` was not reseeded in this documentation iteration, so the
+  new ecommerce manager account will appear after the next `make seed-demo-users`
+  run.
+- Screenshot and DOCX user guides should be regenerated after the next live
+  local/staging run so screenshots include the dedicated ecommerce persona.
+
+### Next Iteration
+
+- Reseed local/staging users and verify 14 demo personas with
+  `make seed-demo-users` and `make verify-enterprise-seed`.
+- Upgrade/verify `tijara_dev` with `tijara_ecommerce` and capture storefront
+  screenshots for the screenshot-based guide.
+- Add Playwright storefront checkout coverage for B2C, B2B, pickup, delivery,
+  and queue-ticket handoff.

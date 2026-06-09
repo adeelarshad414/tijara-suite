@@ -277,8 +277,10 @@ See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
 `docs/VOICEOVER_RECORDING_GUIDE.md`.
 
 The all-user guide covers platform superadmins, tenant admins, cashiers,
-inventory managers, accountants, restaurant operators, display/kiosk operators,
-and business managers, including local access, demo accounts, POS checkout,
+inventory managers, accountants, expense managers, salary managers, loyalty
+managers, vertical managers, promotion managers, ecommerce managers, analytics
+managers, restaurant operators, display/kiosk operators, and business managers,
+including local access, demo accounts, POS checkout, online storefront checkout,
 refund/exchange, inventory alerts, SaaS feature flags, hardware usage,
 troubleshooting, and escalation.
 
@@ -322,7 +324,7 @@ cashier smoke-test data; it is not part of the production suite install.
 The local `tijara_dev` database has also been upgraded after the Pakistan
 currency/tax correction: live verification now reports company country `PK`,
 currency `PKR`, `GST 18% Sales (PK)`, and GST mapped to the seeded demo rice
-product. All thirteen documented demo personas from
+product. All fourteen documented demo personas from
 `docs/TEST_CREDENTIALS.csv` can be created/mapped in the local database, and
 live browser screenshots now back the screenshot-based guide.
 The local evidence harness run `local-e2e-20260609T073524Z` also passed all
@@ -970,8 +972,12 @@ Every implementation iteration must update:
 
 - `README.md` when setup, architecture, modules, usage, or project structure
   changes.
+- `DEPLOY.md` when deployment, configuration, secrets, runtime operations,
+  provisioning, test execution, or release behavior changes.
 - `PROGRESS.md` with completed work, validation results, risks, and the next
   planned build step.
+- `docs/USER_GUIDE_ALL_USERS.md` and `docs/TEST_CREDENTIALS.csv` whenever
+  personas, credentials, or user workflows change.
 
 This keeps the product record clear as Tijara Suite grows from scaffold to
 pilot-ready SaaS.

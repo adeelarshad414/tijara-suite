@@ -212,6 +212,24 @@
       ]
     },
     {
+      "role": "ecommerce_manager",
+      "email": "ecommerce-manager@demo.tijara-suite.local",
+      "permissions": [
+        "storefront channels",
+        "online catalog publishing",
+        "B2B B2C ecommerce pricing",
+        "pickup delivery order review",
+        "ecommerce reports"
+      ],
+      "key_workflows": [
+        "Configure ecommerce channel",
+        "Publish online products",
+        "Validate B2B B2C storefront pricing",
+        "Review online sale orders",
+        "Hand off pickup delivery orders to queue"
+      ]
+    },
+    {
       "role": "analytics_manager",
       "email": "analytics-manager@demo.tijara-suite.local",
       "permissions": [
@@ -242,6 +260,22 @@
         "Manage kitchen status",
         "Operate menu board"
       ]
+    },
+    {
+      "role": "public_display",
+      "email": "public-display@demo.tijara-suite.local",
+      "permissions": [
+        "public display route smoke checks",
+        "kiosk display checks",
+        "menu deals queue display checks"
+      ],
+      "key_workflows": [
+        "Open kiosk route",
+        "Open menu board",
+        "Open deals board",
+        "Open customer display",
+        "Open queue display"
+      ]
     }
   ],
   "screen_inventory": [
@@ -267,8 +301,10 @@
         "loyalty_manager",
         "vertical_manager",
         "promotion_manager",
+        "ecommerce_manager",
         "analytics_manager",
-        "restaurant_operator"
+        "restaurant_operator",
+        "public_display"
       ],
       "description": "Authenticated Odoo web app shell for backend modules and POS access."
     },
@@ -278,7 +314,8 @@
       "auth": "public",
       "personas": [
         "restaurant_operator",
-        "promotion_manager"
+        "promotion_manager",
+        "public_display"
       ],
       "description": "Self-ordering kiosk route backed by display screen slug."
     },
@@ -288,7 +325,8 @@
       "auth": "public",
       "personas": [
         "restaurant_operator",
-        "promotion_manager"
+        "promotion_manager",
+        "public_display"
       ],
       "description": "JSON endpoint for kiosk cart checkout."
     },
@@ -298,7 +336,8 @@
       "auth": "public",
       "personas": [
         "restaurant_operator",
-        "promotion_manager"
+        "promotion_manager",
+        "public_display"
       ],
       "description": "Public menu board route for restaurants and bakeries."
     },
@@ -309,7 +348,8 @@
       "personas": [
         "tenant_admin",
         "restaurant_operator",
-        "promotion_manager"
+        "promotion_manager",
+        "public_display"
       ],
       "description": "Public deals and promotions display."
     },
@@ -320,7 +360,8 @@
       "personas": [
         "cashier",
         "tenant_admin",
-        "promotion_manager"
+        "promotion_manager",
+        "public_display"
       ],
       "description": "Customer-facing live cart and totals display."
     },
@@ -331,9 +372,41 @@
       "personas": [
         "restaurant_operator",
         "tenant_admin",
-        "promotion_manager"
+        "promotion_manager",
+        "public_display"
       ],
       "description": "Public queue number and pickup status display."
+    },
+    {
+      "name": "Ecommerce Storefront",
+      "route_path": "/tijara/ecommerce/tijara-demo-web",
+      "auth": "public",
+      "personas": [
+        "ecommerce_manager",
+        "tenant_admin"
+      ],
+      "description": "Public online storefront route for catalog browsing and checkout."
+    },
+    {
+      "name": "Ecommerce Catalog API",
+      "route_path": "/tijara/ecommerce/tijara-demo-web/catalog",
+      "auth": "public_json",
+      "personas": [
+        "ecommerce_manager",
+        "analytics_manager"
+      ],
+      "description": "B2C/B2B catalog, stock, promotions, and Urdu/English product payload endpoint."
+    },
+    {
+      "name": "Ecommerce Checkout API",
+      "route_path": "/tijara/ecommerce/tijara-demo-web/checkout",
+      "auth": "public_json",
+      "personas": [
+        "ecommerce_manager",
+        "restaurant_operator",
+        "tenant_admin"
+      ],
+      "description": "Online checkout endpoint that creates Odoo sale orders and queue handoff."
     },
     {
       "name": "Expense Management",
@@ -444,6 +517,7 @@
     "CSV import export for operational data",
     "Hardware bridge for printers scanners drawers scales labels and customer displays",
     "Kiosk menu deals promotion queue and customer-display public routes",
+    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff and ecommerce analytics templates",
     "Offline POS capture replay and conflict review",
     "SaaS feature flags for B2B queue promotion display and customer display",
     "Tenant database provisioning and operations manifests",
@@ -507,7 +581,7 @@
   "demo_data": {
     "module": "tijara_demo_pos",
     "seed_command": "make seed-pos-demo",
-    "notes": "Seeds POS config, open session, vertical demo products, B2B and B2C customers, loyalty records, screens, kiosk profile, queue ticket, promotions, invoice and receipt templates, back-office expenses, and salary batch data. Demo login users must be created or mapped in staging before authenticated E2E."
+    "notes": "Seeds POS config, open session, vertical demo products, B2B and B2C customers, loyalty records, screens, kiosk profile, queue ticket, promotions, ecommerce storefront channel, published online products, invoice and receipt templates, back-office expenses, and salary batch data. Demo login users must be created or mapped in staging before authenticated E2E."
   },
   "commands": {
     "start": "bash scripts/dev-start.sh",

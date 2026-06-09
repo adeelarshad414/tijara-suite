@@ -19,6 +19,7 @@ required_logins = {
     "loyalty-manager@demo.tijara-suite.local",
     "vertical-manager@demo.tijara-suite.local",
     "promotion-manager@demo.tijara-suite.local",
+    "ecommerce-manager@demo.tijara-suite.local",
     "analytics-manager@demo.tijara-suite.local",
     "restaurant@demo.tijara-suite.local",
     "public-display@demo.tijara-suite.local",

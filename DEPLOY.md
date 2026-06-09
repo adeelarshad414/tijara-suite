@@ -4,6 +4,12 @@ This guide is the operational entry point for deploying Tijara Suite. Keep it
 updated whenever deployment, configuration, secrets, observability, backup, or
 release behavior changes.
 
+Every implementation iteration must keep the public operator record aligned:
+update `README.md` for product/setup/module changes, this `DEPLOY.md` for
+deployment/runtime/release changes, `PROGRESS.md` for completed work and
+validation, and `docs/USER_GUIDE_ALL_USERS.md` plus
+`docs/TEST_CREDENTIALS.csv` whenever personas, credentials, or workflows change.
+
 ## Deployment Layout
 
 ```text
