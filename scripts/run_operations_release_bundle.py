@@ -81,6 +81,7 @@ def _step_specs(args, output):
     tenant_rollout_dir = output / "tenant-rollout"
     tenant_smoke_dir = output / "tenant-smoke"
     monitoring_dir = output / "monitoring-evidence"
+    grafana_dir = output / "grafana-dashboard-evidence"
     incident_dir = output / "incident-runbook"
     retention_dir = output / "release-retention"
     smoke_decision = smoke_dir / "smoke-decision.json"
@@ -180,6 +181,19 @@ def _step_specs(args, output):
                 str(monitoring_dir),
             ],
         },
+        "grafana-dashboard": {
+            "label": "grafana-dashboard-evidence",
+            "output": grafana_dir,
+            "manifest": grafana_dir / "grafana-dashboard-evidence.json",
+            "command": [
+                "node",
+                "scripts/capture-grafana-evidence.js",
+                "--run-id",
+                args.run_id,
+                "--output",
+                str(grafana_dir),
+            ],
+        },
         "incident": {
             "label": "incident-runbook",
             "output": incident_dir,
@@ -217,6 +231,8 @@ def _step_specs(args, output):
                 "--evidence-path",
                 str(monitoring_dir),
                 "--evidence-path",
+                str(grafana_dir),
+                "--evidence-path",
                 str(incident_dir),
             ],
         },
@@ -232,6 +248,7 @@ def _step_specs(args, output):
     else:
         specs["smoke"]["command"].append("--non-strict")
         specs["monitoring"]["command"].append("--non-strict")
+        specs["grafana-dashboard"]["command"].append("--non-strict")
         specs["retention"]["command"].append("--non-strict")
         specs["tenant-smoke"]["command"].append("--non-strict")
         specs["tenant-rollout"]["command"].append("--non-strict")
@@ -280,6 +297,11 @@ def _step_specs(args, output):
         specs["monitoring"]["command"].extend(["--alertmanager-url", args.alertmanager_url])
     if args.grafana_url:
         specs["monitoring"]["command"].extend(["--grafana-url", args.grafana_url])
+        specs["grafana-dashboard"]["command"].extend(["--grafana-url", args.grafana_url])
+    if args.grafana_dashboard_metadata_only:
+        specs["grafana-dashboard"]["command"].append("--metadata-only")
+    if args.grafana_dashboard_timeout:
+        specs["grafana-dashboard"]["command"].extend(["--timeout", str(args.grafana_dashboard_timeout)])
 
     if smoke_decision.is_file() or "smoke" in args.checks:
         specs["monitoring"]["command"].extend(["--smoke-decision", str(smoke_decision)])
@@ -296,6 +318,8 @@ def _step_specs(args, output):
 
     if monitoring_evidence.is_file() or "monitoring" in args.checks:
         specs["incident"]["command"].extend(["--monitoring-reference", str(monitoring_evidence)])
+    if grafana_dir.is_dir() or "grafana-dashboard" in args.checks:
+        specs["retention"]["command"].extend(["--evidence-path", str(grafana_dir)])
     if tenant_rollout_evidence.is_file() or "tenant-rollout" in args.checks:
         specs["retention"]["command"].extend(["--evidence-path", str(tenant_rollout_dir)])
     return specs
@@ -403,7 +427,7 @@ def main():
     parser.add_argument("--run-id", default=os.environ.get("TIJARA_OPS_BUNDLE_RUN_ID", _default_run_id()))
     parser.add_argument("--target-environment", default=os.environ.get("TIJARA_OPS_BUNDLE_ENVIRONMENT", "staging"))
     parser.add_argument("--output", default=os.environ.get("TIJARA_OPS_BUNDLE_OUTPUT", ""))
-    parser.add_argument("--checks", default=os.environ.get("TIJARA_OPS_BUNDLE_CHECKS", "load-matrix,load-enterprise,smoke,monitoring,incident,retention"))
+    parser.add_argument("--checks", default=os.environ.get("TIJARA_OPS_BUNDLE_CHECKS", "load-matrix,load-enterprise,smoke,monitoring,grafana-dashboard,incident,retention"))
     parser.add_argument("--base-url", default=os.environ.get("TIJARA_BASE_URL", ""))
     parser.add_argument("--smoke-base-url", default=os.environ.get("TIJARA_SMOKE_BASE_URL", ""))
     parser.add_argument("--smoke-url", action="append", default=[])
@@ -438,6 +462,8 @@ def main():
     parser.add_argument("--prometheus-url", default=os.environ.get("TIJARA_PROMETHEUS_URL", ""))
     parser.add_argument("--alertmanager-url", default=os.environ.get("TIJARA_ALERTMANAGER_URL", ""))
     parser.add_argument("--grafana-url", default=os.environ.get("TIJARA_GRAFANA_URL", ""))
+    parser.add_argument("--grafana-dashboard-metadata-only", action="store_true", default=_truthy(os.environ.get("TIJARA_OPS_BUNDLE_GRAFANA_DASHBOARD_METADATA_ONLY", "0")))
+    parser.add_argument("--grafana-dashboard-timeout", type=int, default=int(os.environ.get("TIJARA_OPS_BUNDLE_GRAFANA_DASHBOARD_TIMEOUT", "15000")))
     parser.add_argument("--deployment-decision", default=os.environ.get("TIJARA_OPS_BUNDLE_DEPLOYMENT_DECISION", ""))
     parser.add_argument("--rollback-decision", default=os.environ.get("TIJARA_OPS_BUNDLE_ROLLBACK_DECISION", ""))
     parser.add_argument("--strict", action="store_true", default=_truthy(os.environ.get("TIJARA_OPS_BUNDLE_STRICT", "0")))
@@ -453,7 +479,7 @@ def main():
         requested.append("tenant-smoke")
     if args.tenant_rollout_artifact and "tenant-rollout" not in requested:
         requested.append("tenant-rollout")
-    canonical_order = ["load-matrix", "load-enterprise", "smoke", "tenant-rollout", "tenant-smoke", "monitoring", "incident", "retention"]
+    canonical_order = ["load-matrix", "load-enterprise", "smoke", "tenant-rollout", "tenant-smoke", "monitoring", "grafana-dashboard", "incident", "retention"]
     args.checks = [check for check in canonical_order if check in requested] + [
         check for check in requested if check not in canonical_order
     ]

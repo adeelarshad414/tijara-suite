@@ -11284,3 +11284,127 @@ Status: Complete
   Grafana panels can show representative values during demos.
 - Run protected/staging release evidence with the new Grafana dashboard evidence
   artifact attached.
+
+## Iteration 151: Production Infra Wrappers, Seeded Metrics, And Protected Grafana Evidence
+
+### Objective
+
+- Add production DNS/TLS/backup automation wrappers from tenant operations
+  manifests.
+- Add seeded Prometheus/Pushgateway demo data so Grafana panels show
+  representative values.
+- Attach Grafana dashboard evidence to the operations release bundle.
+- Validate PowerShell wrappers on PowerShell Core.
+- Extend real/dummy certification paths for courier providers alongside FBR,
+  PSPs, and hardware.
+
+### Completed
+
+- Added `scripts/run_production_infra_automation.py`.
+- Added Bash and PowerShell wrappers:
+  `scripts/tijara-production-infra.sh` and
+  `scripts/tijara-production-infra.ps1`.
+- Added Make targets:
+  `production-infra`, `tijara-production-infra`, and
+  `prometheus-demo-metrics`.
+- Added Pushgateway to the monitoring profile and Prometheus scrape config.
+- Added `scripts/seed_prometheus_demo_metrics.py` and expanded
+  `deploy/monitoring/tijara-delivery-metrics.example.prom` for ecommerce,
+  delivery, PSP, FBR, hardware, blackbox, and assumption-mode panels.
+- Updated `scripts/run_operations_release_bundle.py` so
+  `grafana-dashboard` is a first-class release-bundle check and default
+  release-bundle component.
+- Extended certification evidence to courier:
+  `collect_certification_evidence.py`,
+  `run_protected_certification_evidence.sh`,
+  `export_certification_result_matrix.py`,
+  `export_assumed_external_certification_evidence.py`, protected runner
+  variables, and
+  `deploy/config/certification-manifests/courier-certification-manifest.example.json`.
+- Installed PowerShell Core through Homebrew on this workstation for validation.
+- Updated `README.md`, `DEPLOY.md`, `.env.example`,
+  `docs/COMMANDS_QUICKREF.md`, `docs/CONFIGURATION_AND_SECRETS.md`,
+  `docs/LOCAL_SETUP_GUIDE.md`, `docs/SETUP_STEP_BY_STEP.md`,
+  `docs/PRODUCTION_READINESS_CHECKLIST.md`, `docs/SPEC_MAP.md`,
+  `docs/SPEC_MAP.json`, `deploy/monitoring/README.md`, and protected-runner
+  environment examples.
+
+### Validation
+
+- `env PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile ...`
+  passed for the changed Python scripts.
+- `bash -n scripts/tijara-production-infra.sh scripts/run_protected_certification_evidence.sh`
+  passed.
+- `node --check scripts/capture-grafana-evidence.js` passed.
+- `python3 scripts/seed_prometheus_demo_metrics.py --dry-run --run-id 20260609-demo-metrics-dry`
+  passed.
+- `python3 scripts/generate_tenant_ops_manifest.py tijara_customer_001 customer.example.com --admin-email admin@example.com --output-dir deploy/runtime/tenants`
+  passed.
+- `python3 scripts/run_production_infra_automation.py --run-id 20260609-infra-plan --tenant-artifact deploy/runtime/tenants/tijara_customer_001`
+  passed with `decision=passed`.
+- `bash scripts/tijara-production-infra.sh --run-id 20260609-infra-wrapper --tenant-artifact deploy/runtime/tenants/tijara_customer_001`
+  passed with `decision=passed`.
+- `python3 scripts/export_assumed_external_certification_evidence.py --run-id 20260609-assumed-certs`
+  passed with `decision=passed_with_assumptions`.
+- PowerShell Core validation passed:
+  - `pwsh -NoProfile -File scripts/tijara-start.ps1 -AllProfiles -NoWait -DryRun`
+  - `pwsh -NoProfile -File scripts/tijara-stop.ps1 -ForceKillPorts -DryRun`
+  - `pwsh -NoProfile -File scripts/tijara-deploy.ps1 -Production -Domain demo.example.com -Monitoring -AllowPlaceholders -NoPull -DryRun`
+  - `pwsh -NoProfile -File scripts/tijara-production-infra.ps1 --run-id 20260609-infra-pwsh --tenant-artifact deploy/runtime/tenants/tijara_customer_001`
+- `make monitoring-up` passed and started Prometheus, Pushgateway,
+  Blackbox, Alertmanager, Loki, and Grafana.
+- Live Pushgateway seeding passed after local-network escalation:
+  `python3 scripts/seed_prometheus_demo_metrics.py --run-id 20260609-live-demo-metrics --pushgateway-url http://localhost:9091`.
+- Prometheus query checks returned seeded demo values:
+  `sum(tijara_ecommerce_orders_total)=60`,
+  `sum(tijara_payment_events_total)=55`, and
+  `sum(tijara_external_assumption_mode)=4`.
+- Live Grafana evidence passed:
+  `node scripts/capture-grafana-evidence.js --run-id 20260609-seeded-grafana --timeout 30000`.
+- Operations release bundle with Grafana attached passed without blockers:
+  `python3 scripts/run_operations_release_bundle.py --run-id 20260609-grafana-attached --target-environment staging --checks monitoring,grafana-dashboard,incident,retention --prometheus-url http://localhost:9090 --alertmanager-url http://localhost:9093 --grafana-url http://localhost:3000 --grafana-dashboard-timeout 30000`.
+  Result was `decision=warning`, `ci_status=pass_with_warnings`; Grafana
+  dashboard evidence itself passed, while monitoring/incident/retention warned
+  because this focused run did not attach production smoke, tenant smoke,
+  tenant rollout, deployment gate, rollback, and final retention references.
+
+### Current Enterprise Status
+
+- Architecture: 91%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 83%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 76%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 78%
+- DevOps/security/release evidence baseline: 80%
+- Overall production readiness: around 70-74%
+
+### Known Gaps
+
+- Real DNS/TLS/backup wrappers are now generated, but production execution
+  still needs provider-specific templates, live runner credentials, and
+  release-owner approval.
+- Pushgateway demo data is for demos/staging evidence only; production needs
+  continuous real Odoo/provider exporters and retention tuning.
+- FBR, PSPs, couriers, and hardware still need real certified-provider/device
+  credentials, UAT/live sign-off, and signed evidence.
+- Full protected/staging release bundle still needs production smoke, tenant
+  rollout, tenant smoke, deployment gate, rollback, retention, backup restore,
+  load, security, and E2E evidence attached in one strict run.
+- Offline POS live pilot proof and full authenticated browser checkout/refund/
+  print matrix remain production blockers.
+
+### Next Iteration
+
+- Add provider-specific production command templates and examples for
+  Cloudflare/Route53 DNS, cert-manager/Kubernetes TLS, and backup/restore
+  runners.
+- Run a strict full release bundle with tenant rollout, smoke, Grafana,
+  retention, backup restore, load, security scan, and protected browser E2E
+  evidence attached.
+- Add live exporter readiness checks for payment, courier, FBR, hardware, and
+  Odoo business metrics.
+- Continue replacing assumption-mode certification with real FBR, PSP, courier,
+  and hardware evidence as credentials/devices become available.

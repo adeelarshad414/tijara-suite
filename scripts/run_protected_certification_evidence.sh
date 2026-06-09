@@ -135,11 +135,12 @@ run_certification_category() {
 status=0
 run_certification_category "psp" "TIJARA_CERT_PSP" || status=1
 run_certification_category "fbr" "TIJARA_CERT_FBR" || status=1
+run_certification_category "courier" "TIJARA_CERT_COURIER" || status=1
 run_certification_category "hardware" "TIJARA_CERT_HARDWARE" || status=1
 
 {
   echo "TIJARA_CERTIFICATION_EVIDENCE_ROOT=$EVIDENCE_ROOT"
-  echo "TIJARA_CERTIFICATION_EVIDENCE_PATHS=$EVIDENCE_ROOT/psp,$EVIDENCE_ROOT/fbr,$EVIDENCE_ROOT/hardware"
+  echo "TIJARA_CERTIFICATION_EVIDENCE_PATHS=$EVIDENCE_ROOT/psp,$EVIDENCE_ROOT/fbr,$EVIDENCE_ROOT/courier,$EVIDENCE_ROOT/hardware"
 } > "$EVIDENCE_ROOT/certification-evidence-paths.env"
 
 {

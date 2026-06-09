@@ -39,3 +39,8 @@ scrape_configs:
       token: [dummy-prometheus-token-change-me]
     static_configs:
       - targets: ["odoo:8069"]
+
+  - job_name: tijara-demo-business
+    honor_labels: true
+    static_configs:
+      - targets: ["pushgateway:9091"]

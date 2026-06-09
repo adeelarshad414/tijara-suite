@@ -99,7 +99,7 @@ FBR exceptions reviewed ہوں۔
 | 2 | Start local services with `bash scripts/dev-start.sh` and stop with `bash scripts/dev-stop.sh`. | local services کو `bash scripts/dev-start.sh` سے start اور `bash scripts/dev-stop.sh` سے stop کریں۔ |
 | 3 | For local evidence, run `make local-e2e-evidence`. | local evidence کے لیے `make local-e2e-evidence` چلائیں۔ |
 | 4 | For protected/staging browser matrix, run `make browser-e2e-matrix` with seeded credentials and staging URL. | protected/staging browser matrix کے لیے seeded credentials اور staging URL کے ساتھ `make browser-e2e-matrix` چلائیں۔ |
-| 5 | Attach monitoring, backup restore, load, security, tenant, PSP, FBR, and hardware evidence to the sign-off pack. | monitoring، backup restore، load، security، tenant، PSP، FBR، اور hardware evidence کو sign-off pack کے ساتھ attach کریں۔ |
+| 5 | Attach monitoring, backup restore, load, security, tenant, PSP, FBR, courier, and hardware evidence to the sign-off pack. | monitoring، backup restore، load، security، tenant، PSP، FBR، courier، اور hardware evidence کو sign-off pack کے ساتھ attach کریں۔ |
 
 Success signal: release evidence is repeatable, redacted, reviewed, and tied to
 one run ID.

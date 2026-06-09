@@ -4,7 +4,7 @@
 
 TIJARA_PROTECTED_RELEASE_CHECKS=full
 TIJARA_PROTECTED_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,security
-TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware
+TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,courier,hardware
 
 TIJARA_FIRST_RUN_RELEASE_OWNER=ReleaseOwner
 TIJARA_FIRST_RUN_DEVOPS_OWNER=DevOpsOwner
@@ -186,10 +186,21 @@ TIJARA_TENANT_OPS_REQUIRE_RESTORE_DRILL=1
 TIJARA_TENANT_OPS_REQUIRE_MONITORING=1
 TIJARA_TENANT_OPS_REQUIRE_ALL_ARTIFACTS=1
 
+TIJARA_PRODUCTION_INFRA_TENANT_ARTIFACTS=deploy/runtime/tenants/tijara_customer_001
+TIJARA_PRODUCTION_INFRA_MINIMUM_TENANTS=1
+TIJARA_PRODUCTION_INFRA_MODE=plan
+TIJARA_PRODUCTION_INFRA_EXECUTE=0
+TIJARA_DNS_APPLY_COMMAND_TEMPLATE=
+TIJARA_DNS_ROLLBACK_COMMAND_TEMPLATE=
+TIJARA_TLS_APPLY_COMMAND_TEMPLATE=
+TIJARA_TLS_ROLLBACK_COMMAND_TEMPLATE=
+TIJARA_BACKUP_COMMAND_TEMPLATE=
+TIJARA_RESTORE_DRILL_COMMAND_TEMPLATE=
+
 TIJARA_MONITORING_TIMEOUT=8
 TIJARA_MONITORING_NON_STRICT=1
 TIJARA_DRILL_TIMEOUT=8
-TIJARA_OPS_BUNDLE_CHECKS=load-matrix,load-enterprise,smoke,monitoring,incident,retention
+TIJARA_OPS_BUNDLE_CHECKS=load-matrix,load-enterprise,smoke,monitoring,grafana-dashboard,incident,retention
 TIJARA_OPS_BUNDLE_STRICT=0
 TIJARA_OPS_BUNDLE_FAIL_ON_WARNING=0
 TIJARA_PROD_OPS_ALLOW_WARNING_EXCEPTION=0
@@ -211,6 +222,8 @@ TIJARA_HARDWARE_BRIDGE_URL=https://bridge-staging.example.com
 TIJARA_PROMETHEUS_URL=https://prometheus-staging.example.com
 TIJARA_ALERTMANAGER_URL=https://alertmanager-staging.example.com
 TIJARA_GRAFANA_URL=https://grafana-staging.example.com
+TIJARA_PUSHGATEWAY_URL=https://pushgateway-staging.example.com
+TIJARA_OPS_BUNDLE_GRAFANA_DASHBOARD_TIMEOUT=30000
 
 TIJARA_E2E_SCOPE=full
 TIJARA_RUN_POS_UI_E2E=1
@@ -253,6 +266,18 @@ TIJARA_CERT_FBR_APPROVED_BY=TaxLead
 TIJARA_CERT_FBR_APPROVAL_REFERENCE=approval:fbr-certification
 TIJARA_CERT_FBR_VALID_UNTIL=2027-06-05
 TIJARA_CERT_FBR_METADATA=fbr_pos_id=replace-with-pos-id,branch_code=replace-with-branch-code
+
+TIJARA_CERT_COURIER_PROVIDER=TCS
+TIJARA_CERT_COURIER_REFERENCE=COURIER-UAT-REFERENCE
+TIJARA_CERT_COURIER_OWNER=DeliveryOpsLead
+TIJARA_CERT_COURIER_EVIDENCE_FILES=/secure/tijara/certification/courier/courier-certification-letter.pdf,/secure/tijara/certification/courier/create-cancel-track-label-manifest-proof.json
+TIJARA_CERT_COURIER_ARTIFACT_MANIFEST=/secure/tijara/certification/courier/courier-certification-manifest.json
+TIJARA_CERT_COURIER_EXPECTED_SHA256=/secure/tijara/certification/courier/courier-certification-letter.pdf=replace-with-64-character-sha256,/secure/tijara/certification/courier/create-cancel-track-label-manifest-proof.json=replace-with-64-character-sha256
+TIJARA_CERT_COURIER_MINIMUM_EVIDENCE_FILES=2
+TIJARA_CERT_COURIER_APPROVED_BY=DeliveryOpsLead
+TIJARA_CERT_COURIER_APPROVAL_REFERENCE=approval:courier-certification
+TIJARA_CERT_COURIER_VALID_UNTIL=2027-06-05
+TIJARA_CERT_COURIER_METADATA=provider_batch=replace-with-provider-batch,api_scope=create_cancel_track_label_manifest_cod
 
 TIJARA_CERT_HARDWARE_OWNER=OperationsLead
 TIJARA_CERT_HARDWARE_STORE=Karachi-Branch

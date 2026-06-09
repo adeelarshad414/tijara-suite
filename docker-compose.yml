@@ -120,6 +120,13 @@ services:
     volumes:
       - ./deploy/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
 
+  pushgateway:
+    image: ${PUSHGATEWAY_IMAGE:-prom/pushgateway:v1.9.0}
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "${PUSHGATEWAY_PORT:-9091}:9091"
+
   loki:
     image: ${LOKI_IMAGE:-grafana/loki:3.2.0}
     profiles: ["monitoring"]

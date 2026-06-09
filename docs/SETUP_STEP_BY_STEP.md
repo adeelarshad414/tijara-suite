@@ -139,6 +139,8 @@ Start monitoring services:
 
 ```bash
 make monitoring-up
+make prometheus-demo-metrics
+make grafana-dashboard-evidence
 ```
 
 Odoo business metrics endpoint:
@@ -235,10 +237,12 @@ Native wrapper equivalents:
 
 ```bash
 bash scripts/tijara-deploy.sh --environment staging --generate-secrets --with-monitoring --install-suite
+bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
 ```powershell
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
 For production, inject real secrets from the secret manager and use

@@ -140,6 +140,7 @@ powershell -File scripts/dev-start.ps1 -Hardware -Monitoring
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
 ## Troubleshooting
@@ -154,6 +155,7 @@ powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets
 | Screenshot script cannot log in | Create or map the users listed in `docs/TEST_CREDENTIALS.csv` |
 | Hardware bridge does not respond | Start it with `TIJARA_DEV_START_HARDWARE=1 bash scripts/dev-start.sh` |
 | Grafana login fails | Set `GRAFANA_ADMIN_PASSWORD` in `secrets/.env.secrets` |
+| Grafana panels show no demo data | Run `make prometheus-demo-metrics` after `make monitoring-up` and wait one scrape interval |
 | Prometheus business scrape fails | Confirm `TIJARA_METRICS_TOKEN` matches the token in `deploy/monitoring/prometheus.yml` |
 | Odoo modules do not appear | Run `make install-suite` against the target DB |
 | Production secret warning appears | Replace all placeholder secret values before staging or production |

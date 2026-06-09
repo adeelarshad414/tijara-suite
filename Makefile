@@ -11,11 +11,13 @@ DB ?= tijara_dev
 TIJARA_SERVICE_FLAGS ?=
 TIJARA_DEPLOY_FLAGS ?=
 TIJARA_GRAFANA_EVIDENCE_FLAGS ?=
+TIJARA_DEMO_METRICS_FLAGS ?=
+TIJARA_PRODUCTION_INFRA_FLAGS ?=
 TIJARA_MODULES := tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_ecommerce,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery
 DEMO_MODULES := tijara_demo_pos
 
-.PHONY: dev-start dev-stop dev-restart capture-screenshots screenshot-user-guide record-demo assemble-video customer-demo-video up down logs shell restart ps validate js-check security-audit config install-suite upgrade-pkr-gst seed-pos-demo seed-demo-users verify-pkr-gst verify-enterprise-seed seed-e2e local-e2e-evidence staging-e2e-profile e2e-execution-evidence test-odoo e2e e2e-staging browser-e2e-matrix protected-browser-e2e protected-browser-e2e-matrix ops-staging operations-release-bundle production-ops-readiness ops-tool-evidence release-candidate signoff-pack check-release-readiness staging-release-signoff production-deployment-gate production-rollback production-smoke tenant-smoke tenant-rollout protected-runner-bootstrap protected-runner-bootstrap-verification protected-runbook-handoff protected-first-run-checklist protected-runner-preflight protected-service-checks protected-provider-readiness protected-payment-lifecycle-evidence protected-offline-replay-evidence protected-offline-queue-snapshot protected-offline-pilot-evidence protected-post-run-verification github-artifact-metadata github-step-summary protected-artifact-summary protected-run-decision protected-evidence-retention protected-sidecar-verification protected-evidence-replay protected-release-evidence-index protected-release-closure protected-closure-result-verification protected-release-archive protected-archive-upload-verification protected-evidence-bundle-score protected-evidence-bundle-drift certification-evidence protected-certification-evidence certification-result-matrix psp-readiness-evidence psp-fixture-smoke fbr-readiness-evidence fbr-fixture-smoke assumed-certification-evidence monitoring-evidence incident-runbook-evidence release-retention-evidence secret-manager-evidence secret-runtime-evidence deployment-environment-evidence tenant-ops-evidence load-evidence load-profile load-enterprise-surfaces load-profile-matrix-evidence bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill
-.PHONY: py-start py-stop py-restart py-status py-config host-preflight host-init-config host-deploy tijara-start tijara-stop tijara-deploy monitoring-dashboards monitoring-dashboards-check grafana-dashboard-evidence
+.PHONY: dev-start dev-stop dev-restart capture-screenshots screenshot-user-guide record-demo assemble-video customer-demo-video up down logs shell restart ps validate js-check security-audit config install-suite upgrade-pkr-gst seed-pos-demo seed-demo-users verify-pkr-gst verify-enterprise-seed seed-e2e local-e2e-evidence staging-e2e-profile e2e-execution-evidence test-odoo e2e e2e-staging browser-e2e-matrix protected-browser-e2e protected-browser-e2e-matrix ops-staging operations-release-bundle production-ops-readiness ops-tool-evidence release-candidate signoff-pack check-release-readiness staging-release-signoff production-deployment-gate production-rollback production-smoke tenant-smoke tenant-rollout production-infra protected-runner-bootstrap protected-runner-bootstrap-verification protected-runbook-handoff protected-first-run-checklist protected-runner-preflight protected-service-checks protected-provider-readiness protected-payment-lifecycle-evidence protected-offline-replay-evidence protected-offline-queue-snapshot protected-offline-pilot-evidence protected-post-run-verification github-artifact-metadata github-step-summary protected-artifact-summary protected-run-decision protected-evidence-retention protected-sidecar-verification protected-evidence-replay protected-release-evidence-index protected-release-closure protected-closure-result-verification protected-release-archive protected-archive-upload-verification protected-evidence-bundle-score protected-evidence-bundle-drift certification-evidence protected-certification-evidence certification-result-matrix psp-readiness-evidence psp-fixture-smoke fbr-readiness-evidence fbr-fixture-smoke assumed-certification-evidence monitoring-evidence incident-runbook-evidence release-retention-evidence secret-manager-evidence secret-runtime-evidence deployment-environment-evidence tenant-ops-evidence load-evidence load-profile load-enterprise-surfaces load-profile-matrix-evidence bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill prometheus-demo-metrics
+.PHONY: py-start py-stop py-restart py-status py-config host-preflight host-init-config host-deploy tijara-start tijara-stop tijara-deploy tijara-production-infra monitoring-dashboards monitoring-dashboards-check grafana-dashboard-evidence
 
 dev-start:
 	bash scripts/dev-start.sh
@@ -58,6 +60,9 @@ tijara-stop:
 
 tijara-deploy:
 	bash scripts/tijara-deploy.sh $(TIJARA_DEPLOY_FLAGS)
+
+tijara-production-infra:
+	bash scripts/tijara-production-infra.sh $(TIJARA_PRODUCTION_INFRA_FLAGS)
 
 capture-screenshots:
 	node scripts/capture-screenshots.js
@@ -193,6 +198,9 @@ tenant-smoke:
 
 tenant-rollout:
 	python3 scripts/run_tenant_rollout.py
+
+production-infra:
+	python3 scripts/run_production_infra_automation.py $(TIJARA_PRODUCTION_INFRA_FLAGS)
 
 protected-runner-bootstrap:
 	bash scripts/bootstrap_protected_runner.sh
@@ -367,10 +375,10 @@ dependency-scan:
 	bash scripts/dependency_scan.sh
 
 monitoring-up:
-	$(COMPOSE) --profile monitoring up -d prometheus blackbox alertmanager loki grafana
+	$(COMPOSE) --profile monitoring up -d prometheus pushgateway blackbox alertmanager loki grafana
 
 monitoring-logs:
-	$(COMPOSE) logs -f prometheus blackbox alertmanager loki grafana
+	$(COMPOSE) logs -f prometheus pushgateway blackbox alertmanager loki grafana
 
 monitoring-drill:
 	python3 scripts/staging_monitoring_drill.py
@@ -383,3 +391,6 @@ monitoring-dashboards-check:
 
 grafana-dashboard-evidence:
 	node scripts/capture-grafana-evidence.js $(TIJARA_GRAFANA_EVIDENCE_FLAGS)
+
+prometheus-demo-metrics:
+	python3 scripts/seed_prometheus_demo_metrics.py $(TIJARA_DEMO_METRICS_FLAGS)

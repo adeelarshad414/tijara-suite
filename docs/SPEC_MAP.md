@@ -14,12 +14,15 @@ agentic development pipeline.
 | Local URL | `http://localhost:8069` |
 | Long polling | `http://localhost:8072` |
 | Hardware bridge | `http://localhost:9109` |
+| Pushgateway | `http://localhost:9091` |
 | Database | PostgreSQL via Docker Compose |
 | Optional profiles | `hardware`, `monitoring` |
 | Diagram pack | `docs/DIAGRAMS.md` |
 | Configuration guide | `docs/CONFIGURATION_AND_SECRETS.md` |
 | Grafana dashboards | `deploy/monitoring/grafana/dashboards/` |
 | Grafana evidence | `deploy/runtime/grafana-dashboard-evidence/` |
+| Demo metrics evidence | `deploy/runtime/prometheus-demo-metrics/` |
+| Production infra evidence | `deploy/runtime/production-infra/` |
 
 ## Personas
 
@@ -98,6 +101,8 @@ agentic development pipeline.
 - Provisioned Grafana dashboards for owner/DevOps, ecommerce delivery,
   finance/PSP/FBR compliance, and hardware/integration risk.
 - Grafana dashboard API and browser screenshot evidence capture.
+- Pushgateway demo metric seeding for representative Grafana panel values.
+- Production DNS/TLS/backup/restore wrapper generation from tenant ops artifacts.
 
 ## Configuration Source Of Truth
 
@@ -137,7 +142,9 @@ python3 scripts/tijara_services.py stop --force-kill-ports
 bash scripts/tijara-start.sh --all --install-suite --seed-demo
 bash scripts/tijara-stop.sh --force-kill-ports
 bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite
+bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```

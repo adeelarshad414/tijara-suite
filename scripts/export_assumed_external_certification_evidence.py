@@ -133,7 +133,7 @@ def _summary(context: dict, runs: list[dict], assumptions: list[str], warnings: 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate dummy/assumption-mode evidence for external hardware, FBR, and PSP certification."
+        description="Generate dummy/assumption-mode evidence for external hardware, FBR, PSP, and courier certification."
     )
     parser.add_argument("--run-id", default=os.environ.get("TIJARA_ASSUMED_CERT_RUN_ID", _default_run_id()))
     parser.add_argument("--target-environment", default=os.environ.get("TIJARA_ASSUMED_CERT_ENVIRONMENT", "staging-assumed"))
@@ -280,18 +280,69 @@ def main() -> int:
     hardware_log_run["artifact"] = hardware_log_run["log"]
     runs.append(hardware_log_run)
 
+    courier_evidence_file = output / "courier-assumed-evidence.md"
+    _write(
+        courier_evidence_file,
+        """
+# Assumed Courier Certification Evidence
+
+- Provider: TCS-ASSUMED
+- Scope: create shipment, cancel shipment, track shipment, label/manifest, COD reconciliation.
+- Mode: dummy public-repo assumption for staging evidence only.
+- Production replacement: attach signed courier UAT/live certification letter, API payload logs,
+  webhook proof, and COD settlement sample.
+""",
+    )
+    courier_output = output / "courier-certification"
+    runs.append(
+        _run(
+            "courier-certification-assumed",
+            [
+                sys.executable,
+                "scripts/collect_certification_evidence.py",
+                "--run-id",
+                args.run_id,
+                "--category",
+                "courier",
+                "--target-environment",
+                args.target_environment,
+                "--output",
+                str(courier_output),
+                "--provider",
+                "TCS-ASSUMED",
+                "--reference",
+                "ASSUMED-COURIER-UAT-001",
+                "--owner",
+                "Delivery Ops",
+                "--evidence-file",
+                str(courier_evidence_file),
+                "--minimum-evidence-files",
+                "1",
+                "--metadata",
+                "provider_type=pakistan_courier",
+                "--metadata",
+                "api_scope=create_cancel_track_label_manifest_cod",
+                "--non-strict",
+            ],
+            output,
+        )
+    )
+    runs[-1]["artifact"] = _repo_relative(courier_output / "certification-evidence.json")
+
     failures = [run for run in runs if run["exit_code"] != 0]
     warnings = [
         "Assumption-mode evidence is not a legal or provider certification substitute.",
         "Physical printer, drawer, scanner, scale, and display certification still needs target devices.",
         "FBR sandbox/live sign-off still needs certified-provider credentials and official compliance evidence.",
         "JazzCash, Easypaisa, and Stripe still need merchant UAT/live references before production launch.",
+        "Courier create/cancel/track/label/manifest/COD flows still need provider UAT/live certification.",
     ]
     assumptions = [
         "PSP secrets and certification references are dummy redacted values for staging evidence.",
         "FBR provider, POS id, branch code, endpoint, and payload hash are dummy assumed values.",
         "Hardware operations run through dry-run bridge drivers using the open-source certification profile.",
         "Committed FBR and PSP fixtures stand in for provider payloads until signed samples are attached.",
+        "Courier certification uses a dummy Pakistan courier reference until signed provider evidence is attached.",
     ]
     decision = "failed" if failures else "passed_with_assumptions"
     ci_status = "fail" if failures else "pass_with_warnings"
@@ -314,6 +365,7 @@ def main() -> int:
         "psp_fixture_smoke": _read_json(psp_fixture_output / "psp-fixture-smoke.json"),
         "fbr_readiness": _read_json(fbr_output / "fbr-readiness.json"),
         "fbr_fixture_smoke": _read_json(fbr_fixture_output / "fbr-fixture-smoke.json"),
+        "courier_certification": _read_json(courier_output / "certification-evidence.json"),
     }
     env_summary = "\n".join(
         [
@@ -326,6 +378,7 @@ def main() -> int:
             "hardware_mode=dry_run",
             "fbr_mode=assumed_sandbox_live_adapter",
             "psp_mode=assumed_uat_certification",
+            "courier_mode=assumed_uat_certification",
         ]
     )
     for run in runs:

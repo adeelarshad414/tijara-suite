@@ -147,6 +147,7 @@ def known_ports(values: dict[str, str]) -> dict[str, int]:
         "prometheus": env_value(values, "PROMETHEUS_PORT", "9090"),
         "blackbox": env_value(values, "BLACKBOX_PORT", "9115"),
         "alertmanager": env_value(values, "ALERTMANAGER_PORT", "9093"),
+        "pushgateway": env_value(values, "PUSHGATEWAY_PORT", "9091"),
         "loki": env_value(values, "LOKI_PORT", "3100"),
         "grafana": env_value(values, "GRAFANA_PORT", "3000"),
     }
@@ -215,6 +216,8 @@ def service_urls(values: dict[str, str], host: str = "localhost") -> dict[str, s
         urls["Hardware bridge"] = "http://%s:%s" % (host, ports["hardware_bridge"])
     if "prometheus" in ports:
         urls["Prometheus"] = "http://%s:%s" % (host, ports["prometheus"])
+    if "pushgateway" in ports:
+        urls["Pushgateway"] = "http://%s:%s" % (host, ports["pushgateway"])
     if "grafana" in ports:
         urls["Grafana"] = "http://%s:%s" % (host, ports["grafana"])
     return urls

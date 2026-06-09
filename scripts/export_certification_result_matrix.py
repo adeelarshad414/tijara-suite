@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 SECRET_KEY_PARTS = {"password", "secret", "token", "api_key", "apikey", "client_secret"}
-CATEGORIES = ["psp", "fbr", "hardware"]
+CATEGORIES = ["psp", "fbr", "courier", "hardware"]
 
 
 def _utc_now():
@@ -343,7 +343,7 @@ def _env_summary(context):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Export PSP/FBR/hardware certification result matrix.")
+    parser = argparse.ArgumentParser(description="Export PSP/FBR/courier/hardware certification result matrix.")
     parser.add_argument("--run-id", default=os.environ.get("TIJARA_PROTECTED_RUN_ID", os.environ.get("TIJARA_CERT_RUN_ID", _default_run_id())))
     parser.add_argument("--target-environment", default=os.environ.get("TIJARA_TARGET_ENVIRONMENT", os.environ.get("TIJARA_CERT_ENVIRONMENT", "staging")))
     parser.add_argument("--output", default=os.environ.get("TIJARA_CERTIFICATION_MATRIX_OUTPUT", ""))

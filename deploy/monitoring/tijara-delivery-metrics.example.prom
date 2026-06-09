@@ -1,15 +1,46 @@
 # Example OpenMetrics payload for staging runbooks and alert-rule tests.
-# The live Odoo exporter is /tijara/monitoring/metrics.
-# Values here are dummy/assumed and are not scraped by default.
-tijara_delivery_open_exceptions{provider="TIJARA-INHOUSE",severity="critical",category="sla_breach",state="open"} 0
-tijara_delivery_retry_pending{provider="TIJARA-INHOUSE"} 0
-tijara_delivery_retry_oldest_seconds{provider="TIJARA-INHOUSE"} 0
-tijara_delivery_sla_breach_rate_percent{provider="TIJARA-INHOUSE"} 0
-tijara_delivery_webhook_failures_total{provider="TIJARA-INHOUSE"} 0
-tijara_delivery_cod_variance_amount{provider="TIJARA-INHOUSE"} 0
-tijara_ecommerce_orders_total{company="Tijara Demo",channel="Tijara Web Store",fulfillment="delivery",payment_method="cod",payment_status="cod",state="sale"} 1
-tijara_payment_events_total{company="Tijara Demo",provider="jazzcash",payment_event_type="payment",status="applied",signature_status="valid",reconciliation_status="matched"} 1
-tijara_fbr_queue_total{company="Tijara Demo",state="submitted",adapter_mode="dry_run",compliance_status="sandbox_passed",certification_environment="sandbox"} 1
-tijara_hardware_certifications_total{company="Tijara Demo",device_type="receipt_printer",certification_type="dry_run",result="passed"} 1
+# The live Odoo exporter remains /tijara/monitoring/metrics.
+# These dummy/assumed values can be pushed to Pushgateway with
+# `make prometheus-demo-metrics` so Grafana dashboards show representative data.
+up{job="tijara-odoo-business",instance="demo-odoo"} 1
+probe_success{job="tijara-http-blackbox",instance="http://odoo:8069/web/login"} 1
+probe_success{job="tijara-http-blackbox",instance="http://hardware_bridge:9109/health"} 1
+probe_duration_seconds{job="tijara-http-blackbox",instance="http://odoo:8069/web/login"} 0.18
+probe_duration_seconds{job="tijara-http-blackbox",instance="http://hardware_bridge:9109/health"} 0.07
+tijara_ecommerce_orders_total{company="Tijara Demo",channel="Tijara Web Store",fulfillment="delivery",payment_method="cod",payment_status="cod",state="sale"} 42
+tijara_ecommerce_orders_total{company="Tijara Demo",channel="Tijara Web Store",fulfillment="pickup",payment_method="card",payment_status="paid",state="sale"} 18
+tijara_ecommerce_order_amount_pkr{company="Tijara Demo",channel="Tijara Web Store",payment_status="cod",state="sale"} 186500
+tijara_ecommerce_order_amount_pkr{company="Tijara Demo",channel="Tijara Web Store",payment_status="paid",state="sale"} 92750
+tijara_ecommerce_delivery_orders_total{company="Tijara Demo",provider="TIJARA-INHOUSE",delivery_status="assigned"} 19
+tijara_ecommerce_delivery_orders_total{company="Tijara Demo",provider="TCS-ASSUMED",delivery_status="in_transit"} 11
+tijara_ecommerce_delivery_orders_total{company="Tijara Demo",provider="LEOPARDS-ASSUMED",delivery_status="delivered"} 27
+tijara_delivery_open_exceptions{provider="TIJARA-INHOUSE",severity="critical",category="sla_breach",state="open"} 1
+tijara_delivery_open_exceptions{provider="TCS-ASSUMED",severity="warning",category="address_issue",state="open"} 2
+tijara_delivery_retry_pending{provider="TIJARA-INHOUSE"} 3
+tijara_delivery_retry_pending{provider="TCS-ASSUMED"} 1
+tijara_delivery_retry_oldest_seconds{provider="TIJARA-INHOUSE"} 840
+tijara_delivery_retry_oldest_seconds{provider="TCS-ASSUMED"} 360
+tijara_delivery_sla_breach_rate_percent{provider="TIJARA-INHOUSE"} 2.5
+tijara_delivery_sla_breach_rate_percent{provider="TCS-ASSUMED"} 1.2
+tijara_delivery_webhook_failures_total{provider="TIJARA-INHOUSE"} 2
+tijara_delivery_webhook_failures_total{provider="TCS-ASSUMED"} 1
+tijara_delivery_cod_variance_amount{provider="TIJARA-INHOUSE"} 750
+tijara_delivery_cod_variance_amount{provider="TCS-ASSUMED"} 1250
+tijara_payment_events_total{company="Tijara Demo",provider="jazzcash",payment_event_type="payment",status="applied",signature_status="valid",reconciliation_status="matched"} 31
+tijara_payment_events_total{company="Tijara Demo",provider="easypaisa",payment_event_type="payment",status="applied",signature_status="valid",reconciliation_status="matched"} 22
+tijara_payment_events_total{company="Tijara Demo",provider="stripe",payment_event_type="refund",status="review",signature_status="valid",reconciliation_status="pending"} 2
+tijara_payment_settlement_variance_pkr{company="Tijara Demo",provider="jazzcash",reconciliation_status="matched"} 0
+tijara_payment_settlement_variance_pkr{company="Tijara Demo",provider="easypaisa",reconciliation_status="review"} 425
+tijara_payment_settlement_variance_pkr{company="Tijara Demo",provider="stripe",reconciliation_status="pending"} 120
+tijara_fbr_queue_total{company="Tijara Demo",state="submitted",adapter_mode="dry_run",compliance_status="sandbox_passed",certification_environment="sandbox"} 23
+tijara_fbr_queue_total{company="Tijara Demo",state="queued",adapter_mode="dry_run",compliance_status="pending",certification_environment="sandbox"} 4
+tijara_hardware_devices_total{company="Tijara Demo",device_type="receipt_printer",integration_status="ready"} 3
+tijara_hardware_devices_total{company="Tijara Demo",device_type="scanner",integration_status="ready"} 2
+tijara_hardware_devices_total{company="Tijara Demo",device_type="scale",integration_status="dry_run"} 1
+tijara_hardware_certifications_total{company="Tijara Demo",device_type="receipt_printer",certification_type="dry_run",result="passed"} 3
+tijara_hardware_certifications_total{company="Tijara Demo",device_type="scanner",certification_type="dry_run",result="passed"} 2
+tijara_hardware_certifications_total{company="Tijara Demo",device_type="scale",certification_type="assumed",result="pending_physical"} 1
+tijara_external_assumption_mode{integration="courier"} 1
 tijara_external_assumption_mode{integration="fbr"} 1
+tijara_external_assumption_mode{integration="hardware"} 1
 tijara_external_assumption_mode{integration="psp"} 1

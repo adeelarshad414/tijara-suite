@@ -12,6 +12,7 @@
     "longpolling": "http://localhost:8072",
     "hardware_bridge": "http://localhost:9109",
     "prometheus": "http://localhost:9090",
+    "pushgateway": "http://localhost:9091",
     "grafana": "http://localhost:3000"
   },
   "grafana_dashboards": [
@@ -53,6 +54,12 @@
       "name": "prometheus",
       "runtime": "Docker Compose monitoring profile",
       "port": 9090,
+      "required": false
+    },
+    {
+      "name": "pushgateway",
+      "runtime": "Docker Compose monitoring profile",
+      "port": 9091,
       "required": false
     },
     {
@@ -667,6 +674,8 @@
     "Tenant database provisioning and operations manifests",
     "Subscription billing payment webhooks settlements dunning and suspension",
     "FBR adapter queue and provider readiness evidence",
+    "Production DNS TLS backup and restore wrapper generation from tenant ops artifacts",
+    "Pushgateway demo metrics for representative Grafana panel data",
     "Inventory low-stock expiry rack shelf bin and warehouse intelligence",
     "Analytics dashboards reports trends and daily KPI collectors",
     "Protected release evidence gates and production readiness reports"
@@ -707,6 +716,10 @@
       "TIJARA_PAYMENT_REQUIRE_NATIVE_SIGNATURES",
       "FBR_ADAPTER_MODE",
       "PROMETHEUS_PORT",
+      "PUSHGATEWAY_PORT",
+      "TIJARA_PUSHGATEWAY_URL",
+      "TIJARA_DEMO_METRICS_FILE",
+      "TIJARA_PRODUCTION_INFRA_MODE",
       "GRAFANA_PORT"
     ],
     "secret": [
@@ -738,14 +751,18 @@
     "bash_start": "bash scripts/tijara-start.sh --all --install-suite --seed-demo",
     "bash_stop": "bash scripts/tijara-stop.sh --force-kill-ports",
     "bash_deploy": "bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite",
+    "bash_production_infra": "bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001",
     "powershell_start": "powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo",
     "powershell_stop": "powershell -File scripts/tijara-stop.ps1 -ForceKillPorts",
     "powershell_deploy": "powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite",
+    "powershell_production_infra": "pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001",
     "server_preflight": "python3 scripts/tijara_host.py preflight --all-profiles",
     "server_deploy": "python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite",
     "monitoring_dashboards": "make monitoring-dashboards",
     "monitoring_dashboards_check": "make monitoring-dashboards-check",
     "grafana_dashboard_evidence": "make grafana-dashboard-evidence",
+    "prometheus_demo_metrics": "make prometheus-demo-metrics",
+    "production_infra": "make production-infra TIJARA_PRODUCTION_INFRA_FLAGS=\"--tenant-artifact deploy/runtime/tenants/tijara_customer_001\"",
     "validate": "make validate",
     "install_suite": "make install-suite",
     "seed_pos_demo": "make seed-pos-demo",

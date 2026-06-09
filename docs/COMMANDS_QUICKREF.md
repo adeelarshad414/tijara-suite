@@ -54,10 +54,12 @@
 | Run JS checks | `make js-check` |
 | Start hardware bridge only | `make bridge-up` |
 | Start monitoring profile | `make monitoring-up` |
+| Seed demo Prometheus/Pushgateway metrics | `make prometheus-demo-metrics` |
 | Regenerate Grafana dashboards | `make monitoring-dashboards` |
 | Validate Grafana dashboards | `make monitoring-dashboards-check` |
 | Capture Grafana dashboard evidence | `make grafana-dashboard-evidence` |
 | Validate Grafana dashboards without running Grafana | `node scripts/capture-grafana-evidence.js --metadata-only` |
+| Generate production DNS/TLS/backup wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001"` |
 | Run release candidate gate | `make release-candidate` |
 | Generate signoff pack | `make signoff-pack` |
 
@@ -85,6 +87,7 @@
 | Stop services with PowerShell wrapper | `powershell -File scripts/tijara-stop.ps1 -ForceKillPorts` |
 | Stop and force known ports | `powershell -File scripts/dev-stop.ps1 -ForceKillPorts` |
 | Deploy with PowerShell wrapper | `powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite` |
+| Generate production infra wrappers | `pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001` |
 
 ## Stop And Kill
 

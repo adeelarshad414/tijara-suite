@@ -176,6 +176,8 @@ bash scripts/tijara-deploy.sh \
   --generate-secrets \
   --with-monitoring \
   --install-suite
+bash scripts/tijara-production-infra.sh \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
 Windows PowerShell:
@@ -184,12 +186,15 @@ Windows PowerShell:
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
 For production, use `-Production -Domain tijara.example.com` or
 `--production --domain tijara.example.com` after real secret-manager values are
 injected. Use `-DryRun` or `--dry-run` to print actions before changing files or
-services.
+services. Use `scripts/tijara-production-infra.*` in plan mode first; only pass
+`--mode apply --execute --confirm YES` after DNS/TLS/backup templates, tenant
+artifacts, and rollback approval are reviewed.
 
 ## Compose Commands
 
@@ -209,6 +214,7 @@ make host-deploy
 make tijara-start TIJARA_SERVICE_FLAGS="--all --install-suite --seed-demo"
 make tijara-stop TIJARA_SERVICE_FLAGS="--force-kill-ports"
 make tijara-deploy TIJARA_DEPLOY_FLAGS="--environment staging --generate-secrets --monitoring"
+make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001"
 make security-audit
 make dev-start
 make dev-stop
@@ -650,6 +656,44 @@ operations manifest from SaaS Admin. Production DNS changes, certificate
 issuance, admin-user creation, and smoke execution still need provider-specific
 automation, but the required rollout artifacts are now machine-checkable.
 
+Generate production DNS/TLS/backup wrapper scripts from the tenant operations
+bundle:
+
+```bash
+python3 scripts/run_production_infra_automation.py \
+  --run-id 20260609-infra-plan \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001
+
+bash scripts/tijara-production-infra.sh \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001
+
+pwsh -File scripts/tijara-production-infra.ps1 \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001
+```
+
+The generator writes `production-infra-automation.json`, `status.tsv`,
+`summary.md`, and per-tenant Bash/PowerShell scripts under
+`deploy/runtime/production-infra/<run-id>/tenants/<tenant-db>/`:
+
+- `dns-apply.sh/.ps1` and `dns-rollback.sh/.ps1`
+- `tls-apply.sh/.ps1` and `tls-rollback.sh/.ps1`
+- `backup-run.sh/.ps1`
+- `restore-drill.sh/.ps1`
+- `tenant-infra-plan.json`
+
+By default this is a plan-only run. To execute shell wrappers on a real
+production runner, set provider-reviewed command templates such as
+`TIJARA_DNS_APPLY_COMMAND_TEMPLATE`, keep tokens in `secrets/.env.secrets` or a
+secret manager, and require explicit confirmation:
+
+```bash
+CONFIRM_PRODUCTION_INFRA=YES \
+python3 scripts/run_production_infra_automation.py \
+  --mode apply \
+  --execute \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001
+```
+
 Export tenant operations evidence before pilot, staging, or production
 sign-off:
 
@@ -1050,8 +1094,8 @@ Start the open-source monitoring baseline:
 make monitoring-up
 ```
 
-This launches Prometheus, Blackbox Exporter, Alertmanager, Loki, and Grafana
-with Odoo login and hardware bridge health checks. Grafana automatically loads
+This launches Prometheus, Pushgateway, Blackbox Exporter, Alertmanager, Loki,
+and Grafana with Odoo login and hardware bridge health checks. Grafana automatically loads
 the `Tijara Suite` folder with:
 
 - `Tijara Owner And DevOps Overview`
@@ -1072,6 +1116,20 @@ Capture live Grafana API and browser screenshot evidence with:
 make grafana-dashboard-evidence
 ```
 
+Seed demo Pushgateway metrics so owner, delivery, finance/PSP/FBR, and hardware
+dashboards show representative values during sales demos:
+
+```bash
+make prometheus-demo-metrics
+curl "http://localhost:9090/api/v1/query?query=sum(tijara_ecommerce_orders_total)"
+```
+
+The seeder writes `demo-metrics-seed.json`, `status.tsv`, `summary.md`, and a
+copy of the metrics payload under
+`deploy/runtime/prometheus-demo-metrics/<run-id>/`. The payload is clearly
+dummy/assumption-mode evidence for public-repo demos; production should scrape
+real Odoo exporters and provider adapters.
+
 For CI or a workstation where Grafana is not running, validate the committed
 dashboard definitions without live API or browser checks:
 
@@ -1083,6 +1141,18 @@ The evidence is written under
 `deploy/runtime/grafana-dashboard-evidence/<run-id>/` and includes
 `grafana-dashboard-evidence.json`, `status.tsv`, `summary.md`, and dashboard
 screenshots when browser capture is enabled.
+
+The operations bundle now includes Grafana dashboard evidence by default:
+
+```bash
+python3 scripts/run_operations_release_bundle.py \
+  --run-id 20260609-grafana-attached \
+  --target-environment staging \
+  --checks monitoring,grafana-dashboard,incident,retention \
+  --prometheus-url http://localhost:9090 \
+  --alertmanager-url http://localhost:9093 \
+  --grafana-url http://localhost:3000
+```
 
 See `deploy/monitoring/README.md`.
 
@@ -1555,13 +1625,13 @@ the same workflow:
    required secrets and variables for Odoo, Playwright, backup restore drills,
    artifact storage, secret manager references, runtime secret probes,
    deployment approvers/gates, tenant operations artifacts, monitoring/incident
-   references, PSP/FBR/hardware certification evidence paths, Trivy, k6, npm,
+   references, PSP/FBR/courier/hardware certification evidence paths, Trivy, k6, npm,
    and optional pip-audit.
    Use `deploy/config/github-protected-vars.example` for non-secret environment
    variables and `secrets/github-protected-secrets.example` for the required
    secret names. Use the JSON templates under
    `deploy/config/certification-manifests/` as starting points for PSP, FBR,
-   and hardware evidence bundles.
+   courier, and hardware evidence bundles.
 3. Start the workflow manually with `protected_release=true`,
    `target_environment=staging` or `production`, and an optional `run_id`.
 
@@ -1595,7 +1665,7 @@ runtime secret delivery evidence under
 protection evidence under `deploy/runtime/deployment-environments/<run-id>/`,
 and tenant operations evidence under
 `deploy/runtime/tenant-ops-evidence/<run-id>/`. It then collects strict
-PSP/FBR/hardware certification evidence when the matching `TIJARA_CERT_*`
+PSP/FBR/courier/hardware certification evidence when the matching `TIJARA_CERT_*`
 variables are configured, exports retention and secret-manager evidence, runs
 strict production operations readiness with all of those inputs attached,
 generates the protected sign-off package, checks `release-readiness.json`, and
@@ -1644,7 +1714,7 @@ URL, digest, retention days, and the retention-manifest verdict. If a strict
 evidence step fails, the job still tries to build the final sign-off package so
 the release-readiness JSON explains the blocker.
 
-Set `TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware` in the protected
+Set `TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,courier,hardware` in the protected
 GitHub environment when external certification must be mandatory for the
 release. The protected sign-off package will append certification evidence
 directories to `TIJARA_SIGNOFF_EVIDENCE_PATHS` and require the selected groups;
@@ -1662,7 +1732,7 @@ skipped optional groups.
 The protected workflow also exports
 `deploy/runtime/certification-evidence/<run-id>/result-matrix/` with
 `certification-result-matrix.json`, `status.tsv`, `env-summary.txt`, and
-`summary.md`. The matrix merges root certification execution, PSP/FBR/hardware
+`summary.md`. The matrix merges root certification execution, PSP/FBR/courier/hardware
 evidence, approvals, validity dates, evidence counts, and optional PSP/FBR
 provider-readiness evidence into one release-owner review. Set
 `TIJARA_CERTIFICATION_MATRIX_REQUIRE_PROVIDER_READINESS=1` when PSP/FBR
@@ -2016,7 +2086,7 @@ check the non-secret environment surface without executing release gates:
 ```bash
 TIJARA_PROTECTED_RUN_ID=2026-06-05-rc1 \
 TIJARA_TARGET_ENVIRONMENT=staging \
-TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,hardware \
+TIJARA_PROTECTED_CERTIFICATION_GROUPS=psp,fbr,courier,hardware \
 python3 scripts/export_protected_runner_preflight.py \
   --output deploy/runtime/protected-runner-preflight/2026-06-05-rc1 \
   --strict
@@ -2024,7 +2094,7 @@ python3 scripts/export_protected_runner_preflight.py \
 
 The preflight manifest does not print secret values. It records presence,
 placeholder status, and redacted previews for protected release variables,
-certification groups, URL/load/E2E toggles, and required PSP/FBR/hardware
+certification groups, URL/load/E2E toggles, and required PSP/FBR/courier/hardware
 evidence fields. Attach that directory to `TIJARA_SIGNOFF_EVIDENCE_PATHS`; the
 sign-off package reads `summary.md` and `status.tsv`, so strict preflight
 failures appear as release-readiness blockers.
@@ -2587,6 +2657,7 @@ secure evidence bundle outside the repo, replace the placeholder file names and
 hashes, and point the protected runner variables such as
 `TIJARA_CERT_PSP_ARTIFACT_MANIFEST`,
 `TIJARA_CERT_FBR_ARTIFACT_MANIFEST`, and
+`TIJARA_CERT_COURIER_ARTIFACT_MANIFEST`, and
 `TIJARA_CERT_HARDWARE_ARTIFACT_MANIFEST` at those real manifest files.
 
 PSP evidence example:
@@ -2634,6 +2705,27 @@ python3 scripts/collect_certification_evidence.py \
   --strict
 ```
 
+Courier evidence example:
+
+```bash
+python3 scripts/collect_certification_evidence.py \
+  --run-id 2026-06-05-rc1 \
+  --category courier \
+  --provider TCS \
+  --reference TCS-UAT-001 \
+  --owner Delivery \
+  --evidence-file /secure/evidence/tcs-create-cancel-track-label-manifest.json \
+  --artifact-manifest /secure/evidence/tcs-courier-certification-manifest.json \
+  --approved-by "Delivery Ops Lead" \
+  --approval-reference COURIER-SIGNOFF-2026-001 \
+  --valid-until 2027-06-05 \
+  --require-artifact-manifest \
+  --require-approval \
+  --require-validity \
+  --metadata api_scope=create_cancel_track_label_manifest_cod \
+  --strict
+```
+
 Hardware evidence example:
 
 ```bash
@@ -2658,8 +2750,8 @@ python3 scripts/collect_certification_evidence.py \
 Include the generated directories in the release sign-off package:
 
 ```bash
-TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-seed/2026-06-05-rc1,deploy/runtime/e2e-profile/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
-TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,psp,fbr,hardware \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/release-evidence/2026-06-05-rc1,deploy/runtime/e2e-seed/2026-06-05-rc1,deploy/runtime/e2e-profile/2026-06-05-rc1,deploy/runtime/e2e-evidence/2026-06-05-rc1,deploy/runtime/ops-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/courier,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=release,e2e,ops,psp,fbr,courier,hardware \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
 make signoff-pack
 ```
@@ -2678,8 +2770,8 @@ python3 scripts/export_certification_result_matrix.py \
 ```
 
 ```bash
-TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/certification-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
-TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=psp,fbr,hardware \
+TIJARA_SIGNOFF_EVIDENCE_PATHS=deploy/runtime/certification-evidence/2026-06-05-rc1,deploy/runtime/certification-evidence/2026-06-05-rc1/psp,deploy/runtime/certification-evidence/2026-06-05-rc1/fbr,deploy/runtime/certification-evidence/2026-06-05-rc1/courier,deploy/runtime/certification-evidence/2026-06-05-rc1/hardware \
+TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS=psp,fbr,courier,hardware \
 TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
 make signoff-pack
 ```
@@ -2702,6 +2794,8 @@ The package is written to `deploy/runtime/signoff-packages/<run-id>/` unless
 - `psp-certification.md` for JazzCash, Easypaisa, Stripe, bank, or other PSP
   signature, settlement, refund, chargeback, and reconciliation sign-off.
 - `fbr-certification.md` for certified-provider sandbox/live evidence.
+- `courier-certification.md` for courier create/cancel/track/label/manifest,
+  webhook, and COD reconciliation sign-off.
 - `hardware-certification.md` for printer, drawer, scanner, scale, customer
   display, and label printer physical certification.
 - `finance-tax-signoff.md` for accounting setup, refund, chargeback, write-off,

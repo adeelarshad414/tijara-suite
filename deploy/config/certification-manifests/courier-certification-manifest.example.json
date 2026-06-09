@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "category": "courier",
+    "owner": "replace-with-delivery-ops-owner",
+    "provider": "replace-with-courier-provider",
+    "reference": "replace-with-courier-uat-or-live-certification-reference"
+  },
+  "artifacts": [
+    {
+      "path": "courier-certification-letter.pdf",
+      "required": true,
+      "sha256": "replace-with-64-character-sha256"
+    },
+    {
+      "path": "create-cancel-track-label-manifest-proof.json",
+      "required": true,
+      "sha256": "replace-with-64-character-sha256"
+    },
+    {
+      "path": "cod-reconciliation-sample.csv",
+      "required": true,
+      "sha256": "replace-with-64-character-sha256"
+    },
+    {
+      "path": "webhook-signature-or-ip-allowlist-proof.json",
+      "required": true,
+      "sha256": "replace-with-64-character-sha256"
+    }
+  ]
+}

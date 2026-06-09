@@ -45,9 +45,14 @@ These files may read or reference variables, but they are not secret stores:
 - `scripts/tijara-start.sh`
 - `scripts/tijara-stop.sh`
 - `scripts/tijara-deploy.sh`
+- `scripts/tijara-production-infra.sh`
 - `scripts/tijara-start.ps1`
 - `scripts/tijara-stop.ps1`
 - `scripts/tijara-deploy.ps1`
+- `scripts/tijara-production-infra.ps1`
+- `scripts/seed_prometheus_demo_metrics.py`
+- `scripts/run_production_infra_automation.py`
+- `scripts/capture-grafana-evidence.js`
 - `deploy/bin/start-odoo.sh`
 - `deploy/config/odoo.conf.template`
 - `deploy/nginx/tijara.conf`
@@ -92,6 +97,14 @@ environment variable:
 | Payment providers | JazzCash, Easypaisa, Stripe, generic PSP webhook secrets | Finance/DevOps |
 | FBR | `FBR_CLIENT_ID`, `FBR_CLIENT_SECRET` | Tax/finance/DevOps |
 | Courier webhooks | Provider webhook shared secrets | Ecommerce ops/DevOps |
+
+## New Operations Variables
+
+| Area | Non-secret examples | Secret handling |
+|---|---|---|
+| Demo metrics | `TIJARA_PUSHGATEWAY_URL`, `TIJARA_DEMO_METRICS_FILE`, `TIJARA_DEMO_METRICS_JOB`, `TIJARA_DEMO_METRICS_TIMEOUT` | None for public demo metrics; production exporters must use secret-managed scrape tokens. |
+| Grafana evidence | `TIJARA_GRAFANA_URL`, `TIJARA_OPS_BUNDLE_GRAFANA_DASHBOARD_TIMEOUT` | `GRAFANA_ADMIN_PASSWORD` stays in `secrets/.env.secrets` or the platform secret manager. |
+| Production infra wrappers | `TIJARA_PRODUCTION_INFRA_TENANT_ARTIFACTS`, `TIJARA_PRODUCTION_INFRA_MODE`, `TIJARA_DNS_APPLY_COMMAND_TEMPLATE`, `TIJARA_TLS_APPLY_COMMAND_TEMPLATE`, `TIJARA_BACKUP_COMMAND_TEMPLATE` | Provider API tokens, kubeconfig credentials, DNS tokens, and backup encryption keys stay in `secrets/.env.secrets` or the platform secret manager. |
 
 ## Rotation And Promotion
 

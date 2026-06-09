@@ -141,9 +141,13 @@ scripts/tijara_services.py     Python start/stop/status service manager
 scripts/tijara-start.sh        Native Bash start wrapper for PC/server
 scripts/tijara-stop.sh         Native Bash stop wrapper for PC/server
 scripts/tijara-deploy.sh       Native Bash deploy wrapper for PC/server
+scripts/tijara-production-infra.sh
+                               Native Bash DNS/TLS/backup wrapper generator
 scripts/tijara-start.ps1       Native PowerShell start wrapper for Windows
 scripts/tijara-stop.ps1        Native PowerShell stop wrapper for Windows
 scripts/tijara-deploy.ps1      Native PowerShell deploy wrapper for Windows
+scripts/tijara-production-infra.ps1
+                               Native PowerShell DNS/TLS/backup wrapper generator
 tests/e2e/                     Playwright browser E2E staging scaffolds
 DEPLOY.md                      Deployment, secrets, release, and rollback guide
 LICENSE                        Root LGPL-3.0 project license notice
@@ -192,6 +196,7 @@ Native Bash wrappers for local PCs and Linux/macOS servers:
 bash scripts/tijara-start.sh --all --install-suite --seed-demo
 bash scripts/tijara-stop.sh --force-kill-ports
 bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite
+bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
 Server hosting/bootstrap helper:
@@ -208,6 +213,7 @@ Windows PowerShell equivalents:
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
 The older local developer helpers still live in `scripts/dev-start.ps1` and
@@ -682,7 +688,7 @@ The detailed policy and dependency intake checklist are maintained in
   available for strict staging/production evidence on `[self-hosted,
   tijara-protected]`; see `deploy/config/github-protected-vars.example` and
   `secrets/github-protected-secrets.example` for setup templates, plus
-  `deploy/config/certification-manifests/` for PSP, FBR, and hardware
+  `deploy/config/certification-manifests/` for PSP, FBR, courier, and hardware
   certification manifest examples. The protected job now emits an operator
   handoff runbook, a first-run checklist, a redacted runner preflight evidence
   report, protected authenticated service checks, protected PSP/FBR provider
@@ -756,7 +762,7 @@ The detailed policy and dependency intake checklist are maintained in
   toggles, required toolchain checks for python3, node, npm, Docker/Compose,
   Trivy, k6, PostgreSQL client tools, optional pip-audit/GitHub CLI checks,
   optional Odoo/bridge/monitoring reachability probes with secret-backed auth
-  headers, and mandatory PSP/FBR/hardware certification inputs under
+  headers, and mandatory PSP/FBR/courier/hardware certification inputs under
   `deploy/runtime/protected-runner-preflight/`.
 - `scripts/bootstrap_protected_runner.sh`,
   `make protected-runner-bootstrap`, and
@@ -903,14 +909,14 @@ The detailed policy and dependency intake checklist are maintained in
   `protected-evidence-bundle-drift.json` and `drift-report.md` under
   `deploy/runtime/protected-evidence-bundle-drift/`.
 - `scripts/collect_certification_evidence.py` and `make certification-evidence`
-  collect PSP, FBR, and hardware certification metadata, reject secret-like
+  collect PSP, FBR, courier, and hardware certification metadata, reject secret-like
   metadata fields, fingerprint external evidence files, directories, or
   provider artifact manifests, validate expected SHA-256 hashes, enforce
   minimum evidence counts, approvals, validity dates, and required manifests,
   and write sign-off-ready summaries under
   `deploy/runtime/certification-evidence/`.
 - `scripts/run_protected_certification_evidence.sh` and
-  `make protected-certification-evidence` collect strict PSP, FBR, and hardware
+  `make protected-certification-evidence` collect strict PSP, FBR, courier, and hardware
   certification evidence from protected-runner environment variables so
   staging/production sign-off packages can require external certification
   groups without committing provider or device evidence. Required groups from
@@ -918,7 +924,7 @@ The detailed policy and dependency intake checklist are maintained in
   runner writes root `certification-execution.json`, `status.tsv`,
   `env-summary.txt`, and `summary.md` evidence.
 - `scripts/export_certification_result_matrix.py` and
-  `make certification-result-matrix` merge protected PSP, FBR, and hardware
+  `make certification-result-matrix` merge protected PSP, FBR, courier, and hardware
   certification execution, category evidence, approval, validity, and optional
   PSP/FBR provider-readiness proof into one reviewer-facing
   `certification-result-matrix.json` under
@@ -1012,6 +1018,10 @@ The detailed policy and dependency intake checklist are maintained in
   `make grafana-dashboard-evidence` validate the provisioned Grafana dashboard
   API state and capture browser screenshots under
   `deploy/runtime/grafana-dashboard-evidence/`.
+- `scripts/seed_prometheus_demo_metrics.py` and
+  `make prometheus-demo-metrics` publish dummy/assumed Pushgateway samples for
+  orders, delivery, PSP, FBR, hardware, blackbox, and assumption-mode panels so
+  Grafana dashboards show representative data during demos.
 - `scripts/export_incident_runbook_evidence.py` and
   `make incident-runbook-evidence` collect release owner, DevOps, support,
   business, on-call, alert-route, runbook, backup, restore, rollback, and
@@ -1019,7 +1029,8 @@ The detailed policy and dependency intake checklist are maintained in
 - `scripts/run_operations_release_bundle.py` and
   `make operations-release-bundle` combine load profile matrix, enterprise load,
   production smoke, optional tenant rollout, optional tenant smoke, monitoring,
-  and incident runbook evidence under one operations run ID for release sign-off.
+  Grafana dashboard evidence, and incident runbook evidence under one operations
+  run ID for release sign-off.
 - `scripts/export_production_ops_readiness.py` and
   `make production-ops-readiness` combine operations bundle, monitoring,
   incident, load, retention, secret-manager/runtime, deployment environment,
@@ -1045,13 +1056,18 @@ The detailed policy and dependency intake checklist are maintained in
   the Odoo container module install path.
 - `scripts/generate_tenant_ops_manifest.py` generates tenant DNS, ingress,
   admin, backup, and monitoring artifacts for DevOps handoff.
+- `scripts/run_production_infra_automation.py`, `make production-infra`, and
+  the `tijara-production-infra` Bash/PowerShell wrappers generate production
+  DNS apply/rollback, TLS apply/rollback, backup, and restore-drill scripts
+  from tenant operations artifacts under `deploy/runtime/production-infra/`.
 - `deploy/monitoring/`, `deploy/logging/`, and `deploy/postgres/restore-drill.sh`
-  provide Prometheus, Blackbox, Alertmanager, Grafana, Loki, logging, and
-  restore-drill baselines. Grafana dashboard provisioning now loads the
+  provide Prometheus, Pushgateway, Blackbox, Alertmanager, Grafana, Loki,
+  logging, and restore-drill baselines. Grafana dashboard provisioning now loads the
   `Tijara Suite` folder with owner/DevOps, ecommerce delivery, finance/PSP/FBR,
   and hardware/integration-risk dashboards from
   `deploy/monitoring/grafana/dashboards/`; dashboard screenshot evidence is
-  captured with `make grafana-dashboard-evidence`.
+  captured with `make grafana-dashboard-evidence`, and demo panel data is seeded
+  with `make prometheus-demo-metrics`.
 - `scripts/container_scan.sh` and `scripts/dependency_scan.sh` provide
   production security scan hooks for Trivy, npm audit, and pip-audit.
 - `DEPLOY.md` is the maintained deployment runbook.

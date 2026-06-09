@@ -65,6 +65,8 @@ Required for production:
 - [ ] Courier provider contract/API credentials are attached.
 - [ ] Courier live tracking, cancellation, label, manifest, webhook, and COD
       reconciliation are tested.
+- [ ] Courier certification evidence is collected with
+      `scripts/collect_certification_evidence.py --category courier`.
 - [ ] FBR certified provider credentials are attached.
 - [ ] FBR sandbox/UAT approval is attached.
 - [ ] FBR live compliance test is approved.
@@ -85,6 +87,9 @@ Required for production:
       `/tijara/monitoring/metrics`.
 - [ ] `/tijara/monitoring/metrics` returns Prometheus text format.
 - [ ] Prometheus scrapes Odoo business metrics.
+- [ ] Pushgateway demo metrics are disabled for production or isolated from
+      production dashboards; `make prometheus-demo-metrics` is used only for
+      demos/staging evidence.
 - [ ] Delivery alert rules are loaded.
 - [ ] Blackbox probes cover Odoo and hardware bridge.
 - [ ] Grafana dashboards are reachable.
@@ -99,6 +104,8 @@ Required for production:
       FBR, PSP, and background jobs.
 - [ ] Backup job runs successfully.
 - [ ] Restore drill passes.
+- [ ] Production DNS/TLS/backup wrapper plan is generated with
+      `make production-infra` and provider-approved apply/rollback templates.
 - [ ] Incident runbook is reviewed.
 - [ ] Rollback process is tested.
 

@@ -13,6 +13,7 @@ SECRET_KEY_PARTS = {"password", "secret", "token", "api_key", "apikey", "client_
 REQUIRED_BY_CATEGORY = {
     "psp": ["provider", "reference", "owner"],
     "fbr": ["provider", "reference", "owner"],
+    "courier": ["provider", "reference", "owner"],
     "hardware": ["device_model", "device_serial", "store", "owner"],
 }
 

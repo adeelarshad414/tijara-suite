@@ -1,13 +1,14 @@
 # Tijara Monitoring
 
-This profile uses open-source Prometheus, Blackbox Exporter, Alertmanager,
-Grafana, and Loki for first-line availability checks, alert routing foundation,
-dashboards, and log aggregation foundation.
+This profile uses open-source Prometheus, Pushgateway, Blackbox Exporter,
+Alertmanager, Grafana, and Loki for first-line availability checks, alert
+routing foundation, dashboards, demo metric seeding, and log aggregation
+foundation.
 
 Start it with:
 
 ```bash
-docker compose --env-file .env --env-file secrets/.env.secrets --profile monitoring up -d prometheus blackbox alertmanager loki grafana
+docker compose --env-file .env --env-file secrets/.env.secrets --profile monitoring up -d prometheus pushgateway blackbox alertmanager loki grafana
 ```
 
 For the Odoo business metrics scrape, run Odoo with a database filter that
@@ -60,6 +61,19 @@ after the monitoring profile is running:
 ```bash
 make grafana-dashboard-evidence
 ```
+
+Seed representative demo values into Pushgateway when Grafana panels would
+otherwise show sparse/no data:
+
+```bash
+make prometheus-demo-metrics
+```
+
+This publishes grouped samples for `tijara-demo-business`,
+`tijara-http-blackbox`, and `tijara-odoo-business` from
+`deploy/monitoring/tijara-delivery-metrics.example.prom`, then writes
+`demo-metrics-seed.json`, `status.tsv`, `summary.md`, and `metrics.prom` under
+`deploy/runtime/prometheus-demo-metrics/<run-id>/`.
 
 The evidence writer reads `TIJARA_GRAFANA_URL`, `GRAFANA_ADMIN_USER`, and
 `GRAFANA_ADMIN_PASSWORD` from the central runtime files or environment, writes
