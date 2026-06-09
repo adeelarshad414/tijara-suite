@@ -60,6 +60,9 @@
 | Capture Grafana dashboard evidence | `make grafana-dashboard-evidence` |
 | Validate Grafana dashboards without running Grafana | `node scripts/capture-grafana-evidence.js --metadata-only` |
 | Generate production DNS/TLS/backup wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001"` |
+| Generate Cloudflare/cert-manager/Postgres wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict"` |
+| Generate Route53/cert-manager/Postgres wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template route53-cert-manager-postgres --strict"` |
+| Run full operations evidence bundle | `make operations-release-bundle` |
 | Run release candidate gate | `make release-candidate` |
 | Generate signoff pack | `make signoff-pack` |
 
@@ -88,6 +91,7 @@
 | Stop and force known ports | `powershell -File scripts/dev-stop.ps1 -ForceKillPorts` |
 | Deploy with PowerShell wrapper | `powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite` |
 | Generate production infra wrappers | `pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001` |
+| Generate provider infra wrappers | `pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict` |
 
 ## Stop And Kill
 

@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "description": "Full Tijara production infra template using Cloudflare DNS, cert-manager TLS, and PostgreSQL backup/restore runners.",
+    "provider_stack": [
+      "cloudflare",
+      "cert-manager",
+      "postgres"
+    ]
+  },
+  "command_templates": {
+    "dns_apply_command_template": "bash deploy/production-infra/runners/cloudflare-dns.sh apply --zone-id-env CLOUDFLARE_ZONE_ID --token-env CLOUDFLARE_API_TOKEN --hostname {domain} --target {dns_target} --record-type {record_type} --ttl {ttl}",
+    "dns_rollback_command_template": "bash deploy/production-infra/runners/cloudflare-dns.sh rollback --zone-id-env CLOUDFLARE_ZONE_ID --token-env CLOUDFLARE_API_TOKEN --hostname {domain} --record-id-env CLOUDFLARE_RECORD_ID",
+    "tls_apply_command_template": "bash deploy/production-infra/runners/cert-manager-tls.sh apply --namespace {namespace} --domain {domain} --tls-secret {tls_secret} --issuer {tls_issuer}",
+    "tls_rollback_command_template": "bash deploy/production-infra/runners/cert-manager-tls.sh rollback --namespace {namespace} --domain {domain} --tls-secret {tls_secret}",
+    "backup_command_template": "bash deploy/production-infra/runners/postgres-backup-runner.sh backup --database {backup_database} --retention-days {backup_retention_days}",
+    "restore_drill_command_template": "bash deploy/production-infra/runners/postgres-backup-runner.sh restore-drill --database {backup_database} --backup-ref {restore_drill_ref}"
+  }
+}

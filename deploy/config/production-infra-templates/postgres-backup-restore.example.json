@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "description": "PostgreSQL backup and restore-drill runner templates.",
+    "provider": "postgres",
+    "secrets": [
+      "POSTGRES_PASSWORD",
+      "BACKUP_ENCRYPTION_KEY"
+    ],
+    "variables": [
+      "backup_database",
+      "backup_retention_days",
+      "restore_drill_ref"
+    ]
+  },
+  "command_templates": {
+    "backup_command_template": "bash deploy/production-infra/runners/postgres-backup-runner.sh backup --database {backup_database} --retention-days {backup_retention_days}",
+    "restore_drill_command_template": "bash deploy/production-infra/runners/postgres-backup-runner.sh restore-drill --database {backup_database} --backup-ref {restore_drill_ref}"
+  }
+}

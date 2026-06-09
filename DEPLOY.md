@@ -196,6 +196,37 @@ services. Use `scripts/tijara-production-infra.*` in plan mode first; only pass
 `--mode apply --execute --confirm YES` after DNS/TLS/backup templates, tenant
 artifacts, and rollback approval are reviewed.
 
+Provider-specific templates are committed under
+`deploy/config/production-infra-templates/`. These are non-secret command
+packs; provider tokens, kubeconfig credentials, and backup encryption keys stay
+in `secrets/.env.secrets` or the production secret manager.
+
+```bash
+python3 scripts/run_production_infra_automation.py \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --provider-template cloudflare-cert-manager-postgres \
+  --strict
+
+python3 scripts/run_production_infra_automation.py \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --provider-template route53-cert-manager-postgres \
+  --strict
+```
+
+The provider templates render these dry-run-first runner scripts:
+
+- `deploy/production-infra/runners/cloudflare-dns.sh`
+- `deploy/production-infra/runners/route53-dns.sh`
+- `deploy/production-infra/runners/cert-manager-tls.sh`
+- `deploy/production-infra/runners/postgres-backup-runner.sh`
+
+Real provider execution requires both the generated script confirmation
+(`CONFIRM_PRODUCTION_INFRA=YES --mode apply --execute --confirm YES`) and
+provider confirmation (`CONFIRM_PROVIDER_ACTION=YES`). Keep DNS record IDs,
+hosted zone IDs, previous DNS targets, and runner selectors in `.env` or the
+deployment platform variables; keep API tokens and cloud credentials in the
+secret manager.
+
 ## Compose Commands
 
 The Makefile automatically includes `.env` and `secrets/.env.secrets` when they
@@ -693,6 +724,27 @@ python3 scripts/run_production_infra_automation.py \
   --execute \
   --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
+
+To use a named provider pack instead of raw command templates:
+
+```bash
+python3 scripts/run_production_infra_automation.py \
+  --run-id 20260609-provider-templates-cloudflare \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --provider-template cloudflare-cert-manager-postgres \
+  --strict
+
+python3 scripts/run_production_infra_automation.py \
+  --run-id 20260609-provider-templates-route53 \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --provider-template route53-cert-manager-postgres \
+  --strict
+```
+
+Individual packs are also available for partial rollouts:
+`cloudflare-dns`, `route53-dns`, `cert-manager-kubernetes-tls`, and
+`postgres-backup-restore`. The generator records loaded template sources and
+rendered actions in `production-infra-automation.json`.
 
 Export tenant operations evidence before pilot, staging, or production
 sign-off:
@@ -1253,6 +1305,33 @@ directories, logs, `status.tsv`, `env-summary.txt`, and `summary.md` under
 `TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence. Use
 `TIJARA_OPS_BUNDLE_STRICT=1` and `TIJARA_OPS_BUNDLE_FAIL_ON_WARNING=1` for
 production release drills where missing evidence or warnings must block.
+
+The strict local/protected pattern used by this repo is:
+
+```bash
+python3 scripts/run_operations_release_bundle.py \
+  --run-id 20260609-strict-full \
+  --target-environment local-strict-evidence \
+  --checks load-matrix,load-enterprise,smoke,tenant-rollout,tenant-smoke,monitoring,grafana-dashboard,incident,retention \
+  --base-url http://localhost:8069 \
+  --tenant-rollout-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --tenant-rollout-require-all-artifacts \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --tenant-base-url tijara_customer_001=http://localhost:8069 \
+  --tenant-smoke-skip-monitoring \
+  --prometheus-url http://localhost:9090 \
+  --alertmanager-url http://localhost:9093 \
+  --grafana-url http://localhost:3000 \
+  --deployment-decision deploy/runtime/assumed-release-decisions/20260609-strict-full/deployment-decision.json \
+  --rollback-decision deploy/runtime/assumed-release-decisions/20260609-strict-full/rollback-decision.json \
+  --strict \
+  --fail-on-warning
+```
+
+For production, replace the assumed deployment/rollback JSON with output from
+`run_production_deployment_gate.py` and `run_production_rollback.py`, and run
+against the protected staging/production URLs with real owner, retention,
+backup, restore, and secret-manager references.
 
 On a protected runner, convert real command outputs into structured operations
 tool evidence. Capture logs or JSON from the tools first, then export a single

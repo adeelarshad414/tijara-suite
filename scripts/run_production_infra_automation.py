@@ -15,6 +15,7 @@ from pathlib import Path
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+TEMPLATE_DIR = ROOT_DIR / "deploy" / "config" / "production-infra-templates"
 SECRET_KEY_PARTS = {"password", "secret", "token", "api_key", "apikey", "client_secret"}
 SCRIPT_NAMES = {
     "dns-apply": "dns-apply",
@@ -23,6 +24,26 @@ SCRIPT_NAMES = {
     "tls-rollback": "tls-rollback",
     "backup-run": "backup-run",
     "restore-drill": "restore-drill",
+}
+TEMPLATE_KEY_ALIASES = {
+    "dns-apply": "dns-apply",
+    "dns_apply": "dns-apply",
+    "dns_apply_command_template": "dns-apply",
+    "dns-rollback": "dns-rollback",
+    "dns_rollback": "dns-rollback",
+    "dns_rollback_command_template": "dns-rollback",
+    "tls-apply": "tls-apply",
+    "tls_apply": "tls-apply",
+    "tls_apply_command_template": "tls-apply",
+    "tls-rollback": "tls-rollback",
+    "tls_rollback": "tls-rollback",
+    "tls_rollback_command_template": "tls-rollback",
+    "backup-run": "backup-run",
+    "backup_run": "backup-run",
+    "backup_command_template": "backup-run",
+    "restore-drill": "restore-drill",
+    "restore_drill": "restore-drill",
+    "restore_drill_command_template": "restore-drill",
 }
 
 
@@ -88,6 +109,75 @@ def _load_json(path: Path) -> dict:
         return {}
 
 
+def _template_name_candidates(name: str) -> list[Path]:
+    raw = str(name or "").strip()
+    if not raw:
+        return []
+    path = Path(raw)
+    if path.suffix:
+        return [path if path.is_absolute() else ROOT_DIR / path]
+    return [
+        TEMPLATE_DIR / ("%s.json" % raw),
+        TEMPLATE_DIR / ("%s.example.json" % raw),
+    ]
+
+
+def _template_paths(args: argparse.Namespace) -> list[Path]:
+    raw_names = list(args.provider_template or [])
+    raw_names.extend(_csv_items(os.environ.get("TIJARA_PRODUCTION_INFRA_TEMPLATE")))
+    raw_files = list(args.template_file or [])
+    raw_files.extend(_csv_items(os.environ.get("TIJARA_PRODUCTION_INFRA_TEMPLATE_FILE")))
+    candidates: list[Path] = []
+    for name in raw_names:
+        candidates.extend(_template_name_candidates(name))
+    for item in raw_files:
+        path = Path(item)
+        candidates.append(path if path.is_absolute() else ROOT_DIR / path)
+
+    resolved: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = str(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
+        if candidate.is_file():
+            resolved.append(candidate)
+    missing_names = [
+        name
+        for name in raw_names
+        if not any(candidate.is_file() for candidate in _template_name_candidates(name))
+    ]
+    missing_files = [
+        item
+        for item in raw_files
+        if not (Path(item) if Path(item).is_absolute() else ROOT_DIR / item).is_file()
+    ]
+    if missing_names or missing_files:
+        missing = missing_names + missing_files
+        raise ValueError("Production infra template file(s) not found: %s" % ", ".join(missing))
+    return resolved
+
+
+def _load_template_commands(args: argparse.Namespace) -> tuple[dict[str, str], list[str]]:
+    commands: dict[str, str] = {}
+    sources: list[str] = []
+    for path in _template_paths(args):
+        payload = _load_json(path)
+        if not payload:
+            raise ValueError("Production infra template is missing or invalid JSON: %s" % path)
+        raw_commands = payload.get("command_templates") or payload.get("templates") or {}
+        if not isinstance(raw_commands, dict):
+            raise ValueError("Production infra template command_templates must be an object: %s" % path)
+        for raw_key, value in raw_commands.items():
+            key = TEMPLATE_KEY_ALIASES.get(str(raw_key).strip())
+            if not key:
+                raise ValueError("Unknown production infra template command key %s in %s" % (raw_key, path))
+            commands[key] = str(value or "").strip()
+        sources.append(_repo_relative(path))
+    return commands, sources
+
+
 def _tenant_artifact_paths(args: argparse.Namespace) -> list[Path]:
     raw = list(args.tenant_artifact or [])
     raw.extend(_csv_items(os.environ.get("TIJARA_PRODUCTION_INFRA_TENANT_ARTIFACTS")))
@@ -146,8 +236,8 @@ def _values(manifest: dict) -> dict[str, str]:
         "tls_issuer": str(ingress.get("tls_issuer") or "letsencrypt-prod"),
         "tls_secret": str(ingress.get("tls_secret") or ""),
         "backup_policy": str(backup.get("policy") or "daily"),
-        "backup_retention_days": str(backup.get("retention_days") or ""),
-        "restore_drill_ref": str(backup.get("restore_drill_ref") or ""),
+        "backup_retention_days": str(backup.get("retention_days") or 30),
+        "restore_drill_ref": str(backup.get("restore_drill_ref") or "operator-selected-backup"),
         "backup_database": str(backup.get("database") or tenant.get("database") or ""),
     }
 
@@ -203,13 +293,14 @@ def _default_ps_commands(values: dict[str, str]) -> dict[str, str]:
 
 
 def _operator_templates(args: argparse.Namespace, values: dict[str, str]) -> dict[str, str]:
+    template_commands = getattr(args, "template_commands", {}) or {}
     templates = {
-        "dns-apply": args.dns_apply_command_template,
-        "dns-rollback": args.dns_rollback_command_template,
-        "tls-apply": args.tls_apply_command_template,
-        "tls-rollback": args.tls_rollback_command_template,
-        "backup-run": args.backup_command_template,
-        "restore-drill": args.restore_drill_command_template,
+        "dns-apply": args.dns_apply_command_template or template_commands.get("dns-apply", ""),
+        "dns-rollback": args.dns_rollback_command_template or template_commands.get("dns-rollback", ""),
+        "tls-apply": args.tls_apply_command_template or template_commands.get("tls-apply", ""),
+        "tls-rollback": args.tls_rollback_command_template or template_commands.get("tls-rollback", ""),
+        "backup-run": args.backup_command_template or template_commands.get("backup-run", ""),
+        "restore-drill": args.restore_drill_command_template or template_commands.get("restore-drill", ""),
     }
     rendered: dict[str, str] = {}
     for name, template in templates.items():
@@ -350,6 +441,8 @@ def main() -> int:
     parser.add_argument("--target-environment", default=os.environ.get("TIJARA_PRODUCTION_INFRA_ENVIRONMENT", "production"))
     parser.add_argument("--output", default=os.environ.get("TIJARA_PRODUCTION_INFRA_OUTPUT", ""))
     parser.add_argument("--tenant-artifact", action="append", default=[])
+    parser.add_argument("--provider-template", action="append", default=[], help="Named template from deploy/config/production-infra-templates.")
+    parser.add_argument("--template-file", action="append", default=[], help="Direct production infra template JSON file.")
     parser.add_argument("--minimum-tenants", type=int, default=int(os.environ.get("TIJARA_PRODUCTION_INFRA_MINIMUM_TENANTS", "1")))
     parser.add_argument("--mode", choices=["plan", "apply"], default=os.environ.get("TIJARA_PRODUCTION_INFRA_MODE", "plan"))
     parser.add_argument("--execute", action="store_true", default=_truthy(os.environ.get("TIJARA_PRODUCTION_INFRA_EXECUTE")))
@@ -391,6 +484,35 @@ def main() -> int:
         rows.append({"name": "metadata-secret-safety", "status": "failed", "tenant_db": "", "message": message, "source": ""})
     else:
         rows.append({"name": "metadata-secret-safety", "status": "passed", "tenant_db": "", "message": "No secret-like metadata keys found.", "source": ""})
+
+    try:
+        args.template_commands, args.template_sources = _load_template_commands(args)
+    except ValueError as error:
+        args.template_commands = {}
+        args.template_sources = []
+        blockers.append(str(error))
+        rows.append({"name": "provider-templates", "status": "failed", "tenant_db": "", "message": str(error), "source": ""})
+    else:
+        if args.template_sources:
+            rows.append(
+                {
+                    "name": "provider-templates",
+                    "status": "passed",
+                    "tenant_db": "",
+                    "message": "%s provider template file(s) loaded." % len(args.template_sources),
+                    "source": ",".join(args.template_sources),
+                }
+            )
+        else:
+            rows.append(
+                {
+                    "name": "provider-templates",
+                    "status": "passed",
+                    "tenant_db": "",
+                    "message": "No provider template selected; using defaults or explicit command templates.",
+                    "source": "",
+                }
+            )
 
     tenant_paths = _tenant_artifact_paths(args)
     if len(tenant_paths) < max(args.minimum_tenants, 0):
@@ -509,6 +631,8 @@ def main() -> int:
         "decision": decision,
         "ci_status": ci_status,
         "metadata": metadata,
+        "provider_template_sources": getattr(args, "template_sources", []),
+        "provider_template_actions": sorted((getattr(args, "template_commands", {}) or {}).keys()),
         "tenant_artifacts": [_repo_relative(path) for path in tenant_paths],
         "tenant_plans": tenant_plans,
         "checks": rows,

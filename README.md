@@ -100,11 +100,13 @@ addons/
 deploy/
   bin/                         Runtime helpers, including Odoo config renderer
   config/                      Secret-free runtime config templates
+    production-infra-templates/ Cloudflare, Route53, cert-manager, backup packs
   logging/                     Logging retention and aggregation notes
   monitoring/                  Prometheus and Blackbox Exporter baseline
     grafana/dashboards/        Provisioned Tijara Suite Grafana dashboards
   nginx/                       Reverse proxy configuration
   postgres/                    Database notes, backup hooks, restore drills
+  production-infra/runners/    Dry-run-first DNS, TLS, backup provider runners
 hardware-bridge/               Local shop-machine device bridge foundation
 docs/                          Architecture, roadmap, analytics, inventory, QA
                                retail operations, hardware, and data exchange
@@ -1060,6 +1062,10 @@ The detailed policy and dependency intake checklist are maintained in
   the `tijara-production-infra` Bash/PowerShell wrappers generate production
   DNS apply/rollback, TLS apply/rollback, backup, and restore-drill scripts
   from tenant operations artifacts under `deploy/runtime/production-infra/`.
+  Named provider templates now cover Cloudflare DNS, Route53 DNS,
+  cert-manager/Kubernetes TLS, and PostgreSQL backup/restore runners through
+  `deploy/config/production-infra-templates/`, with real execution gated by
+  `CONFIRM_PROVIDER_ACTION=YES`.
 - `deploy/monitoring/`, `deploy/logging/`, and `deploy/postgres/restore-drill.sh`
   provide Prometheus, Pushgateway, Blackbox, Alertmanager, Grafana, Loki,
   logging, and restore-drill baselines. Grafana dashboard provisioning now loads the

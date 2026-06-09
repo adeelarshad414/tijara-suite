@@ -104,7 +104,7 @@ environment variable:
 |---|---|---|
 | Demo metrics | `TIJARA_PUSHGATEWAY_URL`, `TIJARA_DEMO_METRICS_FILE`, `TIJARA_DEMO_METRICS_JOB`, `TIJARA_DEMO_METRICS_TIMEOUT` | None for public demo metrics; production exporters must use secret-managed scrape tokens. |
 | Grafana evidence | `TIJARA_GRAFANA_URL`, `TIJARA_OPS_BUNDLE_GRAFANA_DASHBOARD_TIMEOUT` | `GRAFANA_ADMIN_PASSWORD` stays in `secrets/.env.secrets` or the platform secret manager. |
-| Production infra wrappers | `TIJARA_PRODUCTION_INFRA_TENANT_ARTIFACTS`, `TIJARA_PRODUCTION_INFRA_MODE`, `TIJARA_DNS_APPLY_COMMAND_TEMPLATE`, `TIJARA_TLS_APPLY_COMMAND_TEMPLATE`, `TIJARA_BACKUP_COMMAND_TEMPLATE` | Provider API tokens, kubeconfig credentials, DNS tokens, and backup encryption keys stay in `secrets/.env.secrets` or the platform secret manager. |
+| Production infra wrappers | `TIJARA_PRODUCTION_INFRA_TENANT_ARTIFACTS`, `TIJARA_PRODUCTION_INFRA_MODE`, `TIJARA_PRODUCTION_INFRA_TEMPLATE`, `TIJARA_PRODUCTION_INFRA_TEMPLATE_FILE`, `TIJARA_DNS_APPLY_COMMAND_TEMPLATE`, `TIJARA_TLS_APPLY_COMMAND_TEMPLATE`, `TIJARA_BACKUP_COMMAND_TEMPLATE`, `CONFIRM_PROVIDER_ACTION`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_RECORD_ID`, `ROUTE53_HOSTED_ZONE_ID`, `ROUTE53_PREVIOUS_TARGET` | `CLOUDFLARE_API_TOKEN`, AWS access keys/session tokens, kubeconfig/service-account credentials, database passwords, and backup encryption keys stay in `secrets/.env.secrets` or the platform secret manager. |
 
 ## Rotation And Promotion
 

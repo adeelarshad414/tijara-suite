@@ -106,6 +106,10 @@ Required for production:
 - [ ] Restore drill passes.
 - [ ] Production DNS/TLS/backup wrapper plan is generated with
       `make production-infra` and provider-approved apply/rollback templates.
+- [ ] Cloudflare or Route53 DNS template pack is selected and reviewed.
+- [ ] cert-manager/Kubernetes TLS template pack is selected and reviewed.
+- [ ] PostgreSQL backup/restore runner pack is selected and dry-run evidence
+      passes before `CONFIRM_PROVIDER_ACTION=YES` is allowed.
 - [ ] Incident runbook is reviewed.
 - [ ] Rollback process is tested.
 

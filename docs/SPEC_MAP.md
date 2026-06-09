@@ -22,6 +22,7 @@ agentic development pipeline.
 | Grafana dashboards | `deploy/monitoring/grafana/dashboards/` |
 | Grafana evidence | `deploy/runtime/grafana-dashboard-evidence/` |
 | Demo metrics evidence | `deploy/runtime/prometheus-demo-metrics/` |
+| Production infra templates | `deploy/config/production-infra-templates/` |
 | Production infra evidence | `deploy/runtime/production-infra/` |
 
 ## Personas
@@ -103,6 +104,8 @@ agentic development pipeline.
 - Grafana dashboard API and browser screenshot evidence capture.
 - Pushgateway demo metric seeding for representative Grafana panel values.
 - Production DNS/TLS/backup/restore wrapper generation from tenant ops artifacts.
+- Provider-specific Cloudflare, Route53, cert-manager, and PostgreSQL
+  backup/restore template packs with dry-run-first runner scripts.
 
 ## Configuration Source Of Truth
 
@@ -143,6 +146,7 @@ bash scripts/tijara-start.sh --all --install-suite --seed-demo
 bash scripts/tijara-stop.sh --force-kill-ports
 bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite
 bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001
+bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite

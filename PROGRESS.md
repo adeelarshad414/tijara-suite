@@ -11408,3 +11408,118 @@ Status: Complete
   Odoo business metrics.
 - Continue replacing assumption-mode certification with real FBR, PSP, courier,
   and hardware evidence as credentials/devices become available.
+
+## Iteration 152: Provider Infra Templates And Strict Full Release Evidence
+
+### Scope Completed
+
+- Added provider-specific production infrastructure template packs under
+  `deploy/config/production-infra-templates/`:
+  - `cloudflare-dns.example.json`
+  - `route53-dns.example.json`
+  - `cert-manager-kubernetes-tls.example.json`
+  - `postgres-backup-restore.example.json`
+  - `cloudflare-cert-manager-postgres.example.json`
+  - `route53-cert-manager-postgres.example.json`
+- Added dry-run-first provider runners under `deploy/production-infra/runners/`:
+  - `cloudflare-dns.sh`
+  - `route53-dns.sh`
+  - `cert-manager-tls.sh`
+  - `postgres-backup-runner.sh`
+- Extended `scripts/run_production_infra_automation.py` with
+  `--provider-template`, `--template-file`,
+  `TIJARA_PRODUCTION_INFRA_TEMPLATE`, and
+  `TIJARA_PRODUCTION_INFRA_TEMPLATE_FILE` support.
+- Added template source/action reporting into
+  `production-infra-automation.json`.
+- Updated `.env.example`, `secrets/.env.secrets.example`, `README.md`,
+  `DEPLOY.md`, `docs/COMMANDS_QUICKREF.md`,
+  `docs/CONFIGURATION_AND_SECRETS.md`,
+  `docs/PRODUCTION_READINESS_CHECKLIST.md`, `docs/SPEC_MAP.md`,
+  `docs/SPEC_MAP.json`, and `deploy/config/github-protected-vars.example`.
+
+### Evidence Generated
+
+- Cloudflare/cert-manager/Postgres provider plan:
+  `deploy/runtime/production-infra/20260609-provider-templates-cloudflare/`
+  with `decision=passed`, `ci_status=pass`.
+- Route53/cert-manager/Postgres provider plan:
+  `deploy/runtime/production-infra/20260609-provider-templates-route53/`
+  with `decision=passed`, `ci_status=pass`.
+- Prometheus demo metrics seed:
+  `deploy/runtime/prometheus-demo-metrics/20260609-strict-full-demo-metrics/`
+  with `decision=passed`, `ci_status=pass`.
+- Strict full operations release bundle:
+  `deploy/runtime/operations-release-bundle/20260609-strict-full/` with
+  `decision=passed`, `ci_status=pass`, `strict=True`, and
+  `fail_on_warning=True`.
+- Grafana screenshots in the strict bundle:
+  - `tijara-owner-ops.png`
+  - `tijara-delivery.png`
+  - `tijara-finance-fbr.png`
+  - `tijara-hardware-integrations.png`
+
+### Validation
+
+- Python syntax validation passed with `PYTHONPYCACHEPREFIX` redirected to
+  `/tmp`.
+- Bash syntax validation passed for provider runner scripts and generated
+  tenant provider scripts.
+- JSON validation passed for `docs/SPEC_MAP.json` and all provider template
+  files.
+- `scripts/run_production_infra_automation.py --strict` passed for both the
+  Cloudflare and Route53 full provider stacks.
+- Generated Cloudflare DNS, Route53 DNS, cert-manager TLS, and PostgreSQL
+  restore-drill scripts produced redacted dry-run output without secrets.
+- Local Odoo and monitoring endpoints responded:
+  Odoo `/web/login`, Prometheus `/-/ready`, Alertmanager `/-/ready`, and
+  Grafana `/api/health`.
+- Prometheus query checks returned seeded values:
+  `sum(tijara_ecommerce_orders_total)=60`,
+  `sum(tijara_payment_events_total)=55`, and
+  `sum(tijara_external_assumption_mode)=4`.
+- Strict full bundle passed all nine checks:
+  load matrix, enterprise load, production smoke, tenant rollout, tenant smoke,
+  monitoring, Grafana dashboard evidence, incident runbook, and retention.
+
+### Current Enterprise Status
+
+- Architecture: 92%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 83%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 80%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 83%
+- Overall production readiness: around 73-77%
+
+### Known Gaps
+
+- The strict full bundle is a local/staging-style evidence run. Deployment gate
+  and rollback decisions used explicit local assumed JSON files, not a real
+  production cutover approval.
+- Tenant rollout passed in dry-run mode; real DNS/TLS/backup changes still need
+  provider credentials, `CONFIRM_PROVIDER_ACTION=YES`, and release-owner
+  approval.
+- FBR, PSPs, couriers, and hardware still need real certified-provider/device
+  credentials, UAT/live sign-off, and signed evidence.
+- Production monitoring still needs real continuous exporters, log retention,
+  alert routing, backup restore drills, security scans, and load tests from the
+  protected production runner.
+- Offline POS live pilot proof and full authenticated browser checkout/refund/
+  print matrix remain production blockers.
+
+### Next Iteration
+
+- Add provider readiness probes for Cloudflare, Route53, Kubernetes
+  cert-manager, and PostgreSQL backup/restore prerequisites.
+- Export production infra provider evidence into the sign-off package and
+  production operations readiness report.
+- Add live Odoo/provider metric exporters to replace Pushgateway demo samples
+  for production dashboards.
+- Run protected authenticated browser checkout/refund/print/offline replay
+  matrix against seeded staging with real users.
+- Continue replacing assumed FBR, PSP, courier, and hardware certification
+  evidence with certified provider/device artifacts.

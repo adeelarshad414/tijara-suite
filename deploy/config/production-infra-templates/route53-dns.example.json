@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "description": "AWS Route53 DNS apply and rollback templates for Tijara tenant domains.",
+    "provider": "route53",
+    "secrets": [
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "AWS_SESSION_TOKEN"
+    ],
+    "variables": [
+      "ROUTE53_HOSTED_ZONE_ID",
+      "ROUTE53_PREVIOUS_TARGET"
+    ]
+  },
+  "command_templates": {
+    "dns_apply_command_template": "bash deploy/production-infra/runners/route53-dns.sh apply --hosted-zone-id-env ROUTE53_HOSTED_ZONE_ID --hostname {domain} --target {dns_target} --record-type {record_type} --ttl {ttl}",
+    "dns_rollback_command_template": "bash deploy/production-infra/runners/route53-dns.sh rollback --hosted-zone-id-env ROUTE53_HOSTED_ZONE_ID --hostname {domain} --record-type {record_type} --previous-target-env ROUTE53_PREVIOUS_TARGET"
+  }
+}

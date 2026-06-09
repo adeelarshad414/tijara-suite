@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "description": "cert-manager Kubernetes TLS apply and rollback templates for tenant certificates.",
+    "provider": "cert-manager",
+    "secrets": [
+      "KUBECONFIG",
+      "Kubernetes service account token"
+    ],
+    "variables": [
+      "namespace",
+      "domain",
+      "tls_secret",
+      "tls_issuer"
+    ]
+  },
+  "command_templates": {
+    "tls_apply_command_template": "bash deploy/production-infra/runners/cert-manager-tls.sh apply --namespace {namespace} --domain {domain} --tls-secret {tls_secret} --issuer {tls_issuer}",
+    "tls_rollback_command_template": "bash deploy/production-infra/runners/cert-manager-tls.sh rollback --namespace {namespace} --domain {domain} --tls-secret {tls_secret}"
+  }
+}
