@@ -2610,6 +2610,26 @@ python3 scripts/export_load_evidence.py \
 Load evidence is written under `deploy/runtime/load-evidence/<run-id>/` and can
 be included in `TIJARA_SIGNOFF_EVIDENCE_PATHS` as Operations evidence.
 
+## Assumption-Mode External Certification Evidence
+
+When real shop hardware, certified FBR credentials, or PSP UAT/live references
+are not available during local or public-repo validation, generate explicit
+dummy evidence instead of leaving the release record blank:
+
+```bash
+TIJARA_ASSUMED_CERT_RUN_ID=local-assumed-2026-06-09 \
+make assumed-certification-evidence
+```
+
+The exporter writes `assumed-certification-evidence.json`, `status.tsv`,
+`env-summary.txt`, command logs, PSP readiness, PSP fixture smoke, FBR
+readiness, FBR fixture smoke, and hardware dry-run smoke evidence under
+`deploy/runtime/assumed-certification/<run-id>/`. Treat this as
+`pass_with_warnings`: it proves adapters, fixture parsers, and bridge driver
+output shape, but it is not production certification. Production sign-off still
+requires physical printer/scanner/drawer/scale/display evidence, certified FBR
+provider credentials, and JazzCash/Easypaisa/Stripe UAT or live references.
+
 Capture incident runbook evidence before production cutover:
 
 ```bash

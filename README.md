@@ -202,6 +202,7 @@ make psp-readiness-evidence
 make psp-fixture-smoke
 make fbr-readiness-evidence
 make fbr-fixture-smoke
+make assumed-certification-evidence
 make monitoring-evidence
 make incident-runbook-evidence
 make release-retention-evidence
@@ -244,6 +245,16 @@ make record-demo
 make assemble-video
 make customer-demo-video
 ```
+
+Current enterprise-readiness helpers now include automated daily KPI collectors
+for back-office expenses, salary liability, loyalty point liability, vertical
+catalog coverage, B2B/B2C price spread, kiosk order-type mix, and delivery/
+service/payment-tax policy evidence. For local/public-repo certification drills
+where real devices or provider credentials are unavailable, run
+`make assumed-certification-evidence`; it generates dummy/assumption-mode PSP,
+FBR, fixture, and hardware dry-run evidence under
+`deploy/runtime/assumed-certification/<run-id>/` while clearly preserving the
+need for real hardware, FBR, and PSP sign-off before production.
 
 See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
 `docs/TEST_CREDENTIALS.csv`, `docs/BILINGUAL_QUICK_STARTS.md`,

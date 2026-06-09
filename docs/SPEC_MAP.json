@@ -336,6 +336,92 @@
       "description": "Public queue number and pickup status display."
     },
     {
+      "name": "Expense Management",
+      "route_path": "/web#model=tijara.expense.request&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "expense_manager",
+        "tenant_admin",
+        "accountant"
+      ],
+      "description": "Back-office expense submission, approval, payment, and audit screen."
+    },
+    {
+      "name": "Salary Management",
+      "route_path": "/web#model=tijara.salary.batch&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "salary_manager",
+        "tenant_admin",
+        "accountant"
+      ],
+      "description": "Salary batch, deduction, bonus, approval, and payment evidence screen."
+    },
+    {
+      "name": "Loyalty Customer Records",
+      "route_path": "/web#model=res.partner&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "loyalty_manager",
+        "tenant_admin",
+        "analytics_manager"
+      ],
+      "description": "Customer details, walk-in conversion, B2B/B2C type, loyalty tier, and points records."
+    },
+    {
+      "name": "Business Policy Settings",
+      "route_path": "/web#model=res.company&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "vertical_manager",
+        "tenant_admin"
+      ],
+      "description": "GST, service charge, delivery charge, cafe/restaurant card/cash tax, FBR, and loyalty policy settings."
+    },
+    {
+      "name": "Kiosk Orders",
+      "route_path": "/web#model=tijara.kiosk.order&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "restaurant_operator",
+        "tenant_admin",
+        "analytics_manager"
+      ],
+      "description": "Kiosk dine-in, takeaway, pickup, delivery, customer details, payment status, and POS sync review."
+    },
+    {
+      "name": "Promotions Management",
+      "route_path": "/web#model=tijara.promotion&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "promotion_manager",
+        "tenant_admin"
+      ],
+      "description": "Promotion, deal, menu-board, and display-board campaign management."
+    },
+    {
+      "name": "Analytics Dashboards",
+      "route_path": "/web#model=tijara.analytics.dashboard&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "analytics_manager",
+        "tenant_admin",
+        "platform_superadmin"
+      ],
+      "description": "Role-based dashboard catalog for owner, POS, inventory, back office, restaurant, loyalty, and vertical analytics."
+    },
+    {
+      "name": "KPI History",
+      "route_path": "/web#model=tijara.analytics.snapshot&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "analytics_manager",
+        "tenant_admin",
+        "platform_superadmin"
+      ],
+      "description": "Daily KPI collector history for sales, inventory, expenses, salaries, loyalty, vertical, queue, and tax policy metrics."
+    },
+    {
       "name": "Payment Webhook",
       "route_path": "/tijara/saas/payment/webhook/generic",
       "auth": "signed_public",

@@ -38,6 +38,66 @@ FIGURES = [
         ],
     },
     {
+        "title": "Expense Management",
+        "path": SCREENSHOTS / "expense-manager" / "expense-management.png",
+        "caption": "Expense managers submit, approve, cancel, mark paid, and audit back-office expense requests in PKR with tax amounts and receipt references.",
+        "steps": [
+            "Open Retail Operations > Back Office > Expenses.",
+            "Create or review an expense with vendor or employee, category, payment method, amount, tax, and receipt reference.",
+            "Move the request through submitted, approved, and paid states so finance dashboards can collect the expense pipeline.",
+        ],
+    },
+    {
+        "title": "Salary Management",
+        "path": SCREENSHOTS / "salary-manager" / "salary-management.png",
+        "caption": "Salary batches track employees, roles, gross pay, deductions, bonuses, net payable, approval, and paid status.",
+        "steps": [
+            "Open Retail Operations > Back Office > Salaries.",
+            "Review salary lines for the month or payroll period.",
+            "Approve the batch and mark it paid after finance sign-off.",
+        ],
+    },
+    {
+        "title": "Loyalty Customer Records",
+        "path": SCREENSHOTS / "loyalty-manager" / "loyalty-customer-records.png",
+        "caption": "Customer records support walk-in details, B2B/B2C customer type, CNIC/NTN/STRN fields, loyalty opt-in, tier, and points.",
+        "steps": [
+            "Open Contacts or the Loyalty Customer Records screen.",
+            "Search by name, mobile, email, loyalty number, or customer type.",
+            "Update tier and verify points after POS or kiosk purchases.",
+        ],
+    },
+    {
+        "title": "Business Policy Settings",
+        "path": SCREENSHOTS / "vertical-manager" / "business-policy-settings.png",
+        "caption": "Company policy fields control Pakistan GST, cafe service charge, delivery charge, cafe/restaurant card and cash tax, FBR flags, and loyalty earning.",
+        "steps": [
+            "Open the business policy settings screen from the tenant admin or vertical manager account.",
+            "Enable or disable GST, service charge, delivery charge, and food-service payment tax according to the business type.",
+            "Save policy changes and rerun kiosk/POS checkout tests before rollout.",
+        ],
+    },
+    {
+        "title": "Analytics Dashboards",
+        "path": SCREENSHOTS / "analytics-manager" / "analytics-dashboards.png",
+        "caption": "Analytics dashboards organize owner, inventory, POS, back-office, restaurant, vertical, loyalty, and promotion KPIs with SaaS feature-aware widgets.",
+        "steps": [
+            "Open Analytics > Dashboards.",
+            "Review dashboard widgets by audience and feature flag.",
+            "Use dashboard notes to map each KPI to operational reports and collectors.",
+        ],
+    },
+    {
+        "title": "KPI History",
+        "path": SCREENSHOTS / "analytics-manager" / "kpi-history.png",
+        "caption": "KPI history stores daily automated collector snapshots for POS, inventory, queue, expenses, salaries, loyalty, vertical catalog, and food-service tax policy.",
+        "steps": [
+            "Open Analytics > KPI History.",
+            "Group by business area, metric, date, or warehouse.",
+            "Use graph and pivot views to inspect trends, history, records, charts, and reporting evidence.",
+        ],
+    },
+    {
         "title": "Kiosk Self Ordering",
         "path": SCREENSHOTS / "public-display" / "kiosk-display.png",
         "caption": "The kiosk route supports dine-in, takeaway, pickup, B2C/B2B pricing, PKR prices, customer details, payment selection, and checkout.",
@@ -95,11 +155,35 @@ ROLE_GUIDANCE = [
     ("cashier", "Run B2C/B2B checkout, bill discounts, barcode refund scans, receipt print, and offline queue retry."),
     ("inventory_manager", "Maintain products, low-stock/expiry alerts, racks, shelves, bins, warehouses, and bulk import/export."),
     ("accountant", "Review settlements, refunds, chargebacks, draft accounting moves, and FBR queue evidence."),
+    ("expense_manager", "Submit, approve, pay, and export business expense records."),
+    ("salary_manager", "Review gross pay, deductions, bonuses, approvals, and payroll payment status."),
+    ("loyalty_manager", "Manage walk-in customers, B2B/B2C details, loyalty tiers, point balances, and retention history."),
+    ("vertical_manager", "Maintain vertical catalog settings, B2B/B2C prices, GST, service charge, delivery charge, and food-service tax policy."),
+    ("promotion_manager", "Publish promotions, menu boards, deals boards, queue displays, and customer-facing messages."),
+    ("analytics_manager", "Review dashboards, KPI history, trend charts, vertical sales, loyalty, expenses, salaries, and charge policy analytics."),
     ("restaurant_operator", "Operate dine-in, takeaway, pickup, kiosk orders, queue tickets, kitchen status, menu boards, and pickup screens."),
     ("public_display", "Run public display routes for kiosk, customer display, queue, menu, deals, and promotions."),
 ]
 
 WORKFLOW_SECTIONS = [
+    (
+        "Back Office Expenses, Salaries, And Approvals",
+        [
+            "Use expense requests for rent, utilities, transport, delivery, maintenance, marketing, salary advances, and other operating costs.",
+            "Approve and mark expenses paid so the back-office finance dashboard can collect state totals.",
+            "Use salary batches for gross pay, deductions, bonuses, net payable, approval, and paid status.",
+            "Run the daily KPI collector after approvals to update expense and salary analytics.",
+        ],
+    ),
+    (
+        "Customers, Loyalty, And Vertical Retail Mix",
+        [
+            "Capture walk-in customer details at POS, kiosk, or back office when the customer wants history or loyalty points.",
+            "Maintain B2C, wholesale, corporate, and supplier customer types with NTN/STRN where needed.",
+            "Set product vertical tags for superstore, grocery, cosmetics, cloth, garments, uniform, shoes, pharmacy, fast food, restaurant, bakery, mobile, and electronics stores.",
+            "Review vertical catalog coverage, B2B/B2C price spread, loyalty points liability, and repeat-customer KPI history.",
+        ],
+    ),
     (
         "POS Checkout, Discounts, Refunds, And Print",
         [
@@ -123,6 +207,8 @@ WORKFLOW_SECTIONS = [
         "Restaurant, Bakery, And Pickup Operations",
         [
             "Use dine-in, takeaway, and pickup modes on kiosk or POS flows.",
+            "Use delivery mode when delivery charge is enabled for the tenant.",
+            "For cafe tenants, enable service charge; for cafe/restaurant tenants, enable card 5% and cash 16% payment tax policy when applicable.",
             "Send kiosk orders into queue tickets and linked POS payments when the profile has a POS register and payment method.",
             "Use queue display for public ticket status and kitchen/operator views for preparation stages.",
             "Use menu and deals boards for active promotions, food menus, bakery offers, and pickup announcements.",
@@ -211,6 +297,7 @@ def write_markdown():
             "- Physical printer, scanner, drawer, scale, and display certification still needs real device evidence.",
             "- FBR live operation still needs certified-provider credentials and compliance sign-off.",
             "- Payment providers still need PSP certification, settlement reconciliation, refunds, and chargeback sign-off.",
+            "- Assumption-mode evidence can document dummy hardware/FBR/PSP readiness but does not replace production certification.",
             "- Full staging browser E2E should run against seeded users and real staging URLs before customer deployment.",
             "- Monitoring, alerting, restore drills, load tests, and security scans should be attached to release sign-off.",
             "",
@@ -336,6 +423,7 @@ def write_docx():
         "Physical hardware certification still needs real printer, scanner, drawer, scale, and display evidence.",
         "FBR live operation still needs certified-provider credentials and compliance sign-off.",
         "Payment providers still need PSP certification, settlement reconciliation, refunds, and chargeback sign-off.",
+        "Assumption-mode evidence can document dummy hardware/FBR/PSP readiness but does not replace production certification.",
         "Full staging browser E2E should run against seeded users and real staging URLs before customer deployment.",
         "Monitoring, alerting, restore drills, load tests, and security scans should be attached to release sign-off.",
     ]:

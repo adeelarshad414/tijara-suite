@@ -139,6 +139,7 @@ profile_values = {
     "allow_dine_in": True,
     "allow_takeaway": True,
     "allow_pickup": True,
+    "allow_delivery": True,
     "allow_b2c": True,
     "allow_b2b": True,
     "allow_cash": True,

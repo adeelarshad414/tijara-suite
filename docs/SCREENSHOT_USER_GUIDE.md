@@ -1,6 +1,6 @@
 # Tijara Suite Screenshot User Guide
 
-Generated from live local Odoo screenshots on 2026-06-09 06:58 UTC.
+Generated from live local Odoo screenshots on 2026-06-09 09:05 UTC.
 
 ## Live Verification Snapshot
 
@@ -18,6 +18,12 @@ Generated from live local Odoo screenshots on 2026-06-09 06:58 UTC.
 | `cashier` | `cashier@demo.tijara-suite.local` | Run B2C/B2B checkout, bill discounts, barcode refund scans, receipt print, and offline queue retry. |
 | `inventory_manager` | `inventory-manager@demo.tijara-suite.local` | Maintain products, low-stock/expiry alerts, racks, shelves, bins, warehouses, and bulk import/export. |
 | `accountant` | `accountant@demo.tijara-suite.local` | Review settlements, refunds, chargebacks, draft accounting moves, and FBR queue evidence. |
+| `expense_manager` | `expense-manager@demo.tijara-suite.local` | Submit, approve, pay, and export business expense records. |
+| `salary_manager` | `salary-manager@demo.tijara-suite.local` | Review gross pay, deductions, bonuses, approvals, and payroll payment status. |
+| `loyalty_manager` | `loyalty-manager@demo.tijara-suite.local` | Manage walk-in customers, B2B/B2C details, loyalty tiers, point balances, and retention history. |
+| `vertical_manager` | `vertical-manager@demo.tijara-suite.local` | Maintain vertical catalog settings, B2B/B2C prices, GST, service charge, delivery charge, and food-service tax policy. |
+| `promotion_manager` | `promotion-manager@demo.tijara-suite.local` | Publish promotions, menu boards, deals boards, queue displays, and customer-facing messages. |
+| `analytics_manager` | `analytics-manager@demo.tijara-suite.local` | Review dashboards, KPI history, trend charts, vertical sales, loyalty, expenses, salaries, and charge policy analytics. |
 | `restaurant_operator` | `restaurant@demo.tijara-suite.local` | Operate dine-in, takeaway, pickup, kiosk orders, queue tickets, kitchen status, menu boards, and pickup screens. |
 | `public_display` | `public-display@demo.tijara-suite.local` | Run public display routes for kiosk, customer display, queue, menu, deals, and promotions. |
 
@@ -42,6 +48,66 @@ The authenticated Odoo shell is the entry point for Apps, POS, Inventory, Sales,
 1. Use the app switcher to open the required module.
 2. Use role-specific menus for daily work and manager approvals.
 3. Keep demo operations in the local `tijara_dev` database.
+
+### Expense Management
+
+Expense managers submit, approve, cancel, mark paid, and audit back-office expense requests in PKR with tax amounts and receipt references.
+
+![Expense Management](screenshots/expense-manager/expense-management.png)
+
+1. Open Retail Operations > Back Office > Expenses.
+2. Create or review an expense with vendor or employee, category, payment method, amount, tax, and receipt reference.
+3. Move the request through submitted, approved, and paid states so finance dashboards can collect the expense pipeline.
+
+### Salary Management
+
+Salary batches track employees, roles, gross pay, deductions, bonuses, net payable, approval, and paid status.
+
+![Salary Management](screenshots/salary-manager/salary-management.png)
+
+1. Open Retail Operations > Back Office > Salaries.
+2. Review salary lines for the month or payroll period.
+3. Approve the batch and mark it paid after finance sign-off.
+
+### Loyalty Customer Records
+
+Customer records support walk-in details, B2B/B2C customer type, CNIC/NTN/STRN fields, loyalty opt-in, tier, and points.
+
+![Loyalty Customer Records](screenshots/loyalty-manager/loyalty-customer-records.png)
+
+1. Open Contacts or the Loyalty Customer Records screen.
+2. Search by name, mobile, email, loyalty number, or customer type.
+3. Update tier and verify points after POS or kiosk purchases.
+
+### Business Policy Settings
+
+Company policy fields control Pakistan GST, cafe service charge, delivery charge, cafe/restaurant card and cash tax, FBR flags, and loyalty earning.
+
+![Business Policy Settings](screenshots/vertical-manager/business-policy-settings.png)
+
+1. Open the business policy settings screen from the tenant admin or vertical manager account.
+2. Enable or disable GST, service charge, delivery charge, and food-service payment tax according to the business type.
+3. Save policy changes and rerun kiosk/POS checkout tests before rollout.
+
+### Analytics Dashboards
+
+Analytics dashboards organize owner, inventory, POS, back-office, restaurant, vertical, loyalty, and promotion KPIs with SaaS feature-aware widgets.
+
+![Analytics Dashboards](screenshots/analytics-manager/analytics-dashboards.png)
+
+1. Open Analytics > Dashboards.
+2. Review dashboard widgets by audience and feature flag.
+3. Use dashboard notes to map each KPI to operational reports and collectors.
+
+### KPI History
+
+KPI history stores daily automated collector snapshots for POS, inventory, queue, expenses, salaries, loyalty, vertical catalog, and food-service tax policy.
+
+![KPI History](screenshots/analytics-manager/kpi-history.png)
+
+1. Open Analytics > KPI History.
+2. Group by business area, metric, date, or warehouse.
+3. Use graph and pivot views to inspect trends, history, records, charts, and reporting evidence.
 
 ### Kiosk Self Ordering
 
@@ -95,6 +161,20 @@ The deals board highlights discount campaigns and promotion messages for in-stor
 
 ## Workflow Checklist
 
+### Back Office Expenses, Salaries, And Approvals
+
+- Use expense requests for rent, utilities, transport, delivery, maintenance, marketing, salary advances, and other operating costs.
+- Approve and mark expenses paid so the back-office finance dashboard can collect state totals.
+- Use salary batches for gross pay, deductions, bonuses, net payable, approval, and paid status.
+- Run the daily KPI collector after approvals to update expense and salary analytics.
+
+### Customers, Loyalty, And Vertical Retail Mix
+
+- Capture walk-in customer details at POS, kiosk, or back office when the customer wants history or loyalty points.
+- Maintain B2C, wholesale, corporate, and supplier customer types with NTN/STRN where needed.
+- Set product vertical tags for superstore, grocery, cosmetics, cloth, garments, uniform, shoes, pharmacy, fast food, restaurant, bakery, mobile, and electronics stores.
+- Review vertical catalog coverage, B2B/B2C price spread, loyalty points liability, and repeat-customer KPI history.
+
 ### POS Checkout, Discounts, Refunds, And Print
 
 - Open POS from the app shell and select the active Tijara Demo POS session.
@@ -113,6 +193,8 @@ The deals board highlights discount campaigns and promotion messages for in-stor
 ### Restaurant, Bakery, And Pickup Operations
 
 - Use dine-in, takeaway, and pickup modes on kiosk or POS flows.
+- Use delivery mode when delivery charge is enabled for the tenant.
+- For cafe tenants, enable service charge; for cafe/restaurant tenants, enable card 5% and cash 16% payment tax policy when applicable.
 - Send kiosk orders into queue tickets and linked POS payments when the profile has a POS register and payment method.
 - Use queue display for public ticket status and kitchen/operator views for preparation stages.
 - Use menu and deals boards for active promotions, food menus, bakery offers, and pickup announcements.
@@ -135,5 +217,6 @@ The deals board highlights discount campaigns and promotion messages for in-stor
 - Physical printer, scanner, drawer, scale, and display certification still needs real device evidence.
 - FBR live operation still needs certified-provider credentials and compliance sign-off.
 - Payment providers still need PSP certification, settlement reconciliation, refunds, and chargeback sign-off.
+- Assumption-mode evidence can document dummy hardware/FBR/PSP readiness but does not replace production certification.
 - Full staging browser E2E should run against seeded users and real staging URLs before customer deployment.
 - Monitoring, alerting, restore drills, load tests, and security scans should be attached to release sign-off.

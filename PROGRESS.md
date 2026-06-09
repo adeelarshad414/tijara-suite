@@ -9913,3 +9913,101 @@ Status: Complete
 - Continue production-readiness work on hardware certification, FBR/PSP
   certification, monitoring evidence, backup restore drills, load testing, and
   security scans.
+
+## Iteration 134: Automated Enterprise KPI Collectors, Browser Evidence, And Assumed Certification
+
+### Objective
+
+- Add automated KPI collection for the new back-office, loyalty, vertical,
+  restaurant/cafe, delivery/service charge, and tax-policy workflows.
+- Rerun protected-style browser evidence with the expanded demo seed.
+- Regenerate the screenshot-based guide for the new screens.
+- Continue hardware/FBR/PSP evidence using explicit dummy assumptions where
+  real devices or provider credentials are unavailable.
+
+### Completed
+
+- Extended `tijara.analytics.snapshot` with business areas and metric types for
+  back office, payroll, loyalty, food service, vertical retail, and tax/charge
+  policy.
+- Added daily collectors for:
+  - expense state totals;
+  - salary net payable, gross, deductions, and bonuses;
+  - loyalty points liability and opt-in rate;
+  - repeat-customer POS history;
+  - vertical catalog coverage;
+  - B2B/B2C price spread and margin;
+  - kiosk dine-in/takeaway/pickup/delivery order mix;
+  - GST, delivery charge, service charge, and payment-tax audit totals;
+  - queue wait plus active kitchen SLA ticket counts.
+- Added Odoo transaction coverage for the enterprise collector with seeded
+  expense, salary, loyalty, vertical product, and delivery kiosk data.
+- Added Playwright coverage for kiosk delivery/charge checkout and an
+  authenticated back-office/analytics browser harness. The back-office browser
+  harness skips only when local multi-database routing lands on a DB without
+  Tijara back-office models; the actual workflow is covered by Odoo tests.
+- Hardened Playwright Odoo login/RPC helpers with explicit JSON session
+  authentication and database-aware RPC calls.
+- Updated E2E seeding so the kiosk profile enables delivery mode.
+- Added `scripts/export_assumed_external_certification_evidence.py` and
+  `make assumed-certification-evidence` to generate explicit dummy/assumption
+  evidence for PSP readiness, PSP fixtures, FBR readiness, FBR fixtures, and
+  hardware dry-run bridge output.
+- Expanded `docs/SPEC_MAP.json` and regenerated screenshots/user guide content
+  for back-office expenses, salaries, loyalty/customer records, business policy
+  settings, kiosk orders, promotions, analytics dashboards, and KPI history.
+- Updated `README.md`, `DEPLOY.md`, `docs/SCREENSHOT_USER_GUIDE.md`, and
+  `docs/Tijara_Suite_Screenshot_User_Guide.docx`.
+
+### Validation
+
+- `make upgrade-pkr-gst DB=tijara_dev` passed for the local live database.
+- `make seed-demo-users DB=tijara_dev` passed and mapped 13 demo users.
+- `make verify-enterprise-seed DB=tijara_dev` passed with status `ready`,
+  13 users, 14 verticals, 9 dashboards, 9 reports, and all receipt/invoice
+  template scopes.
+- `make verify-pkr-gst DB=tijara_dev` passed with country `PK`, currency
+  `PKR`, and `GST 18% Sales (PK)`.
+- Live collector verification in `tijara_dev` reported 7 new enterprise KPI
+  metrics: expense, salary, loyalty, vertical coverage, B2B/B2C margin,
+  restaurant order mix, and food-service charge/tax audit.
+- Fresh Odoo test DB `tijara_test_enterprise_iter` passed 37 post-install
+  tests across analytics, POS experience, POS PK, retail core, and SaaS
+  control with 0 failures and 0 errors.
+- `make assumed-certification-evidence` passed with
+  `decision=passed_with_assumptions` and `ci_status=pass_with_warnings`.
+- Protected-style browser matrix passed after E2E reseed:
+  `TIJARA_BROWSER_E2E_RUN_ID=iter-kpi-backoffice-matrix-final`,
+  projects `chromium-desktop mobile-touch`, `decision=ready`,
+  `ci_status=pass`.
+- `node scripts/capture-screenshots.js` refreshed `docs/screenshots/INDEX.md`.
+- Screenshot guide generation passed with the bundled document Python runtime.
+- `make validate` passed and parsed 78 XML files.
+- `bash scripts/js_check.sh` passed.
+- Python compile checks passed for modified Python files.
+- `docs/SPEC_MAP.json` parses successfully.
+
+### Known Gaps
+
+- Assumption-mode certification is not a substitute for physical device,
+  certified FBR, or PSP UAT/live sign-off.
+- Local browser back-office workflow evidence can skip in multi-database Odoo
+  sessions that route to a DB without Tijara back-office models; protected
+  staging should run against a single seeded database or strict DB routing.
+- The full five-project protected browser matrix with Firefox, WebKit, and
+  tablet touch still needs a staging runner where those browsers are installed.
+- Monitoring, alerting, backup restore drills, load tests, container/dependency
+  scans, secret-manager runtime proof, and tenant DNS/ingress automation still
+  need production evidence.
+
+### Next Iteration
+
+- Run the full protected browser matrix against a clean single-database staging
+  URL with all five Playwright projects.
+- Attach assumption-mode evidence to sign-off packages, then replace dummy
+  assumptions with real hardware/FBR/PSP certification artifacts as they become
+  available.
+- Add monitoring/alerting, restore-drill, load, and security evidence execution
+  for a staging release candidate.
+- Continue tenant provisioning automation for DNS, ingress, admin bootstrap,
+  backups, monitoring, and subscription billing operations.
