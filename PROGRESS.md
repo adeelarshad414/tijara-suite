@@ -11764,6 +11764,9 @@ Status: Complete
   `docs/COMMANDS_QUICKREF.md`, `docs/CONFIGURATION_AND_SECRETS.md`,
   `docs/PRODUCTION_READINESS_CHECKLIST.md`, `docs/SPEC_MAP.md`, and
   `docs/SPEC_MAP.json`.
+- Fixed `scripts/validate_scaffold.sh` so Python bytecode validation uses
+  `${TMPDIR:-/tmp}/tijara-pycache` instead of a macOS-only `/private/tmp`
+  default, allowing the hosted Ubuntu validate job to run.
 
 ### Evidence Generated
 
@@ -11788,6 +11791,9 @@ Status: Complete
   `deploy/runtime/e2e-evidence/local-e2e-20260609T073524Z/playwright-results.json`
   and proved checkout, refund, print, and offline replay.
 - Strict local rejection run failed as expected.
+- `make validate` passed after the portable pycache fix.
+- `TMPDIR=/tmp bash scripts/validate_scaffold.sh` passed, matching the hosted
+  Ubuntu runner cache-path behavior.
 
 ### Current Enterprise Status
 
