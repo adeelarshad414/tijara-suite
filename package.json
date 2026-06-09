@@ -37,6 +37,7 @@
     "fbr:readiness": "python3 scripts/export_fbr_readiness.py",
     "fbr:fixture-smoke": "python3 scripts/fbr_provider_fixture_smoke.py",
     "monitoring:evidence": "python3 scripts/export_monitoring_evidence.py",
+    "monitoring:grafana-evidence": "node scripts/capture-grafana-evidence.js",
     "incident:runbook": "python3 scripts/export_incident_runbook_evidence.py",
     "release:retention": "python3 scripts/export_release_retention_evidence.py",
     "secret-manager:evidence": "python3 scripts/export_secret_manager_evidence.py",

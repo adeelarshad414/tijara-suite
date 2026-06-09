@@ -1008,6 +1008,10 @@ The detailed policy and dependency intake checklist are maintained in
   collect post-deploy monitoring evidence from production smoke, tenant rollout,
   tenant smoke, deployment, rollback, and Prometheus/Alertmanager/Grafana
   endpoint probes under `deploy/runtime/monitoring-evidence/`.
+- `scripts/capture-grafana-evidence.js` and
+  `make grafana-dashboard-evidence` validate the provisioned Grafana dashboard
+  API state and capture browser screenshots under
+  `deploy/runtime/grafana-dashboard-evidence/`.
 - `scripts/export_incident_runbook_evidence.py` and
   `make incident-runbook-evidence` collect release owner, DevOps, support,
   business, on-call, alert-route, runbook, backup, restore, rollback, and
@@ -1046,7 +1050,8 @@ The detailed policy and dependency intake checklist are maintained in
   restore-drill baselines. Grafana dashboard provisioning now loads the
   `Tijara Suite` folder with owner/DevOps, ecommerce delivery, finance/PSP/FBR,
   and hardware/integration-risk dashboards from
-  `deploy/monitoring/grafana/dashboards/`.
+  `deploy/monitoring/grafana/dashboards/`; dashboard screenshot evidence is
+  captured with `make grafana-dashboard-evidence`.
 - `scripts/container_scan.sh` and `scripts/dependency_scan.sh` provide
   production security scan hooks for Trivy, npm audit, and pip-audit.
 - `DEPLOY.md` is the maintained deployment runbook.

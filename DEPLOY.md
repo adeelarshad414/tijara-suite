@@ -1066,6 +1066,24 @@ make monitoring-dashboards
 make monitoring-dashboards-check
 ```
 
+Capture live Grafana API and browser screenshot evidence with:
+
+```bash
+make grafana-dashboard-evidence
+```
+
+For CI or a workstation where Grafana is not running, validate the committed
+dashboard definitions without live API or browser checks:
+
+```bash
+node scripts/capture-grafana-evidence.js --metadata-only
+```
+
+The evidence is written under
+`deploy/runtime/grafana-dashboard-evidence/<run-id>/` and includes
+`grafana-dashboard-evidence.json`, `status.tsv`, `summary.md`, and dashboard
+screenshots when browser capture is enabled.
+
 See `deploy/monitoring/README.md`.
 
 The local Prometheus config also scrapes Odoo business metrics:
@@ -2883,6 +2901,20 @@ Monitoring evidence is written under
 evidence is attached, the exporter records rollout decision status, rollback
 action count, and whether `rollback-plan.md` is present next to the rollout
 evidence.
+
+Grafana dashboard evidence is captured separately with:
+
+```bash
+node scripts/capture-grafana-evidence.js \
+  --run-id 2026-06-05-prod \
+  --grafana-url https://grafana.example.com
+```
+
+Attach
+`deploy/runtime/grafana-dashboard-evidence/<run-id>/grafana-dashboard-evidence.json`
+and the screenshots folder to release sign-off so business owners, DevOps,
+finance, delivery, hardware, PSP, and FBR reviewers can verify the visible
+dashboard layer.
 
 Capture load-test evidence after the release candidate load smoke:
 

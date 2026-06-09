@@ -19,6 +19,7 @@ agentic development pipeline.
 | Diagram pack | `docs/DIAGRAMS.md` |
 | Configuration guide | `docs/CONFIGURATION_AND_SECRETS.md` |
 | Grafana dashboards | `deploy/monitoring/grafana/dashboards/` |
+| Grafana evidence | `deploy/runtime/grafana-dashboard-evidence/` |
 
 ## Personas
 
@@ -96,6 +97,7 @@ agentic development pipeline.
 - Protected release evidence gates and production readiness reports.
 - Provisioned Grafana dashboards for owner/DevOps, ecommerce delivery,
   finance/PSP/FBR compliance, and hardware/integration risk.
+- Grafana dashboard API and browser screenshot evidence capture.
 
 ## Configuration Source Of Truth
 

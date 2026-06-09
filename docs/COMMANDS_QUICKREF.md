@@ -56,6 +56,8 @@
 | Start monitoring profile | `make monitoring-up` |
 | Regenerate Grafana dashboards | `make monitoring-dashboards` |
 | Validate Grafana dashboards | `make monitoring-dashboards-check` |
+| Capture Grafana dashboard evidence | `make grafana-dashboard-evidence` |
+| Validate Grafana dashboards without running Grafana | `node scripts/capture-grafana-evidence.js --metadata-only` |
 | Run release candidate gate | `make release-candidate` |
 | Generate signoff pack | `make signoff-pack` |
 

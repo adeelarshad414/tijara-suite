@@ -91,6 +91,9 @@ Required for production:
 - [ ] Grafana `Tijara Suite` folder contains owner/DevOps, delivery, finance,
       and hardware/integration-risk dashboards.
 - [ ] `make monitoring-dashboards-check` passes.
+- [ ] `make grafana-dashboard-evidence` captured dashboard API and screenshot
+      evidence, or `node scripts/capture-grafana-evidence.js --metadata-only`
+      passed for a non-live CI validation.
 - [ ] Alertmanager routes alerts to the support/on-call channel.
 - [ ] Logs are collected for Odoo, PostgreSQL, Nginx/ingress, hardware bridge,
       FBR, PSP, and background jobs.

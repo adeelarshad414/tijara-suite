@@ -54,6 +54,19 @@ make monitoring-dashboards
 make monitoring-dashboards-check
 ```
 
+Capture API and browser screenshot evidence for the provisioned dashboards
+after the monitoring profile is running:
+
+```bash
+make grafana-dashboard-evidence
+```
+
+The evidence writer reads `TIJARA_GRAFANA_URL`, `GRAFANA_ADMIN_USER`, and
+`GRAFANA_ADMIN_PASSWORD` from the central runtime files or environment, writes
+`grafana-dashboard-evidence.json`, `status.tsv`, `summary.md`, and dashboard
+screenshots under `deploy/runtime/grafana-dashboard-evidence/<run-id>/`, and
+supports `--metadata-only` when Grafana is not running.
+
 Production teams should add:
 
 - PostgreSQL exporter.

@@ -745,6 +745,7 @@
     "server_deploy": "python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite",
     "monitoring_dashboards": "make monitoring-dashboards",
     "monitoring_dashboards_check": "make monitoring-dashboards-check",
+    "grafana_dashboard_evidence": "make grafana-dashboard-evidence",
     "validate": "make validate",
     "install_suite": "make install-suite",
     "seed_pos_demo": "make seed-pos-demo",

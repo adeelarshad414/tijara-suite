@@ -11207,3 +11207,80 @@ Status: Complete
   capture dashboard screenshots/evidence.
 - Validate the PowerShell wrappers on Windows or PowerShell Core once available.
 - Continue production DNS/TLS/backup automation and protected/staging evidence.
+
+## Iteration 150: Grafana Dashboard Evidence Capture
+
+### Objective
+
+- Turn Grafana dashboard provisioning into repeatable release evidence with API
+  verification, browser screenshots, and an auditable manifest.
+- Run the local monitoring profile, open the provisioned dashboards, and capture
+  live screenshot evidence where possible.
+- Keep README, deployment, monitoring, command, readiness, progress, and spec
+  docs aligned.
+
+### Completed
+
+- Added `scripts/capture-grafana-evidence.js`.
+- The script reads Grafana URL/admin credentials from the central `.env` and
+  `secrets/.env.secrets` runtime files or environment variables without
+  printing secret values.
+- The script validates committed dashboard JSON definitions, checks Grafana API
+  health, searches provisioned dashboards, resolves each dashboard UID through
+  `/api/dashboards/uid/<uid>`, captures browser screenshots with Playwright,
+  and writes:
+  `grafana-dashboard-evidence.json`, `status.tsv`, `summary.md`, and
+  `screenshots/*.png` under
+  `deploy/runtime/grafana-dashboard-evidence/<run-id>/`.
+- Added metadata-only mode for CI/non-live validation:
+  `node scripts/capture-grafana-evidence.js --metadata-only`.
+- Added npm script `monitoring:grafana-evidence`.
+- Added Makefile target `grafana-dashboard-evidence` with
+  `TIJARA_GRAFANA_EVIDENCE_FLAGS` passthrough.
+- Updated `README.md`, `DEPLOY.md`, `deploy/monitoring/README.md`,
+  `docs/COMMANDS_QUICKREF.md`, `docs/PRODUCTION_READINESS_CHECKLIST.md`,
+  `docs/SPEC_MAP.md`, and `docs/SPEC_MAP.json`.
+
+### Validation
+
+- `make monitoring-up` passed after Docker socket escalation and started
+  Prometheus, Blackbox Exporter, Alertmanager, Loki, and Grafana.
+- Live Grafana evidence capture passed:
+  `node scripts/capture-grafana-evidence.js --run-id 20260609-local-grafana --timeout 30000`.
+- Live evidence results:
+  4 dashboard definitions found, Grafana health returned HTTP 200, dashboard
+  search returned HTTP 200, all four dashboard UIDs resolved, and screenshots
+  were captured for:
+  `tijara-delivery`, `tijara-finance-fbr`,
+  `tijara-hardware-integrations`, and `tijara-owner-ops`.
+- Visual spot-check confirmed the owner/DevOps Grafana dashboard rendered as a
+  real dashboard page in the `Tijara Suite` folder.
+- Metadata-only evidence passed:
+  `node scripts/capture-grafana-evidence.js --metadata-only --run-id 20260609-metadata-check-2`.
+- Make target metadata validation passed:
+  `make grafana-dashboard-evidence TIJARA_GRAFANA_EVIDENCE_FLAGS="--metadata-only --run-id 20260609-make-metadata-check"`.
+- `node --check scripts/capture-grafana-evidence.js` passed.
+- `make monitoring-dashboards-check` passed.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `make validate` passed: 103 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- `git diff --check` passed.
+
+### Known Gaps
+
+- Live dashboard screenshots prove Grafana provisioning and visible dashboard
+  routes, but many panels still show sparse/no data until seeded business
+  metrics are scraped continuously from a populated Odoo database.
+- Production still needs real Grafana URL, TLS, auth policy, alert routing,
+  retention, log shippers, PostgreSQL exporter, tenant SLO dashboards, and
+  sign-off attachment flow.
+- PowerShell wrappers still need validation on Windows or PowerShell Core.
+
+### Next Iteration
+
+- Add production DNS/TLS/backup automation wrappers around the Python host
+  script and tenant operations manifests.
+- Add a monitoring scrape data fixture or seeded Prometheus sample path so
+  Grafana panels can show representative values during demos.
+- Run protected/staging release evidence with the new Grafana dashboard evidence
+  artifact attached.
