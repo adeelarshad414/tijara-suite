@@ -11824,3 +11824,65 @@ Status: Complete
   matrix summary to release evidence.
 - Replace local warning-mode POS matrix proof with real protected staging
   `ready/pass` evidence.
+
+## Iteration 156: Application About Document
+
+### Scope Completed
+
+- Added top-level `ABOUT.md` as a product-facing overview for Tijara Suite.
+- Documented the application purpose, Pakistan market focus, supported business
+  verticals, SaaS positioning, open-source position, and community-safe secret
+  handling.
+- Summarized the major capability areas:
+  - POS and retail
+  - Inventory and warehousing
+  - Restaurant, kiosk, queue, customer display, promotion, menu, and deals
+    screens
+  - Back office, expenses, salaries, customers, suppliers, and reporting
+  - Ecommerce, customer account portal, delivery providers, retry queue, and
+    reconciliation
+  - SaaS feature flags, tenant operations, hardware bridge, payments, and FBR
+    readiness
+- Added usage entry points for local setup, service control, staging/server
+  deployment, validation, and protected release evidence commands.
+- Added an explicit production-readiness boundary covering the remaining real
+  protected-runner, hardware, FBR, PSP, courier, monitoring, backup, load, and
+  security evidence requirements.
+- Linked `ABOUT.md` from `README.md` and `DEPLOY.md` so product, deployment,
+  and progress documentation stay aligned.
+
+### Validation
+
+- Documentation-only iteration; no Odoo module behavior changed.
+- `git diff --check` passed.
+- `make validate` passed and parsed 103 XML files.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 84%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 84%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 88%
+- Overall production readiness: around 77-81%
+
+### Known Gaps
+
+- This iteration improves documentation and onboarding clarity only.
+- The protected authenticated POS matrix still needs a real self-hosted staging
+  run with seeded users and protected approvals.
+- Hardware, FBR, PSP, courier, backup, monitoring, load, and security evidence
+  still require real certified provider/device or protected-runner artifacts.
+
+### Next Iteration
+
+- Bring the `tijara-protected` self-hosted runner online.
+- Dispatch the protected GitHub Actions release chain.
+- Attach protected artifact URLs, IDs, digests, and POS matrix summary to the
+  sign-off package.
+- Replace local warning-mode POS matrix proof with real protected staging
+  `ready/pass` evidence.

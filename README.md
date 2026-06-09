@@ -40,6 +40,10 @@ certification. Grafana now provisions Tijara Suite dashboards for owner/DevOps
 overview, ecommerce delivery operations, finance/PSP/FBR compliance, and
 hardware/integration risk directly from the monitoring profile.
 
+For a product-level overview of the application purpose, supported business
+verticals, major features, usage entry points, and production-readiness boundary,
+see [ABOUT.md](ABOUT.md).
+
 The first market verticals are:
 
 - Superstores and general retail
@@ -133,6 +137,7 @@ docs/Tijara_Suite_Visual_User_Guide.docx
 docs/SCREENSHOT_USER_GUIDE.md  Live screenshot-based guide source
 docs/Tijara_Suite_Screenshot_User_Guide.docx
                                Live screenshot-based training document
+ABOUT.md                       Product overview, purpose, features, and usage
 secrets/                       Ignored local/staging secrets, example included
 scripts/                       Operational helper scripts
 scripts/dev-start.sh           Universal local startup script

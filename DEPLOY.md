@@ -11,9 +11,14 @@ validation, `docs/DIAGRAMS.md` for topology/flow changes, and
 `docs/USER_GUIDE_ALL_USERS.md` plus `docs/TEST_CREDENTIALS.csv` whenever
 personas, credentials, or workflows change.
 
+Use `ABOUT.md` as the product and non-technical onboarding overview. Keep this
+guide focused on deployment, configuration, secrets, operations, release, and
+rollback details.
+
 ## Deployment Layout
 
 ```text
+ABOUT.md                             Product overview, purpose, features, usage
 .env.example                         Central non-secret environment template
 secrets/.env.secrets.example          Central secret environment template
 deploy/config/odoo.conf.template      Secret-free Odoo runtime config template
