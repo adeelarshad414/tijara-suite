@@ -173,6 +173,7 @@ and B2B/B2C selection, and opens payment from the keyboard.
 `tests/e2e/ecommerce-storefront.spec.mjs` covers the ecommerce channel: catalog
 payloads with PKR, Urdu names, promotions, B2C/B2B prices, stock and
 fulfillment; browser pickup checkout from the storefront; API delivery checkout
-with delivery charge, provider tracking, and queue number; pickup-code/mobile
-customer tracking; and authenticated sale-order/queue-ticket review by the
-ecommerce manager.
+with delivery charge, provider tracking, adapter state, and queue number;
+pickup-code/mobile customer tracking; authenticated sale-order/queue-ticket
+review by the ecommerce manager; delivery label and manifest actions; and
+dry-run delivery webhook sync back into customer tracking.

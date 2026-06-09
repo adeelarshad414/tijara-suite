@@ -154,6 +154,8 @@ Primary tasks:
   queue ticket handoff.
 - Configure dry-run delivery providers for local/staging demos and replace them
   with certified providers before production.
+- Use Online Orders delivery actions for shipment creation, label generation,
+  manifest creation, shipment cancellation, and delivery adapter event review.
 - Share the customer tracking link or lookup instructions after checkout.
 - Coordinate with inventory when online products are low stock.
 - Coordinate with accounting before live payment provider activation.
@@ -173,7 +175,9 @@ Storefront setup workflow:
 7. Attach active promotions to the ecommerce channel when required.
 8. Configure Ecommerce Configuration > Delivery Providers and attach the
    default provider to the channel for delivery/courier orders.
-9. Open the storefront route and test catalog search, cart, checkout, pickup,
+9. Confirm adapter mode, endpoint paths, label format, webhook signature mode,
+   webhook field mapping, and secret-manager reference for the provider.
+10. Open the storefront route and test catalog search, cart, checkout, pickup,
    delivery, queue ticket creation, and customer order tracking.
 
 Online order workflow:
@@ -186,11 +190,17 @@ Online order workflow:
    payment method, charge-policy amounts, estimated GST, and payload snapshot.
 5. Pickup/delivery orders create queue tickets when the queue SaaS feature is
    available.
-6. Delivery/courier orders receive a provider assignment, tracking number, and
-   customer tracking URL when a channel provider is configured.
-7. Staff confirm stock, prepare the order, update queue status, update delivery
-   state, collect or reconcile payment, and print invoice/receipt as needed.
-8. Customer tracks status through `/tijara/ecommerce/<slug>/track`, either with
+6. Delivery/courier orders receive a provider assignment, provider reference,
+   tracking number, adapter state, and customer tracking URL when a channel
+   provider is configured.
+7. Staff generate labels, create manifests, cancel shipments when needed, and
+   review Delivery Adapter Events for payload, response, signature status, and
+   payload hash evidence.
+8. Certified provider webhooks or dry-run webhook tests update delivery status
+   back into the order and customer tracking payload.
+9. Staff confirm stock, prepare the order, update queue status, collect or
+   reconcile payment, and print invoice/receipt as needed.
+10. Customer tracks status through `/tijara/ecommerce/<slug>/track`, either with
    the private tracking link or with pickup code plus mobile/email.
 
 Ecommerce smoke-test workflow:
@@ -202,8 +212,8 @@ Ecommerce smoke-test workflow:
    `ecommerce-manager@demo.tijara-suite.local`.
 4. Run the ecommerce Playwright spec to verify catalog payloads, Urdu names,
    B2C/B2B prices, pickup checkout, delivery checkout, charge policy, sale
-   order creation, queue ticket handoff, provider assignment, and customer
-   tracking payloads.
+   order creation, queue ticket handoff, provider assignment, label/manifest
+   actions, dry-run webhook sync, and customer tracking payloads.
 5. Regenerate screenshot guide evidence after checkout routes or storefront
    copy/layout changes.
 

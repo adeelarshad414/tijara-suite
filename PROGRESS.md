@@ -10478,3 +10478,101 @@ Status: Complete
 - Expand customer portal/account order history beyond token tracking.
 - Continue PSP/FBR certification evidence, hardware certification, monitoring,
   backup restore drills, load testing, and security hardening.
+
+## Iteration 141: Protected Browser Matrix And Delivery Adapter Interfaces
+
+### Objective
+
+- Build the next delivery-provider adapter layer for ecommerce orders.
+- Run a protected authenticated/full browser matrix against seeded local Odoo
+  evidence.
+- Keep README, DEPLOY, user guides, E2E docs, diagrams, spec map, and progress
+  records aligned.
+
+### Completed
+
+- Added `tijara.ecommerce.delivery.event` as an auditable adapter event ledger
+  for outbound shipment create/cancel, label, manifest, inbound webhook, status,
+  exception, payload/response JSON, signature status, payload hash, provider
+  reference, tracking number, and manifest reference.
+- Extended delivery providers with adapter mode, endpoint fields, supported
+  capabilities, label format, webhook field mapping, dry-run/HMAC signature
+  mode, event counts, and event smart-button navigation.
+- Extended ecommerce sale orders with delivery adapter state, provider
+  reference, label format/payload, manifest reference, exception reason, last
+  event, event count, and object actions for create shipment, cancel shipment,
+  generate label, create manifest, and open delivery events.
+- Added public delivery webhook ingress:
+  `/tijara/ecommerce/delivery/webhook/<provider_code>`, including dry-run
+  signature validation and HMAC SHA256 validation from the externalized Odoo
+  config parameter `tijara.delivery.webhook.<PROVIDER_CODE>.secret`.
+- Updated checkout and customer tracking payloads with delivery adapter state,
+  provider reference, label/manifest metadata, event count, and webhook-synced
+  status updates.
+- Seeded the demo ecommerce provider with dry-run adapter settings for create,
+  cancel, status, label, manifest, and webhook flows.
+- Extended Odoo transaction tests for delivery adapter create, label, manifest,
+  webhook, cancel, event count, tracking payload, and SaaS enforcement.
+- Extended Playwright ecommerce coverage for delivery adapter state/reference,
+  label/manifest actions, dry-run webhook sync, and customer tracking status.
+- Hardened the authenticated back-office browser E2E screen check to use stable
+  Odoo action routes and a bounded DOM text probe instead of brittle raw
+  `/web#model=...` hashes.
+- Updated `README.md`, `DEPLOY.md`, `docs/ARCHITECTURE.md`, `docs/DIAGRAMS.md`,
+  `docs/USER_GUIDE_ALL_USERS.md`, `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`,
+  `docs/SCREENSHOT_USER_GUIDE.md`, `docs/SPEC_MAP.md`,
+  `docs/SPEC_MAP.json`, and `tests/e2e/README.md`.
+
+### Validation
+
+- `make validate` passed: 88 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- Python compile passed for touched ecommerce model/controller/test files with
+  a sandbox-safe pycache path.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `git diff --check` passed.
+- Local `tijara_dev` was upgraded with `tijara_ecommerce`, loading the new
+  delivery event model, security access, views, provider fields, sale order
+  fields, and webhook route.
+- Focused Odoo ecommerce transaction tests passed against fresh database
+  `tijara_test_ecommerce_adapter`: 4 post-test methods, 0 failures, 0 errors.
+- E2E seed run `20260609-delivery-adapter` passed and exported the protected
+  browser environment under
+  `deploy/runtime/e2e-seed/20260609-delivery-adapter/`.
+- Initial protected full matrix run
+  `20260609-delivery-adapter-full` correctly produced evidence but blocked on
+  one brittle back-office route assertion across five projects.
+- After fixing that assertion, focused Chromium back-office E2E passed:
+  1 passed in 4.5 seconds.
+- Protected local full-scope browser matrix run
+  `20260609-delivery-adapter-full-rerun` passed with decision `ready` and
+  `ci_status=pass`:
+  Chromium desktop 18 expected/3 skipped/0 unexpected; mobile touch,
+  Firefox desktop, WebKit desktop, and tablet touch each 17 expected/4 skipped/
+  0 unexpected.
+- Aggregate matrix evidence:
+  `deploy/runtime/browser-e2e-matrix/20260609-delivery-adapter-full-rerun/`.
+
+### Known Gaps
+
+- Delivery-provider adapters are still dry-run/manual/HTTP JSON interfaces; real
+  courier certification, sandbox/live credentials, provider-specific payloads,
+  retry queues, reconciliation, SLA monitoring, and support runbooks remain.
+- HMAC webhook validation is implemented, but production secret injection still
+  needs tenant/provider onboarding automation through the selected secret
+  manager.
+- Physical hardware certification, PSP/FBR live certification, monitoring/
+  alerting proof, restore drills, load testing, and deeper security scans still
+  require production-like execution evidence.
+- Customer portal/account order history beyond token/pickup-code tracking is
+  still pending.
+
+### Next Iteration
+
+- Add provider-specific dry-run adapters/fixtures for common Pakistan delivery
+  providers and rider/in-house fleet assignment.
+- Add delivery retry/backoff queue, exception dashboard, SLA breach alerts, and
+  delivery reconciliation reports.
+- Build customer account order-history portal beyond private tracking links.
+- Continue PSP/FBR certification hardening, physical hardware evidence,
+  monitoring/alerting proof, restore drills, load tests, and security scans.

@@ -346,6 +346,11 @@ The public browser E2E evidence run `20260609-101847` passed locally in
 Chromium with display/kiosk/customer-display coverage plus ecommerce catalog,
 storefront pickup checkout, delivery checkout, charge policy, queue handoff,
 and authenticated ecommerce manager order review.
+The protected local full-scope browser matrix run
+`20260609-delivery-adapter-full-rerun` passed across Chromium desktop, mobile
+touch, Firefox desktop, WebKit desktop, and tablet touch with authenticated
+POS/back-office/refund coverage plus ecommerce catalog, checkout, delivery
+adapter label/manifest actions, dry-run webhook sync, and customer tracking.
 
 The current code is an enterprise product foundation: models, security access,
 menus, backend views, SaaS plans/features, Pakistan localization fields, POS
@@ -365,7 +370,11 @@ public storefront routes, creates Odoo sale orders from online checkout, applies
 tenant charge policies, links pickup/delivery orders to the shared queue system,
 exposes ecommerce KPI/report templates, returns customer order-tracking links,
 and can assign dry-run delivery-provider shipment records for local/staging
-delivery certification drills. The Tijara invoice/receipt template
+delivery certification drills. The delivery adapter layer now records shipment
+create/cancel, label, manifest, and webhook events with payload hashes,
+provider references, tracking numbers, signature status, adapter state, and
+customer-safe tracking updates for dry-run or certified provider rollout. The
+Tijara invoice/receipt template
 configuration now renders through backend QWeb PDF/HTML reports for
 customer invoices and POS orders, and the browser POS receipt screen consumes
 the configured POS receipt profile during cashier checkout. Pakistan defaults
@@ -493,6 +502,9 @@ The retail operations layer now includes:
 - Ecommerce customer order tracking routes with token and pickup-code/mobile
   lookup, delivery status, queue status, provider tracking number, and dry-run
   delivery-provider assignment for public repo demos.
+- Ecommerce delivery-provider adapter interfaces for shipment create/cancel,
+  label payloads, manifests, signed/dry-run webhooks, adapter event audit
+  records, provider references, and customer tracking synchronization.
 - Keyboard-first POS cashier controls for scanner-style product entry, Enter
   flow, payment/receipt shortcuts, quantity adjustment, B2B/B2C switching, and
   dine-in/takeaway/pickup/delivery cycling.

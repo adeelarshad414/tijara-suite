@@ -1,8 +1,11 @@
+import hashlib
+import hmac
 import json
 import re
+from datetime import datetime
 
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class TijaraEcommerceDeliveryProvider(models.Model):
@@ -40,19 +43,61 @@ class TijaraEcommerceDeliveryProvider(models.Model):
         default=True,
         help="Keep enabled until a real courier/provider integration is certified.",
     )
+    adapter_mode = fields.Selection(
+        [
+            ("dry_run", "Dry Run Adapter"),
+            ("manual", "Manual Adapter"),
+            ("http_json", "HTTP JSON Adapter"),
+        ],
+        default="dry_run",
+        required=True,
+    )
     auto_assign = fields.Boolean(default=True)
     supports_delivery = fields.Boolean(default=True)
     supports_courier = fields.Boolean(default=True)
     supports_cod = fields.Boolean(default=True)
+    supports_cancel = fields.Boolean(default=True)
+    supports_labels = fields.Boolean(default=True)
+    supports_manifests = fields.Boolean(default=True)
+    supports_webhooks = fields.Boolean(default=True)
     api_base_url = fields.Char()
+    create_endpoint = fields.Char()
+    cancel_endpoint = fields.Char()
+    status_endpoint = fields.Char()
+    label_endpoint = fields.Char()
+    manifest_endpoint = fields.Char()
     tracking_url_template = fields.Char(
         help="Optional URL template. Use {tracking_number} where the provider tracking number should appear.",
     )
+    label_format = fields.Selection(
+        [
+            ("pdf", "PDF"),
+            ("zpl", "ZPL"),
+            ("escpos", "ESC/POS"),
+            ("json", "JSON"),
+            ("url", "Provider URL"),
+        ],
+        default="pdf",
+    )
+    webhook_signature_mode = fields.Selection(
+        [
+            ("none", "None"),
+            ("dry_run", "Dry Run Header"),
+            ("hmac_sha256", "HMAC SHA256"),
+        ],
+        default="dry_run",
+        required=True,
+    )
+    webhook_signature_header = fields.Char(default="X-Tijara-Delivery-Signature")
+    webhook_reference_field = fields.Char(default="tracking_number")
+    webhook_status_field = fields.Char(default="status")
+    webhook_eta_field = fields.Char(default="eta")
     contact_phone = fields.Char()
     webhook_secret_ref = fields.Char(
         help="Secret-manager reference only. Do not store raw courier webhook secrets here.",
     )
     shipment_count = fields.Integer(compute="_compute_shipment_count")
+    event_count = fields.Integer(compute="_compute_event_count")
     notes = fields.Text()
 
     @api.depends("company_id")
@@ -62,6 +107,12 @@ class TijaraEcommerceDeliveryProvider(models.Model):
             provider.shipment_count = order_model.search_count(
                 [("tijara_delivery_provider_id", "=", provider.id)]
             )
+
+    @api.depends("company_id")
+    def _compute_event_count(self):
+        event_model = self.env["tijara.ecommerce.delivery.event"].sudo()
+        for provider in self:
+            provider.event_count = event_model.search_count([("provider_id", "=", provider.id)])
 
     @api.constrains("code", "company_id")
     def _check_unique_code(self):
@@ -114,6 +165,17 @@ class TijaraEcommerceDeliveryProvider(models.Model):
             "context": {"search_default_tijara_ecommerce": 1},
         }
 
+    def action_open_events(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Delivery Adapter Events"),
+            "res_model": "tijara.ecommerce.delivery.event",
+            "view_mode": "list,form,pivot,graph",
+            "domain": [("provider_id", "=", self.id)],
+            "context": {"default_provider_id": self.id, "default_company_id": self.company_id.id},
+        }
+
     def action_test_provider(self):
         self.ensure_one()
         message = _("Dry-run provider is ready for assumed local certification.")
@@ -130,29 +192,348 @@ class TijaraEcommerceDeliveryProvider(models.Model):
             },
         }
 
+    def _require_live_endpoint(self, endpoint_field, operation):
+        self.ensure_one()
+        if self.dry_run or self.adapter_mode in {"dry_run", "manual"}:
+            return
+        if not self[endpoint_field]:
+            raise UserError(
+                _("%s requires %s for live HTTP JSON providers.")
+                % (operation, endpoint_field.replace("_", " "))
+            )
+
+    def _delivery_event(
+        self,
+        order=False,
+        event_type="shipment_create",
+        direction="outbound",
+        status="queued",
+        payload=False,
+        response=False,
+        message="",
+        signature_status="not_required",
+        external_reference="",
+        tracking_number="",
+        manifest_reference="",
+    ):
+        self.ensure_one()
+        event_model = self.env["tijara.ecommerce.delivery.event"].sudo()
+        event = event_model.create(
+            {
+                "name": "%s/%s/%s" % (self.code, event_type, fields.Datetime.now()),
+                "provider_id": self.id,
+                "sale_order_id": order.id if order else False,
+                "company_id": self.company_id.id,
+                "direction": direction,
+                "event_type": event_type,
+                "status": status,
+                "signature_status": signature_status,
+                "external_reference": external_reference or "",
+                "tracking_number": tracking_number or "",
+                "manifest_reference": manifest_reference or "",
+                "payload_json": event_model.payload_to_json(payload),
+                "response_json": event_model.payload_to_json(response),
+                "message": message or "",
+            }
+        )
+        event.write_payload_hash()
+        if order:
+            order.tijara_delivery_last_event_id = event.id
+        return event
+
+    def _order_line_payload(self, order):
+        return [
+            {
+                "sku": line.product_id.default_code or "",
+                "name": line.product_id.display_name,
+                "quantity": line.product_uom_qty,
+                "subtotal": line.price_subtotal,
+            }
+            for line in order.order_line
+            if line.product_id and line.product_uom_qty
+        ]
+
+    def _shipment_payload(self, order):
+        self.ensure_one()
+        return {
+            "provider": self.code,
+            "adapter_mode": self.adapter_mode,
+            "dry_run": self.dry_run,
+            "order": {
+                "id": order.id,
+                "name": order.name,
+                "reference": order.client_order_ref or order.tijara_ecommerce_reference or "",
+                "fulfillment_method": order.tijara_fulfillment_method,
+                "amount_total": order.amount_total,
+                "currency": order.currency_id.name,
+            },
+            "customer": {
+                "name": order.partner_id.name or "",
+                "mobile": order.tijara_delivery_mobile or order.partner_id.mobile or order.partner_id.phone or "",
+                "email": order.partner_id.email or "",
+                "address": order.tijara_delivery_address or "",
+            },
+            "lines": self._order_line_payload(order),
+        }
+
+    def _provider_reference_for_order(self, order):
+        raw_order = re.sub(r"[^A-Za-z0-9]+", "", order.name or str(order.id))[-10:]
+        raw_order = raw_order or str(order.id)
+        return "%s-REF-%s" % (self.code, raw_order)
+
     def tijara_prepare_shipment(self, order):
         self.ensure_one()
+        return self.tijara_create_shipment(order)
+
+    def tijara_create_shipment(self, order):
+        self.ensure_one()
+        self._require_live_endpoint("create_endpoint", _("Shipment create"))
         tracking_number = order.tijara_delivery_tracking_number or self._tracking_number_for_order(order)
         tracking_url = order.tijara_delivery_tracking_url or self._tracking_url_for_number(tracking_number)
+        external_reference = order.tijara_delivery_provider_reference or self._provider_reference_for_order(order)
+        request_payload = self._shipment_payload(order)
         payload = {
             "provider": self.code,
             "provider_type": self.provider_type,
+            "adapter_mode": self.adapter_mode,
             "service_level": self.service_level,
             "dry_run": self.dry_run,
             "order_id": order.id,
             "order_name": order.name,
             "fulfillment_method": order.tijara_fulfillment_method,
+            "external_reference": external_reference,
             "tracking_number": tracking_number,
             "tracking_url": tracking_url,
         }
+        event = self._delivery_event(
+            order=order,
+            event_type="shipment_create",
+            status="processed" if self.dry_run or self.adapter_mode != "http_json" else "queued",
+            payload=request_payload,
+            response=payload,
+            external_reference=external_reference,
+            tracking_number=tracking_number,
+            message=_("Dry-run/manual shipment interface prepared.")
+            if self.dry_run or self.adapter_mode != "http_json"
+            else _("Live HTTP shipment request queued for provider adapter."),
+        )
         order.write(
             {
                 "tijara_delivery_provider_id": self.id,
                 "tijara_delivery_status": "assigned",
+                "tijara_delivery_adapter_state": "created",
+                "tijara_delivery_provider_reference": external_reference,
                 "tijara_delivery_tracking_number": tracking_number,
                 "tijara_delivery_tracking_url": tracking_url,
                 "tijara_delivery_provider_payload": json.dumps(payload, ensure_ascii=False, sort_keys=True),
                 "tijara_last_tracking_at": fields.Datetime.now(),
+                "tijara_delivery_last_event_id": event.id,
             }
         )
         return payload
+
+    def tijara_cancel_shipment(self, order, reason=""):
+        self.ensure_one()
+        self._require_live_endpoint("cancel_endpoint", _("Shipment cancel"))
+        payload = {
+            "provider": self.code,
+            "order_id": order.id,
+            "order_name": order.name,
+            "external_reference": order.tijara_delivery_provider_reference or "",
+            "tracking_number": order.tijara_delivery_tracking_number or "",
+            "reason": reason or _("Cancelled by operator"),
+        }
+        event = self._delivery_event(
+            order=order,
+            event_type="shipment_cancel",
+            status="processed" if self.dry_run or self.adapter_mode != "http_json" else "queued",
+            payload=payload,
+            response=dict(payload, cancelled=True),
+            external_reference=payload["external_reference"],
+            tracking_number=payload["tracking_number"],
+            message=_("Shipment cancel interface processed."),
+        )
+        order.write(
+            {
+                "tijara_delivery_status": "cancelled",
+                "tijara_delivery_adapter_state": "cancelled",
+                "tijara_delivery_exception_reason": reason or _("Cancelled by operator"),
+                "tijara_last_tracking_at": fields.Datetime.now(),
+                "tijara_delivery_last_event_id": event.id,
+            }
+        )
+        return payload
+
+    def tijara_generate_label(self, order):
+        self.ensure_one()
+        if not self.supports_labels:
+            raise UserError(_("This delivery provider does not support labels."))
+        self._require_live_endpoint("label_endpoint", _("Label generation"))
+        label_payload = {
+            "format": self.label_format,
+            "tracking_number": order.tijara_delivery_tracking_number or "",
+            "order_name": order.name,
+            "provider": self.code,
+            "dry_run": self.dry_run,
+            "content": "TIJARA LABEL %s %s" % (self.code, order.tijara_delivery_tracking_number or order.name),
+        }
+        event = self._delivery_event(
+            order=order,
+            event_type="label",
+            status="processed" if self.dry_run or self.adapter_mode != "http_json" else "queued",
+            payload=label_payload,
+            response=label_payload,
+            external_reference=order.tijara_delivery_provider_reference or "",
+            tracking_number=order.tijara_delivery_tracking_number or "",
+            message=_("Label interface generated."),
+        )
+        order.write(
+            {
+                "tijara_delivery_label_format": self.label_format,
+                "tijara_delivery_label_payload": json.dumps(label_payload, ensure_ascii=False, sort_keys=True),
+                "tijara_delivery_adapter_state": "label_ready",
+                "tijara_delivery_last_event_id": event.id,
+            }
+        )
+        return label_payload
+
+    def tijara_create_manifest(self, orders):
+        self.ensure_one()
+        orders = orders.filtered(lambda order: order.tijara_delivery_provider_id == self)
+        if not orders:
+            raise UserError(_("Select ecommerce orders assigned to this provider."))
+        if not self.supports_manifests:
+            raise UserError(_("This delivery provider does not support manifests."))
+        self._require_live_endpoint("manifest_endpoint", _("Manifest create"))
+        manifest_reference = "%s-MAN-%s" % (
+            self.code,
+            datetime.utcnow().strftime("%Y%m%d%H%M%S"),
+        )
+        payload = {
+            "provider": self.code,
+            "manifest_reference": manifest_reference,
+            "orders": [
+                {
+                    "order_id": order.id,
+                    "order_name": order.name,
+                    "tracking_number": order.tijara_delivery_tracking_number or "",
+                    "external_reference": order.tijara_delivery_provider_reference or "",
+                }
+                for order in orders
+            ],
+        }
+        event = self._delivery_event(
+            event_type="manifest",
+            status="processed" if self.dry_run or self.adapter_mode != "http_json" else "queued",
+            payload=payload,
+            response=payload,
+            manifest_reference=manifest_reference,
+            message=_("Manifest interface generated."),
+        )
+        orders.write(
+            {
+                "tijara_delivery_manifest_reference": manifest_reference,
+                "tijara_delivery_adapter_state": "manifested",
+                "tijara_delivery_last_event_id": event.id,
+            }
+        )
+        return payload
+
+    def _webhook_secret_value(self):
+        self.ensure_one()
+        if not self.webhook_secret_ref:
+            return ""
+        parameter_key = "tijara.delivery.webhook.%s.secret" % self.code
+        return self.env["ir.config_parameter"].sudo().get_param(parameter_key, default="") or ""
+
+    def _webhook_signature_status(self, headers, payload=False, raw_body=""):
+        self.ensure_one()
+        if self.webhook_signature_mode == "none":
+            return "not_required"
+        signature = headers.get(self.webhook_signature_header or "") if headers else ""
+        if not signature:
+            return "missing"
+        if self.webhook_signature_mode == "dry_run":
+            return "valid" if signature in {"dry-run", "tijara-dry-run"} else "invalid"
+        secret = self._webhook_secret_value()
+        if not secret:
+            return "missing"
+        raw_payload = raw_body or json.dumps(
+            payload or {}, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str
+        )
+        expected = hmac.new(secret.encode("utf-8"), raw_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+        provided = signature.strip()
+        if provided.lower().startswith("sha256="):
+            provided = provided.split("=", 1)[1].strip()
+        return "valid" if hmac.compare_digest(provided, expected) else "invalid"
+
+    def _delivery_status_from_provider(self, provider_status):
+        status = str(provider_status or "").strip().lower().replace("-", "_").replace(" ", "_")
+        return {
+            "created": "assigned",
+            "assigned": "assigned",
+            "picked": "picked",
+            "pickup": "picked",
+            "out_for_delivery": "out_for_delivery",
+            "out": "out_for_delivery",
+            "delivered": "delivered",
+            "complete": "delivered",
+            "failed": "failed",
+            "exception": "failed",
+            "cancelled": "cancelled",
+            "canceled": "cancelled",
+        }.get(status, "assigned")
+
+    def tijara_process_webhook(self, payload, headers=False, raw_body=""):
+        self.ensure_one()
+        if not self.supports_webhooks:
+            raise UserError(_("This delivery provider does not accept webhooks."))
+        if not isinstance(payload, dict):
+            raise UserError(_("Delivery webhook payload must be a JSON object."))
+        signature_status = self._webhook_signature_status(headers or {}, payload=payload, raw_body=raw_body)
+        tracking = payload.get(self.webhook_reference_field or "tracking_number") or payload.get("tracking_number")
+        external_reference = payload.get("external_reference") or payload.get("reference") or ""
+        order_domain = [("tijara_delivery_provider_id", "=", self.id)]
+        if tracking:
+            order_domain.append(("tijara_delivery_tracking_number", "=", tracking))
+        elif external_reference:
+            order_domain.append(("tijara_delivery_provider_reference", "=", external_reference))
+        else:
+            raise UserError(_("Delivery webhook must include tracking number or external reference."))
+        order = self.env["sale.order"].sudo().search(order_domain, limit=1)
+        provider_status = payload.get(self.webhook_status_field or "status") or payload.get("status")
+        mapped_status = self._delivery_status_from_provider(provider_status)
+        event_status = "processed" if order and signature_status in {"valid", "not_required"} else "failed"
+        message = _("Webhook processed.") if event_status == "processed" else _("Webhook could not be applied.")
+        event = self._delivery_event(
+            order=order,
+            event_type="webhook",
+            direction="inbound",
+            status=event_status,
+            payload=payload,
+            response={"mapped_status": mapped_status, "order_found": bool(order)},
+            signature_status=signature_status,
+            external_reference=external_reference,
+            tracking_number=tracking,
+            message=message,
+        )
+        if order and event_status == "processed":
+            values = {
+                "tijara_delivery_status": mapped_status,
+                "tijara_delivery_adapter_state": "failed" if mapped_status == "failed" else "webhook_synced",
+                "tijara_last_tracking_at": fields.Datetime.now(),
+                "tijara_delivery_last_event_id": event.id,
+            }
+            eta = payload.get(self.webhook_eta_field or "eta") or payload.get("eta")
+            if eta:
+                values["tijara_delivery_eta"] = eta
+            if mapped_status == "failed":
+                values["tijara_delivery_exception_reason"] = payload.get("reason") or payload.get("message") or ""
+            order.write(values)
+        return {
+            "status": "ok" if event_status == "processed" else "error",
+            "event_id": event.id,
+            "signature_status": signature_status,
+            "delivery_status": mapped_status,
+            "order_id": order.id if order else False,
+        }

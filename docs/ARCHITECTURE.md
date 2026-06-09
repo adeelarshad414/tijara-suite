@@ -69,7 +69,9 @@ service in a later phase.
 8. `tijara_ecommerce`
    Public storefront channels, online catalog publishing, B2B/B2C checkout,
    pickup/delivery queue handoff, customer order tracking, delivery-provider
-   assignment, and ecommerce analytics/report templates.
+   assignment, shipment create/cancel adapter events, label/manifest payloads,
+   signed or dry-run delivery webhooks, and ecommerce analytics/report
+   templates.
 
 9. Vertical modules
    Pharmacy, restaurant, garments, electronics, and future industry packs.

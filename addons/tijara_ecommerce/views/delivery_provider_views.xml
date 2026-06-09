@@ -15,9 +15,11 @@
                 <field name="code"/>
                 <field name="provider_type"/>
                 <field name="service_level"/>
+                <field name="adapter_mode"/>
                 <field name="dry_run"/>
                 <field name="auto_assign"/>
                 <field name="shipment_count"/>
+                <field name="event_count"/>
                 <field name="company_id"/>
                 <field name="active"/>
             </list>
@@ -37,6 +39,9 @@
                         <button name="action_open_shipments" type="object" class="oe_stat_button" icon="fa-truck">
                             <field name="shipment_count" widget="statinfo" string="Shipments"/>
                         </button>
+                        <button name="action_open_events" type="object" class="oe_stat_button" icon="fa-exchange">
+                            <field name="event_count" widget="statinfo" string="Events"/>
+                        </button>
                     </div>
                     <group>
                         <group>
@@ -49,6 +54,7 @@
                         <group>
                             <field name="provider_type"/>
                             <field name="service_level"/>
+                            <field name="adapter_mode"/>
                             <field name="dry_run"/>
                             <field name="auto_assign"/>
                         </group>
@@ -59,14 +65,33 @@
                                 <field name="supports_delivery"/>
                                 <field name="supports_courier"/>
                                 <field name="supports_cod"/>
+                                <field name="supports_cancel"/>
+                                <field name="supports_labels"/>
+                                <field name="supports_manifests"/>
+                                <field name="supports_webhooks"/>
                             </group>
                         </page>
                         <page string="Integration">
                             <group>
-                                <field name="api_base_url"/>
-                                <field name="tracking_url_template"/>
-                                <field name="contact_phone"/>
-                                <field name="webhook_secret_ref"/>
+                                <group string="Endpoints">
+                                    <field name="api_base_url"/>
+                                    <field name="create_endpoint"/>
+                                    <field name="cancel_endpoint"/>
+                                    <field name="status_endpoint"/>
+                                    <field name="label_endpoint"/>
+                                    <field name="manifest_endpoint"/>
+                                    <field name="tracking_url_template"/>
+                                </group>
+                                <group string="Webhook And Output">
+                                    <field name="label_format"/>
+                                    <field name="webhook_signature_mode"/>
+                                    <field name="webhook_signature_header"/>
+                                    <field name="webhook_reference_field"/>
+                                    <field name="webhook_status_field"/>
+                                    <field name="webhook_eta_field"/>
+                                    <field name="webhook_secret_ref"/>
+                                    <field name="contact_phone"/>
+                                </group>
                             </group>
                         </page>
                         <page string="Notes">
@@ -88,10 +113,12 @@
                 <filter name="active" string="Active" domain="[('active', '=', True)]"/>
                 <filter name="dry_run" string="Dry Run" domain="[('dry_run', '=', True)]"/>
                 <filter name="live_mode" string="Live Mode" domain="[('dry_run', '=', False)]"/>
+                <filter name="http_json" string="HTTP JSON Adapter" domain="[('adapter_mode', '=', 'http_json')]"/>
                 <group>
                     <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
                     <filter name="group_provider_type" string="Provider Type" context="{'group_by': 'provider_type'}"/>
                     <filter name="group_service_level" string="Service Level" context="{'group_by': 'service_level'}"/>
+                    <filter name="group_adapter" string="Adapter Mode" context="{'group_by': 'adapter_mode'}"/>
                 </group>
             </search>
         </field>

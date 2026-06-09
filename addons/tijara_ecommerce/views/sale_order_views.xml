@@ -16,6 +16,11 @@
                 <button name="action_tijara_mark_ecommerce_paid" type="object" string="Mark Ecommerce Paid" invisible="not tijara_ecommerce_channel_id or tijara_payment_status == 'paid'"/>
                 <button name="action_tijara_create_ecommerce_queue_ticket" type="object" string="Create Queue Ticket" invisible="not tijara_ecommerce_channel_id or tijara_queue_ticket_id"/>
                 <button name="action_tijara_prepare_delivery" type="object" string="Prepare Delivery" invisible="not tijara_ecommerce_channel_id or tijara_fulfillment_method not in ('delivery', 'courier')"/>
+                <button name="action_tijara_create_delivery_shipment" type="object" string="Create Shipment" invisible="not tijara_ecommerce_channel_id or tijara_fulfillment_method not in ('delivery', 'courier')"/>
+                <button name="action_tijara_generate_delivery_label" type="object" string="Generate Label" invisible="not tijara_delivery_provider_id"/>
+                <button name="action_tijara_create_delivery_manifest" type="object" string="Create Manifest" invisible="not tijara_delivery_provider_id"/>
+                <button name="action_tijara_cancel_delivery_shipment" type="object" string="Cancel Shipment" invisible="not tijara_delivery_provider_id or tijara_delivery_status in ('cancelled', 'not_required')"/>
+                <button name="action_tijara_open_delivery_events" type="object" string="Delivery Events" invisible="not tijara_delivery_provider_id"/>
                 <button name="action_tijara_mark_delivery_picked" type="object" string="Mark Picked" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status not in ('assigned', 'pending')"/>
                 <button name="action_tijara_mark_out_for_delivery" type="object" string="Out For Delivery" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status not in ('assigned', 'picked')"/>
                 <button name="action_tijara_mark_delivered" type="object" string="Mark Delivered" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status == 'delivered'"/>
@@ -48,12 +53,26 @@
                             <field name="tijara_delivery_address"/>
                             <field name="tijara_delivery_provider_id"/>
                             <field name="tijara_delivery_status"/>
+                            <field name="tijara_delivery_adapter_state"/>
+                            <field name="tijara_delivery_provider_reference"/>
                         </group>
                         <group>
                             <field name="tijara_delivery_tracking_number"/>
                             <field name="tijara_delivery_tracking_url" widget="url"/>
+                            <field name="tijara_delivery_label_format"/>
+                            <field name="tijara_delivery_manifest_reference"/>
                             <field name="tijara_delivery_eta"/>
                             <field name="tijara_last_tracking_at"/>
+                            <field name="tijara_delivery_last_event_id"/>
+                            <field name="tijara_delivery_event_count"/>
+                        </group>
+                    </group>
+                    <group string="Delivery Label And Exception">
+                        <group>
+                            <field name="tijara_delivery_label_payload"/>
+                        </group>
+                        <group>
+                            <field name="tijara_delivery_exception_reason"/>
                         </group>
                     </group>
                     <group string="Provider Payload">

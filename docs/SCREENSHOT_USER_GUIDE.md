@@ -162,14 +162,15 @@ The deals board highlights discount campaigns and promotion messages for in-stor
 
 ### Ecommerce Storefront
 
-The ecommerce storefront exposes the online catalog with PKR prices, Urdu/English product names, B2C/B2B pricing, pickup and delivery options, checkout into Odoo sale orders, and customer order tracking links.
+The ecommerce storefront exposes the online catalog with PKR prices, Urdu/English product names, B2C/B2B pricing, pickup and delivery options, checkout into Odoo sale orders, customer order tracking links, and delivery-provider adapter state.
 
 ![Ecommerce Storefront](screenshots/ecommerce-manager/ecommerce-storefront.png)
 
 1. Open `/tijara/ecommerce/tijara-demo-web` from the ecommerce manager or public display route.
 2. Review online products, Urdu names, SKU/barcode details, promotions, stock visibility, and B2C/B2B prices.
 3. Add products to the cart, choose pickup or delivery, enter customer details, and place the order for sale-order and queue handoff.
-4. Use `/tijara/ecommerce/tijara-demo-web/track` or the private `/track/<token>` link to verify pickup code, queue state, delivery status, and provider tracking number.
+4. Use `/tijara/ecommerce/tijara-demo-web/track` or the private `/track/<token>` link to verify pickup code, queue state, delivery status, provider reference, adapter state, and provider tracking number.
+5. In Online Orders, use delivery actions to generate labels, create manifests, cancel shipments when needed, and review Delivery Adapter Events for webhook/signature evidence.
 
 ## Workflow Checklist
 

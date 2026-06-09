@@ -16,6 +16,9 @@ class TijaraEcommerceController(http.Controller):
 
     def _request_json_payload(self):
         body = request.httprequest.get_data(as_text=True) or "{}"
+        return self._json_payload_from_body(body)
+
+    def _json_payload_from_body(self, body):
         try:
             payload = json.loads(body)
         except json.JSONDecodeError as error:
@@ -392,6 +395,34 @@ if (initialToken) checkStatus().catch(error => setStatus(error.message));
         return self._json_response(result)
 
     @http.route(
+        "/tijara/ecommerce/delivery/webhook/<string:provider_code>",
+        type="http",
+        methods=["POST"],
+        auth="public",
+        csrf=False,
+    )
+    def delivery_provider_webhook(self, provider_code, **kwargs):
+        provider_model = request.env["tijara.ecommerce.delivery.provider"].sudo()
+        normalized_code = provider_model._normalize_code(provider_code)
+        provider = provider_model.search([("active", "=", True), ("code", "=", normalized_code)], limit=1)
+        if not provider:
+            return self._json_response({"status": "not_found", "message": "Delivery provider not found."}, status=404)
+        raw_body = request.httprequest.get_data(as_text=True) or "{}"
+        try:
+            payload = self._json_payload_from_body(raw_body)
+            result = provider.tijara_process_webhook(
+                payload,
+                headers={key: value for key, value in request.httprequest.headers.items()},
+                raw_body=raw_body,
+            )
+        except (UserError, ValidationError, ValueError) as error:
+            return self._json_response({"status": "error", "message": str(error)}, status=400)
+        http_status = 200 if result.get("status") == "ok" else 400
+        if result.get("signature_status") in {"missing", "invalid"}:
+            http_status = 403
+        return self._json_response(result, status=http_status)
+
+    @http.route(
         "/tijara/ecommerce/<string:channel_code>/checkout",
         type="http",
         methods=["POST"],
@@ -422,9 +453,13 @@ if (initialToken) checkStatus().catch(error => setStatus(error.message));
                 "tracking_token": order.tijara_tracking_token or "",
                 "tracking_url": order.tijara_tracking_url or "",
                 "delivery_status": order.tijara_delivery_status or "",
+                "delivery_adapter_state": order.tijara_delivery_adapter_state or "",
                 "delivery_provider": order.tijara_delivery_provider_id.name or "",
+                "delivery_provider_reference": order.tijara_delivery_provider_reference or "",
                 "delivery_tracking_number": order.tijara_delivery_tracking_number or "",
                 "delivery_tracking_url": order.tijara_delivery_tracking_url or "",
+                "delivery_label_format": order.tijara_delivery_label_format or "",
+                "delivery_manifest_reference": order.tijara_delivery_manifest_reference or "",
             }
         )
 

@@ -1,6 +1,7 @@
 import uuid
 
 from odoo import _, fields, models
+from odoo.exceptions import UserError
 
 
 class SaleOrder(models.Model):
@@ -77,6 +78,42 @@ class SaleOrder(models.Model):
     tijara_delivery_tracking_number = fields.Char(string="Delivery Tracking Number", copy=False)
     tijara_delivery_tracking_url = fields.Char(string="Provider Tracking URL", copy=False)
     tijara_delivery_provider_payload = fields.Text(string="Provider Payload Snapshot", copy=False)
+    tijara_delivery_provider_reference = fields.Char(string="Provider Reference", copy=False)
+    tijara_delivery_adapter_state = fields.Selection(
+        [
+            ("not_started", "Not Started"),
+            ("created", "Shipment Created"),
+            ("label_ready", "Label Ready"),
+            ("manifested", "Manifested"),
+            ("webhook_synced", "Webhook Synced"),
+            ("cancelled", "Cancelled"),
+            ("failed", "Failed"),
+        ],
+        default="not_started",
+        string="Delivery Adapter State",
+        copy=False,
+    )
+    tijara_delivery_label_format = fields.Selection(
+        [
+            ("pdf", "PDF"),
+            ("zpl", "ZPL"),
+            ("escpos", "ESC/POS"),
+            ("json", "JSON"),
+            ("url", "Provider URL"),
+        ],
+        string="Delivery Label Format",
+        copy=False,
+    )
+    tijara_delivery_label_payload = fields.Text(string="Delivery Label Payload", copy=False)
+    tijara_delivery_manifest_reference = fields.Char(string="Manifest Reference", copy=False)
+    tijara_delivery_exception_reason = fields.Text(string="Delivery Exception Reason", copy=False)
+    tijara_delivery_last_event_id = fields.Many2one(
+        "tijara.ecommerce.delivery.event",
+        string="Last Delivery Adapter Event",
+        copy=False,
+        readonly=True,
+    )
+    tijara_delivery_event_count = fields.Integer(compute="_compute_tijara_delivery_event_count")
     tijara_delivery_eta = fields.Datetime(string="Delivery ETA", copy=False)
     tijara_last_tracking_at = fields.Datetime(string="Last Tracking Update", copy=False)
     tijara_tracking_token = fields.Char(string="Customer Tracking Token", copy=False, readonly=True)
@@ -88,6 +125,11 @@ class SaleOrder(models.Model):
     tijara_estimated_gst = fields.Monetary(currency_field="currency_id", copy=False)
     tijara_loyalty_points_awarded = fields.Float(copy=False)
     tijara_ecommerce_payload = fields.Text(string="Online Payload Snapshot", copy=False)
+
+    def _compute_tijara_delivery_event_count(self):
+        event_model = self.env["tijara.ecommerce.delivery.event"].sudo()
+        for order in self:
+            order.tijara_delivery_event_count = event_model.search_count([("sale_order_id", "=", order.id)])
 
     def _tijara_tracking_public_url(self):
         self.ensure_one()
@@ -122,6 +164,83 @@ class SaleOrder(models.Model):
             else:
                 order.tijara_delivery_status = "not_required"
         return True
+
+    def _tijara_delivery_provider_or_error(self):
+        self.ensure_one()
+        provider = self.tijara_delivery_provider_id or self.tijara_ecommerce_channel_id.default_delivery_provider_id
+        if not provider:
+            raise UserError(_("Configure a delivery provider before using the delivery adapter."))
+        return provider
+
+    def action_tijara_create_delivery_shipment(self):
+        for order in self:
+            order._tijara_delivery_provider_or_error().tijara_create_shipment(order)
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Delivery Adapter"),
+                "message": _("Shipment interface prepared for selected order(s)."),
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
+    def action_tijara_cancel_delivery_shipment(self):
+        for order in self:
+            order._tijara_delivery_provider_or_error().tijara_cancel_shipment(order)
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Delivery Adapter"),
+                "message": _("Shipment cancel interface processed for selected order(s)."),
+                "type": "warning",
+                "sticky": False,
+            },
+        }
+
+    def action_tijara_generate_delivery_label(self):
+        for order in self:
+            order._tijara_delivery_provider_or_error().tijara_generate_label(order)
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Delivery Adapter"),
+                "message": _("Delivery label payload generated for selected order(s)."),
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
+    def action_tijara_create_delivery_manifest(self):
+        providers = self.mapped("tijara_delivery_provider_id")
+        if not providers:
+            raise UserError(_("Select ecommerce orders that already have a delivery provider."))
+        for provider in providers:
+            provider.tijara_create_manifest(self.filtered(lambda order: order.tijara_delivery_provider_id == provider))
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Delivery Adapter"),
+                "message": _("Delivery manifest payload generated for selected order(s)."),
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
+    def action_tijara_open_delivery_events(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Delivery Adapter Events"),
+            "res_model": "tijara.ecommerce.delivery.event",
+            "view_mode": "list,form,pivot,graph",
+            "domain": [("sale_order_id", "=", self.id)],
+            "context": {"default_sale_order_id": self.id, "default_company_id": self.company_id.id},
+        }
 
     def action_tijara_mark_delivery_picked(self):
         self.write({"tijara_delivery_status": "picked", "tijara_last_tracking_at": fields.Datetime.now()})
@@ -174,8 +293,15 @@ class SaleOrder(models.Model):
                 "provider": provider.name or "",
                 "provider_type": provider.provider_type or "",
                 "dry_run": bool(provider.dry_run) if provider else False,
+                "adapter_state": self.tijara_delivery_adapter_state or "",
+                "provider_reference": self.tijara_delivery_provider_reference or "",
                 "tracking_number": self.tijara_delivery_tracking_number or "",
                 "tracking_url": self.tijara_delivery_tracking_url or "",
+                "label_format": self.tijara_delivery_label_format or "",
+                "manifest_reference": self.tijara_delivery_manifest_reference or "",
+                "exception_reason": self.tijara_delivery_exception_reason or "",
+                "event_count": self.tijara_delivery_event_count,
+                "last_event_id": self.tijara_delivery_last_event_id.id if self.tijara_delivery_last_event_id else False,
                 "eta": fields.Datetime.to_string(self.tijara_delivery_eta) if self.tijara_delivery_eta else "",
                 "last_update": fields.Datetime.to_string(self.tijara_last_tracking_at) if self.tijara_last_tracking_at else "",
             },

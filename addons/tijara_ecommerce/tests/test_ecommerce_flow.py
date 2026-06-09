@@ -74,7 +74,14 @@ class TestTijaraEcommerceFlow(TransactionCase):
                 "provider_type": "dummy",
                 "service_level": "same_day",
                 "dry_run": True,
+                "adapter_mode": "dry_run",
                 "auto_assign": True,
+                "supports_cancel": True,
+                "supports_labels": True,
+                "supports_manifests": True,
+                "supports_webhooks": True,
+                "label_format": "pdf",
+                "webhook_signature_mode": "dry_run",
                 "tracking_url_template": "https://tracking.example.test/{tracking_number}",
             }
         )
@@ -129,16 +136,64 @@ class TestTijaraEcommerceFlow(TransactionCase):
         self.assertTrue(order.tijara_tracking_url)
         self.assertEqual(order.tijara_delivery_provider_id, self.provider)
         self.assertEqual(order.tijara_delivery_status, "assigned")
+        self.assertEqual(order.tijara_delivery_adapter_state, "created")
+        self.assertTrue(order.tijara_delivery_provider_reference)
         self.assertTrue(order.tijara_delivery_tracking_number)
         self.assertTrue(order.tijara_delivery_tracking_url)
+        self.assertTrue(order.tijara_delivery_last_event_id)
         tracking = self.channel.tijara_tracking_payload({"tracking_token": order.tijara_tracking_token})
         self.assertEqual(tracking["status"], "ok")
         self.assertEqual(tracking["order"]["pickup_code"], order.tijara_pickup_code)
         self.assertEqual(tracking["queue"]["number"], order.tijara_queue_ticket_id.queue_number)
         self.assertEqual(tracking["delivery"]["provider"], self.provider.name)
+        self.assertEqual(tracking["delivery"]["adapter_state"], "created")
+        self.assertEqual(tracking["delivery"]["provider_reference"], order.tijara_delivery_provider_reference)
         order.action_tijara_mark_ecommerce_paid()
         self.assertEqual(order.tijara_payment_status, "paid")
         self.assertGreater(order.partner_id.tijara_loyalty_points, 0)
+
+    def test_delivery_adapter_label_manifest_cancel_and_webhook_flow(self):
+        order = self.channel.tijara_create_order(
+            {
+                "audience": "b2c",
+                "fulfillment_method": "delivery",
+                "payment_method": "cod",
+                "customer": {
+                    "name": "Online Delivery Adapter Customer",
+                    "mobile": "03001234568",
+                    "email": "online-delivery-adapter@example.com",
+                    "delivery_address": "Adapter test address",
+                },
+                "lines": [{"product_id": self.product.id, "quantity": 1}],
+            }
+        )
+        label = self.provider.tijara_generate_label(order)
+        self.assertEqual(label["format"], "pdf")
+        self.assertEqual(order.tijara_delivery_adapter_state, "label_ready")
+        self.assertTrue(order.tijara_delivery_label_payload)
+
+        manifest = self.provider.tijara_create_manifest(order)
+        self.assertEqual(order.tijara_delivery_manifest_reference, manifest["manifest_reference"])
+        self.assertEqual(order.tijara_delivery_adapter_state, "manifested")
+
+        result = self.provider.tijara_process_webhook(
+            {
+                "tracking_number": order.tijara_delivery_tracking_number,
+                "status": "out_for_delivery",
+            },
+            headers={"X-Tijara-Delivery-Signature": "tijara-dry-run"},
+        )
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["signature_status"], "valid")
+        self.assertEqual(order.tijara_delivery_status, "out_for_delivery")
+        self.assertEqual(order.tijara_delivery_adapter_state, "webhook_synced")
+
+        self.provider.tijara_cancel_shipment(order, reason="Customer cancelled")
+        self.assertEqual(order.tijara_delivery_status, "cancelled")
+        self.assertEqual(order.tijara_delivery_adapter_state, "cancelled")
+        self.assertIn("Customer cancelled", order.tijara_delivery_exception_reason)
+        events = self.env["tijara.ecommerce.delivery.event"].sudo().search([("sale_order_id", "=", order.id)])
+        self.assertGreaterEqual(len(events), 4)
 
     def test_saas_enforcement_blocks_without_ecommerce_feature(self):
         self.env["ir.config_parameter"].sudo().set_param("tijara.saas.enforcement_enabled", "1")

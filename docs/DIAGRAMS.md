@@ -251,7 +251,17 @@ classDiagram
         provider_type
         service_level
         dry_run
+        adapter_mode
+        label_format
+        webhook_signature_mode
         tracking_url_template
+    }
+    class DeliveryEvent {
+        event_type
+        direction
+        status
+        signature_status
+        payload_hash
     }
     class SaleOrder {
         ecommerce_channel
@@ -261,6 +271,8 @@ classDiagram
         pickup_code
         tracking_token
         delivery_status
+        delivery_adapter_state
+        delivery_provider_reference
     }
     class QueueTicket {
         queue_number
@@ -299,6 +311,8 @@ classDiagram
     SaasPlan "1" --> "*" SaasSubscription
     EcommerceChannel "1" --> "*" SaleOrder
     DeliveryProvider "1" --> "*" SaleOrder
+    DeliveryProvider "1" --> "*" DeliveryEvent
+    SaleOrder "1" --> "*" DeliveryEvent
     EcommerceChannel "*" --> "*" DeliveryProvider
     ProductTemplate "*" --> "*" EcommerceChannel
     SaleOrder "1" --> "0..1" QueueTicket

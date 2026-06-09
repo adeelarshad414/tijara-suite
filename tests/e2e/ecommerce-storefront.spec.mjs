@@ -127,10 +127,15 @@ test("ecommerce API delivery checkout applies charges and creates a queue handof
   expect(result.tracking_token).toBeTruthy();
   expect(result.tracking_url).toContain("/track/");
   expect(result.delivery_status).toBeTruthy();
+  expect(result.delivery_adapter_state).toBe("created");
+  expect(result.delivery_provider_reference).toBeTruthy();
   const tracking = await trackOrder(request, { tracking_token: result.tracking_token });
   expect(tracking.order.pickup_code).toBe(result.pickup_code);
   expect(tracking.queue.number).toBe(result.queue_number);
   expect(tracking.delivery.required).toBe(true);
+  expect(tracking.delivery.adapter_state).toBe("created");
+  expect(tracking.delivery.provider_reference).toBe(result.delivery_provider_reference);
+  expect(tracking.delivery.event_count).toBeGreaterThan(0);
   expect(tracking.delivery.tracking_number || result.delivery_tracking_number).toBeTruthy();
 });
 
@@ -174,11 +179,12 @@ test("authenticated ecommerce manager can review the created ecommerce sale orde
   );
 
   const catalog = await loadCatalog(request, "b2b");
+  test.skip(!catalog.fulfillment.methods.includes("delivery"), "Ecommerce channel does not allow delivery.");
   const product = firstOrderableProduct(catalog);
   const reference = `E2E-ECOM-REVIEW-${Date.now()}`;
   const result = await checkout(request, {
     audience: "b2b",
-    fulfillment_method: catalog.fulfillment.methods.includes("pickup") ? "pickup" : catalog.fulfillment.methods[0],
+    fulfillment_method: "delivery",
     payment_method: catalog.payment.methods[0],
     reference,
     customer: {
@@ -206,6 +212,10 @@ test("authenticated ecommerce manager can review the created ecommerce sale orde
         "tijara_payment_method",
         "tijara_pickup_code",
         "tijara_queue_ticket_id",
+        "tijara_delivery_provider_id",
+        "tijara_delivery_tracking_number",
+        "tijara_delivery_adapter_state",
+        "tijara_delivery_provider_reference",
       ],
       limit: 1,
     },
@@ -215,6 +225,62 @@ test("authenticated ecommerce manager can review the created ecommerce sale orde
   expect(orders[0].tijara_ecommerce_audience).toBe("b2b");
   expect(orders[0].tijara_pickup_code).toBeTruthy();
   expect(orders[0].tijara_queue_ticket_id).toBeTruthy();
+  expect(orders[0].tijara_delivery_adapter_state).toBe("created");
+  expect(orders[0].tijara_delivery_provider_reference).toBeTruthy();
+  expect(orders[0].tijara_delivery_provider_id).toBeTruthy();
+
+  await odooCallKw(page, "sale.order", "action_tijara_generate_delivery_label", [[result.order_id]]);
+  await odooCallKw(page, "sale.order", "action_tijara_create_delivery_manifest", [[result.order_id]]);
+
+  const updatedOrders = await odooCallKw(
+    page,
+    "sale.order",
+    "search_read",
+    [[["id", "=", result.order_id]]],
+    {
+      fields: [
+        "id",
+        "tijara_delivery_provider_id",
+        "tijara_delivery_tracking_number",
+        "tijara_delivery_adapter_state",
+        "tijara_delivery_label_format",
+        "tijara_delivery_manifest_reference",
+      ],
+      limit: 1,
+    },
+  );
+  expect(updatedOrders).toHaveLength(1);
+  expect(updatedOrders[0].tijara_delivery_adapter_state).toBe("manifested");
+  expect(updatedOrders[0].tijara_delivery_label_format).toBeTruthy();
+  expect(updatedOrders[0].tijara_delivery_manifest_reference).toBeTruthy();
+
+  const providerId = updatedOrders[0].tijara_delivery_provider_id[0];
+  const providers = await odooCallKw(
+    page,
+    "tijara.ecommerce.delivery.provider",
+    "search_read",
+    [[["id", "=", providerId]]],
+    { fields: ["id", "code"], limit: 1 },
+  );
+  expect(providers).toHaveLength(1);
+
+  const webhookResponse = await request.post(`/tijara/ecommerce/delivery/webhook/${providers[0].code}`, {
+    headers: {
+      ...databaseHeaders(),
+      "X-Tijara-Delivery-Signature": "tijara-dry-run",
+    },
+    data: {
+      tracking_number: updatedOrders[0].tijara_delivery_tracking_number,
+      status: "delivered",
+    },
+  });
+  const webhook = await webhookResponse.json();
+  expect(webhookResponse.status(), JSON.stringify(webhook)).toBe(200);
+  expect(webhook.status).toBe("ok");
+  expect(webhook.signature_status).toBe("valid");
+  const postWebhookTracking = await trackOrder(request, { tracking_token: result.tracking_token });
+  expect(postWebhookTracking.delivery.status).toBe("delivered");
+  expect(postWebhookTracking.delivery.adapter_state).toBe("webhook_synced");
 
   const tickets = await odooCallKw(
     page,

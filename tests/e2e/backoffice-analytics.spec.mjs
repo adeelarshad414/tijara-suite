@@ -6,10 +6,13 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-async function visitAction(page, hash, expectedText) {
-  await page.goto(`/web#${hash}`, { waitUntil: "domcontentloaded" });
-  await page.waitForLoadState("networkidle").catch(() => null);
-  await expect(page.locator("body")).toContainText(expectedText);
+async function visitAction(page, actionUrl, expectedText) {
+  await page.goto(actionUrl, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(
+    ({ source, flags }) => new RegExp(source, flags).test(document.body.innerText || ""),
+    { source: expectedText.source, flags: expectedText.flags },
+    { timeout: 15000 }
+  );
 }
 
 async function canReachModel(page, model) {
@@ -25,6 +28,7 @@ async function canReachModel(page, model) {
 }
 
 test("authenticated back-office expense, salary, and KPI collector workflows", async ({ page }) => {
+  test.setTimeout(180000);
   const missing = requiredEnv.filter((name) => !process.env[name]);
   test.skip(missing.length > 0, `Set ${requiredEnv.join(", ")} for back-office E2E.`);
 
@@ -122,8 +126,8 @@ test("authenticated back-office expense, salary, and KPI collector workflows", a
   });
 
   await test.step("load browser screens for back-office and analytics operations", async () => {
-    await visitAction(page, "model=tijara.expense.request&view_type=list", /Expense|Expenses/i);
-    await visitAction(page, "model=tijara.salary.batch&view_type=list", /Salary|Salaries/i);
-    await visitAction(page, "model=tijara.analytics.snapshot&view_type=list", /KPI|Snapshot|Analytics/i);
+    await visitAction(page, "/odoo/action-tijara_retail_core.action_tijara_expense_request", /Expense|Expenses/i);
+    await visitAction(page, "/odoo/action-tijara_retail_core.action_tijara_salary_batch", /Salary|Salaries/i);
+    await visitAction(page, "/odoo/action-tijara_analytics.action_tijara_analytics_snapshot", /KPI|Snapshot|Analytics/i);
   });
 });

@@ -249,6 +249,8 @@ Compose requires these secret values before startup:
 - `ODOO_MASTER_PASSWORD`
 - `TIJARA_BRIDGE_SHARED_SECRET` for hardware bridge deployments
 - `TIJARA_PAYMENT_WEBHOOK_SECRET` for public payment webhook validation
+- Delivery webhook secrets for certified providers, loaded into the Odoo config
+  parameter namespace `tijara.delivery.webhook.<PROVIDER_CODE>.secret`
 - `GRAFANA_ADMIN_PASSWORD` for the monitoring profile
 
 The startup script refuses to start production if placeholder or development
@@ -280,15 +282,24 @@ Production ecommerce rollout must include:
   The seeded `Tijara In-House Delivery` provider is dry-run/assumption mode for
   demos only; production requires certified courier/provider contracts,
   credentials, webhook signing, reconciliation, and support runbooks.
+- Delivery-provider adapter settings now include adapter mode, create/cancel/
+  status/label/manifest endpoints, supported capabilities, label format,
+  webhook reference/status/ETA field names, and webhook signature mode.
+- For HMAC SHA256 delivery webhooks, keep raw secrets outside source control.
+  The current Odoo-side lookup uses the config parameter
+  `tijara.delivery.webhook.<PROVIDER_CODE>.secret`, which should be populated
+  from the environment secret manager during tenant/provider onboarding.
 - Customer order tracking routes:
   `/tijara/ecommerce/<slug>/track`,
   `/tijara/ecommerce/<slug>/track/<token>`, and
   `/tijara/ecommerce/<slug>/track/status`.
+- Delivery-provider webhook route:
+  `/tijara/ecommerce/delivery/webhook/<provider_code>`.
 - Public-route security controls at the reverse proxy, including rate limits,
   request-size limits, bot controls where needed, and log retention.
 - Browser tests for catalog, checkout, sale-order creation, queue handoff, and
-  customer order tracking, plus receipt/invoice print paths after each staging
-  upgrade.
+  customer order tracking, delivery label/manifest actions, dry-run webhook
+  sync, plus receipt/invoice print paths after each staging upgrade.
 - `TIJARA_ECOMMERCE_SLUG` configured in the Browser E2E environment. The seeded
   local/demo channel exports `tijara-demo-web`.
 

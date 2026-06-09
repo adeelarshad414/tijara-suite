@@ -431,6 +431,17 @@
       "description": "Customer-safe order, queue, payment, delivery provider, and tracking payload endpoint."
     },
     {
+      "name": "Ecommerce Delivery Webhook",
+      "route_path": "/tijara/ecommerce/delivery/webhook/TIJARA-INHOUSE",
+      "auth": "signed_public_json",
+      "personas": [
+        "ecommerce_manager",
+        "tenant_admin",
+        "platform_superadmin"
+      ],
+      "description": "Dry-run or certified provider delivery status webhook endpoint with signature tracking."
+    },
+    {
       "name": "Expense Management",
       "route_path": "/web#model=tijara.expense.request&view_type=list",
       "auth": "authenticated",
@@ -539,7 +550,7 @@
     "CSV import export for operational data",
     "Hardware bridge for printers scanners drawers scales labels and customer displays",
     "Kiosk menu deals promotion queue and customer-display public routes",
-    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff customer tracking dry-run delivery provider assignment and ecommerce analytics templates",
+    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff customer tracking dry-run delivery provider assignment label manifest signed webhook adapter events and ecommerce analytics templates",
     "Offline POS capture replay and conflict review",
     "SaaS feature flags for B2B queue promotion display and customer display",
     "Tenant database provisioning and operations manifests",
