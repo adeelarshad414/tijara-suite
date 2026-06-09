@@ -39,6 +39,17 @@ class TijaraEcommerceChannel(models.Model):
     allow_stripe = fields.Boolean()
     auto_confirm_sale_order = fields.Boolean(string="Auto Confirm Sale Order")
     auto_queue_pickup_delivery = fields.Boolean(string="Auto Queue Pickup/Delivery", default=True)
+    delivery_provider_ids = fields.Many2many(
+        "tijara.ecommerce.delivery.provider",
+        "tijara_ecommerce_channel_delivery_provider_rel",
+        "channel_id",
+        "provider_id",
+        string="Delivery Providers",
+    )
+    default_delivery_provider_id = fields.Many2one(
+        "tijara.ecommerce.delivery.provider",
+        string="Default Delivery Provider",
+    )
     show_stock_qty = fields.Boolean(default=True)
     low_stock_threshold = fields.Float(default=10.0)
     promotion_ids = fields.Many2many(
@@ -51,13 +62,14 @@ class TijaraEcommerceChannel(models.Model):
     product_count = fields.Integer(compute="_compute_counts")
     sale_order_count = fields.Integer(compute="_compute_counts")
     queue_ticket_count = fields.Integer(compute="_compute_counts")
+    delivery_provider_count = fields.Integer(compute="_compute_counts")
     notes = fields.Text()
 
     @api.model
     def _default_warehouse(self):
         return self.env["stock.warehouse"].sudo().search([("company_id", "=", self.env.company.id)], limit=1)
 
-    @api.depends("company_id")
+    @api.depends("company_id", "delivery_provider_ids")
     def _compute_counts(self):
         product_model = self.env["product.template"].sudo()
         order_model = self.env["sale.order"].sudo()
@@ -67,6 +79,7 @@ class TijaraEcommerceChannel(models.Model):
             channel.product_count = product_model.search_count(product_domain)
             channel.sale_order_count = order_model.search_count([("tijara_ecommerce_channel_id", "=", channel.id)])
             channel.queue_ticket_count = ticket_model.search_count([("sale_order_id.tijara_ecommerce_channel_id", "=", channel.id)])
+            channel.delivery_provider_count = len(channel.delivery_provider_ids)
 
     @api.constrains("default_audience", "allow_b2b", "allow_b2c")
     def _check_audience_config(self):
@@ -195,6 +208,17 @@ class TijaraEcommerceChannel(models.Model):
             "type": "ir.actions.act_url",
             "target": "new",
             "url": "/tijara/ecommerce/%s" % self.url_slug,
+        }
+
+    def action_view_delivery_providers(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Delivery Providers"),
+            "res_model": "tijara.ecommerce.delivery.provider",
+            "view_mode": "list,form",
+            "domain": [("id", "in", self.delivery_provider_ids.ids)],
+            "context": {"default_company_id": self.company_id.id},
         }
 
     def _product_price(self, product, audience):
@@ -552,6 +576,70 @@ class TijaraEcommerceChannel(models.Model):
             return "pay_at_pickup"
         return "pending"
 
+    def _tracking_contact_matches(self, order, mobile="", email=""):
+        contact_mobile = (mobile or "").strip()
+        contact_email = (email or "").strip().lower()
+        partner = order.partner_id
+        order_mobile = (order.tijara_delivery_mobile or partner.mobile or partner.phone or "").strip()
+        order_email = (partner.email or "").strip().lower()
+        if contact_mobile and order_mobile and contact_mobile == order_mobile:
+            return True
+        if contact_email and order_email and contact_email == order_email:
+            return True
+        return False
+
+    def _find_order_for_tracking(self, payload):
+        self.ensure_one()
+        if not isinstance(payload, dict):
+            raise UserError(_("Tracking payload must be a JSON object."))
+        token = (payload.get("tracking_token") or payload.get("token") or "").strip()
+        if token:
+            order = self.env["sale.order"].sudo().search(
+                [
+                    ("tijara_ecommerce_channel_id", "=", self.id),
+                    ("tijara_tracking_token", "=", token),
+                ],
+                limit=1,
+            )
+            if order:
+                return order
+            raise UserError(_("Order tracking link was not found."))
+        lookup = (
+            payload.get("pickup_code")
+            or payload.get("reference")
+            or payload.get("order_name")
+            or payload.get("tracking_number")
+            or ""
+        ).strip()
+        mobile = (payload.get("mobile") or payload.get("phone") or "").strip()
+        email = (payload.get("email") or "").strip()
+        if not lookup:
+            raise UserError(_("Enter a pickup code, order reference, or tracking number."))
+        if not mobile and not email:
+            raise UserError(_("Enter the mobile number or email used on the order."))
+        domain = [
+            ("tijara_ecommerce_channel_id", "=", self.id),
+            "|",
+            "|",
+            "|",
+            ("tijara_pickup_code", "=", lookup),
+            ("name", "=", lookup),
+            ("client_order_ref", "=", lookup),
+            ("tijara_delivery_tracking_number", "=", lookup),
+        ]
+        orders = self.env["sale.order"].sudo().search(domain, limit=10)
+        for order in orders:
+            if self._tracking_contact_matches(order, mobile=mobile, email=email):
+                return order
+        raise UserError(_("Order was not found for those tracking details."))
+
+    def tijara_tracking_payload(self, payload):
+        self.ensure_one()
+        self._check_saas_entitlement()
+        order = self._find_order_for_tracking(payload)
+        order.action_tijara_generate_tracking_token()
+        return order._tijara_ecommerce_tracking_payload()
+
     def _fulfillment_to_queue_order_type(self, fulfillment_method):
         return {
             "delivery": "delivery",
@@ -615,8 +703,10 @@ class TijaraEcommerceChannel(models.Model):
             )
         )
         order.tijara_pickup_code = payload.get("pickup_code") or self._pickup_code_for_order(order)
+        order.action_tijara_generate_tracking_token()
         if self.auto_confirm_sale_order:
             order.action_confirm()
         if self.auto_queue_pickup_delivery:
             order.action_tijara_create_ecommerce_queue_ticket()
+        order.action_tijara_prepare_delivery()
         return order

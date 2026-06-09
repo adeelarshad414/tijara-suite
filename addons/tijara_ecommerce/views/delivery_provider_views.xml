@@ -1,0 +1,101 @@
+<odoo>
+    <record id="action_tijara_ecommerce_delivery_provider" model="ir.actions.act_window">
+        <field name="name">Delivery Providers</field>
+        <field name="res_model">tijara.ecommerce.delivery.provider</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_ecommerce_delivery_provider_list" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.delivery.provider.list</field>
+        <field name="model">tijara.ecommerce.delivery.provider</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active" decoration-warning="not dry_run">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="provider_type"/>
+                <field name="service_level"/>
+                <field name="dry_run"/>
+                <field name="auto_assign"/>
+                <field name="shipment_count"/>
+                <field name="company_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_delivery_provider_form" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.delivery.provider.form</field>
+        <field name="model">tijara.ecommerce.delivery.provider</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_test_provider" type="object" string="Test Provider" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_shipments" type="object" class="oe_stat_button" icon="fa-truck">
+                            <field name="shipment_count" widget="statinfo" string="Shipments"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <field name="provider_type"/>
+                            <field name="service_level"/>
+                            <field name="dry_run"/>
+                            <field name="auto_assign"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Capabilities">
+                            <group>
+                                <field name="supports_delivery"/>
+                                <field name="supports_courier"/>
+                                <field name="supports_cod"/>
+                            </group>
+                        </page>
+                        <page string="Integration">
+                            <group>
+                                <field name="api_base_url"/>
+                                <field name="tracking_url_template"/>
+                                <field name="contact_phone"/>
+                                <field name="webhook_secret_ref"/>
+                            </group>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_delivery_provider_search" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.delivery.provider.search</field>
+        <field name="model">tijara.ecommerce.delivery.provider</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="dry_run" string="Dry Run" domain="[('dry_run', '=', True)]"/>
+                <filter name="live_mode" string="Live Mode" domain="[('dry_run', '=', False)]"/>
+                <group>
+                    <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
+                    <filter name="group_provider_type" string="Provider Type" context="{'group_by': 'provider_type'}"/>
+                    <filter name="group_service_level" string="Service Level" context="{'group_by': 'service_level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_ecommerce_delivery_provider" name="Delivery Providers" parent="menu_tijara_ecommerce_configuration" action="action_tijara_ecommerce_delivery_provider" sequence="20"/>
+</odoo>

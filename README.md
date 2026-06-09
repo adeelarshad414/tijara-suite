@@ -363,8 +363,10 @@ pharmacy, bakery, cafe, fast food, restaurant, mobile shop, and electronics
 workflows. The ecommerce layer publishes those same B2B/B2C priced products to
 public storefront routes, creates Odoo sale orders from online checkout, applies
 tenant charge policies, links pickup/delivery orders to the shared queue system,
-and exposes ecommerce KPI/report templates. The Tijara invoice/receipt
-template configuration now renders through backend QWeb PDF/HTML reports for
+exposes ecommerce KPI/report templates, returns customer order-tracking links,
+and can assign dry-run delivery-provider shipment records for local/staging
+delivery certification drills. The Tijara invoice/receipt template
+configuration now renders through backend QWeb PDF/HTML reports for
 customer invoices and POS orders, and the browser POS receipt screen consumes
 the configured POS receipt profile during cashier checkout. Pakistan defaults
 now activate PKR as the company currency where safe, create a GST 18% sales tax
@@ -488,6 +490,9 @@ The retail operations layer now includes:
   B2B/B2C price selection, dine-in/takeaway/pickup/delivery selection, kiosk
   order records, queue-ticket creation when entitled, and optional linked Odoo
   POS order/payment creation from mapped kiosk profiles.
+- Ecommerce customer order tracking routes with token and pickup-code/mobile
+  lookup, delivery status, queue status, provider tracking number, and dry-run
+  delivery-provider assignment for public repo demos.
 - Keyboard-first POS cashier controls for scanner-style product entry, Enter
   flow, payment/receipt shortcuts, quantity adjustment, B2B/B2C switching, and
   dine-in/takeaway/pickup/delivery cycling.

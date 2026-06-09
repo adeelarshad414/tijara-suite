@@ -40,6 +40,9 @@
                         <button name="action_view_orders" type="object" class="oe_stat_button" icon="fa-shopping-cart">
                             <field name="sale_order_count" widget="statinfo" string="Orders"/>
                         </button>
+                        <button name="action_view_delivery_providers" type="object" class="oe_stat_button" icon="fa-truck">
+                            <field name="delivery_provider_count" widget="statinfo" string="Providers"/>
+                        </button>
                     </div>
                     <group>
                         <group>
@@ -77,14 +80,20 @@
                         </page>
                         <page string="Fulfillment">
                             <group>
-                                <field name="allow_delivery"/>
-                                <field name="allow_pickup"/>
-                                <field name="allow_store_pickup"/>
-                                <field name="allow_courier"/>
-                                <field name="allow_takeaway"/>
-                                <field name="allow_dine_in"/>
-                                <field name="auto_confirm_sale_order"/>
-                                <field name="auto_queue_pickup_delivery"/>
+                                <group>
+                                    <field name="allow_delivery"/>
+                                    <field name="allow_pickup"/>
+                                    <field name="allow_store_pickup"/>
+                                    <field name="allow_courier"/>
+                                    <field name="allow_takeaway"/>
+                                    <field name="allow_dine_in"/>
+                                </group>
+                                <group>
+                                    <field name="auto_confirm_sale_order"/>
+                                    <field name="auto_queue_pickup_delivery"/>
+                                    <field name="default_delivery_provider_id"/>
+                                    <field name="delivery_provider_ids" widget="many2many_tags"/>
+                                </group>
                             </group>
                         </page>
                         <page string="Payment">

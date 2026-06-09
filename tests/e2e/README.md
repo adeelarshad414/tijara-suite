@@ -127,7 +127,8 @@ Useful environment variables:
 - `TIJARA_KIOSK_SLUG` for kiosk route smoke.
 - `TIJARA_CUSTOMER_DISPLAY_SLUG` for customer-display live-state smoke.
 - `TIJARA_ECOMMERCE_SLUG` for ecommerce storefront, catalog, checkout, delivery
-  charge, queue handoff, and authenticated online-order review smoke.
+  charge, queue handoff, customer tracking, provider assignment, and
+  authenticated online-order review smoke.
 - `TIJARA_E2E_PRODUCT_ID` for authenticated offline POS replay smoke.
 - `TIJARA_E2E_PRODUCT_NAME` for direct POS UI product search and add-to-cart.
 - `TIJARA_E2E_PAYMENT_METHOD_ID` for authenticated offline POS replay smoke.
@@ -172,5 +173,6 @@ and B2B/B2C selection, and opens payment from the keyboard.
 `tests/e2e/ecommerce-storefront.spec.mjs` covers the ecommerce channel: catalog
 payloads with PKR, Urdu names, promotions, B2C/B2B prices, stock and
 fulfillment; browser pickup checkout from the storefront; API delivery checkout
-with delivery charge and queue number; and authenticated sale-order/queue-ticket
-review by the ecommerce manager.
+with delivery charge, provider tracking, and queue number; pickup-code/mobile
+customer tracking; and authenticated sale-order/queue-ticket review by the
+ecommerce manager.

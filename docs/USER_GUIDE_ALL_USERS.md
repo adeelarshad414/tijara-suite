@@ -152,6 +152,9 @@ Primary tasks:
 - Confirm B2C and B2B prices before promotions go live.
 - Review online orders, payment status, delivery address, pickup code, and
   queue ticket handoff.
+- Configure dry-run delivery providers for local/staging demos and replace them
+  with certified providers before production.
+- Share the customer tracking link or lookup instructions after checkout.
 - Coordinate with inventory when online products are low stock.
 - Coordinate with accounting before live payment provider activation.
 
@@ -168,8 +171,10 @@ Storefront setup workflow:
 6. Confirm online sequence, featured flag, Urdu/English description, barcode,
    SKU, GST policy, B2C price, and B2B price.
 7. Attach active promotions to the ecommerce channel when required.
-8. Open the storefront route and test catalog search, cart, checkout, pickup,
-   delivery, and queue ticket creation.
+8. Configure Ecommerce Configuration > Delivery Providers and attach the
+   default provider to the channel for delivery/courier orders.
+9. Open the storefront route and test catalog search, cart, checkout, pickup,
+   delivery, queue ticket creation, and customer order tracking.
 
 Online order workflow:
 
@@ -181,8 +186,12 @@ Online order workflow:
    payment method, charge-policy amounts, estimated GST, and payload snapshot.
 5. Pickup/delivery orders create queue tickets when the queue SaaS feature is
    available.
-6. Staff confirm stock, prepare the order, update queue status, collect or
-   reconcile payment, and print invoice/receipt as needed.
+6. Delivery/courier orders receive a provider assignment, tracking number, and
+   customer tracking URL when a channel provider is configured.
+7. Staff confirm stock, prepare the order, update queue status, update delivery
+   state, collect or reconcile payment, and print invoice/receipt as needed.
+8. Customer tracks status through `/tijara/ecommerce/<slug>/track`, either with
+   the private tracking link or with pickup code plus mobile/email.
 
 Ecommerce smoke-test workflow:
 
@@ -193,7 +202,8 @@ Ecommerce smoke-test workflow:
    `ecommerce-manager@demo.tijara-suite.local`.
 4. Run the ecommerce Playwright spec to verify catalog payloads, Urdu names,
    B2C/B2B prices, pickup checkout, delivery checkout, charge policy, sale
-   order creation, and queue ticket handoff.
+   order creation, queue ticket handoff, provider assignment, and customer
+   tracking payloads.
 5. Regenerate screenshot guide evidence after checkout routes or storefront
    copy/layout changes.
 

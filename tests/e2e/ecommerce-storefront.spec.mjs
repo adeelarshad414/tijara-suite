@@ -44,6 +44,18 @@ async function checkout(request, payload) {
   return result;
 }
 
+async function trackOrder(request, payload) {
+  const activeSlug = requireSlug();
+  const response = await request.post(`/tijara/ecommerce/${activeSlug}/track/status`, {
+    headers: databaseHeaders(),
+    data: payload,
+  });
+  const result = await response.json();
+  expect(response.status(), result.message || JSON.stringify(result)).toBe(200);
+  expect(result.status).toBe("ok");
+  return result;
+}
+
 test("ecommerce catalog exposes PKR, Urdu names, B2C, B2B, stock, promotions, and fulfillment", async ({ request }) => {
   const b2cCatalog = await loadCatalog(request, "b2c");
   expect(b2cCatalog.channel.currency).toBe("PKR");
@@ -82,6 +94,7 @@ test("ecommerce storefront renders and completes a pickup checkout from the brow
   await page.locator("#email").fill("ecommerce.pickup@example.test");
   await page.locator("#checkout").click();
   await expect(page.locator("#status")).toContainText(/Order .* ready/i);
+  await expect(page.locator("#trackingLink")).toBeVisible();
 });
 
 test("ecommerce API delivery checkout applies charges and creates a queue handoff", async ({ request }) => {
@@ -111,6 +124,43 @@ test("ecommerce API delivery checkout applies charges and creates a queue handof
   }
   expect(result.pickup_code).toBeTruthy();
   expect(result.queue_number).toBeTruthy();
+  expect(result.tracking_token).toBeTruthy();
+  expect(result.tracking_url).toContain("/track/");
+  expect(result.delivery_status).toBeTruthy();
+  const tracking = await trackOrder(request, { tracking_token: result.tracking_token });
+  expect(tracking.order.pickup_code).toBe(result.pickup_code);
+  expect(tracking.queue.number).toBe(result.queue_number);
+  expect(tracking.delivery.required).toBe(true);
+  expect(tracking.delivery.tracking_number || result.delivery_tracking_number).toBeTruthy();
+});
+
+test("ecommerce customer can track an order with pickup code and mobile", async ({ request }) => {
+  const catalog = await loadCatalog(request, "b2c");
+  const product = firstOrderableProduct(catalog);
+  const mobile = "03000000024";
+  const result = await checkout(request, {
+    audience: "b2c",
+    fulfillment_method: catalog.fulfillment.methods.includes("delivery") ? "delivery" : catalog.fulfillment.methods[0],
+    payment_method: catalog.payment.methods.includes("cod") ? "cod" : catalog.payment.methods[0],
+    reference: `E2E-ECOM-TRACK-${Date.now()}`,
+    customer: {
+      name: "E2E Ecommerce Tracking",
+      mobile,
+      email: "ecommerce.tracking@example.test",
+      delivery_address: "Tracking delivery address, Lahore",
+      loyalty_opt_in: true,
+    },
+    lines: [{ product_id: product.product_id, quantity: 1 }],
+  });
+
+  const tracking = await trackOrder(request, {
+    pickup_code: result.pickup_code,
+    mobile,
+  });
+  expect(tracking.order.name).toBe(result.order_name);
+  expect(tracking.order.customer_tracking_url).toContain("/track/");
+  expect(["pending", "assigned", "not_required"]).toContain(tracking.delivery.status);
+  expect(tracking.next_step).toBeTruthy();
 });
 
 test("authenticated ecommerce manager can review the created ecommerce sale order and queue ticket", async ({

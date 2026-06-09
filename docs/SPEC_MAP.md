@@ -52,6 +52,8 @@ agentic development pipeline.
 | Ecommerce Storefront | `/tijara/ecommerce/tijara-demo-web` | Public | Public online catalog and checkout route |
 | Ecommerce Catalog API | `/tijara/ecommerce/tijara-demo-web/catalog` | Public JSON | B2C/B2B catalog, stock, Urdu/English product payload |
 | Ecommerce Checkout API | `/tijara/ecommerce/tijara-demo-web/checkout` | Public JSON | Online checkout submission into Odoo sale orders |
+| Ecommerce Tracking | `/tijara/ecommerce/tijara-demo-web/track` | Public | Customer pickup-code/mobile and private-token order tracking |
+| Ecommerce Tracking API | `/tijara/ecommerce/tijara-demo-web/track/status` | Public JSON | Customer-safe order, queue, payment, and delivery tracking payload |
 | Payment Webhook | `/tijara/saas/payment/webhook/generic` | Signed public | PSP webhook ingestion |
 
 ## Feature Inventory
@@ -64,7 +66,8 @@ agentic development pipeline.
 - Hardware bridge for printers, scanners, drawers, scales, labels, and customer displays.
 - Kiosk, menu, deals, promotion, queue, and customer-display routes.
 - Ecommerce storefront, catalog API, checkout API, sale-order sync, pickup/
-  delivery queue handoff, and ecommerce analytics templates.
+  delivery queue handoff, customer order tracking, dry-run delivery-provider
+  assignment, and ecommerce analytics templates.
 - Offline POS capture, replay, and conflict review.
 - SaaS feature flags and runtime enforcement.
 - Tenant provisioning and operations manifests.

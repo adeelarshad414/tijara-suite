@@ -162,13 +162,14 @@ The deals board highlights discount campaigns and promotion messages for in-stor
 
 ### Ecommerce Storefront
 
-The ecommerce storefront exposes the online catalog with PKR prices, Urdu/English product names, B2C/B2B pricing, pickup and delivery options, and checkout into Odoo sale orders.
+The ecommerce storefront exposes the online catalog with PKR prices, Urdu/English product names, B2C/B2B pricing, pickup and delivery options, checkout into Odoo sale orders, and customer order tracking links.
 
 ![Ecommerce Storefront](screenshots/ecommerce-manager/ecommerce-storefront.png)
 
 1. Open `/tijara/ecommerce/tijara-demo-web` from the ecommerce manager or public display route.
 2. Review online products, Urdu names, SKU/barcode details, promotions, stock visibility, and B2C/B2B prices.
 3. Add products to the cart, choose pickup or delivery, enter customer details, and place the order for sale-order and queue handoff.
+4. Use `/tijara/ecommerce/tijara-demo-web/track` or the private `/track/<token>` link to verify pickup code, queue state, delivery status, and provider tracking number.
 
 ## Workflow Checklist
 
@@ -215,8 +216,8 @@ The ecommerce storefront exposes the online catalog with PKR prices, Urdu/Englis
 - Enable the `ecommerce_store` SaaS feature before publishing a tenant storefront.
 - Publish products with B2C/B2B prices, Urdu/English descriptions, SKU, barcode, stock visibility, and active promotions.
 - Use pickup, store pickup, takeaway, delivery, or courier fulfillment according to the channel policy.
-- Review online sale orders, payment status, delivery address, pickup code, queue ticket, estimated GST, delivery charge, and loyalty point award.
-- Run ecommerce Playwright coverage for catalog, storefront checkout, delivery checkout, queue handoff, and authenticated order review before rollout.
+- Review online sale orders, payment status, delivery address, pickup code, queue ticket, delivery provider, tracking number, estimated GST, delivery charge, and loyalty point award.
+- Run ecommerce Playwright coverage for catalog, storefront checkout, delivery checkout, queue handoff, customer tracking, and authenticated order review before rollout.
 
 ### SaaS Controls And Tenant Operations
 

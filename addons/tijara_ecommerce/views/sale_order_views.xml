@@ -15,6 +15,10 @@
             <xpath expr="//header" position="inside">
                 <button name="action_tijara_mark_ecommerce_paid" type="object" string="Mark Ecommerce Paid" invisible="not tijara_ecommerce_channel_id or tijara_payment_status == 'paid'"/>
                 <button name="action_tijara_create_ecommerce_queue_ticket" type="object" string="Create Queue Ticket" invisible="not tijara_ecommerce_channel_id or tijara_queue_ticket_id"/>
+                <button name="action_tijara_prepare_delivery" type="object" string="Prepare Delivery" invisible="not tijara_ecommerce_channel_id or tijara_fulfillment_method not in ('delivery', 'courier')"/>
+                <button name="action_tijara_mark_delivery_picked" type="object" string="Mark Picked" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status not in ('assigned', 'pending')"/>
+                <button name="action_tijara_mark_out_for_delivery" type="object" string="Out For Delivery" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status not in ('assigned', 'picked')"/>
+                <button name="action_tijara_mark_delivered" type="object" string="Mark Delivered" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status == 'delivered'"/>
             </xpath>
             <xpath expr="//sheet/notebook" position="inside">
                 <page name="tijara_ecommerce" string="Tijara Ecommerce" invisible="not tijara_ecommerce_channel_id">
@@ -25,12 +29,12 @@
                             <field name="tijara_ecommerce_audience"/>
                             <field name="tijara_fulfillment_method"/>
                             <field name="tijara_pickup_code"/>
+                            <field name="tijara_tracking_url" widget="url"/>
                             <field name="tijara_queue_ticket_id"/>
                         </group>
                         <group>
                             <field name="tijara_payment_method"/>
                             <field name="tijara_payment_status"/>
-                            <field name="tijara_delivery_mobile"/>
                             <field name="tijara_amount_service_charge"/>
                             <field name="tijara_amount_delivery_charge"/>
                             <field name="tijara_amount_payment_tax"/>
@@ -39,7 +43,21 @@
                         </group>
                     </group>
                     <group string="Delivery">
-                        <field name="tijara_delivery_address"/>
+                        <group>
+                            <field name="tijara_delivery_mobile"/>
+                            <field name="tijara_delivery_address"/>
+                            <field name="tijara_delivery_provider_id"/>
+                            <field name="tijara_delivery_status"/>
+                        </group>
+                        <group>
+                            <field name="tijara_delivery_tracking_number"/>
+                            <field name="tijara_delivery_tracking_url" widget="url"/>
+                            <field name="tijara_delivery_eta"/>
+                            <field name="tijara_last_tracking_at"/>
+                        </group>
+                    </group>
+                    <group string="Provider Payload">
+                        <field name="tijara_delivery_provider_payload"/>
                     </group>
                     <group string="Payload">
                         <field name="tijara_ecommerce_payload"/>

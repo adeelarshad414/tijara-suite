@@ -42,6 +42,7 @@ offline, hardware, tenant, analytics, and release diagrams, use
 | Inventory manager | Inventory, Inventory Intelligence | Products, stock, racks, shelves, low-stock and expiry alerts |
 | Accountant | Accounting, Settlements, FBR Queue | Invoices, payments, refunds, settlements, tax review |
 | Restaurant operator | Restaurant, POS, Kiosk, Queue | Dine-in, takeaway, pickup, kitchen status, order calling |
+| Ecommerce manager | Ecommerce, Delivery Providers, Online Orders | Storefront setup, catalog publishing, tracking, pickup/delivery handoff |
 | Display/kiosk operator | Display Screens, Public Routes | Customer display, queue, menu, deals, promotion screens |
 | Business owner/manager | Analytics, Reports, Dashboards | Sales trends, margins, inventory health, discount and refund audit |
 

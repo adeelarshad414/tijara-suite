@@ -66,6 +66,24 @@ class TestTijaraEcommerceFlow(TransactionCase):
                 "auto_queue_pickup_delivery": True,
             }
         )
+        cls.provider = cls.env["tijara.ecommerce.delivery.provider"].sudo().create(
+            {
+                "name": "Tijara Test Delivery",
+                "code": "TIJARA-TEST-DELIVERY",
+                "company_id": cls.company.id,
+                "provider_type": "dummy",
+                "service_level": "same_day",
+                "dry_run": True,
+                "auto_assign": True,
+                "tracking_url_template": "https://tracking.example.test/{tracking_number}",
+            }
+        )
+        cls.channel.write(
+            {
+                "delivery_provider_ids": [Command.set(cls.provider.ids)],
+                "default_delivery_provider_id": cls.provider.id,
+            }
+        )
 
     def setUp(self):
         super().setUp()
@@ -107,6 +125,17 @@ class TestTijaraEcommerceFlow(TransactionCase):
         self.assertTrue(order.tijara_pickup_code)
         self.assertTrue(order.tijara_queue_ticket_id)
         self.assertEqual(order.tijara_queue_ticket_id.source, "ecommerce")
+        self.assertTrue(order.tijara_tracking_token)
+        self.assertTrue(order.tijara_tracking_url)
+        self.assertEqual(order.tijara_delivery_provider_id, self.provider)
+        self.assertEqual(order.tijara_delivery_status, "assigned")
+        self.assertTrue(order.tijara_delivery_tracking_number)
+        self.assertTrue(order.tijara_delivery_tracking_url)
+        tracking = self.channel.tijara_tracking_payload({"tracking_token": order.tijara_tracking_token})
+        self.assertEqual(tracking["status"], "ok")
+        self.assertEqual(tracking["order"]["pickup_code"], order.tijara_pickup_code)
+        self.assertEqual(tracking["queue"]["number"], order.tijara_queue_ticket_id.queue_number)
+        self.assertEqual(tracking["delivery"]["provider"], self.provider.name)
         order.action_tijara_mark_ecommerce_paid()
         self.assertEqual(order.tijara_payment_status, "paid")
         self.assertGreater(order.partner_id.tijara_loyalty_points, 0)

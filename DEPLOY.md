@@ -276,10 +276,19 @@ Production ecommerce rollout must include:
   live JazzCash, Easypaisa, Stripe, or card payments.
 - Pickup/delivery operating procedures, queue display checks, delivery charges,
   cafe-only service charge, and cafe/restaurant card/cash tax policy review.
+- Delivery-provider setup under Ecommerce Configuration > Delivery Providers.
+  The seeded `Tijara In-House Delivery` provider is dry-run/assumption mode for
+  demos only; production requires certified courier/provider contracts,
+  credentials, webhook signing, reconciliation, and support runbooks.
+- Customer order tracking routes:
+  `/tijara/ecommerce/<slug>/track`,
+  `/tijara/ecommerce/<slug>/track/<token>`, and
+  `/tijara/ecommerce/<slug>/track/status`.
 - Public-route security controls at the reverse proxy, including rate limits,
   request-size limits, bot controls where needed, and log retention.
 - Browser tests for catalog, checkout, sale-order creation, queue handoff, and
-  receipt/invoice print paths after each staging upgrade.
+  customer order tracking, plus receipt/invoice print paths after each staging
+  upgrade.
 - `TIJARA_ECOMMERCE_SLUG` configured in the Browser E2E environment. The seeded
   local/demo channel exports `tijara-demo-web`.
 

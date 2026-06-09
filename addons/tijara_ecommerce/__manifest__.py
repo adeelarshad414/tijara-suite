@@ -18,6 +18,7 @@
         "security/ir.model.access.csv",
         "data/ecommerce_analytics.xml",
         "views/ecommerce_menus.xml",
+        "views/delivery_provider_views.xml",
         "views/ecommerce_channel_views.xml",
         "views/product_template_views.xml",
         "views/sale_order_views.xml",

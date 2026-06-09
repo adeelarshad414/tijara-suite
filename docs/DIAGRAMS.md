@@ -244,6 +244,14 @@ classDiagram
         fulfillment_methods
         payment_methods
         auto_queue
+        default_delivery_provider
+    }
+    class DeliveryProvider {
+        code
+        provider_type
+        service_level
+        dry_run
+        tracking_url_template
     }
     class SaleOrder {
         ecommerce_channel
@@ -251,6 +259,8 @@ classDiagram
         fulfillment_method
         payment_status
         pickup_code
+        tracking_token
+        delivery_status
     }
     class QueueTicket {
         queue_number
@@ -288,6 +298,8 @@ classDiagram
     ResCompany "1" --> "*" SaasSubscription
     SaasPlan "1" --> "*" SaasSubscription
     EcommerceChannel "1" --> "*" SaleOrder
+    DeliveryProvider "1" --> "*" SaleOrder
+    EcommerceChannel "*" --> "*" DeliveryProvider
     ProductTemplate "*" --> "*" EcommerceChannel
     SaleOrder "1" --> "0..1" QueueTicket
     ProductTemplate "1" --> "*" PosOrder
@@ -342,14 +354,19 @@ flowchart TD
     CreateSO["Create Odoo sale order"]
     Queue{"Pickup or delivery queue?"}
     Ticket["Create queue ticket"]
-    Review["Ecommerce manager reviews\norder and queue ticket"]
+    Provider{"Delivery or courier?"}
+    Shipment["Assign dry-run/certified\nprovider tracking"]
+    Track["Customer tracks order\nby token or pickup/mobile"]
+    Review["Ecommerce manager reviews\norder, queue, and delivery"]
     Done(["Order ready for fulfillment"])
 
     Open --> Catalog --> Audience
     Audience --> Cart --> Fulfillment --> Customer --> Payment --> Policy --> CreateSO
     CreateSO --> Queue
-    Queue -- yes --> Ticket --> Review --> Done
-    Queue -- no --> Review --> Done
+    Queue -- yes --> Ticket --> Provider
+    Queue -- no --> Provider
+    Provider -- yes --> Shipment --> Track --> Review --> Done
+    Provider -- no --> Track --> Review --> Done
 ```
 
 ## Restaurant And Kiosk Activity

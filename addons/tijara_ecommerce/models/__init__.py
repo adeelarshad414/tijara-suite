@@ -1,4 +1,5 @@
 from . import analytics
+from . import delivery_provider
 from . import product_template
 from . import queue_ticket
 from . import sale_order

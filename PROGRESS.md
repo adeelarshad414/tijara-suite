@@ -10391,3 +10391,90 @@ Status: Complete
   reconciliation reports.
 - Continue hardware certification evidence, monitoring/alerting proof, restore
   drills, load tests, and security hardening.
+
+## Iteration 140: Ecommerce Tracking And Delivery Provider Scaffold
+
+### Objective
+
+- Build the next ecommerce production-readiness slice: customer order tracking,
+  dry-run delivery-provider assignment, back-office tracking fields/actions,
+  demo seed support, and browser/API verification.
+- Keep README, DEPLOY, architecture, diagrams, user guides, E2E docs, spec map,
+  and progress records aligned.
+
+### Completed
+
+- Added `tijara.ecommerce.delivery.provider` with manager/user access, list/form
+  views, dry-run/live-mode metadata, provider capabilities, tracking URL
+  templates, secret-reference fields, shipment counts, and a test-provider
+  action.
+- Added ecommerce channel delivery-provider configuration:
+  `delivery_provider_ids`, `default_delivery_provider_id`, provider count, and
+  provider smart-button navigation.
+- Extended ecommerce sale orders with:
+  customer tracking token/URL, Tijara delivery provider, delivery status,
+  tracking number, provider tracking URL, provider payload snapshot, delivery
+  ETA, last tracking update, and delivery state actions.
+- Checkout now generates a customer tracking URL, creates queue tickets as
+  before, and prepares a dry-run provider shipment for delivery/courier orders
+  when a channel provider is configured.
+- Added public customer tracking routes:
+  `/tijara/ecommerce/<slug>/track`,
+  `/tijara/ecommerce/<slug>/track/<token>`, and
+  `/tijara/ecommerce/<slug>/track/status`.
+- Storefront checkout now exposes a visible `Track order` link after a
+  successful online order.
+- Added customer-safe tracking payload lookup by private token or pickup
+  code/reference/tracking number plus mobile/email.
+- Seeded demo ecommerce channels with the dry-run `Tijara In-House Delivery`
+  provider for public-repo/local/staging demos.
+- Extended Odoo transaction coverage and Playwright ecommerce coverage for
+  provider assignment, tracking token/URL, pickup-code/mobile tracking, and
+  provider tracking payloads.
+- Updated `README.md`, `DEPLOY.md`, `docs/ARCHITECTURE.md`, `docs/DIAGRAMS.md`,
+  `docs/USER_GUIDE_ALL_USERS.md`, `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`,
+  `docs/SCREENSHOT_USER_GUIDE.md`, `docs/SPEC_MAP.md`,
+  `docs/SPEC_MAP.json`, and `tests/e2e/README.md`.
+
+### Validation
+
+- `make validate` passed: 87 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- Python compile passed for touched ecommerce Python files with a sandbox-safe
+  pycache path.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- Mermaid/Markdown fence sanity check passed: 14 Mermaid diagrams and balanced
+  fences.
+- `git diff --check` passed.
+- Focused Odoo ecommerce transaction test passed against fresh database
+  `tijara_test_ecommerce_tracking_final`: 3 post-tests, 0 failures, 0 errors.
+- Local `tijara_dev` was upgraded with
+  `tijara_base,tijara_retail_core,tijara_pos_pk,tijara_pos_experience,tijara_analytics,tijara_ecommerce,tijara_demo_pos`
+  and the long-running Odoo service was restarted.
+- Focused local Chromium ecommerce E2E passed after sandbox escalation:
+  4 passed, 1 authenticated review skipped because `ODOO_USERNAME` and
+  `ODOO_PASSWORD` were not exported.
+
+### Known Gaps
+
+- Delivery-provider support is still a dry-run/open-source scaffold; real
+  courier/provider certification, credentials, signed webhooks, label manifests,
+  exception handling, settlement/reconciliation, and SLA reporting remain
+  production work.
+- Public tracking routes need production reverse-proxy rate limits, bot/abuse
+  controls, WAF/logging review, and privacy/security sign-off.
+- The authenticated ecommerce manager E2E review still needs staging
+  credentials exported for the protected browser matrix.
+- PSP, FBR, real hardware certification, monitoring/alerting proof, restore
+  drills, load testing, and deeper security scans remain production blockers.
+
+### Next Iteration
+
+- Run the protected browser matrix with seeded ecommerce/display/POS data and
+  authenticated ecommerce manager credentials.
+- Add real delivery-provider adapter interfaces for shipment create/cancel,
+  signed webhooks, label/manifest payloads, delivery exceptions, and
+  reconciliation evidence.
+- Expand customer portal/account order history beyond token tracking.
+- Continue PSP/FBR certification evidence, hardware certification, monitoring,
+  backup restore drills, load testing, and security hardening.

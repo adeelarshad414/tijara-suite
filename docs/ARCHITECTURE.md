@@ -66,7 +66,12 @@ service in a later phase.
 7. `tijara_saas_control`
    Plans, features, subscriptions, and tenant metadata.
 
-8. Vertical modules
+8. `tijara_ecommerce`
+   Public storefront channels, online catalog publishing, B2B/B2C checkout,
+   pickup/delivery queue handoff, customer order tracking, delivery-provider
+   assignment, and ecommerce analytics/report templates.
+
+9. Vertical modules
    Pharmacy, restaurant, garments, electronics, and future industry packs.
 
 ## Analytics Strategy

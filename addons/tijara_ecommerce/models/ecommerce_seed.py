@@ -9,6 +9,13 @@ class TijaraEcommerceSeed(models.AbstractModel):
     def seed_demo(self, products=False):
         company = self.env.company
         channel = self._seed_channel(company)
+        provider = self._seed_delivery_provider(company)
+        channel.write(
+            {
+                "delivery_provider_ids": [Command.set(provider.ids)],
+                "default_delivery_provider_id": provider.id,
+            }
+        )
         products = products or self.env["product.product"].sudo().search(
             [("default_code", "=like", "TIJARA-DEMO-%")]
         )
@@ -52,6 +59,30 @@ class TijaraEcommerceSeed(models.AbstractModel):
             channel.write(values)
             return channel
         return channel_model.create(values)
+
+    def _seed_delivery_provider(self, company):
+        provider_model = self.env["tijara.ecommerce.delivery.provider"].sudo()
+        values = {
+            "name": "Tijara In-House Delivery",
+            "code": "TIJARA-INHOUSE",
+            "company_id": company.id,
+            "provider_type": "dummy",
+            "service_level": "same_day",
+            "dry_run": True,
+            "auto_assign": True,
+            "supports_delivery": True,
+            "supports_courier": True,
+            "supports_cod": True,
+            "tracking_url_template": "https://tracking.example.test/tijara/{tracking_number}",
+            "contact_phone": "0300-0000000",
+            "webhook_secret_ref": "secret://tijara/demo/ecommerce-delivery-webhook",
+            "notes": "Dry-run provider for public repository demos and assumed certification evidence. Replace with a certified provider before production.",
+        }
+        provider = provider_model.search([("code", "=", values["code"]), ("company_id", "=", company.id)], limit=1)
+        if provider:
+            provider.write(values)
+            return provider
+        return provider_model.create(values)
 
     def _publish_products(self, products):
         sequence = 10

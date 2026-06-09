@@ -39,6 +39,7 @@ class TijaraEcommerceController(http.Controller):
         title = html.escape(channel.name or "Tijara Store")
         catalog_url = json.dumps("/tijara/ecommerce/%s/catalog" % channel.url_slug)
         checkout_url = json.dumps("/tijara/ecommerce/%s/checkout" % channel.url_slug)
+        track_href = html.escape("/tijara/ecommerce/%s/track" % channel.url_slug, quote=True)
         return """<!doctype html>
 <html lang="en">
 <head>
@@ -51,6 +52,8 @@ class TijaraEcommerceController(http.Controller):
 body { margin: 0; background: #f6f8f7; color: #14221d; }
 header { position: sticky; top: 0; z-index: 3; padding: 14px 18px; background: #ffffff; border-bottom: 1px solid #dbe4df; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 h1 { margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: 0; }
+a { color: #0f5f4d; font-weight: 700; text-decoration: none; }
+.button-link { min-height: 44px; border: 1px solid #adc1b7; background: #ffffff; color: #14221d; border-radius: 6px; padding: 10px 12px; display: inline-flex; align-items: center; }
 button, input, select, textarea { font: inherit; }
 button { min-height: 44px; border: 1px solid #adc1b7; background: #ffffff; color: #14221d; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
 button.active, button.primary { background: #16634f; color: #ffffff; border-color: #16634f; }
@@ -85,7 +88,10 @@ aside { position: sticky; top: 74px; align-self: start; }
 <body>
 <header>
   <h1>__TITLE__</h1>
-  <div class="status" id="status"></div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <a class="button-link" href="__TRACK_HREF__">Track Order</a>
+    <div class="status" id="status"></div>
+  </div>
 </header>
 <main>
   <section>
@@ -110,6 +116,7 @@ aside { position: sticky; top: 74px; align-self: start; }
     <div class="field"><label for="email">Email</label><input id="email" autocomplete="email"></div>
     <div class="field"><label for="address">Delivery Address</label><textarea id="address" rows="2"></textarea></div>
     <button type="button" class="primary" id="checkout" style="width:100%;">Place Order</button>
+    <div class="status" id="orderResult" style="margin-top:10px;"></div>
   </aside>
 </main>
 <script>
@@ -176,6 +183,16 @@ function addProduct(productId) {
   cart.set(productId, entry);
   renderCart();
 }
+function renderTrackingLink(result) {
+  const container = el("orderResult");
+  container.textContent = "";
+  if (!result.tracking_url) return;
+  const link = document.createElement("a");
+  link.id = "trackingLink";
+  link.href = result.tracking_url;
+  link.textContent = "Track order";
+  container.appendChild(link);
+}
 async function loadCatalog() {
   const response = await fetch(catalogEndpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ audience }) });
   catalog = await response.json();
@@ -198,6 +215,7 @@ async function submitCheckout() {
   if (result.status !== "ok") return setStatus(result.message || "Order failed");
   cart.clear();
   renderCart();
+  renderTrackingLink(result);
   setStatus(`Order ${result.order_name} ready. Pickup ${result.pickup_code || "-"}`);
 }
 document.addEventListener("click", event => {
@@ -215,11 +233,107 @@ el("checkout").addEventListener("click", () => submitCheckout().catch(error => s
 loadCatalog().catch(error => setStatus(error.message));
 </script>
 </body>
-</html>""".replace("__TITLE__", title).replace("__CATALOG_URL__", catalog_url).replace("__CHECKOUT_URL__", checkout_url)
+</html>""".replace("__TITLE__", title).replace("__TRACK_HREF__", track_href).replace("__CATALOG_URL__", catalog_url).replace("__CHECKOUT_URL__", checkout_url)
+
+    def _tracking_html(self, channel, tracking_token=""):
+        title = html.escape("%s Order Tracking" % (channel.name or "Tijara Store"))
+        status_url = json.dumps("/tijara/ecommerce/%s/track/status" % channel.url_slug)
+        token_json = json.dumps(tracking_token or "")
+        return """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root { color-scheme: light; font-family: Inter, Arial, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f6f8f7; color: #14221d; }
+header { padding: 16px 18px; background: #ffffff; border-bottom: 1px solid #dbe4df; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+main { max-width: 960px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; }
+h1 { margin: 0; font-size: 22px; letter-spacing: 0; }
+h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+a { color: #0f5f4d; font-weight: 700; text-decoration: none; }
+.panel, .card { background: #ffffff; border: 1px solid #dbe4df; border-radius: 8px; padding: 14px; }
+.field { display: grid; gap: 4px; margin-bottom: 10px; }
+.field label { font-size: 12px; color: #52645c; }
+input { min-height: 44px; border: 1px solid #adc1b7; border-radius: 6px; padding: 8px 10px; font: inherit; }
+button { width: 100%; min-height: 44px; border: 1px solid #16634f; background: #16634f; color: #fff; border-radius: 6px; font: inherit; cursor: pointer; }
+.status { color: #0f5f4d; font-weight: 700; min-height: 22px; }
+.grid { display: grid; gap: 10px; }
+.row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #edf2ef; }
+.row span:first-child { color: #52645c; }
+.badge { display: inline-flex; align-items: center; min-height: 32px; padding: 4px 10px; border-radius: 6px; background: #e8f5ef; color: #0f5f4d; font-weight: 700; }
+@media (max-width: 780px) { main { grid-template-columns: 1fr; padding: 10px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>__TITLE__</h1>
+  <a href="/tijara/ecommerce/__SLUG__">Storefront</a>
+</header>
+<main>
+  <section class="panel">
+    <h2>Find order</h2>
+    <div class="field"><label for="lookup">Pickup code, order reference, or tracking number</label><input id="lookup" autocomplete="off"></div>
+    <div class="field"><label for="mobile">Mobile</label><input id="mobile" autocomplete="tel"></div>
+    <div class="field"><label for="email">Email</label><input id="email" autocomplete="email"></div>
+    <button type="button" id="check">Check Status</button>
+    <div class="status" id="status" style="margin-top:10px;"></div>
+  </section>
+  <section class="card">
+    <h2>Order status</h2>
+    <div class="grid" id="result"><span class="status">Enter tracking details or use your private tracking link.</span></div>
+  </section>
+</main>
+<script>
+const statusEndpoint = __STATUS_URL__;
+const initialToken = __TOKEN__;
+const el = id => document.getElementById(id);
+const money = (value, currency) => new Intl.NumberFormat("en-PK", { style: "currency", currency: currency || "PKR" }).format(Number(value || 0));
+function setStatus(text) { el("status").textContent = text || ""; }
+function row(label, value) { return `<div class="row"><span>${label}</span><strong>${value || "-"}</strong></div>`; }
+function render(payload) {
+  const order = payload.order || {};
+  const queue = payload.queue || {};
+  const delivery = payload.delivery || {};
+  const providerLink = delivery.tracking_url ? `<a href="${delivery.tracking_url}" target="_blank" rel="noopener">Provider tracking</a>` : "";
+  el("result").innerHTML = [
+    `<span class="badge">${payload.next_step || "Order received"}</span>`,
+    row("Order", order.name),
+    row("Reference", order.reference),
+    row("Total", money(order.amount_total, order.currency)),
+    row("Fulfillment", order.fulfillment_method),
+    row("Payment", `${order.payment_method || "-"} / ${order.payment_status || "-"}`),
+    row("Pickup code", order.pickup_code),
+    row("Queue", [queue.number, queue.state].filter(Boolean).join(" / ")),
+    row("Delivery", [delivery.provider, delivery.status].filter(Boolean).join(" / ")),
+    row("Tracking", delivery.tracking_number),
+    providerLink ? `<div class="row"><span>Provider link</span><strong>${providerLink}</strong></div>` : "",
+  ].join("");
+}
+async function checkStatus(payload = {}) {
+  const body = initialToken && !payload.lookup ? { tracking_token: initialToken } : {
+    pickup_code: payload.lookup || el("lookup").value,
+    mobile: payload.mobile || el("mobile").value,
+    email: payload.email || el("email").value,
+  };
+  const response = await fetch(statusEndpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const result = await response.json();
+  if (result.status !== "ok") { setStatus(result.message || "Order not found."); return; }
+  setStatus("Status loaded.");
+  render(result);
+}
+el("check").addEventListener("click", () => checkStatus().catch(error => setStatus(error.message)));
+if (initialToken) checkStatus().catch(error => setStatus(error.message));
+</script>
+</body>
+</html>""".replace("__TITLE__", title).replace("__SLUG__", html.escape(channel.url_slug, quote=True)).replace("__STATUS_URL__", status_url).replace("__TOKEN__", token_json)
 
     @http.route(
         "/tijara/ecommerce/<string:channel_code>",
         type="http",
+        methods=["GET"],
         auth="public",
         csrf=False,
     )
@@ -231,6 +345,27 @@ loadCatalog().catch(error => setStatus(error.message));
             return self._json_response({"status": "forbidden"}, status=403)
         return request.make_response(
             self._storefront_html(channel),
+            headers=[("Content-Type", "text/html; charset=utf-8")],
+        )
+
+    @http.route(
+        [
+            "/tijara/ecommerce/<string:channel_code>/track",
+            "/tijara/ecommerce/<string:channel_code>/track/<string:tracking_token>",
+        ],
+        type="http",
+        methods=["GET"],
+        auth="public",
+        csrf=False,
+    )
+    def tracking_page(self, channel_code, tracking_token="", **kwargs):
+        channel = self._find_channel(channel_code)
+        if not channel:
+            return request.not_found()
+        if not channel.company_id.tijara_has_saas_feature("ecommerce_store"):
+            return self._json_response({"status": "forbidden"}, status=403)
+        return request.make_response(
+            self._tracking_html(channel, tracking_token=tracking_token),
             headers=[("Content-Type", "text/html; charset=utf-8")],
         )
 
@@ -284,6 +419,28 @@ loadCatalog().catch(error => setStatus(error.message));
                 "payment_status": order.tijara_payment_status,
                 "pickup_code": order.tijara_pickup_code or "",
                 "queue_number": order.tijara_queue_ticket_id.queue_number or "",
-                "access_token": getattr(order, "access_token", "") or "",
+                "tracking_token": order.tijara_tracking_token or "",
+                "tracking_url": order.tijara_tracking_url or "",
+                "delivery_status": order.tijara_delivery_status or "",
+                "delivery_provider": order.tijara_delivery_provider_id.name or "",
+                "delivery_tracking_number": order.tijara_delivery_tracking_number or "",
+                "delivery_tracking_url": order.tijara_delivery_tracking_url or "",
             }
         )
+
+    @http.route(
+        "/tijara/ecommerce/<string:channel_code>/track/status",
+        type="http",
+        methods=["POST"],
+        auth="public",
+        csrf=False,
+    )
+    def tracking_status(self, channel_code, **kwargs):
+        channel = self._find_channel(channel_code)
+        if not channel:
+            return self._json_response({"status": "not_found"}, status=404)
+        try:
+            result = channel.tijara_tracking_payload(self._request_json_payload())
+        except (UserError, ValidationError, ValueError) as error:
+            return self._json_response({"status": "error", "message": str(error)}, status=400)
+        return self._json_response(result)
