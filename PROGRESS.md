@@ -11615,3 +11615,113 @@ Status: Complete
   Kubernetes, and PostgreSQL backup credentials on a protected runner.
 - Continue replacing assumed FBR, PSP, courier, and hardware certification
   evidence with certified provider/device artifacts.
+
+## Iteration 154: One-Command Protected Release Evidence Chain
+
+### Scope Completed
+
+- Added `scripts/run_protected_release_evidence_chain.py`.
+- Added `make protected-release-chain` and
+  `TIJARA_PROTECTED_CHAIN_FLAGS`.
+- The chain now runs, in one command:
+  - production infrastructure plan generation
+  - infrastructure provider readiness
+  - production operations readiness
+  - sign-off package generation
+  - optional protected deployment gate
+  - optional rollback drill
+  - final infra/provider readiness refresh after deployment/rollback evidence
+  - CI artifact bundle manifest export
+- Wired `.github/workflows/tijara-ci.yml` so the protected workflow runs
+  `make protected-release-chain` before checking final release readiness.
+- Added protected workflow environment variables for strict provider checks,
+  Cloudflare, Route53, cert-manager/Kubernetes, PostgreSQL backup readiness,
+  deployment/rollback refresh, and artifact upload.
+- Added GitHub protected secret placeholders for Cloudflare, AWS, kubeconfig,
+  and backup encryption credentials.
+- Updated protected run-decision and artifact-summary tools so
+  `protected-release-chain`, `ci-artifact-bundle`,
+  `infra-provider-readiness`, and `production-infra` can be required and
+  summarized as first-class protected components.
+- Updated the GitHub step summary generator so release owners see protected
+  chain and CI artifact bundle verdicts in the Actions summary.
+- Updated `README.md`, `DEPLOY.md`, `.env.example`,
+  `deploy/config/github-protected-vars.example`,
+  `secrets/github-protected-secrets.example`,
+  `docs/COMMANDS_QUICKREF.md`, `docs/CONFIGURATION_AND_SECRETS.md`,
+  `docs/PRODUCTION_READINESS_CHECKLIST.md`, `docs/SPEC_MAP.md`, and
+  `docs/SPEC_MAP.json`.
+- Fixed release sign-off summary parsing so rollback `dry-run` evidence is not
+  treated as a failed release status.
+- Made the chain output idempotent by excluding stale self-generated chain
+  manifests from pre-write decision review during reruns.
+
+### Evidence Generated
+
+- Local one-command chain smoke:
+  `deploy/runtime/protected-release-chain/20260609-protected-chain-local/`
+  with `decision=warning`, `ci_status=pass_with_warnings`.
+- Local one-command chain with deployment gate and rollback drill refresh:
+  `deploy/runtime/protected-release-chain/20260609-protected-chain-refresh-local/`
+  with `decision=warning`, `ci_status=pass_with_warnings`.
+- The refresh run produced:
+  - `deploy/runtime/production-infra/20260609-protected-chain-refresh-local/`
+  - `deploy/runtime/infra-provider-readiness/20260609-protected-chain-refresh-local/`
+  - `deploy/runtime/production-ops-readiness/20260609-protected-chain-refresh-local/`
+  - `deploy/runtime/signoff-packages/20260609-protected-chain-refresh-local/`
+  - `deploy/runtime/deployment-gates/20260609-protected-chain-refresh-local/`
+  - `deploy/runtime/rollback-runs/20260609-protected-chain-refresh-local/`
+  - `deploy/runtime/protected-release-chain/20260609-protected-chain-refresh-local/ci-artifact-bundle.json`
+- Protected run-decision path resolution was verified for
+  `protected-release-chain`, `ci-artifact-bundle`,
+  `infra-provider-readiness`, and `production-infra`; it correctly blocks the
+  local assumption-mode warning evidence when warning-as-blocker policy is
+  enabled.
+
+### Validation
+
+- `python3 -m py_compile` passed for the new chain and touched evidence tools.
+- `docs/SPEC_MAP.json` and generated chain evidence JSON files parsed
+  successfully.
+- `.github/workflows/tijara-ci.yml` parsed with Ruby YAML.
+- `git diff --check` passed.
+- `make validate` passed and parsed 103 XML files.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 83%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 84%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 87%
+- Overall production readiness: around 76-80%
+
+### Known Gaps
+
+- The local chain evidence still uses explicit assumption mode for provider
+  credentials and missing protected cloud/Kubernetes execution context.
+- The GitHub protected workflow is wired, but it still needs an actual
+  self-hosted protected runner execution with real GitHub environment
+  approvals, Cloudflare/AWS/Kubernetes/PostgreSQL credentials, backup refs,
+  rollback refs, and artifact upload outputs.
+- Real FBR, PSP, courier, and hardware certification artifacts are still
+  required before production go-live.
+- Full authenticated browser POS checkout/refund/print/offline replay matrix
+  still needs protected staging execution with real seeded users and devices.
+- Monitoring, alerting, restore drills, load testing, and security scans need
+  production-run evidence, not local placeholder or dry-run proof.
+
+### Next Iteration
+
+- Dispatch the protected GitHub Actions workflow on the self-hosted
+  `tijara-protected` runner and attach the resulting artifact URLs/digests.
+- Replace local assumption-mode chain evidence with real protected-runner
+  chain evidence.
+- Add provider certification evidence intake for FBR, PSPs, couriers, and
+  hardware into the protected release chain artifact bundle.
+- Run the protected browser POS matrix and load/security scans against seeded
+  staging, then require those artifacts in the final protected run decision.

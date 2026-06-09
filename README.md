@@ -1072,6 +1072,11 @@ The detailed policy and dependency intake checklist are maintained in
   against production-infra evidence, redacted provider credential presence,
   required CLIs, and deployment/rollback approval evidence. Production
   operations readiness and sign-off packages now extract provider infra reviews.
+- `scripts/run_protected_release_evidence_chain.py` and
+  `make protected-release-chain` run the protected production evidence chain in
+  one command: production infra plan, infra-provider readiness, production ops
+  readiness, signoff package, optional deployment/rollback approval refresh, and
+  `ci-artifact-bundle.json` for GitHub Actions upload.
 - `deploy/monitoring/`, `deploy/logging/`, and `deploy/postgres/restore-drill.sh`
   provide Prometheus, Pushgateway, Blackbox, Alertmanager, Grafana, Loki,
   logging, and restore-drill baselines. Grafana dashboard provisioning now loads the

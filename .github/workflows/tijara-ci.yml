@@ -148,11 +148,11 @@ jobs:
       TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF: ${{ vars.TIJARA_FIRST_RUN_ROLLBACK_PLAN_REF }}
       TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF: ${{ vars.TIJARA_FIRST_RUN_INCIDENT_CHANNEL_REF }}
       TIJARA_FIRST_RUN_BACKUP_REF: ${{ vars.TIJARA_FIRST_RUN_BACKUP_REF || vars.TIJARA_BACKUP_ARTIFACT_REF }}
-      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification,protected-evidence-bundle-score,protected-evidence-bundle-drift' }}
+      TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS: ${{ vars.TIJARA_FIRST_RUN_EXPECTED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,e2e-seed,e2e-profile,e2e-evidence,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,production-infra,infra-provider-readiness,protected-release-chain,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,protected-post-run-verification,github-artifact-metadata,protected-artifact-summary,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification,protected-evidence-bundle-score,protected-evidence-bundle-drift' }}
       TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS: ${{ vars.TIJARA_FIRST_RUN_REQUIRE_CERTIFICATIONS || '0' }}
-      TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,protected-artifact-summary,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification,protected-evidence-bundle-score,protected-evidence-bundle-drift,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
-      TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata' }}
-      TIJARA_PROTECTED_RUN_DECISION_REQUIRED_COMPONENTS: ${{ vars.TIJARA_PROTECTED_RUN_DECISION_REQUIRED_COMPONENTS || 'release-readiness,production-ops-readiness,protected-post-run-verification,protected-artifact-summary,certification-result-matrix,e2e-execution,protected-offline-pilot,operations-release-bundle,ops-tool-evidence' }}
+      TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER: ${{ vars.TIJARA_RUNBOOK_ARTIFACT_REVIEW_ORDER || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,protected-artifact-summary,protected-run-decision,protected-evidence-retention,protected-sidecar-verification,protected-evidence-replay,protected-release-evidence-index,protected-release-closure,protected-closure-result-verification,protected-release-archive,protected-archive-upload-verification,protected-evidence-bundle-score,protected-evidence-bundle-drift,release-evidence,protected-e2e,e2e-execution,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,production-infra,infra-provider-readiness,protected-release-chain,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages' }}
+      TIJARA_POST_RUN_REQUIRED_ARTIFACTS: ${{ vars.TIJARA_POST_RUN_REQUIRED_ARTIFACTS || 'protected-runbook-handoff,protected-first-run,protected-runner-preflight,protected-runner-bootstrap-verification,protected-service-checks,protected-provider-readiness,protected-payment-lifecycle,protected-offline-replay,protected-offline-pilot,release-evidence,protected-e2e,ops-tool-evidence,operations-release-bundle,monitoring-evidence,incident-runbook-evidence,secret-runtime-evidence,deployment-environment-evidence,tenant-ops-evidence,production-infra,infra-provider-readiness,protected-release-chain,certification-evidence,release-retention-evidence,secret-manager-evidence,production-ops-readiness,signoff-packages,github-artifact-metadata' }}
+      TIJARA_PROTECTED_RUN_DECISION_REQUIRED_COMPONENTS: ${{ vars.TIJARA_PROTECTED_RUN_DECISION_REQUIRED_COMPONENTS || 'release-readiness,production-ops-readiness,protected-release-chain,ci-artifact-bundle,infra-provider-readiness,production-infra,protected-post-run-verification,protected-artifact-summary,certification-result-matrix,e2e-execution,protected-offline-pilot,operations-release-bundle,ops-tool-evidence' }}
       TIJARA_PROTECTED_RUN_DECISION_FAIL_ON_WARNING: ${{ vars.TIJARA_PROTECTED_RUN_DECISION_FAIL_ON_WARNING || '1' }}
       TIJARA_PROTECTED_EVIDENCE_RETENTION_REQUIRED_COMPONENTS: ${{ vars.TIJARA_PROTECTED_EVIDENCE_RETENTION_REQUIRED_COMPONENTS || 'protected-run-decision,signoff-package,release-readiness,certification-result-matrix,github-artifact-metadata,protected-artifact-summary,release-retention-evidence' }}
       TIJARA_PROTECTED_EVIDENCE_RETENTION_FAIL_ON_WARNING: ${{ vars.TIJARA_PROTECTED_EVIDENCE_RETENTION_FAIL_ON_WARNING || '1' }}
@@ -315,8 +315,29 @@ jobs:
       TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON: ${{ vars.TIJARA_PROD_OPS_WARNING_EXCEPTION_REASON }}
       TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT: ${{ vars.TIJARA_PROD_OPS_WARNING_EXCEPTION_EXPIRES_AT }}
       TIJARA_PROD_OPS_WARNING_EXCEPTION_AUDIT_REF: ${{ vars.TIJARA_PROD_OPS_WARNING_EXCEPTION_AUDIT_REF }}
+      TIJARA_PROTECTED_CHAIN_STRICT: ${{ vars.TIJARA_PROTECTED_CHAIN_STRICT || '1' }}
+      TIJARA_PROTECTED_CHAIN_FAIL_ON_WARNING: ${{ vars.TIJARA_PROTECTED_CHAIN_FAIL_ON_WARNING || '1' }}
+      TIJARA_PROTECTED_CHAIN_ALLOW_ASSUMPTIONS: ${{ vars.TIJARA_PROTECTED_CHAIN_ALLOW_ASSUMPTIONS || '0' }}
+      TIJARA_PROTECTED_CHAIN_PROVIDER_TEMPLATES: ${{ vars.TIJARA_PROTECTED_CHAIN_PROVIDER_TEMPLATES || 'cloudflare-dns,route53-dns,cert-manager-kubernetes-tls,postgres-backup-restore' }}
+      TIJARA_PROTECTED_CHAIN_INFRA_PROVIDERS: ${{ vars.TIJARA_PROTECTED_CHAIN_INFRA_PROVIDERS || 'cloudflare,route53,cert-manager,postgres' }}
+      TIJARA_PROTECTED_CHAIN_REQUIRE_PROVIDER_CREDENTIALS: ${{ vars.TIJARA_PROTECTED_CHAIN_REQUIRE_PROVIDER_CREDENTIALS || '1' }}
+      TIJARA_PROTECTED_CHAIN_REQUIRE_TOOLS: ${{ vars.TIJARA_PROTECTED_CHAIN_REQUIRE_TOOLS || '1' }}
+      TIJARA_PROTECTED_CHAIN_REQUIRE_REAL_APPROVALS: ${{ vars.TIJARA_PROTECTED_CHAIN_REQUIRE_REAL_APPROVALS || '1' }}
+      TIJARA_PROTECTED_CHAIN_RUN_DEPLOYMENT_GATE: ${{ vars.TIJARA_PROTECTED_CHAIN_RUN_DEPLOYMENT_GATE || '1' }}
+      TIJARA_PROTECTED_CHAIN_RUN_ROLLBACK_DRILL: ${{ vars.TIJARA_PROTECTED_CHAIN_RUN_ROLLBACK_DRILL || '1' }}
+      TIJARA_PROTECTED_CHAIN_INFRA_MODE: ${{ vars.TIJARA_PROTECTED_CHAIN_INFRA_MODE || 'plan' }}
+      TIJARA_PROTECTED_CHAIN_EXECUTE_INFRA: ${{ vars.TIJARA_PROTECTED_CHAIN_EXECUTE_INFRA || '0' }}
+      TIJARA_PROTECTED_CHAIN_SIGNOFF_REQUIRED_GROUPS: ${{ vars.TIJARA_PROTECTED_CHAIN_SIGNOFF_REQUIRED_GROUPS || vars.TIJARA_PROTECTED_REQUIRED_EVIDENCE_GROUPS || 'release,e2e,ops,security' }}
+      TIJARA_PROTECTED_CHAIN_EXTRA_EVIDENCE_PATHS: ${{ vars.TIJARA_PROTECTED_CHAIN_EXTRA_EVIDENCE_PATHS }}
+      TIJARA_PROTECTED_CHAIN_METADATA: ${{ vars.TIJARA_PROTECTED_CHAIN_METADATA }}
       TIJARA_RESTORE_DRILL_BACKUP: ${{ vars.TIJARA_RESTORE_DRILL_BACKUP }}
       TIJARA_BACKUP_ARTIFACT_REF: ${{ vars.TIJARA_BACKUP_ARTIFACT_REF }}
+      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      CLOUDFLARE_RECORD_ID: ${{ vars.CLOUDFLARE_RECORD_ID }}
+      ROUTE53_HOSTED_ZONE_ID: ${{ vars.ROUTE53_HOSTED_ZONE_ID }}
+      ROUTE53_PREVIOUS_TARGET: ${{ vars.ROUTE53_PREVIOUS_TARGET }}
+      POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+      POSTGRES_DB: ${{ vars.POSTGRES_DB }}
       ODOO_IMAGE: ${{ vars.ODOO_IMAGE }}
       POSTGRES_IMAGE: ${{ vars.POSTGRES_IMAGE }}
       TIJARA_BASE_URL: ${{ vars.TIJARA_BASE_URL }}
@@ -385,6 +406,13 @@ jobs:
       TIJARA_PREFLIGHT_PROMETHEUS_AUTH_VALUE: ${{ secrets.TIJARA_PREFLIGHT_PROMETHEUS_AUTH_VALUE }}
       TIJARA_PREFLIGHT_ALERTMANAGER_AUTH_VALUE: ${{ secrets.TIJARA_PREFLIGHT_ALERTMANAGER_AUTH_VALUE }}
       TIJARA_PREFLIGHT_GRAFANA_AUTH_VALUE: ${{ secrets.TIJARA_PREFLIGHT_GRAFANA_AUTH_VALUE }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      KUBECONFIG: ${{ secrets.KUBECONFIG }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -909,6 +937,10 @@ jobs:
           TIJARA_SIGNOFF_REQUIRED_EVIDENCE_GROUPS="$REQUIRED_GROUPS" \
           TIJARA_SIGNOFF_STRICT_REQUIRED_EVIDENCE=1 \
           make signoff-pack
+      - name: Protected one-command release evidence chain
+        continue-on-error: true
+        run: |
+          make protected-release-chain
       - name: Check protected release readiness
         run: make check-release-readiness READINESS="deploy/runtime/signoff-packages/$TIJARA_PROTECTED_RUN_ID/release-readiness.json"
       - name: Prepare protected GitHub artifact metadata
@@ -1002,6 +1034,11 @@ jobs:
             deploy/runtime/secret-runtime-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/deployment-environments/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/tenant-ops-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/production-infra/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/infra-provider-readiness/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/protected-release-chain/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/deployment-gates/${{ env.TIJARA_PROTECTED_RUN_ID }}
+            deploy/runtime/rollback-runs/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/certification-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/release-retention-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}
             deploy/runtime/secret-manager-evidence/${{ env.TIJARA_PROTECTED_RUN_ID }}

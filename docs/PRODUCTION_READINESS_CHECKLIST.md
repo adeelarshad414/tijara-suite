@@ -116,6 +116,10 @@ Required for production:
       infra-provider-readiness components as passed.
 - [ ] `make signoff-pack` extracts `production_infra_reviews` and
       `infra_provider_readiness_reviews` into `release-readiness.json`.
+- [ ] `make protected-release-chain` runs production-infra, infra-provider
+      readiness, production-ops readiness, signoff package, deployment/rollback
+      approval refresh where enabled, and `ci-artifact-bundle.json` in one
+      protected-runner command.
 - [ ] Incident runbook is reviewed.
 - [ ] Rollback process is tested.
 
@@ -152,6 +156,8 @@ Required for production:
 - [ ] `make load-smoke` passed.
 - [ ] `make monitoring-evidence` passed.
 - [ ] `make production-ops-readiness` passed.
+- [ ] `make protected-release-chain` passed and uploaded
+      `deploy/runtime/protected-release-chain/<run-id>`.
 - [ ] `make signoff-pack` generated release package.
 - [ ] Business owner reviewed dashboards and reports.
 - [ ] Finance owner approved settlement/refund/chargeback workflow.

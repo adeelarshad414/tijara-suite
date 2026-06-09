@@ -51,6 +51,10 @@ INTERESTING_JSON_NAMES = {
     "release-retention-evidence.json",
     "secret-manager-evidence.json",
     "production-ops-readiness.json",
+    "production-infra-automation.json",
+    "infra-provider-readiness.json",
+    "protected-release-chain.json",
+    "ci-artifact-bundle.json",
     "release-readiness.json",
 }
 

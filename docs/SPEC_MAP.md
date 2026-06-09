@@ -109,6 +109,9 @@ agentic development pipeline.
 - Infrastructure provider readiness evidence for Cloudflare, Route53,
   cert-manager, and PostgreSQL backup/restore, wired into production operations
   readiness and release sign-off reviews.
+- One-command protected release evidence chain for production infra planning,
+  infra-provider readiness, production-ops readiness, signoff, protected
+  deployment/rollback approval refresh, and CI artifact bundle manifests.
 
 ## Configuration Source Of Truth
 
@@ -151,6 +154,7 @@ bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitor
 bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict
 make infra-provider-readiness
+make protected-release-chain
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite

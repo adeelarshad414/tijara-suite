@@ -782,6 +782,51 @@ python3 scripts/export_production_ops_readiness.py \
 owners can see provider template sources, rendered action coverage, assumption
 mode, and approval evidence status in the sign-off package.
 
+For protected staging/production, prefer the one-command chain. It runs the
+provider infra plan, infra provider readiness, production ops readiness, signoff
+package, optional protected deployment gate, optional rollback drill, and CI
+artifact bundle manifest in one protected-runner invocation:
+
+```bash
+make protected-release-chain
+```
+
+The protected runner should keep these defaults:
+
+```bash
+TIJARA_PROTECTED_CHAIN_ALLOW_ASSUMPTIONS=0
+TIJARA_PROTECTED_CHAIN_REQUIRE_PROVIDER_CREDENTIALS=1
+TIJARA_PROTECTED_CHAIN_REQUIRE_TOOLS=1
+TIJARA_PROTECTED_CHAIN_REQUIRE_REAL_APPROVALS=1
+TIJARA_PROTECTED_CHAIN_RUN_DEPLOYMENT_GATE=1
+TIJARA_PROTECTED_CHAIN_RUN_ROLLBACK_DRILL=1
+TIJARA_PROTECTED_CHAIN_PROVIDER_TEMPLATES=cloudflare-dns,route53-dns,cert-manager-kubernetes-tls,postgres-backup-restore
+TIJARA_PROTECTED_CHAIN_INFRA_PROVIDERS=cloudflare,route53,cert-manager,postgres
+```
+
+This writes:
+
+- `deploy/runtime/production-infra/<run-id>/production-infra-automation.json`
+- `deploy/runtime/infra-provider-readiness/<run-id>/infra-provider-readiness.json`
+- `deploy/runtime/production-ops-readiness/<run-id>/production-ops-readiness.json`
+- `deploy/runtime/signoff-packages/<run-id>/release-readiness.json`
+- `deploy/runtime/protected-release-chain/<run-id>/protected-release-chain.json`
+- `deploy/runtime/protected-release-chain/<run-id>/ci-artifact-bundle.json`
+
+For a local public-repo smoke only, assumptions can be explicit:
+
+```bash
+TIJARA_PROTECTED_CHAIN_FLAGS="\
+  --run-id local-chain \
+  --target-environment local \
+  --tenant-artifact deploy/runtime/tenants/tijara_customer_001 \
+  --allow-assumptions \
+  --assume-provider all \
+  --non-strict \
+  --signoff-required-group ops" \
+make protected-release-chain
+```
+
 Export tenant operations evidence before pilot, staging, or production
 sign-off:
 
@@ -1783,7 +1828,10 @@ and tenant operations evidence under
 PSP/FBR/courier/hardware certification evidence when the matching `TIJARA_CERT_*`
 variables are configured, exports retention and secret-manager evidence, runs
 strict production operations readiness with all of those inputs attached,
-generates the protected sign-off package, checks `release-readiness.json`, and
+generates the protected sign-off package, runs the one-command protected release
+chain so production-infra, infra-provider readiness, production-ops readiness,
+signoff, deployment-gate/rollback evidence, and `ci-artifact-bundle.json` are
+refreshed together, checks `release-readiness.json`, and
 exports a post-run evidence verifier under
 `deploy/runtime/protected-post-run-verification/<run-id>/`. It then prepares a
 pre-upload GitHub artifact metadata placeholder under
@@ -1793,7 +1841,10 @@ artifact summary, writes a protected run decision under
 Actions step summary with release-readiness, production-ops, post-run,
 artifact-summary, run-decision, blocker, warning, and component status, and
 uploads the main evidence bundle as
-`tijara-protected-release-evidence-<environment>-<run>`. After that upload, the
+`tijara-protected-release-evidence-<environment>-<run>`, including
+`deploy/runtime/production-infra/<run-id>/`,
+`deploy/runtime/infra-provider-readiness/<run-id>/`, and
+`deploy/runtime/protected-release-chain/<run-id>/`. After that upload, the
 workflow records the real upload action outputs such as artifact ID, artifact
 URL, digest, and retention metadata, writes a protected evidence retention
 manifest under `deploy/runtime/protected-evidence-retention/<run-id>/`, then

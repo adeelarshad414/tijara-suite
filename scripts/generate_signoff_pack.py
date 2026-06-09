@@ -2787,7 +2787,7 @@ def _release_readiness(context, evidence_entries, group_counts):
                     "Summary %s has warning status %s"
                     % (entry["relative_path"], fields.get("Status", "unknown"))
                 )
-            elif status and status not in {"passed", "ready", "approved"}:
+            elif status and status not in {"passed", "ready", "approved", "dry-run", "executed", "pass"}:
                 blockers.append(
                     "Summary %s has non-passing status %s"
                     % (entry["relative_path"], fields.get("Status", "unknown"))

@@ -110,6 +110,12 @@ def _summary_lines(args):
     archive_upload, archive_upload_source = _read_json(args.archive_upload) if args.archive_upload else ({}, "")
     bundle_score, bundle_score_source = _read_json(args.bundle_score) if args.bundle_score else ({}, "")
     bundle_drift, bundle_drift_source = _read_json(args.bundle_drift) if args.bundle_drift else ({}, "")
+    protected_chain, protected_chain_source = (
+        _read_json(args.protected_release_chain) if args.protected_release_chain else ({}, "")
+    )
+    ci_artifact_bundle, ci_artifact_bundle_source = (
+        _read_json(args.ci_artifact_bundle) if args.ci_artifact_bundle else ({}, "")
+    )
 
     lines = [
         "# Tijara Protected Release Summary",
@@ -128,6 +134,10 @@ def _summary_lines(args):
         _verdict_row("Protected artifact summary", artifact_summary, artifact_summary_source),
         _verdict_row("Protected run decision", run_decision, run_decision_source),
     ]
+    if args.protected_release_chain:
+        lines.append(_verdict_row("Protected release chain", protected_chain, protected_chain_source))
+    if args.ci_artifact_bundle:
+        lines.append(_verdict_row("CI artifact bundle", ci_artifact_bundle, ci_artifact_bundle_source))
     if args.evidence_retention:
         lines.append(_verdict_row("Protected evidence retention", evidence_retention, evidence_retention_source))
     if args.sidecar_verification:
@@ -235,6 +245,20 @@ def _summary_lines(args):
             warnings.append("bundle-drift: evidence JSON is missing")
         if bundle_drift.get("_read_error"):
             blockers.append("bundle-drift: could not read evidence JSON: %s" % bundle_drift["_read_error"])
+    if args.protected_release_chain:
+        blockers.extend("protected-release-chain: %s" % item for item in protected_chain.get("blockers") or [])
+        warnings.extend("protected-release-chain: %s" % item for item in protected_chain.get("warnings") or [])
+        if protected_chain.get("_missing"):
+            warnings.append("protected-release-chain: evidence JSON is missing")
+        if protected_chain.get("_read_error"):
+            blockers.append("protected-release-chain: could not read evidence JSON: %s" % protected_chain["_read_error"])
+    if args.ci_artifact_bundle:
+        blockers.extend("ci-artifact-bundle: %s" % item for item in ci_artifact_bundle.get("blockers") or [])
+        warnings.extend("ci-artifact-bundle: %s" % item for item in ci_artifact_bundle.get("warnings") or [])
+        if ci_artifact_bundle.get("_missing"):
+            warnings.append("ci-artifact-bundle: evidence JSON is missing")
+        if ci_artifact_bundle.get("_read_error"):
+            blockers.append("ci-artifact-bundle: could not read evidence JSON: %s" % ci_artifact_bundle["_read_error"])
 
     blocker_items, blocker_extra = _limit(blockers, args.max_items)
     warning_items, warning_extra = _limit(warnings, args.max_items)
@@ -300,6 +324,8 @@ def main():
     parser.add_argument("--archive-upload", default=os.environ.get("TIJARA_SUMMARY_ARCHIVE_UPLOAD", ""))
     parser.add_argument("--bundle-score", default=os.environ.get("TIJARA_SUMMARY_BUNDLE_SCORE", ""))
     parser.add_argument("--bundle-drift", default=os.environ.get("TIJARA_SUMMARY_BUNDLE_DRIFT", ""))
+    parser.add_argument("--protected-release-chain", default=os.environ.get("TIJARA_SUMMARY_PROTECTED_RELEASE_CHAIN", ""))
+    parser.add_argument("--ci-artifact-bundle", default=os.environ.get("TIJARA_SUMMARY_CI_ARTIFACT_BUNDLE", ""))
     parser.add_argument("--artifact-name", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_NAME", ""))
     parser.add_argument("--artifact-id", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_ID", ""))
     parser.add_argument("--artifact-url", default=os.environ.get("TIJARA_UPLOADED_ARTIFACT_URL", ""))
@@ -364,6 +390,14 @@ def main():
         default_bundle_drift = "deploy/runtime/protected-evidence-bundle-drift/%s/protected-evidence-bundle-drift.json" % args.run_id
         if _resolve(default_bundle_drift).is_file():
             args.bundle_drift = default_bundle_drift
+    if not args.protected_release_chain:
+        default_chain = "deploy/runtime/protected-release-chain/%s/protected-release-chain.json" % args.run_id
+        if _resolve(default_chain).is_file():
+            args.protected_release_chain = default_chain
+    if not args.ci_artifact_bundle:
+        default_bundle = "deploy/runtime/protected-release-chain/%s/ci-artifact-bundle.json" % args.run_id
+        if _resolve(default_bundle).is_file():
+            args.ci_artifact_bundle = default_bundle
 
     summary = _summary_lines(args)
     if args.output:

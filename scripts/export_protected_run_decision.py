@@ -14,6 +14,10 @@ FAILING_STATUSES = {"blocked", "failed", "fail", "error"}
 DEFAULT_REQUIRED_COMPONENTS = [
     "release-readiness",
     "production-ops-readiness",
+    "protected-release-chain",
+    "ci-artifact-bundle",
+    "infra-provider-readiness",
+    "production-infra",
     "protected-post-run-verification",
     "protected-artifact-summary",
     "certification-result-matrix",
@@ -25,6 +29,10 @@ DEFAULT_REQUIRED_COMPONENTS = [
 DEFAULT_COMPONENT_PATHS = {
     "release-readiness": "deploy/runtime/signoff-packages/{run_id}/release-readiness.json",
     "production-ops-readiness": "deploy/runtime/production-ops-readiness/{run_id}/production-ops-readiness.json",
+    "protected-release-chain": "deploy/runtime/protected-release-chain/{run_id}/protected-release-chain.json",
+    "ci-artifact-bundle": "deploy/runtime/protected-release-chain/{run_id}/ci-artifact-bundle.json",
+    "infra-provider-readiness": "deploy/runtime/infra-provider-readiness/{run_id}/infra-provider-readiness.json",
+    "production-infra": "deploy/runtime/production-infra/{run_id}/production-infra-automation.json",
     "protected-post-run-verification": "deploy/runtime/protected-post-run-verification/{run_id}/protected-post-run-verification.json",
     "protected-artifact-summary": "deploy/runtime/protected-artifact-summary/{run_id}/protected-artifact-summary.json",
     "certification-result-matrix": "deploy/runtime/certification-evidence/{run_id}/result-matrix/certification-result-matrix.json",

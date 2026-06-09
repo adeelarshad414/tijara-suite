@@ -97,6 +97,7 @@ environment variable:
 | Payment providers | JazzCash, Easypaisa, Stripe, generic PSP webhook secrets | Finance/DevOps |
 | FBR | `FBR_CLIENT_ID`, `FBR_CLIENT_SECRET` | Tax/finance/DevOps |
 | Courier webhooks | Provider webhook shared secrets | Ecommerce ops/DevOps |
+| Infrastructure providers | `CLOUDFLARE_API_TOKEN`, AWS keys, `KUBECONFIG`, `BACKUP_ENCRYPTION_KEY` | DevOps/SRE/security |
 
 ## New Operations Variables
 
@@ -106,6 +107,7 @@ environment variable:
 | Grafana evidence | `TIJARA_GRAFANA_URL`, `TIJARA_OPS_BUNDLE_GRAFANA_DASHBOARD_TIMEOUT` | `GRAFANA_ADMIN_PASSWORD` stays in `secrets/.env.secrets` or the platform secret manager. |
 | Production infra wrappers | `TIJARA_PRODUCTION_INFRA_TENANT_ARTIFACTS`, `TIJARA_PRODUCTION_INFRA_MODE`, `TIJARA_PRODUCTION_INFRA_TEMPLATE`, `TIJARA_PRODUCTION_INFRA_TEMPLATE_FILE`, `TIJARA_DNS_APPLY_COMMAND_TEMPLATE`, `TIJARA_TLS_APPLY_COMMAND_TEMPLATE`, `TIJARA_BACKUP_COMMAND_TEMPLATE`, `CONFIRM_PROVIDER_ACTION`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_RECORD_ID`, `ROUTE53_HOSTED_ZONE_ID`, `ROUTE53_PREVIOUS_TARGET` | `CLOUDFLARE_API_TOKEN`, AWS access keys/session tokens, kubeconfig/service-account credentials, database passwords, and backup encryption keys stay in `secrets/.env.secrets` or the platform secret manager. |
 | Infrastructure provider readiness | `TIJARA_INFRA_PROVIDER_READINESS_PROVIDERS`, `TIJARA_INFRA_PROVIDER_READINESS_PRODUCTION_INFRA_EVIDENCE`, `TIJARA_INFRA_PROVIDER_READINESS_DEPLOYMENT_DECISION`, `TIJARA_INFRA_PROVIDER_READINESS_ROLLBACK_DECISION`, `TIJARA_INFRA_PROVIDER_READINESS_REQUIRE_REAL_APPROVALS`, `TIJARA_PROD_OPS_PRODUCTION_INFRA_EVIDENCE`, `TIJARA_PROD_OPS_INFRA_PROVIDER_READINESS_EVIDENCE` | Provider credentials and protected-runner approval evidence stay in the secret manager or protected artifact store. Local assumption mode must stay disabled for production. |
+| Protected release evidence chain | `TIJARA_PROTECTED_CHAIN_PROVIDER_TEMPLATES`, `TIJARA_PROTECTED_CHAIN_INFRA_PROVIDERS`, `TIJARA_PROTECTED_CHAIN_RUN_DEPLOYMENT_GATE`, `TIJARA_PROTECTED_CHAIN_RUN_ROLLBACK_DRILL`, `TIJARA_PROTECTED_CHAIN_SIGNOFF_REQUIRED_GROUPS`, `TIJARA_PROTECTED_CHAIN_EXTRA_EVIDENCE_PATHS`, `TIJARA_PROTECTED_CHAIN_METADATA` | The protected runner injects provider credentials, deployment approver references, backup refs, rollback refs, and certified provider/device evidence from GitHub environment secrets or the selected secret manager. |
 
 ## Rotation And Promotion
 
