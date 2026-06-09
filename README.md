@@ -133,6 +133,8 @@ scripts/                       Operational helper scripts
 scripts/dev-start.sh           Universal local startup script
 scripts/dev-stop.sh            Universal local shutdown script
 scripts/dev-restart.sh         Local restart wrapper
+scripts/tijara_host.py         Python server hosting/bootstrap script
+scripts/tijara_services.py     Python start/stop/status service manager
 tests/e2e/                     Playwright browser E2E staging scaffolds
 DEPLOY.md                      Deployment, secrets, release, and rollback guide
 LICENSE                        Root LGPL-3.0 project license notice
@@ -165,6 +167,22 @@ Stop or restart everything with:
 ```bash
 bash scripts/dev-stop.sh
 bash scripts/dev-restart.sh
+```
+
+Python service manager equivalents for a PC or server:
+
+```bash
+python3 scripts/tijara_services.py start --all-profiles
+python3 scripts/tijara_services.py status
+python3 scripts/tijara_services.py stop --force-kill-ports
+```
+
+Server hosting/bootstrap helper:
+
+```bash
+python3 scripts/tijara_host.py preflight
+python3 scripts/tijara_host.py init-config --environment staging --public-url https://staging.example.com
+python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite
 ```
 
 Windows PowerShell equivalents live in `scripts/dev-start.ps1` and
@@ -216,6 +234,11 @@ Production-readiness checks and scaffolds:
 ```bash
 make test-odoo
 make js-check
+make py-start
+make py-status
+make py-stop
+make host-preflight
+make host-deploy
 make security-audit
 make hardware-cert-smoke
 make e2e

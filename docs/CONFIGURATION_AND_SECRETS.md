@@ -40,6 +40,8 @@ These files may read or reference variables, but they are not secret stores:
 - `docker-compose.yml`
 - `Makefile`
 - `scripts/dev-start.sh`
+- `scripts/tijara_host.py`
+- `scripts/tijara_services.py`
 - `deploy/bin/start-odoo.sh`
 - `deploy/config/odoo.conf.template`
 - `deploy/nginx/tijara.conf`
@@ -108,3 +110,14 @@ cp secrets/.env.secrets.example secrets/.env.secrets
 For local demos, placeholders can remain for dry-run FBR, PSP, courier, and
 hardware behavior. For shared staging or production, replace every placeholder
 with an approved value or secret-manager reference before startup.
+
+The Python hosting helper uses the same files:
+
+```bash
+python3 scripts/tijara_host.py init-config --environment staging --generate-secrets
+python3 scripts/tijara_host.py deploy --with-monitoring
+```
+
+Generated local secrets from this helper are for controlled demo/staging use.
+Production should still inject approved values through the selected secret
+manager.

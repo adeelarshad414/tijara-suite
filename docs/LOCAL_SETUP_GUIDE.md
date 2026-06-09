@@ -50,6 +50,14 @@ TIJARA_DEV_START_HARDWARE=1 bash scripts/dev-start.sh
 TIJARA_DEV_START_MONITORING=1 bash scripts/dev-start.sh
 ```
 
+Python service manager:
+
+```bash
+python3 scripts/tijara_services.py start --all-profiles
+python3 scripts/tijara_services.py status
+python3 scripts/tijara_services.py logs odoo --tail 200
+```
+
 Install the suite and seed demo POS data during startup:
 
 ```bash
@@ -67,6 +75,13 @@ http://localhost:8069
 ```bash
 bash scripts/dev-stop.sh
 bash scripts/dev-restart.sh
+```
+
+Python equivalents:
+
+```bash
+python3 scripts/tijara_services.py stop --force-kill-ports
+python3 scripts/tijara_services.py restart --all-profiles
 ```
 
 If a previous tool left local ports occupied, force free known Tijara ports:

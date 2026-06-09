@@ -74,6 +74,14 @@ Start, install modules, and seed demo data:
 TIJARA_DEV_INSTALL_SUITE=1 TIJARA_DEV_SEED_POS_DEMO=1 bash scripts/dev-start.sh
 ```
 
+Python service manager alternative for a PC or server:
+
+```bash
+python3 scripts/tijara_services.py start --all-profiles
+python3 scripts/tijara_services.py status
+python3 scripts/tijara_services.py stop --force-kill-ports
+```
+
 Open:
 
 ```text
@@ -193,3 +201,23 @@ Before customer production:
 5. Confirm monitoring, alerting, logging, backups, rollback, and incident
    runbooks.
 6. Generate a sign-off package and approve release readiness.
+
+## 12. Python Server Hosting Flow
+
+For a new Linux/macOS server with Docker Compose installed:
+
+```bash
+python3 scripts/tijara_host.py preflight --all-profiles
+python3 scripts/tijara_host.py init-config \
+  --environment staging \
+  --public-url https://staging.example.com \
+  --generate-secrets
+python3 scripts/tijara_host.py deploy \
+  --with-hardware \
+  --with-monitoring \
+  --install-suite \
+  --db tijara_dev
+```
+
+For production, inject real secrets from the secret manager and use
+`--production` so placeholders are rejected before hosting starts.

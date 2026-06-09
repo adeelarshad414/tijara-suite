@@ -120,3 +120,13 @@ expenses, and a salary batch. Demo users in
 `docs/TEST_CREDENTIALS.csv` are deterministic staging accounts that can be
 created or mapped with `make seed-demo-users` before authenticated browser E2E
 runs.
+
+## Python Operations Commands
+
+```bash
+python3 scripts/tijara_host.py preflight --all-profiles
+python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite
+python3 scripts/tijara_services.py start --all-profiles
+python3 scripts/tijara_services.py status
+python3 scripts/tijara_services.py stop --force-kill-ports
+```

@@ -11003,3 +11003,69 @@ Status: Complete
 - Run full protected/staging evidence after the central config update.
 - Continue real-world certification evidence for courier, PSP, FBR, and
   hardware.
+
+## Iteration 147: Python Hosting And Service Operations Scripts
+
+### Objective
+
+- Add Python-based server hosting/bootstrap automation for Tijara Suite.
+- Add Python-based start, stop, restart, status, config, and logs operations
+  for local PCs and servers.
+- Keep all runtime configuration and secrets tied to the central `.env` and
+  `secrets/.env.secrets` files.
+- Update docs and push the latest changes.
+
+### Completed
+
+- Added `scripts/tijara_ops_common.py` with shared Docker Compose, central env
+  file, port, health, and process helper functions.
+- Added `scripts/tijara_host.py` with:
+  preflight checks, central config creation, staging/production public URL
+  setup, optional local random secret generation, production placeholder
+  blocking, profile-aware Compose deploy, optional image pull/build,
+  optional module install, optional demo seeding, and endpoint summary output.
+- Added `scripts/tijara_services.py` with:
+  start, stop, restart, status, logs, and config commands for PC/server
+  operation, including all-profile startup and force-kill of known ports.
+- Added Makefile aliases:
+  `py-start`, `py-stop`, `py-restart`, `py-status`, `py-config`,
+  `host-preflight`, `host-init-config`, and `host-deploy`.
+- Updated `README.md`, `DEPLOY.md`, `docs/COMMANDS_QUICKREF.md`,
+  `docs/SETUP_STEP_BY_STEP.md`, `docs/LOCAL_SETUP_GUIDE.md`,
+  `docs/CONFIGURATION_AND_SECRETS.md`, `docs/SPEC_MAP.md`, and
+  `docs/SPEC_MAP.json` with the new Python hosting/service workflows.
+
+### Validation
+
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile scripts/tijara_ops_common.py scripts/tijara_services.py scripts/tijara_host.py`
+  passed.
+- `python3 scripts/tijara_host.py preflight --dry-run --all-profiles` passed
+  and generated a quiet Compose config validation command.
+- `python3 scripts/tijara_host.py deploy --dry-run --production --allow-placeholders --with-hardware --with-monitoring --domain demo.example.com --no-pull --db tijara_dev`
+  passed without writing config or starting services.
+- `python3 scripts/tijara_services.py start --dry-run --all-profiles --no-wait`
+  passed and generated quiet config validation plus all-profile startup
+  commands.
+- `python3 scripts/tijara_services.py stop --dry-run --force-kill-ports`
+  passed and generated all-profile shutdown plus known-port cleanup commands.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `make validate` passed: 103 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- `make py-config` passed using quiet Compose config validation.
+- `git diff --check` passed.
+
+### Known Gaps
+
+- The Python host script prepares and starts Docker Compose; production still
+  requires real DNS, TLS certificate automation, secret-manager injection,
+  backup scheduling, monitoring alert routing, and release sign-off evidence.
+- Physical hardware, FBR, PSP, and courier certification still require real
+  provider/device evidence before production go-live.
+
+### Next Iteration
+
+- Add Grafana dashboard JSON/provisioning for business metrics and expose it
+  through the monitoring profile.
+- Add production DNS/TLS/backup automation wrappers around the Python host
+  script for specific deployment targets.
+- Run protected/staging evidence after the new Python operations path.

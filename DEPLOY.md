@@ -38,6 +38,8 @@ docker-compose.yml                    Development and small deployment runtime
 scripts/dev-start.sh                  Local bootstrap/start script
 scripts/dev-stop.sh                   Local stop and port verification script
 scripts/dev-restart.sh                Local restart wrapper
+scripts/tijara_host.py                Python server host/bootstrap script
+scripts/tijara_services.py            Python service manager for PC/server
 Makefile                              Operator shortcuts
 ```
 
@@ -89,6 +91,68 @@ Generate strong values for production secrets:
 openssl rand -base64 48
 ```
 
+The Python hosting script can generate local random placeholder replacements
+for shared staging or demo servers:
+
+```bash
+python3 scripts/tijara_host.py init-config --environment staging --generate-secrets
+```
+
+For production, prefer the selected secret manager and run with
+`--production` so placeholder secrets are blocked before deployment.
+
+## Python Hosting And Service Manager
+
+Use `scripts/tijara_host.py` when preparing a new server or production-like
+host. It creates the central `.env` and `secrets/.env.secrets` files when they
+are missing, applies public URL/domain defaults, optionally generates local
+random secret values for non-production use, validates Docker Compose, pulls or
+builds services, starts profiles, and can install or seed the Odoo modules.
+
+Common server flow:
+
+```bash
+python3 scripts/tijara_host.py preflight --all-profiles
+python3 scripts/tijara_host.py init-config \
+  --environment staging \
+  --public-url https://staging.example.com \
+  --generate-secrets
+python3 scripts/tijara_host.py deploy \
+  --with-hardware \
+  --with-monitoring \
+  --install-suite \
+  --db tijara_dev
+```
+
+Production-style flow with placeholders blocked:
+
+```bash
+python3 scripts/tijara_host.py init-config \
+  --production \
+  --domain tijara.example.com
+python3 scripts/tijara_host.py deploy \
+  --production \
+  --domain tijara.example.com \
+  --with-monitoring \
+  --install-suite \
+  --db tijara_prod
+```
+
+Use `scripts/tijara_services.py` for day-to-day service control on a local PC,
+demo machine, or server:
+
+```bash
+python3 scripts/tijara_services.py start --all-profiles
+python3 scripts/tijara_services.py status
+python3 scripts/tijara_services.py logs odoo --tail 200
+python3 scripts/tijara_services.py restart --with-monitoring
+python3 scripts/tijara_services.py stop --force-kill-ports
+```
+
+Both Python scripts use the same central runtime files documented in
+`docs/CONFIGURATION_AND_SECRETS.md`; they do not introduce separate secret
+stores.
+
 ## Compose Commands
 
 The Makefile automatically includes `.env` and `secrets/.env.secrets` when they
@@ -97,6 +161,13 @@ exist.
 ```bash
 make validate
 make js-check
+make py-start
+make py-status
+make py-stop
+make py-config
+make host-preflight
+make host-init-config
+make host-deploy
 make security-audit
 make dev-start
 make dev-stop

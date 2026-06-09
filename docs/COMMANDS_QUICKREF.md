@@ -5,16 +5,29 @@
 | Action | Command |
 |---|---|
 | Start all core services | `bash scripts/dev-start.sh` |
+| Start all services with Python manager | `python3 scripts/tijara_services.py start --all-profiles` |
 | Start with hardware bridge | `TIJARA_DEV_START_HARDWARE=1 bash scripts/dev-start.sh` |
 | Start with monitoring | `TIJARA_DEV_START_MONITORING=1 bash scripts/dev-start.sh` |
 | Start, install suite, and seed POS demo | `TIJARA_DEV_INSTALL_SUITE=1 TIJARA_DEV_SEED_POS_DEMO=1 bash scripts/dev-start.sh` |
 | Stop all Compose services | `bash scripts/dev-stop.sh` |
+| Stop all services with Python manager | `python3 scripts/tijara_services.py stop --force-kill-ports` |
 | Stop and force free known ports | `TIJARA_FORCE_KILL_PORTS=1 bash scripts/dev-stop.sh` |
 | Restart everything | `bash scripts/dev-restart.sh` |
+| Restart with Python manager | `python3 scripts/tijara_services.py restart --all-profiles` |
+| Python service status | `python3 scripts/tijara_services.py status` |
+| Python service logs | `python3 scripts/tijara_services.py logs odoo --tail 200` |
+| Python Compose config validation | `python3 scripts/tijara_services.py config` |
+| Print full Python Compose config | `python3 scripts/tijara_services.py config --print` |
+| Server hosting preflight | `python3 scripts/tijara_host.py preflight --all-profiles` |
+| Server init central config | `python3 scripts/tijara_host.py init-config --environment staging --public-url https://staging.example.com --generate-secrets` |
+| Server deploy stack | `python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite` |
 | Validate scaffold | `make validate` |
 | Start Compose manually | `make up` |
+| Start via Python Make target | `make py-start` |
 | Stop Compose manually | `make down` |
+| Stop via Python Make target | `make py-stop` |
 | Show service status | `make ps` |
+| Show Python service status | `make py-status` |
 | Follow Odoo logs | `make logs` |
 | Install suite modules | `make install-suite` |
 | Upgrade PKR/GST, POS experience, analytics, and demo modules | `make upgrade-pkr-gst` |
@@ -71,6 +84,12 @@ Force free known ports after Compose shutdown:
 
 ```bash
 TIJARA_FORCE_KILL_PORTS=1 bash scripts/dev-stop.sh
+```
+
+Python equivalent:
+
+```bash
+python3 scripts/tijara_services.py stop --force-kill-ports
 ```
 
 Kill a single stuck port on macOS or Linux:
