@@ -87,6 +87,7 @@ required_dashboards = {
     "restaurant_cafe_operations",
     "vertical_retail_mix",
     "loyalty_customer_retention",
+    "ecommerce_store",
 }
 require(required_dashboards.issubset(dashboard_codes), "Dashboard catalog is incomplete.")
 
@@ -101,8 +102,20 @@ required_reports = {
     "vertical_catalog_performance",
     "loyalty_customer_history",
     "display_queue_operations",
+    "ecommerce_order_pipeline",
+    "ecommerce_catalog_stock_pricing",
 }
 require(required_reports.issubset(report_codes), "Report catalog is incomplete.")
+
+ecommerce_channel = env["tijara.ecommerce.channel"].sudo().search(
+    [("code", "=", "TIJARA-DEMO-WEB"), ("company_id", "=", company.id)],
+    limit=1,
+)
+require(ecommerce_channel, "Demo ecommerce channel is missing.")
+ecommerce_products = products.filtered("tijara_ecommerce_published")
+require(len(ecommerce_products) >= len(required_verticals), "Demo ecommerce catalog is incomplete.")
+require(ecommerce_channel.allow_delivery and ecommerce_channel.allow_pickup, "Ecommerce pickup/delivery is not enabled.")
+require(ecommerce_channel.allow_b2b and ecommerce_channel.allow_b2c, "Ecommerce B2B/B2C modes are not enabled.")
 
 require(company.tijara_gst_enabled, "GST policy should be enabled in the demo company.")
 require(company.tijara_delivery_charge_enabled, "Delivery charge policy should be enabled in the demo company.")
@@ -118,3 +131,5 @@ print_export("TIJARA_ENTERPRISE_VERTICAL_COUNT", len(seeded_verticals))
 print_export("TIJARA_ENTERPRISE_DASHBOARD_COUNT", len(required_dashboards))
 print_export("TIJARA_ENTERPRISE_REPORT_COUNT", len(required_reports))
 print_export("TIJARA_ENTERPRISE_RECEIPT_TEMPLATE_SCOPES", ",".join(sorted(receipt_scopes)))
+print_export("TIJARA_ENTERPRISE_ECOMMERCE_CHANNEL_COUNT", env["tijara.ecommerce.channel"].sudo().search_count([]))
+print_export("TIJARA_ENTERPRISE_ECOMMERCE_PRODUCT_COUNT", len(ecommerce_products))

@@ -20,6 +20,7 @@ class TijaraPosDemoSeed(models.AbstractModel):
         self._assign_inventory_label_profile(products, receipt_profiles.get("inventory_label"))
         self._seed_promotion(company, products)
         self._seed_display_content(company, screens, products)
+        self.env["tijara.ecommerce.seed"].sudo().seed_demo(products)
         config = self._seed_pos_config(company, screens, receipt_profiles)
         self._seed_kiosk_profile_pos_sync(company, screens, config)
         self._seed_queue_ticket(company, customers["retail"])

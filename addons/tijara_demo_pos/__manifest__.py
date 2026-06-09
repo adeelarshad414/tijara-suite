@@ -9,6 +9,7 @@
         "tijara_pos_experience",
         "tijara_inventory_intelligence",
         "tijara_analytics",
+        "tijara_ecommerce",
         "tijara_vertical_restaurant",
         "tijara_vertical_superstore",
         "tijara_vertical_grocery",
@@ -20,4 +21,3 @@
     "installable": True,
     "application": False,
 }
-

@@ -1,0 +1,23 @@
+<odoo>
+    <record id="view_tijara_queue_ticket_tree_tijara_ecommerce" model="ir.ui.view">
+        <field name="name">tijara.queue.ticket.tree.tijara.ecommerce</field>
+        <field name="model">tijara.queue.ticket</field>
+        <field name="inherit_id" ref="tijara_pos_experience.view_tijara_queue_ticket_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='pos_order_id']" position="after">
+                <field name="sale_order_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_tijara_queue_ticket_form_tijara_ecommerce" model="ir.ui.view">
+        <field name="name">tijara.queue.ticket.form.tijara.ecommerce</field>
+        <field name="model">tijara.queue.ticket</field>
+        <field name="inherit_id" ref="tijara_pos_experience.view_tijara_queue_ticket_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='pos_order_id']" position="after">
+                <field name="sale_order_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -5,8 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 TEST_DB="${TEST_DB:-tijara_test}"
-MODULES="${TIJARA_TEST_MODULES:-tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery}"
-TEST_TAGS="${TIJARA_TEST_TAGS:-/tijara_saas_control,/tijara_retail_core,/tijara_pos_pk,/tijara_pos_experience,/tijara_analytics}"
+MODULES="${TIJARA_TEST_MODULES:-tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_ecommerce,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery}"
+TEST_TAGS="${TIJARA_TEST_TAGS:-/tijara_saas_control,/tijara_retail_core,/tijara_pos_pk,/tijara_pos_experience,/tijara_analytics,/tijara_ecommerce}"
 
 ENV_FILE_ARGS=()
 if [[ -f ".env" ]]; then

@@ -1,0 +1,132 @@
+<odoo>
+    <record id="action_tijara_ecommerce_channel" model="ir.actions.act_window">
+        <field name="name">Ecommerce Channels</field>
+        <field name="res_model">tijara.ecommerce.channel</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_ecommerce_channel_list" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.channel.list</field>
+        <field name="model">tijara.ecommerce.channel</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="url_slug"/>
+                <field name="default_audience"/>
+                <field name="allow_b2c"/>
+                <field name="allow_b2b"/>
+                <field name="product_count"/>
+                <field name="sale_order_count"/>
+                <field name="queue_ticket_count"/>
+                <field name="company_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_channel_form" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.channel.form</field>
+        <field name="model">tijara.ecommerce.channel</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_open_storefront" type="object" string="Open Storefront" class="btn-primary"/>
+                    <button name="action_check_saas_entitlement" type="object" string="Check SaaS Entitlement"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_orders" type="object" class="oe_stat_button" icon="fa-shopping-cart">
+                            <field name="sale_order_count" widget="statinfo" string="Orders"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="url_slug"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="website_id"/>
+                            <field name="warehouse_id"/>
+                            <field name="stock_location_id"/>
+                            <field name="currency_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Audience">
+                            <group>
+                                <group>
+                                    <field name="default_audience"/>
+                                    <field name="allow_b2c"/>
+                                    <field name="allow_b2b"/>
+                                    <field name="allow_guest_checkout"/>
+                                    <field name="require_mobile_for_pickup_delivery"/>
+                                </group>
+                                <group>
+                                    <field name="show_stock_qty"/>
+                                    <field name="low_stock_threshold"/>
+                                    <field name="product_count"/>
+                                    <field name="queue_ticket_count"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Fulfillment">
+                            <group>
+                                <field name="allow_delivery"/>
+                                <field name="allow_pickup"/>
+                                <field name="allow_store_pickup"/>
+                                <field name="allow_courier"/>
+                                <field name="allow_takeaway"/>
+                                <field name="allow_dine_in"/>
+                                <field name="auto_confirm_sale_order"/>
+                                <field name="auto_queue_pickup_delivery"/>
+                            </group>
+                        </page>
+                        <page string="Payment">
+                            <group>
+                                <field name="allow_cash"/>
+                                <field name="allow_card"/>
+                                <field name="allow_bank_transfer"/>
+                                <field name="allow_cod"/>
+                                <field name="allow_jazzcash"/>
+                                <field name="allow_easypaisa"/>
+                                <field name="allow_stripe"/>
+                            </group>
+                        </page>
+                        <page string="Promotions">
+                            <field name="promotion_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_channel_search" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.channel.search</field>
+        <field name="model">tijara.ecommerce.channel</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="url_slug"/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="b2b" string="B2B Enabled" domain="[('allow_b2b', '=', True)]"/>
+                <group>
+                    <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
+                    <filter name="group_audience" string="Default Audience" context="{'group_by': 'default_audience'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_ecommerce_channel" name="Storefront Channels" parent="menu_tijara_ecommerce_configuration" action="action_tijara_ecommerce_channel" sequence="10"/>
+</odoo>

@@ -1,0 +1,75 @@
+<odoo noupdate="1">
+    <record id="dashboard_ecommerce_store" model="tijara.analytics.dashboard">
+        <field name="name">Ecommerce Store</field>
+        <field name="code">ecommerce_store</field>
+        <field name="sequence">95</field>
+        <field name="audience">analytics_manager</field>
+        <field name="notes">Online order pipeline, catalog stock, B2B/B2C pricing, promotions, pickup/delivery, payment status, and queue handoff.</field>
+    </record>
+
+    <record id="widget_ecommerce_order_pipeline" model="tijara.analytics.widget">
+        <field name="name">Online Order Pipeline</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">kpi</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">ecommerce_order_pipeline</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="query_note">Counts sale orders by ecommerce channel, payment status, fulfillment method, and confirmation state.</field>
+    </record>
+
+    <record id="widget_ecommerce_catalog_stock" model="tijara.analytics.widget">
+        <field name="name">Online Catalog Stock</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">20</field>
+        <field name="widget_type">alert</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">ecommerce_catalog_stock</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="query_note">Shows online products below channel low-stock threshold with vertical, SKU, barcode, and stock location context.</field>
+    </record>
+
+    <record id="widget_ecommerce_b2b_b2c_pricing" model="tijara.analytics.widget">
+        <field name="name">B2B/B2C Online Pricing</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">30</field>
+        <field name="widget_type">table</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">ecommerce_b2b_b2c_pricing</field>
+        <field name="feature_code">b2b_sales</field>
+        <field name="query_note">Audits online catalog products with separate retail and wholesale prices.</field>
+    </record>
+
+    <record id="widget_ecommerce_fulfillment_queue" model="tijara.analytics.widget">
+        <field name="name">Pickup and Delivery Queue</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">40</field>
+        <field name="widget_type">chart</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">ecommerce_fulfillment_queue</field>
+        <field name="feature_code">queue_system</field>
+        <field name="query_note">Tracks ecommerce queue tickets by waiting, preparing, ready, called, completed, and cancelled states.</field>
+    </record>
+
+    <record id="report_ecommerce_order_pipeline" model="tijara.analytics.report">
+        <field name="name">Ecommerce Order Pipeline</field>
+        <field name="code">ecommerce_order_pipeline</field>
+        <field name="business_area">ecommerce</field>
+        <field name="report_type">pivot</field>
+        <field name="frequency">daily</field>
+        <field name="owner_role">Ecommerce Manager / Owner</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="description">Online order count, revenue, payment status, B2B/B2C split, pickup/delivery mix, and queue handoff by ecommerce channel.</field>
+    </record>
+
+    <record id="report_ecommerce_catalog_stock_pricing" model="tijara.analytics.report">
+        <field name="name">Ecommerce Catalog Stock and Pricing</field>
+        <field name="code">ecommerce_catalog_stock_pricing</field>
+        <field name="business_area">ecommerce</field>
+        <field name="report_type">list</field>
+        <field name="frequency">daily</field>
+        <field name="owner_role">Ecommerce Manager / Inventory Manager</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="description">Published products, Urdu/English names, SKU, barcode, stock availability, low-stock online alerts, B2B/B2C price coverage, GST and charge-policy readiness.</field>
+    </record>
+</odoo>

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tijara_ecommerce_channel_user,tijara.ecommerce.channel.user,model_tijara_ecommerce_channel,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_ecommerce_channel_manager,tijara.ecommerce.channel.manager,model_tijara_ecommerce_channel,tijara_base.group_tijara_manager,1,1,1,1

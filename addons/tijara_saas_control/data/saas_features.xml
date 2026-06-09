@@ -64,6 +64,14 @@
         <field name="sequence">65</field>
     </record>
 
+    <record id="feature_ecommerce_store" model="tijara.saas.feature">
+        <field name="name">Ecommerce Store</field>
+        <field name="code">ecommerce_store</field>
+        <field name="module_name">tijara_ecommerce</field>
+        <field name="sequence">65</field>
+        <field name="description">Enables website storefront, online catalog, B2B/B2C checkout, sale-order sync, pickup/delivery, and ecommerce analytics.</field>
+    </record>
+
     <record id="feature_b2b_sales" model="tijara.saas.feature">
         <field name="name">B2B Sales</field>
         <field name="code">b2b_sales</field>
@@ -171,7 +179,7 @@
         <field name="user_limit">5</field>
         <field name="branch_limit">1</field>
         <field name="product_limit">10000</field>
-        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_pos_experience'), ref('feature_b2b_sales')])]"/>
+        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_pos_experience'), ref('feature_ecommerce_store'), ref('feature_b2b_sales')])]"/>
     </record>
 
     <record id="plan_vertical" model="tijara.saas.plan">
@@ -182,7 +190,7 @@
         <field name="user_limit">10</field>
         <field name="branch_limit">2</field>
         <field name="product_limit">25000</field>
-        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_analytics_reporting'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_pos_experience'), ref('feature_b2b_sales'), ref('feature_queue_system'), ref('feature_promotion_display'), ref('feature_customer_display'), ref('feature_pharmacy'), ref('feature_restaurant'), ref('feature_garments'), ref('feature_electronics'), ref('feature_cloth'), ref('feature_superstore'), ref('feature_grocery'), ref('feature_bakery')])]"/>
+        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_analytics_reporting'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_pos_experience'), ref('feature_ecommerce_store'), ref('feature_b2b_sales'), ref('feature_queue_system'), ref('feature_promotion_display'), ref('feature_customer_display'), ref('feature_pharmacy'), ref('feature_restaurant'), ref('feature_garments'), ref('feature_electronics'), ref('feature_cloth'), ref('feature_superstore'), ref('feature_grocery'), ref('feature_bakery')])]"/>
     </record>
 
     <record id="plan_enterprise" model="tijara.saas.plan">
@@ -193,6 +201,6 @@
         <field name="user_limit">50</field>
         <field name="branch_limit">10</field>
         <field name="product_limit">100000</field>
-        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_analytics_reporting'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_fbr'), ref('feature_pos_experience'), ref('feature_b2b_sales'), ref('feature_queue_system'), ref('feature_promotion_display'), ref('feature_customer_display'), ref('feature_pharmacy'), ref('feature_restaurant'), ref('feature_garments'), ref('feature_electronics'), ref('feature_cloth'), ref('feature_superstore'), ref('feature_grocery'), ref('feature_bakery')])]"/>
+        <field name="feature_ids" eval="[(6, 0, [ref('feature_pos'), ref('feature_inventory'), ref('feature_inventory_intelligence'), ref('feature_analytics_reporting'), ref('feature_purchase'), ref('feature_refunds_exchanges'), ref('feature_urdu'), ref('feature_fbr'), ref('feature_pos_experience'), ref('feature_ecommerce_store'), ref('feature_b2b_sales'), ref('feature_queue_system'), ref('feature_promotion_display'), ref('feature_customer_display'), ref('feature_pharmacy'), ref('feature_restaurant'), ref('feature_garments'), ref('feature_electronics'), ref('feature_cloth'), ref('feature_superstore'), ref('feature_grocery'), ref('feature_bakery')])]"/>
     </record>
 </odoo>

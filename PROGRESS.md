@@ -10101,3 +10101,86 @@ Status: Complete
 - Continue production hardening for monitoring, restore drills, load testing,
   security scans, FBR/PSP certification, tenant automation, and subscription
   operations.
+
+## Iteration 136: Integrated Ecommerce Storefront Foundation
+
+### Objective
+
+- Add ecommerce modules and working functions to the Tijara enterprise suite
+  using Odoo Community/open-source foundations.
+- Integrate ecommerce with products, B2B/B2C pricing, inventory stock context,
+  promotions, pickup/delivery, sale orders, queue tickets, SaaS feature flags,
+  analytics/reporting, demo seed, deployment scripts, and user documentation.
+
+### Completed
+
+- Added the new `tijara_ecommerce` addon.
+- Added ecommerce channel management with website, warehouse, stock location,
+  B2C/B2B audience controls, guest checkout, pickup, store pickup, takeaway,
+  delivery, courier, dine-in, and payment-method enablement.
+- Added public storefront, catalog, and checkout routes under
+  `/tijara/ecommerce/<slug>`.
+- Added online product publishing fields for featured items, online sequence,
+  English/Urdu descriptions, and search keywords.
+- Ecommerce catalog payloads now expose Urdu/English names, SKU/barcode,
+  vertical tag, B2C/B2B prices, selected audience price, stock visibility,
+  low-stock flag, and active promotions.
+- Ecommerce checkout now creates Odoo sale orders with channel, audience,
+  fulfillment, payment method/status, pickup code, delivery details, payload
+  snapshot, estimated GST, service charge, delivery charge, and payment-tax
+  audit fields.
+- Online orders use the same Pakistan business policy layer: GST on/off,
+  delivery charge, cafe-only service charge, and cafe/restaurant card/cash tax.
+- Pickup/delivery ecommerce orders can create shared queue tickets with source
+  `ecommerce`.
+- Added ecommerce paid action that awards loyalty points once for opted-in
+  customers.
+- Added ecommerce analytics dashboard widgets and report catalog templates.
+- Added `ecommerce_store` as a SaaS feature and included it in Retail,
+  Vertical, and Enterprise plans.
+- Updated suite install, tenant provisioning, Odoo test module lists, and the
+  PKR/GST upgrade path to include `tijara_ecommerce`.
+- Updated demo seed so demo products are published online and a demo ecommerce
+  channel is created.
+- Updated enterprise seed verification to require ecommerce channel, B2B/B2C
+  enablement, pickup/delivery enablement, published demo catalog, ecommerce
+  dashboard, and ecommerce reports.
+- Updated `README.md`, `DEPLOY.md`, and `docs/USER_GUIDE_ALL_USERS.md`.
+
+### Validation
+
+- `make validate` passed: 86 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- Focused Python compile passed for `addons/tijara_ecommerce`,
+  `scripts/verify_enterprise_seed.py`, and the demo POS seed integration.
+- `git diff --check` passed.
+- Focused Odoo transaction tests passed with:
+  `TIJARA_TEST_MODULES=tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_ecommerce`
+  and `TIJARA_TEST_TAGS=/tijara_ecommerce`.
+- The focused Odoo run covered ecommerce catalog prices/Urdu names, checkout
+  charges, queue ticket handoff, loyalty award, and SaaS enforcement.
+- Local `tijara_dev` live upgrade and seed verification are still pending for
+  this ecommerce module.
+
+### Known Gaps
+
+- Live PSP certification for JazzCash, Easypaisa, Stripe/card capture,
+  settlement, refund, and chargeback workflows is still required before real
+  ecommerce payment go-live.
+- Public storefront routes need production reverse-proxy controls such as HTTPS,
+  rate limits, request-size limits, bot controls where needed, and log
+  retention.
+- Ecommerce checkout creates sale orders and queue tickets, but full payment
+  capture, fraud checks, shipping-provider integration, cart persistence, and
+  customer portal polish remain future production hardening.
+- Protected browser E2E still needs catalog, checkout, sale-order, queue, and
+  invoice/receipt flows against a seeded staging database.
+
+### Next Iteration
+
+- Run focused Odoo tests and local `tijara_dev` upgrade for ecommerce.
+- Add Playwright storefront checkout coverage for B2C, B2B, pickup, delivery,
+  and queue-ticket handoff.
+- Add ecommerce screenshot-guide pages and customer-demo-video scenes.
+- Continue payment provider certification, production reverse-proxy hardening,
+  monitoring, load testing, and security scans.

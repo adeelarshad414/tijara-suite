@@ -161,7 +161,7 @@ make install-suite
 The equivalent direct Compose command is:
 
 ```bash
-docker compose --env-file .env --env-file secrets/.env.secrets run --rm odoo bash /usr/local/bin/tijara-start-odoo -d tijara_dev -i tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery --without-demo --stop-after-init
+docker compose --env-file .env --env-file secrets/.env.secrets run --rm odoo bash /usr/local/bin/tijara-start-odoo -d tijara_dev -i tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_ecommerce,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery --without-demo --stop-after-init
 ```
 
 For the local Pakistan demo/readiness path after a PKR/GST or demo-data change:
@@ -184,8 +184,9 @@ make local-e2e-evidence
 ```
 
 The harness starts Compose, waits for Odoo, upgrades `tijara_base`,
-`tijara_retail_core`, `tijara_pos_experience`, `tijara_analytics`, and
-`tijara_demo_pos`, verifies Pakistan country/PKR/GST 18%, seeds demo users from
+`tijara_retail_core`, `tijara_pos_experience`, `tijara_analytics`,
+`tijara_ecommerce`, and `tijara_demo_pos`, verifies Pakistan country/PKR/GST
+18%, seeds demo users from
 `docs/TEST_CREDENTIALS.csv`, seeds the authenticated browser E2E profile, runs
 the full Playwright browser suite, and exports the correlated execution
 decision. The latest local run
@@ -244,6 +245,28 @@ For single-database local development, `POSTGRES_PASSWORD` and
 `ODOO_DB_PASSWORD` should match the active password for the `POSTGRES_USER` role.
 For production, keep both values in the secret manager and rotate them through a
 planned database credential rotation, not by editing committed templates.
+
+## Ecommerce Deployment Notes
+
+The ecommerce module is part of the standard Tijara suite install. It uses Odoo
+Community website/sale/stock foundations plus Tijara SaaS, B2B/B2C pricing,
+promotion, queue, analytics, loyalty, and Pakistan charge-policy fields.
+
+Production ecommerce rollout must include:
+
+- HTTPS domain routing for each tenant storefront path or domain.
+- SaaS plan entitlement for `ecommerce_store`; B2B online pricing also requires
+  the `b2b_sales` feature when enforcement is enabled.
+- Published online products with SKU/barcode, Urdu/English names where needed,
+  B2C/B2B prices, tax policy, and stock visibility reviewed by inventory.
+- Payment provider configuration and webhook certification before accepting
+  live JazzCash, Easypaisa, Stripe, or card payments.
+- Pickup/delivery operating procedures, queue display checks, delivery charges,
+  cafe-only service charge, and cafe/restaurant card/cash tax policy review.
+- Public-route security controls at the reverse proxy, including rate limits,
+  request-size limits, bot controls where needed, and log retention.
+- Browser tests for catalog, checkout, sale-order creation, queue handoff, and
+  receipt/invoice print paths after each staging upgrade.
 
 ## Production Checklist
 

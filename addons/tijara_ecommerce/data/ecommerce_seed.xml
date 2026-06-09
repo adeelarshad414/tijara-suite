@@ -1,0 +1,3 @@
+<odoo>
+    <function model="tijara.ecommerce.seed" name="seed_demo"/>
+</odoo>

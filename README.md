@@ -5,7 +5,8 @@ Odoo Community and open-source infrastructure. The product target is a modular
 SaaS suite for POS, inventory, back office, sales, purchase, procurement,
 expenses, customers, suppliers, refunds, exchanges, Urdu/English operations,
 barcode/QR workflows, store hardware, self-service kiosk, customer display,
-menu/deal screens, queue system, and B2B/B2C selling.
+menu/deal screens, queue system, ecommerce storefront, online checkout, and
+B2B/B2C selling.
 The POS billing flow includes overall bill-level discount entry by either
 percentage or fixed amount, with both values kept in sync for cashier clarity
 and manager audit.
@@ -73,6 +74,7 @@ addons/
   tijara_pos_pk/               POS receipt, QR, and FBR integration readiness
   tijara_pos_experience/       Kiosk, displays, promotions, queue, B2B/B2C POS
   tijara_analytics/            Dashboards, KPI history, trends, charts, reports
+  tijara_ecommerce/            Storefront, catalog, checkout, pickup/delivery
   tijara_saas_control/         SaaS plans, tenants, feature flags
   tijara_demo_pos/             Optional POS demo seed for cashier smoke tests
   tijara_vertical_pharmacy/    Pharmacy-specific fields and workflows
@@ -292,8 +294,8 @@ offline POS, security, troubleshooting, and escalation.
 
 The screenshot guide is generated from a running local Odoo instance after
 upgrading `tijara_base`, `tijara_retail_core`, `tijara_pos_experience`,
-`tijara_analytics`, and `tijara_demo_pos`, verifying Pakistan country/PKR/GST
-18%, seeding all demo users from
+`tijara_analytics`, `tijara_ecommerce`, and `tijara_demo_pos`, verifying
+Pakistan country/PKR/GST 18%, seeding all demo users from
 `docs/TEST_CREDENTIALS.csv`, and capturing live browser screenshots for login,
 app shell, kiosk, customer display, queue display, menu board, and deals board.
 Regenerate it with `make capture-screenshots` followed by
@@ -311,8 +313,8 @@ rollback guidance.
 ## Current Status
 
 The custom suite has passed live Odoo 19 install and upgrade smoke tests. The
-`tijara_dev` database installs all 15 Tijara custom modules, seeds 21 SaaS
-feature flags, includes nine analytics dashboards, includes nine report catalog
+`tijara_dev` database installs all 16 Tijara custom modules, seeds 22 SaaS
+feature flags, includes 10 analytics dashboards, includes 11 report catalog
 templates, and the Odoo service responds at `http://localhost:8069` with the web
 app redirecting to `/odoo`.
 The optional `tijara_demo_pos` module is also installed in the dev database for
@@ -337,13 +339,18 @@ menus, backend views, SaaS plans/features, Pakistan localization fields, POS
 experience foundations, overall bill discount controls, configurable
 invoice/receipt templates, scanner/printer configuration, invoice barcode return
 scanning, CSV bulk import/export, inventory intelligence, analytics/reporting
-foundations, back-office expense and salary management, loyalty fields,
+foundations, ecommerce storefront/channel management, online catalog publishing,
+website checkout, sale-order sync, pickup/delivery queue handoff, back-office
+expense and salary management, loyalty fields,
 business-policy charge toggles, and vertical packs are in place. The business
 policy layer can enable/disable GST, delivery charges, cafe-only service
 charges, and cafe/restaurant card/cash tax rules while keeping demo products
 tagged for superstore, grocery, cosmetics, cloth, garments, uniform, shoes,
 pharmacy, bakery, cafe, fast food, restaurant, mobile shop, and electronics
-workflows. The Tijara invoice/receipt
+workflows. The ecommerce layer publishes those same B2B/B2C priced products to
+public storefront routes, creates Odoo sale orders from online checkout, applies
+tenant charge policies, links pickup/delivery orders to the shared queue system,
+and exposes ecommerce KPI/report templates. The Tijara invoice/receipt
 template configuration now renders through backend QWeb PDF/HTML reports for
 customer invoices and POS orders, and the browser POS receipt screen consumes
 the configured POS receipt profile during cashier checkout. Pakistan defaults

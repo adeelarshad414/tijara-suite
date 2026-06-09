@@ -37,7 +37,7 @@ case "$DB_NAME" in
         ;;
 esac
 
-MODULES="${TIJARA_PROVISION_MODULES:-tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery}"
+MODULES="${TIJARA_PROVISION_MODULES:-tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_ecommerce,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery}"
 WITHOUT_DEMO="${TIJARA_WITHOUT_DEMO:-True}"
 
 ENV_FILE_ARGS=()
@@ -60,4 +60,3 @@ docker compose "${ENV_FILE_ARGS[@]}" run --rm odoo bash /usr/local/bin/tijara-st
     --stop-after-init
 
 echo "Tenant database provisioned. Mark the matching Tijara provisioning request as provisioned in SaaS Admin."
-

@@ -1,0 +1,25 @@
+<odoo>
+    <record id="product_template_form_view_tijara_ecommerce" model="ir.ui.view">
+        <field name="name">product.template.form.tijara.ecommerce</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_information']" position="after">
+                <page name="tijara_ecommerce" string="Tijara Ecommerce">
+                    <group>
+                        <group>
+                            <field name="tijara_ecommerce_published"/>
+                            <field name="tijara_ecommerce_featured"/>
+                            <field name="tijara_ecommerce_sequence"/>
+                        </group>
+                        <group>
+                            <field name="tijara_ecommerce_short_description_en"/>
+                            <field name="tijara_ecommerce_short_description_ur"/>
+                            <field name="tijara_ecommerce_meta_keywords"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

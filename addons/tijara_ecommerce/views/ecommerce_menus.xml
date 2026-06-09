@@ -1,0 +1,4 @@
+<odoo>
+    <menuitem id="menu_tijara_ecommerce" name="Ecommerce" parent="tijara_base.menu_tijara_root" sequence="28"/>
+    <menuitem id="menu_tijara_ecommerce_configuration" name="Ecommerce Configuration" parent="tijara_base.menu_tijara_configuration" sequence="28"/>
+</odoo>

@@ -1,6 +1,6 @@
 # Tijara Suite All-User Guide
 
-Version: 2026-06-08  
+Version: 2026-06-09
 Audience: platform owners, tenant admins, cashiers, inventory teams, accountants, restaurant operators, display/kiosk operators, and business managers.
 
 ## 1. Purpose
@@ -9,7 +9,8 @@ Tijara Suite is a Pakistan-focused retail and restaurant business platform built
 on Odoo Community. It supports POS, B2B/B2C selling, inventory, procurement,
 customers, suppliers, refunds, exchanges, restaurant dine-in/takeaway/pickup,
 kiosk, queue screens, customer display, promotion/menu/deal screens, analytics,
-hardware bridge readiness, and SaaS feature control.
+ecommerce storefront and checkout, hardware bridge readiness, and SaaS feature
+control.
 
 This guide explains how each user role should use the application during daily
 operations. It is written for local demo, pilot, and training use.
@@ -64,6 +65,7 @@ for local demo only and must not be used in production.
 | Cashier | `cashier@demo.tijara-suite.local` | `Demo@Cashier2024!` | POS checkout, refund, exchange, receipt printing |
 | Inventory Manager | `inventory-manager@demo.tijara-suite.local` | `Demo@InventoryManager2024!` | Products, stock, racks, shelves, expiry and low-stock alerts |
 | Accountant | `accountant@demo.tijara-suite.local` | `Demo@Accountant2024!` | Invoices, settlements, refunds, chargebacks, FBR queue review |
+| Ecommerce Manager | `promotion-manager@demo.tijara-suite.local` | `Demo@PromotionManager2024!` | Online catalog, promotions, pickup/delivery orders, ecommerce reports |
 | Restaurant Operator | `restaurant@demo.tijara-suite.local` | `Demo@Restaurant2024!` | Dine-in, takeaway, pickup, kiosk, queue and kitchen tickets |
 | Public Display | `public-display@demo.tijara-suite.local` | `Demo@Display2024!` | Public display route smoke testing; many display URLs are public |
 
@@ -123,7 +125,50 @@ Setup checklist:
 - Configure POS sessions, cash shifts, payment methods, and barcode settings.
 - Configure warehouses, racks, shelves, bins, and expiry tracking.
 - Enable subscribed SaaS features such as B2B POS, queue display, customer
-  display, and promotion/menu/deal screens.
+  display, ecommerce store, and promotion/menu/deal screens.
+
+### Ecommerce Manager
+
+Owns the public online store workflow.
+
+Primary tasks:
+
+- Manage Ecommerce > Storefront Channels.
+- Publish products to the online catalog.
+- Confirm B2C and B2B prices before promotions go live.
+- Review online orders, payment status, delivery address, pickup code, and
+  queue ticket handoff.
+- Coordinate with inventory when online products are low stock.
+- Coordinate with accounting before live payment provider activation.
+
+Storefront setup workflow:
+
+1. Open Tijara > Ecommerce > Storefront Channels.
+2. Create or review the channel name, code, URL slug, website, warehouse, and
+   stock location.
+3. Enable B2C, B2B, guest checkout, pickup, store pickup, takeaway, delivery,
+   courier, and payment methods according to the tenant plan.
+4. Confirm the tenant plan has `ecommerce_store`; B2B online sales also need
+   `b2b_sales`.
+5. Open products and enable Publish on Tijara Ecommerce.
+6. Confirm online sequence, featured flag, Urdu/English description, barcode,
+   SKU, GST policy, B2C price, and B2B price.
+7. Attach active promotions to the ecommerce channel when required.
+8. Open the storefront route and test catalog search, cart, checkout, pickup,
+   delivery, and queue ticket creation.
+
+Online order workflow:
+
+1. Customer adds items from the storefront.
+2. Customer chooses B2C or B2B where enabled.
+3. Customer selects pickup, delivery, store pickup, takeaway, courier, or dine
+   in if the channel allows it.
+4. System creates an Odoo sale order with the ecommerce channel, customer,
+   payment method, charge-policy amounts, estimated GST, and payload snapshot.
+5. Pickup/delivery orders create queue tickets when the queue SaaS feature is
+   available.
+6. Staff confirm stock, prepare the order, update queue status, collect or
+   reconcile payment, and print invoice/receipt as needed.
 
 ### Cashier
 
