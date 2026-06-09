@@ -12,8 +12,11 @@
                 <field name="tijara_customer_type"/>
                 <field name="tijara_is_walk_in"/>
                 <field name="tijara_credit_limit"/>
+                <field name="tijara_loyalty_opt_in"/>
+                <field name="tijara_loyalty_number"/>
+                <field name="tijara_loyalty_tier"/>
+                <field name="tijara_loyalty_points"/>
             </xpath>
         </field>
     </record>
 </odoo>
-

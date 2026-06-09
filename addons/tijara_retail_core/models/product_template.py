@@ -10,6 +10,27 @@ class ProductTemplate(models.Model):
     tijara_b2c_price = fields.Float(string="B2C Retail Price")
     tijara_b2b_price = fields.Float(string="B2B Trade Price")
     tijara_b2b_min_qty = fields.Float(string="B2B Minimum Quantity")
+    tijara_vertical_tag = fields.Selection(
+        [
+            ("superstore", "Superstore"),
+            ("grocery", "Grocery"),
+            ("cosmetics", "Cosmetics"),
+            ("cloth", "Cloth"),
+            ("garments", "Garments"),
+            ("uniform", "Uniform"),
+            ("shoes", "Shoes"),
+            ("pharmacy", "Pharmacy"),
+            ("bakery", "Bakery"),
+            ("cafe", "Cafe"),
+            ("fast_food", "Fast Food"),
+            ("restaurant", "Restaurant"),
+            ("mobile_shop", "Mobile Shop"),
+            ("electronics", "Electronics"),
+            ("wholesale", "Wholesale"),
+        ],
+        string="Tijara Vertical",
+        default="superstore",
+    )
     tijara_b2c_tax_included = fields.Boolean(string="B2C Price Includes Tax")
     tijara_b2b_tax_included = fields.Boolean(string="B2B Price Includes Tax")
     tijara_allow_refund = fields.Boolean(string="Allow Refund", default=True)

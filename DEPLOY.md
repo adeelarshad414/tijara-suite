@@ -161,7 +161,7 @@ make install-suite
 The equivalent direct Compose command is:
 
 ```bash
-docker compose --env-file .env --env-file secrets/.env.secrets run --rm odoo bash /usr/local/bin/tijara-start-odoo -d tijara_dev -i tijara_base,tijara_retail_core,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery --without-demo --stop-after-init
+docker compose --env-file .env --env-file secrets/.env.secrets run --rm odoo bash /usr/local/bin/tijara-start-odoo -d tijara_dev -i tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery --without-demo --stop-after-init
 ```
 
 For the local Pakistan demo/readiness path after a PKR/GST or demo-data change:
@@ -172,6 +172,7 @@ make upgrade-pkr-gst
 make verify-pkr-gst
 make seed-pos-demo
 make seed-demo-users
+make verify-enterprise-seed
 make capture-screenshots
 make screenshot-user-guide
 ```
@@ -183,10 +184,11 @@ make local-e2e-evidence
 ```
 
 The harness starts Compose, waits for Odoo, upgrades `tijara_base`,
-`tijara_retail_core`, and `tijara_demo_pos`, verifies Pakistan country/PKR/GST
-18%, seeds demo users from `docs/TEST_CREDENTIALS.csv`, seeds the authenticated
-browser E2E profile, runs the full Playwright browser suite, and exports the
-correlated execution decision. The latest local run
+`tijara_retail_core`, `tijara_pos_experience`, `tijara_analytics`, and
+`tijara_demo_pos`, verifies Pakistan country/PKR/GST 18%, seeds demo users from
+`docs/TEST_CREDENTIALS.csv`, seeds the authenticated browser E2E profile, runs
+the full Playwright browser suite, and exports the correlated execution
+decision. The latest local run
 `local-e2e-20260609T073524Z` passed with no blockers; generated evidence is
 ignored under `deploy/runtime/local-e2e/`,
 `deploy/runtime/e2e-evidence/`, and `deploy/runtime/e2e-execution/`.

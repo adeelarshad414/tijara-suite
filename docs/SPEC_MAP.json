@@ -2,7 +2,7 @@
   "app": {
     "name": "Tijara Suite",
     "package_name": "tijara-suite",
-    "version": "0.17.0",
+    "version": "0.18.0",
     "type": "Odoo Community SaaS web application",
     "license": "LGPL-3.0-or-later",
     "market": "Pakistan retail, restaurant, wholesale, and back-office operations"
@@ -132,6 +132,102 @@
       ]
     },
     {
+      "role": "expense_manager",
+      "email": "expense-manager@demo.tijara-suite.local",
+      "permissions": [
+        "back-office expenses",
+        "expense approvals",
+        "paid unpaid evidence",
+        "petty cash review"
+      ],
+      "key_workflows": [
+        "Submit expense",
+        "Approve expense",
+        "Mark expense paid",
+        "Export expense audit"
+      ]
+    },
+    {
+      "role": "salary_manager",
+      "email": "salary-manager@demo.tijara-suite.local",
+      "permissions": [
+        "salary batches",
+        "deductions",
+        "bonuses",
+        "payroll approval"
+      ],
+      "key_workflows": [
+        "Review salary batch",
+        "Approve payroll",
+        "Mark salaries paid",
+        "Audit monthly payroll"
+      ]
+    },
+    {
+      "role": "loyalty_manager",
+      "email": "loyalty-manager@demo.tijara-suite.local",
+      "permissions": [
+        "customer details",
+        "walk-in conversion",
+        "B2B B2C customers",
+        "loyalty tiers and points"
+      ],
+      "key_workflows": [
+        "Review loyalty customer",
+        "Update tier",
+        "Check customer history",
+        "Validate POS point accrual"
+      ]
+    },
+    {
+      "role": "vertical_manager",
+      "email": "vertical-manager@demo.tijara-suite.local",
+      "permissions": [
+        "vertical catalog",
+        "B2B B2C prices",
+        "stock policy",
+        "business policy settings"
+      ],
+      "key_workflows": [
+        "Review vertical tags",
+        "Configure GST service delivery rules",
+        "Update B2B B2C price",
+        "Check inventory readiness"
+      ]
+    },
+    {
+      "role": "promotion_manager",
+      "email": "promotion-manager@demo.tijara-suite.local",
+      "permissions": [
+        "promotions",
+        "menu and deals boards",
+        "customer display",
+        "queue display"
+      ],
+      "key_workflows": [
+        "Publish promotion",
+        "Review menu board",
+        "Review deals board",
+        "Check queue display"
+      ]
+    },
+    {
+      "role": "analytics_manager",
+      "email": "analytics-manager@demo.tijara-suite.local",
+      "permissions": [
+        "dashboards",
+        "reports",
+        "trends",
+        "KPI audit"
+      ],
+      "key_workflows": [
+        "Review dashboard catalog",
+        "Check KPI snapshots",
+        "Review vertical mix",
+        "Export audit report"
+      ]
+    },
+    {
       "role": "restaurant_operator",
       "email": "restaurant@demo.tijara-suite.local",
       "permissions": [
@@ -166,6 +262,12 @@
         "cashier",
         "inventory_manager",
         "accountant",
+        "expense_manager",
+        "salary_manager",
+        "loyalty_manager",
+        "vertical_manager",
+        "promotion_manager",
+        "analytics_manager",
         "restaurant_operator"
       ],
       "description": "Authenticated Odoo web app shell for backend modules and POS access."
@@ -175,7 +277,8 @@
       "route_path": "/tijara/display/tijara-demo-kiosk",
       "auth": "public",
       "personas": [
-        "restaurant_operator"
+        "restaurant_operator",
+        "promotion_manager"
       ],
       "description": "Self-ordering kiosk route backed by display screen slug."
     },
@@ -184,7 +287,8 @@
       "route_path": "/tijara/display/tijara-demo-kiosk/checkout",
       "auth": "public",
       "personas": [
-        "restaurant_operator"
+        "restaurant_operator",
+        "promotion_manager"
       ],
       "description": "JSON endpoint for kiosk cart checkout."
     },
@@ -193,7 +297,8 @@
       "route_path": "/tijara/display/tijara-demo-menu-board",
       "auth": "public",
       "personas": [
-        "restaurant_operator"
+        "restaurant_operator",
+        "promotion_manager"
       ],
       "description": "Public menu board route for restaurants and bakeries."
     },
@@ -203,7 +308,8 @@
       "auth": "public",
       "personas": [
         "tenant_admin",
-        "restaurant_operator"
+        "restaurant_operator",
+        "promotion_manager"
       ],
       "description": "Public deals and promotions display."
     },
@@ -213,7 +319,8 @@
       "auth": "public",
       "personas": [
         "cashier",
-        "tenant_admin"
+        "tenant_admin",
+        "promotion_manager"
       ],
       "description": "Customer-facing live cart and totals display."
     },
@@ -223,7 +330,8 @@
       "auth": "public",
       "personas": [
         "restaurant_operator",
-        "tenant_admin"
+        "tenant_admin",
+        "promotion_manager"
       ],
       "description": "Public queue number and pickup status display."
     },
@@ -243,6 +351,10 @@
     "Bill-level percentage and amount discount synchronization",
     "Refund and exchange workflows with invoice barcode scanning",
     "Receipt and invoice template customization",
+    "Back-office expense and salary management",
+    "Customer details and loyalty programs",
+    "Cafe-only service charges and cafe/restaurant card cash tax policy",
+    "Delivery charges for enabled business types",
     "CSV import export for operational data",
     "Hardware bridge for printers scanners drawers scales labels and customer displays",
     "Kiosk menu deals promotion queue and customer-display public routes",
@@ -258,11 +370,17 @@
   "verticals": [
     "superstore",
     "grocery",
+    "cosmetics",
     "bakery",
     "cloth",
     "pharmacy",
+    "cafe",
+    "fast_food",
     "restaurant",
     "garments",
+    "uniform",
+    "shoes",
+    "mobile_shop",
     "electronics",
     "wholesale"
   ],
@@ -303,7 +421,7 @@
   "demo_data": {
     "module": "tijara_demo_pos",
     "seed_command": "make seed-pos-demo",
-    "notes": "Seeds POS config, open session, demo products, B2B and B2C customers, screens, kiosk profile, queue ticket, and promotions. Demo login users must be created or mapped in staging before authenticated E2E."
+    "notes": "Seeds POS config, open session, vertical demo products, B2B and B2C customers, loyalty records, screens, kiosk profile, queue ticket, promotions, invoice and receipt templates, back-office expenses, and salary batch data. Demo login users must be created or mapped in staging before authenticated E2E."
   },
   "commands": {
     "start": "bash scripts/dev-start.sh",

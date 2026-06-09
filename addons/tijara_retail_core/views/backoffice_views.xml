@@ -1,0 +1,141 @@
+<odoo>
+    <record id="action_tijara_expense_request" model="ir.actions.act_window">
+        <field name="name">Expenses</field>
+        <field name="res_model">tijara.expense.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_expense_request_list" model="ir.ui.view">
+        <field name="name">tijara.expense.request.list</field>
+        <field name="model">tijara.expense.request</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'paid'" decoration-warning="state in ('submitted', 'approved')" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="expense_date"/>
+                <field name="category"/>
+                <field name="partner_id"/>
+                <field name="payment_method"/>
+                <field name="amount"/>
+                <field name="tax_amount"/>
+                <field name="total_amount"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_expense_request_form" model="ir.ui.view">
+        <field name="name">tijara.expense.request.form</field>
+        <field name="model">tijara.expense.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit" type="object" string="Submit" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve" invisible="state != 'submitted'" groups="tijara_base.group_tijara_manager"/>
+                    <button name="action_mark_paid" type="object" string="Mark Paid" invisible="state != 'approved'" groups="tijara_base.group_tijara_manager"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('paid', 'cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="expense_date"/>
+                            <field name="requested_by_id"/>
+                            <field name="partner_id"/>
+                            <field name="category"/>
+                        </group>
+                        <group>
+                            <field name="payment_method"/>
+                            <field name="amount"/>
+                            <field name="tax_amount"/>
+                            <field name="total_amount" readonly="1"/>
+                            <field name="receipt_reference"/>
+                        </group>
+                    </group>
+                    <group string="Approval">
+                        <field name="approved_by_id" readonly="1"/>
+                        <field name="approved_at" readonly="1"/>
+                        <field name="paid_at" readonly="1"/>
+                    </group>
+                    <field name="notes"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tijara_salary_batch" model="ir.actions.act_window">
+        <field name="name">Salary Batches</field>
+        <field name="res_model">tijara.salary.batch</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_salary_batch_list" model="ir.ui.view">
+        <field name="name">tijara.salary.batch.list</field>
+        <field name="model">tijara.salary.batch</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'paid'" decoration-warning="state == 'approved'" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="period_start"/>
+                <field name="period_end"/>
+                <field name="gross_total"/>
+                <field name="deduction_total"/>
+                <field name="bonus_total"/>
+                <field name="net_total"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_salary_batch_form" model="ir.ui.view">
+        <field name="name">tijara.salary.batch.form</field>
+        <field name="model">tijara.salary.batch</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state != 'draft'" groups="tijara_base.group_tijara_manager"/>
+                    <button name="action_mark_paid" type="object" string="Mark Paid" invisible="state != 'approved'" groups="tijara_base.group_tijara_manager"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('paid', 'cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="period_start"/>
+                            <field name="period_end"/>
+                        </group>
+                        <group>
+                            <field name="gross_total" readonly="1"/>
+                            <field name="deduction_total" readonly="1"/>
+                            <field name="bonus_total" readonly="1"/>
+                            <field name="net_total" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="line_ids">
+                        <list editable="bottom">
+                            <field name="employee_id"/>
+                            <field name="role"/>
+                            <field name="gross_amount"/>
+                            <field name="deduction_amount"/>
+                            <field name="bonus_amount"/>
+                            <field name="net_amount" readonly="1"/>
+                            <field name="notes"/>
+                        </list>
+                    </field>
+                    <group string="Approval">
+                        <field name="approved_by_id" readonly="1"/>
+                        <field name="approved_at" readonly="1"/>
+                        <field name="paid_at" readonly="1"/>
+                    </group>
+                    <field name="notes"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_backoffice" name="Back Office" parent="menu_tijara_retail" sequence="35"/>
+    <menuitem id="menu_tijara_expense_request" name="Expenses" parent="menu_tijara_backoffice" action="action_tijara_expense_request" sequence="10"/>
+    <menuitem id="menu_tijara_salary_batch" name="Salaries" parent="menu_tijara_backoffice" action="action_tijara_salary_batch" sequence="20"/>
+</odoo>

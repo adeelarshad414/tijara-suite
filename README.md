@@ -24,11 +24,17 @@ The first market verticals are:
 
 - Superstores and general retail
 - Grocery stores
+- Cosmetics shops
 - Bakeries
 - Cloth and fabric shops
 - Pharmacies
+- Cafes
+- Fast food counters
 - Restaurants
 - Garments and textile retail
+- Uniform shops
+- Shoes brands and shoes stores
+- Mobile shops
 - Electronics and appliance stores
 - Wholesale and multi-branch retail
 
@@ -267,8 +273,9 @@ bulk import/export, hardware, analytics, SaaS controls, settlements, FBR queue,
 offline POS, security, troubleshooting, and escalation.
 
 The screenshot guide is generated from a running local Odoo instance after
-upgrading `tijara_base`, `tijara_retail_core`, and `tijara_demo_pos`, verifying
-Pakistan country/PKR/GST 18%, seeding all demo users from
+upgrading `tijara_base`, `tijara_retail_core`, `tijara_pos_experience`,
+`tijara_analytics`, and `tijara_demo_pos`, verifying Pakistan country/PKR/GST
+18%, seeding all demo users from
 `docs/TEST_CREDENTIALS.csv`, and capturing live browser screenshots for login,
 app shell, kiosk, customer display, queue display, menu board, and deals board.
 Regenerate it with `make capture-screenshots` followed by
@@ -287,7 +294,7 @@ rollback guidance.
 
 The custom suite has passed live Odoo 19 install and upgrade smoke tests. The
 `tijara_dev` database installs all 15 Tijara custom modules, seeds 21 SaaS
-feature flags, includes five analytics dashboards, includes four report catalog
+feature flags, includes nine analytics dashboards, includes nine report catalog
 templates, and the Odoo service responds at `http://localhost:8069` with the web
 app redirecting to `/odoo`.
 The optional `tijara_demo_pos` module is also installed in the dev database for
@@ -295,9 +302,9 @@ cashier smoke-test data; it is not part of the production suite install.
 The local `tijara_dev` database has also been upgraded after the Pakistan
 currency/tax correction: live verification now reports company country `PK`,
 currency `PKR`, `GST 18% Sales (PK)`, and GST mapped to the seeded demo rice
-product. All seven documented demo personas from `docs/TEST_CREDENTIALS.csv`
-have been created/mapped in the local database, and live browser screenshots
-now back the screenshot-based guide.
+product. All thirteen documented demo personas from
+`docs/TEST_CREDENTIALS.csv` can be created/mapped in the local database, and
+live browser screenshots now back the screenshot-based guide.
 The local evidence harness run `local-e2e-20260609T073524Z` also passed all
 stages: Compose startup, Odoo readiness, PKR/GST module upgrade, live PKR/GST
 verification, demo-user seeding, browser E2E seed, full Playwright browser E2E,
@@ -312,7 +319,13 @@ menus, backend views, SaaS plans/features, Pakistan localization fields, POS
 experience foundations, overall bill discount controls, configurable
 invoice/receipt templates, scanner/printer configuration, invoice barcode return
 scanning, CSV bulk import/export, inventory intelligence, analytics/reporting
-foundations, and vertical packs are in place. The Tijara invoice/receipt
+foundations, back-office expense and salary management, loyalty fields,
+business-policy charge toggles, and vertical packs are in place. The business
+policy layer can enable/disable GST, delivery charges, cafe-only service
+charges, and cafe/restaurant card/cash tax rules while keeping demo products
+tagged for superstore, grocery, cosmetics, cloth, garments, uniform, shoes,
+pharmacy, bakery, cafe, fast food, restaurant, mobile shop, and electronics
+workflows. The Tijara invoice/receipt
 template configuration now renders through backend QWeb PDF/HTML reports for
 customer invoices and POS orders, and the browser POS receipt screen consumes
 the configured POS receipt profile during cashier checkout. Pakistan defaults

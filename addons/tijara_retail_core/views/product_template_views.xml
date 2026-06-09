@@ -19,6 +19,7 @@
                             <field name="tijara_b2c_price"/>
                             <field name="tijara_b2b_price"/>
                             <field name="tijara_b2b_min_qty"/>
+                            <field name="tijara_vertical_tag"/>
                             <field name="tijara_b2c_tax_included"/>
                             <field name="tijara_b2b_tax_included"/>
                         </group>

@@ -39,6 +39,38 @@
         <field name="notes">Customer growth, repeat sales, deal uplift, and promotion display performance.</field>
     </record>
 
+    <record id="dashboard_backoffice_finance" model="tijara.analytics.dashboard">
+        <field name="name">Back Office Finance</field>
+        <field name="code">backoffice_finance</field>
+        <field name="sequence">60</field>
+        <field name="audience">backoffice_manager</field>
+        <field name="notes">Expenses, petty cash, delivery settlements, salaries, approvals, paid/unpaid totals, and audit readiness.</field>
+    </record>
+
+    <record id="dashboard_restaurant_cafe_operations" model="tijara.analytics.dashboard">
+        <field name="name">Restaurant and Cafe Operations</field>
+        <field name="code">restaurant_cafe_operations</field>
+        <field name="sequence">70</field>
+        <field name="audience">restaurant_manager</field>
+        <field name="notes">Dine-in, takeaway, pickup, delivery, queue, service charge, card/cash food tax, kitchen load, and menu performance.</field>
+    </record>
+
+    <record id="dashboard_vertical_retail_mix" model="tijara.analytics.dashboard">
+        <field name="name">Vertical Retail Mix</field>
+        <field name="code">vertical_retail_mix</field>
+        <field name="sequence">80</field>
+        <field name="audience">analytics_manager</field>
+        <field name="notes">Superstore, grocery, cosmetics, cloth, garments, uniform, shoes, pharmacy, mobile, electronics, bakery, and food-service catalog coverage.</field>
+    </record>
+
+    <record id="dashboard_loyalty_customer_retention" model="tijara.analytics.dashboard">
+        <field name="name">Loyalty and Customer Retention</field>
+        <field name="code">loyalty_customer_retention</field>
+        <field name="sequence">90</field>
+        <field name="audience">loyalty_manager</field>
+        <field name="notes">Walk-in capture, B2B/B2C customers, loyalty tiers, points earned, repeat visits, customer history, and retention campaigns.</field>
+    </record>
+
     <record id="widget_owner_revenue" model="tijara.analytics.widget">
         <field name="name">Revenue Trend</field>
         <field name="dashboard_id" ref="dashboard_owner_overview"/>
@@ -115,6 +147,92 @@
         <field name="feature_code">promotion_display</field>
     </record>
 
+    <record id="widget_backoffice_expense_pipeline" model="tijara.analytics.widget">
+        <field name="name">Expense Approval Pipeline</field>
+        <field name="dashboard_id" ref="dashboard_backoffice_finance"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">table</field>
+        <field name="business_area">backoffice</field>
+        <field name="metric_code">expense_state_totals</field>
+        <field name="target_note">Show draft, submitted, approved, paid, cancelled, and overdue expense totals.</field>
+    </record>
+
+    <record id="widget_backoffice_salary_liability" model="tijara.analytics.widget">
+        <field name="name">Salary Liability</field>
+        <field name="dashboard_id" ref="dashboard_backoffice_finance"/>
+        <field name="sequence">20</field>
+        <field name="widget_type">kpi</field>
+        <field name="business_area">payroll</field>
+        <field name="metric_code">salary_net_payable</field>
+        <field name="target_note">Track gross, deductions, bonuses, net payable, approved, and paid salary batches.</field>
+    </record>
+
+    <record id="widget_restaurant_order_type_mix" model="tijara.analytics.widget">
+        <field name="name">Dine-in Takeaway Pickup Delivery Mix</field>
+        <field name="dashboard_id" ref="dashboard_restaurant_cafe_operations"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">chart</field>
+        <field name="business_area">food_service</field>
+        <field name="metric_code">restaurant_order_type_mix</field>
+    </record>
+
+    <record id="widget_restaurant_charges_tax_audit" model="tijara.analytics.widget">
+        <field name="name">Service Charge and Card/Cash Tax</field>
+        <field name="dashboard_id" ref="dashboard_restaurant_cafe_operations"/>
+        <field name="sequence">20</field>
+        <field name="widget_type">table</field>
+        <field name="business_area">tax_policy</field>
+        <field name="metric_code">food_service_charge_tax_audit</field>
+        <field name="target_note">Cafe service charge only; cafe/restaurant card 5% and cash 16% policy evidence.</field>
+    </record>
+
+    <record id="widget_restaurant_queue_sla" model="tijara.analytics.widget">
+        <field name="name">Queue Wait and Kitchen SLA</field>
+        <field name="dashboard_id" ref="dashboard_restaurant_cafe_operations"/>
+        <field name="sequence">30</field>
+        <field name="widget_type">trend</field>
+        <field name="business_area">operations</field>
+        <field name="metric_code">queue_wait_kitchen_sla</field>
+        <field name="feature_code">queue_system</field>
+    </record>
+
+    <record id="widget_vertical_catalog_coverage" model="tijara.analytics.widget">
+        <field name="name">Vertical Catalog Coverage</field>
+        <field name="dashboard_id" ref="dashboard_vertical_retail_mix"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">chart</field>
+        <field name="business_area">verticals</field>
+        <field name="metric_code">vertical_catalog_coverage</field>
+        <field name="target_note">Count active SKUs by superstore, grocery, cosmetics, cloth, garments, uniform, shoes, pharmacy, food, mobile, and electronics tags.</field>
+    </record>
+
+    <record id="widget_vertical_b2b_b2c_margin" model="tijara.analytics.widget">
+        <field name="name">B2B and B2C Price Margin</field>
+        <field name="dashboard_id" ref="dashboard_vertical_retail_mix"/>
+        <field name="sequence">20</field>
+        <field name="widget_type">graph</field>
+        <field name="business_area">verticals</field>
+        <field name="metric_code">vertical_b2b_b2c_margin</field>
+    </record>
+
+    <record id="widget_loyalty_points_liability" model="tijara.analytics.widget">
+        <field name="name">Loyalty Points Liability</field>
+        <field name="dashboard_id" ref="dashboard_loyalty_customer_retention"/>
+        <field name="sequence">10</field>
+        <field name="widget_type">kpi</field>
+        <field name="business_area">loyalty</field>
+        <field name="metric_code">loyalty_points_liability</field>
+    </record>
+
+    <record id="widget_loyalty_customer_history" model="tijara.analytics.widget">
+        <field name="name">Customer History and Repeat Visits</field>
+        <field name="dashboard_id" ref="dashboard_loyalty_customer_retention"/>
+        <field name="sequence">20</field>
+        <field name="widget_type">trend</field>
+        <field name="business_area">customers</field>
+        <field name="metric_code">customer_repeat_visit_history</field>
+    </record>
+
     <record id="report_daily_sales" model="tijara.analytics.report">
         <field name="name">Daily Sales Summary</field>
         <field name="code">daily_sales_summary</field>
@@ -155,5 +273,56 @@
         <field name="owner_role">Branch Manager</field>
         <field name="feature_code">promotion_display</field>
         <field name="description">Promotion uplift, repeat customers, customer segments, deal performance, and menu/display effectiveness.</field>
+    </record>
+
+    <record id="report_backoffice_expense_salary" model="tijara.analytics.report">
+        <field name="name">Back Office Expense and Salary Audit</field>
+        <field name="code">backoffice_expense_salary_audit</field>
+        <field name="business_area">backoffice</field>
+        <field name="report_type">dashboard</field>
+        <field name="frequency">monthly</field>
+        <field name="owner_role">Owner / Back Office Manager</field>
+        <field name="description">Expense approvals, paid/unpaid totals, salary batches, deductions, bonuses, and month-close audit evidence.</field>
+    </record>
+
+    <record id="report_restaurant_charge_policy" model="tijara.analytics.report">
+        <field name="name">Restaurant and Cafe Charge Policy</field>
+        <field name="code">restaurant_cafe_charge_policy</field>
+        <field name="business_area">tax_policy</field>
+        <field name="report_type">list</field>
+        <field name="frequency">daily</field>
+        <field name="owner_role">Restaurant Manager / Accountant</field>
+        <field name="description">Dine-in, takeaway, pickup, delivery, service charge, delivery charge, card 5%, cash 16%, GST, and policy override checks.</field>
+    </record>
+
+    <record id="report_vertical_catalog_performance" model="tijara.analytics.report">
+        <field name="name">Vertical Catalog Performance</field>
+        <field name="code">vertical_catalog_performance</field>
+        <field name="business_area">verticals</field>
+        <field name="report_type">pivot</field>
+        <field name="frequency">weekly</field>
+        <field name="owner_role">Vertical Manager / Owner</field>
+        <field name="description">SKU count, sales, margin, B2B/B2C price coverage, stock pressure, and dead-stock signals by retail vertical.</field>
+    </record>
+
+    <record id="report_loyalty_customer_history" model="tijara.analytics.report">
+        <field name="name">Loyalty and Customer History</field>
+        <field name="code">loyalty_customer_history</field>
+        <field name="business_area">loyalty</field>
+        <field name="report_type">graph</field>
+        <field name="frequency">weekly</field>
+        <field name="owner_role">Loyalty Manager / Branch Manager</field>
+        <field name="description">Walk-in conversion, B2B/B2C repeat sales, loyalty points earned, tier movement, and customer purchase history.</field>
+    </record>
+
+    <record id="report_display_queue_operations" model="tijara.analytics.report">
+        <field name="name">Display and Queue Operations</field>
+        <field name="code">display_queue_operations</field>
+        <field name="business_area">operations</field>
+        <field name="report_type">scheduled</field>
+        <field name="frequency">daily</field>
+        <field name="owner_role">Promotion Manager / Restaurant Operator</field>
+        <field name="feature_code">queue_system</field>
+        <field name="description">Kiosk orders, queue state, customer display updates, menu/deal/promotion screen content, and public route availability.</field>
     </record>
 </odoo>

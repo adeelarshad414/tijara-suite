@@ -12,5 +12,18 @@
         <field name="prefix">RET/%(year)s/</field>
         <field name="padding">5</field>
     </record>
-</odoo>
 
+    <record id="seq_tijara_expense_request" model="ir.sequence">
+        <field name="name">Tijara Expense Request</field>
+        <field name="code">tijara.expense.request</field>
+        <field name="prefix">EXP/%(year)s/</field>
+        <field name="padding">5</field>
+    </record>
+
+    <record id="seq_tijara_salary_batch" model="ir.sequence">
+        <field name="name">Tijara Salary Batch</field>
+        <field name="code">tijara.salary.batch</field>
+        <field name="prefix">SAL/%(year)s/</field>
+        <field name="padding">5</field>
+    </record>
+</odoo>

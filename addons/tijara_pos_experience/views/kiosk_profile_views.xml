@@ -15,6 +15,7 @@
                 <field name="allow_dine_in"/>
                 <field name="allow_takeaway"/>
                 <field name="allow_pickup"/>
+                <field name="allow_delivery"/>
                 <field name="allow_b2c"/>
                 <field name="allow_b2b"/>
                 <field name="auto_create_pos_order"/>
@@ -42,6 +43,7 @@
                             <field name="allow_dine_in"/>
                             <field name="allow_takeaway"/>
                             <field name="allow_pickup"/>
+                            <field name="allow_delivery"/>
                             <field name="allow_b2c"/>
                             <field name="allow_b2b"/>
                             <field name="require_customer_for_b2b"/>

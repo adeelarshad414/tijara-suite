@@ -9,6 +9,7 @@ class PosOrder(models.Model):
             ("dine_in", "Dine In"),
             ("takeaway", "Takeaway"),
             ("pickup", "Pickup"),
+            ("delivery", "Delivery"),
         ],
         string="Order Type",
         default="takeaway",

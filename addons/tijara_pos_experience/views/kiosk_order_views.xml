@@ -16,6 +16,9 @@
                 <field name="customer_name"/>
                 <field name="customer_mobile"/>
                 <field name="amount_total"/>
+                <field name="amount_service_charge"/>
+                <field name="amount_delivery_charge"/>
+                <field name="amount_payment_tax"/>
                 <field name="pickup_code"/>
                 <field name="queue_ticket_id"/>
                 <field name="pos_order_id"/>
@@ -59,8 +62,15 @@
                             <field name="payment_terminal_id"/>
                             <field name="pickup_code"/>
                             <field name="queue_ticket_id"/>
-                            <field name="amount_total" readonly="1"/>
                         </group>
+                    </group>
+                    <group string="Totals">
+                        <field name="amount_untaxed" readonly="1"/>
+                        <field name="amount_gst" readonly="1"/>
+                        <field name="amount_service_charge" readonly="1"/>
+                        <field name="amount_delivery_charge" readonly="1"/>
+                        <field name="amount_payment_tax" readonly="1"/>
+                        <field name="amount_total" readonly="1"/>
                     </group>
                     <group string="POS Sync">
                         <field name="pos_config_id"/>

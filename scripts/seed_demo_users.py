@@ -45,6 +45,50 @@ ROLE_GROUPS = {
         "account.group_account_user",
         "account.group_account_manager",
     ],
+    "expense_manager": [
+        "base.group_user",
+        "tijara_base.group_tijara_user",
+        "tijara_base.group_tijara_manager",
+        "account.group_account_user",
+    ],
+    "salary_manager": [
+        "base.group_user",
+        "tijara_base.group_tijara_user",
+        "tijara_base.group_tijara_manager",
+        "account.group_account_user",
+    ],
+    "loyalty_manager": [
+        "base.group_user",
+        "tijara_base.group_tijara_user",
+        "tijara_base.group_tijara_manager",
+        "point_of_sale.group_pos_manager",
+        "sales_team.group_sale_manager",
+    ],
+    "vertical_manager": [
+        "base.group_user",
+        "tijara_base.group_tijara_user",
+        "tijara_base.group_tijara_manager",
+        "point_of_sale.group_pos_manager",
+        "stock.group_stock_manager",
+        "sales_team.group_sale_manager",
+        "purchase.group_purchase_manager",
+    ],
+    "promotion_manager": [
+        "base.group_user",
+        "tijara_base.group_tijara_user",
+        "tijara_base.group_tijara_manager",
+        "point_of_sale.group_pos_manager",
+        "sales_team.group_sale_manager",
+    ],
+    "analytics_manager": [
+        "base.group_user",
+        "tijara_base.group_tijara_user",
+        "tijara_base.group_tijara_manager",
+        "account.group_account_manager",
+        "stock.group_stock_manager",
+        "sales_team.group_sale_manager",
+        "purchase.group_purchase_manager",
+    ],
     "restaurant_operator": [
         "base.group_user",
         "tijara_base.group_tijara_user",
@@ -56,7 +100,15 @@ ROLE_GROUPS = {
     ],
 }
 
-POS_PERSONAS = {"platform_superadmin", "tenant_admin", "cashier", "restaurant_operator"}
+POS_PERSONAS = {
+    "platform_superadmin",
+    "tenant_admin",
+    "cashier",
+    "loyalty_manager",
+    "promotion_manager",
+    "restaurant_operator",
+    "vertical_manager",
+}
 
 
 def ref(xmlid):

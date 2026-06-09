@@ -1,0 +1,55 @@
+<odoo>
+    <template id="tijara_web_login_branding" inherit_id="web.login" name="Tijara Login Branding">
+        <xpath expr="//form" position="before">
+            <style>
+                .tijara-login-brand {
+                    margin-bottom: 18px;
+                    padding: 18px;
+                    border: 1px solid #d9e0d8;
+                    border-radius: 8px;
+                    background: #f7faf6;
+                    color: #17332d;
+                }
+                .tijara-login-brand h1 {
+                    margin: 0;
+                    font-size: 1.65rem;
+                    line-height: 1.15;
+                    letter-spacing: 0;
+                }
+                .tijara-login-brand p {
+                    margin: 8px 0 0;
+                    color: #51635b;
+                    font-size: .95rem;
+                }
+                .tijara-login-badges {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                    margin-top: 12px;
+                }
+                .tijara-login-badges span {
+                    display: inline-flex;
+                    min-height: 30px;
+                    align-items: center;
+                    border: 1px solid #c7d1c8;
+                    border-radius: 7px;
+                    padding: 0 10px;
+                    background: #fff;
+                    color: #17332d;
+                    font-size: .82rem;
+                    font-weight: 700;
+                }
+            </style>
+            <section class="tijara-login-brand">
+                <h1>Tijara Suite</h1>
+                <p>Pakistan-ready retail, restaurant, inventory, and back-office operations.</p>
+                <div class="tijara-login-badges">
+                    <span>PKR</span>
+                    <span>GST 18%</span>
+                    <span>Urdu + English</span>
+                    <span>Community Edition</span>
+                </div>
+            </section>
+        </xpath>
+    </template>
+</odoo>

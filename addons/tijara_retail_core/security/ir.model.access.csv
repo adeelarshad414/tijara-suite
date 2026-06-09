@@ -15,3 +15,9 @@ access_tijara_exchange_request_line_user,tijara.exchange.request.line.user,model
 access_tijara_exchange_request_line_manager,tijara.exchange.request.line.manager,model_tijara_exchange_request_line,tijara_base.group_tijara_manager,1,1,1,1
 access_tijara_cash_shift_user,tijara.cash.shift.user,model_tijara_cash_shift,tijara_base.group_tijara_user,1,1,1,0
 access_tijara_cash_shift_manager,tijara.cash.shift.manager,model_tijara_cash_shift,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_expense_request_user,tijara.expense.request.user,model_tijara_expense_request,tijara_base.group_tijara_user,1,1,1,0
+access_tijara_expense_request_manager,tijara.expense.request.manager,model_tijara_expense_request,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_salary_batch_user,tijara.salary.batch.user,model_tijara_salary_batch,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_salary_batch_manager,tijara.salary.batch.manager,model_tijara_salary_batch,tijara_base.group_tijara_manager,1,1,1,1
+access_tijara_salary_line_user,tijara.salary.line.user,model_tijara_salary_line,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_salary_line_manager,tijara.salary.line.manager,model_tijara_salary_line,tijara_base.group_tijara_manager,1,1,1,1

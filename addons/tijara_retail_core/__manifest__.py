@@ -22,6 +22,7 @@
         "views/hardware_device_views.xml",
         "views/hardware_certification_views.xml",
         "views/bulk_data_operation_views.xml",
+        "views/backoffice_views.xml",
         "views/refund_exchange_views.xml",
         "views/cash_shift_views.xml",
         "views/product_template_views.xml",

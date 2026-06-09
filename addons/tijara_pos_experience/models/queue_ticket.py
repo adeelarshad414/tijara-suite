@@ -18,6 +18,7 @@ class TijaraQueueTicket(models.Model):
             ("dine_in", "Dine In"),
             ("takeaway", "Takeaway"),
             ("pickup", "Pickup"),
+            ("delivery", "Delivery"),
         ],
         default="takeaway",
         required=True,
@@ -75,4 +76,3 @@ class TijaraQueueTicket(models.Model):
                 ) or "New"
             if not ticket.queue_number:
                 ticket.queue_number = ticket.name
-

@@ -20,6 +20,12 @@ class TijaraAnalyticsReport(models.Model):
             ("promotions", "Promotions"),
             ("finance", "Finance"),
             ("operations", "Operations"),
+            ("backoffice", "Back Office"),
+            ("payroll", "Payroll"),
+            ("loyalty", "Loyalty"),
+            ("food_service", "Food Service"),
+            ("verticals", "Vertical Retail"),
+            ("tax_policy", "Tax and Charges"),
         ],
         required=True,
     )

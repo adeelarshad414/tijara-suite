@@ -14,8 +14,17 @@
                 <field name="tijara_fbr_pos_enabled"/>
                 <field name="tijara_fbr_pos_id"/>
                 <field name="tijara_fiscal_device_id"/>
+                <field name="tijara_gst_enabled"/>
+                <field name="tijara_service_charge_enabled"/>
+                <field name="tijara_service_charge_percent"/>
+                <field name="tijara_delivery_charge_enabled"/>
+                <field name="tijara_delivery_charge_amount"/>
+                <field name="tijara_food_payment_tax_enabled"/>
+                <field name="tijara_food_card_tax_percent"/>
+                <field name="tijara_food_cash_tax_percent"/>
+                <field name="tijara_loyalty_enabled"/>
+                <field name="tijara_loyalty_points_per_currency"/>
             </xpath>
         </field>
     </record>
 </odoo>
-

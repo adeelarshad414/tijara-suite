@@ -17,10 +17,11 @@
 | Show service status | `make ps` |
 | Follow Odoo logs | `make logs` |
 | Install suite modules | `make install-suite` |
-| Upgrade PKR/GST demo modules | `make upgrade-pkr-gst` |
+| Upgrade PKR/GST, POS experience, analytics, and demo modules | `make upgrade-pkr-gst` |
 | Verify live PKR and GST 18% | `make verify-pkr-gst` |
 | Seed POS demo | `make seed-pos-demo` |
 | Seed all demo users | `make seed-demo-users` |
+| Verify enterprise demo seed data | `make verify-enterprise-seed` |
 | Run full local browser E2E evidence | `make local-e2e-evidence` |
 | Run Odoo tests | `make test-odoo` |
 | Run Playwright E2E | `make e2e` |

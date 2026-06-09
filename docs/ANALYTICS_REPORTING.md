@@ -60,6 +60,36 @@ Customers and Promotions:
 - Deal performance.
 - Customer display and promotion display impact.
 
+Back Office Finance:
+
+- Expense approval pipeline.
+- Paid/unpaid expense totals.
+- Salary gross, deductions, bonuses, and net payable.
+- Month-close audit readiness.
+
+Restaurant and Cafe Operations:
+
+- Dine-in, takeaway, pickup, and delivery mix.
+- Queue wait and kitchen SLA.
+- Cafe service charge.
+- Cafe/restaurant card 5% and cash 16% food payment tax.
+- Delivery charge audit.
+
+Vertical Retail Mix:
+
+- SKU coverage by superstore, grocery, cosmetics, cloth, garments, uniform,
+  shoes, pharmacy, bakery, cafe, fast food, restaurant, mobile shop,
+  electronics, and wholesale tags.
+- B2B and B2C price coverage.
+- Vertical margin and stock pressure.
+
+Loyalty and Customer Retention:
+
+- Loyalty opt-in coverage.
+- Loyalty tier movement.
+- Points liability.
+- Walk-in conversion and repeat visit history.
+
 ## Report Catalog
 
 Seeded report templates:
@@ -68,13 +98,20 @@ Seeded report templates:
 - Inventory Health.
 - Purchase and Reorder Planning.
 - Customer and Promotion Performance.
+- Back Office Expense and Salary Audit.
+- Restaurant and Cafe Charge Policy.
+- Vertical Catalog Performance.
+- Loyalty and Customer History.
+- Display and Queue Operations.
 
 ## KPI Snapshot Coverage
 
 Snapshots support:
 
 - Day, week, month, quarter, and year periods.
-- Sales, POS, purchase, inventory, customers, promotions, finance, and operations.
+- Sales, POS, purchase, inventory, customers, promotions, finance, operations,
+  back office, payroll, loyalty, food service, vertical retail, and tax/charge
+  policy.
 - Revenue, gross margin, orders, basket size, refunds, stock value, stock
   turnover, low stock, expiry, purchase value, supplier lead time, new customers,
   promotion uplift, queue wait time, and cash variance.

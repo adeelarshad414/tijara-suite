@@ -4,3 +4,4 @@ from . import hardware_device
 from . import hardware_certification
 from . import product_template
 from . import refund_exchange
+from . import backoffice

@@ -10,7 +10,7 @@ agentic development pipeline.
 |---|---|
 | App | Tijara Suite |
 | Type | Odoo Community SaaS web application |
-| Version | 0.17.0 |
+| Version | 0.18.0 |
 | Local URL | `http://localhost:8069` |
 | Long polling | `http://localhost:8072` |
 | Hardware bridge | `http://localhost:9109` |
@@ -26,6 +26,12 @@ agentic development pipeline.
 | Cashier | `cashier@demo.tijara-suite.local` | POS checkout, refunds, receipt print, offline replay |
 | Inventory manager | `inventory-manager@demo.tijara-suite.local` | Products, low stock, expiry, racks, shelves, bulk data |
 | Accountant | `accountant@demo.tijara-suite.local` | Settlements, refunds, chargebacks, FBR queue, draft moves |
+| Expense manager | `expense-manager@demo.tijara-suite.local` | Back-office expenses, approvals, paid/unpaid evidence |
+| Salary manager | `salary-manager@demo.tijara-suite.local` | Salary batches, deductions, bonuses, payroll closeout |
+| Loyalty manager | `loyalty-manager@demo.tijara-suite.local` | Walk-in capture, B2B/B2C customers, loyalty tiers and points |
+| Vertical manager | `vertical-manager@demo.tijara-suite.local` | Vertical catalogs, B2B/B2C prices, stock policy, business settings |
+| Promotion manager | `promotion-manager@demo.tijara-suite.local` | Promotions, menu/deal screens, customer display, queue display |
+| Analytics manager | `analytics-manager@demo.tijara-suite.local` | Dashboards, reports, trends, KPI and audit review |
 | Restaurant operator | `restaurant@demo.tijara-suite.local` | Dine-in, takeaway, pickup, kiosk, queue, kitchen tickets |
 
 ## Screen Inventory
@@ -58,6 +64,8 @@ agentic development pipeline.
 - FBR adapter queue and readiness evidence.
 - Inventory low-stock, expiry, rack, shelf, bin, and warehouse intelligence.
 - Analytics dashboards, reports, trends, and daily KPI collectors.
+- Back-office expenses, salary batches, loyalty, vertical retail mix, and
+  cafe/restaurant charge-policy dashboards.
 - Protected release evidence gates and production readiness reports.
 
 ## Demo Data
@@ -69,8 +77,10 @@ make seed-pos-demo
 make seed-demo-users
 ```
 
-The optional `tijara_demo_pos` module seeds POS config, an open POS session, demo
-products, B2B/B2C customers, display screens, kiosk profile, queue ticket, and
-promotion/deal records. Demo users in `docs/TEST_CREDENTIALS.csv` are
-deterministic staging accounts that can be created or mapped with
-`make seed-demo-users` before authenticated browser E2E runs.
+The optional `tijara_demo_pos` module seeds POS config, an open POS session,
+vertical demo products, B2B/B2C customers, loyalty records, display screens,
+kiosk profile, queue ticket, promotion/deal records, invoice/receipt templates,
+back-office expenses, and a salary batch. Demo users in
+`docs/TEST_CREDENTIALS.csv` are deterministic staging accounts that can be
+created or mapped with `make seed-demo-users` before authenticated browser E2E
+runs.

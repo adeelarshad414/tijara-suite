@@ -32,6 +32,7 @@ class TijaraKioskOrder(models.Model):
             ("dine_in", "Dine In"),
             ("takeaway", "Takeaway"),
             ("pickup", "Pickup"),
+            ("delivery", "Delivery"),
         ],
         default="takeaway",
         required=True,
@@ -90,6 +91,32 @@ class TijaraKioskOrder(models.Model):
         "order_id",
         string="Lines",
     )
+    amount_untaxed = fields.Monetary(
+        compute="_compute_amount_total",
+        currency_field="currency_id",
+        store=True,
+    )
+    amount_gst = fields.Monetary(
+        string="GST",
+        compute="_compute_amount_total",
+        currency_field="currency_id",
+        store=True,
+    )
+    amount_service_charge = fields.Monetary(
+        compute="_compute_amount_total",
+        currency_field="currency_id",
+        store=True,
+    )
+    amount_delivery_charge = fields.Monetary(
+        compute="_compute_amount_total",
+        currency_field="currency_id",
+        store=True,
+    )
+    amount_payment_tax = fields.Monetary(
+        compute="_compute_amount_total",
+        currency_field="currency_id",
+        store=True,
+    )
     amount_total = fields.Monetary(
         compute="_compute_amount_total",
         currency_field="currency_id",
@@ -121,10 +148,110 @@ class TijaraKioskOrder(models.Model):
                 order.name = self.env["ir.sequence"].next_by_code("tijara.kiosk.order") or "New"
         return records
 
-    @api.depends("line_ids.price_subtotal")
+    @api.depends(
+        "line_ids.price_subtotal",
+        "line_ids.product_id",
+        "line_ids.quantity",
+        "line_ids.price_unit",
+        "payment_method",
+        "order_type",
+        "company_id.tijara_business_type",
+        "company_id.tijara_gst_enabled",
+        "company_id.tijara_service_charge_enabled",
+        "company_id.tijara_service_charge_percent",
+        "company_id.tijara_delivery_charge_enabled",
+        "company_id.tijara_delivery_charge_amount",
+        "company_id.tijara_food_payment_tax_enabled",
+        "company_id.tijara_food_card_tax_percent",
+        "company_id.tijara_food_cash_tax_percent",
+    )
     def _compute_amount_total(self):
         for order in self:
-            order.amount_total = sum(order.line_ids.mapped("price_subtotal"))
+            amounts = order._tijara_kiosk_amounts()
+            order.amount_untaxed = amounts["untaxed"]
+            order.amount_gst = amounts["gst"]
+            order.amount_service_charge = amounts["service_charge"]
+            order.amount_delivery_charge = amounts["delivery_charge"]
+            order.amount_payment_tax = amounts["payment_tax"]
+            order.amount_total = amounts["total"]
+
+    def _tijara_tax_enabled(self):
+        self.ensure_one()
+        return bool(getattr(self.company_id, "tijara_gst_enabled", True))
+
+    def _tijara_line_taxes(self, product):
+        self.ensure_one()
+        if not self._tijara_tax_enabled():
+            return self.env["account.tax"]
+        return product.taxes_id.filtered(
+            lambda tax: not tax.company_id or tax.company_id == self.company_id
+        )
+
+    def _tijara_kiosk_amounts(self):
+        self.ensure_one()
+        currency = self.currency_id
+        partner = self.partner_id or False
+        untaxed = 0.0
+        gst = 0.0
+        for line in self.line_ids:
+            product = line.product_id
+            taxes = self._tijara_line_taxes(product) if product else self.env["account.tax"]
+            if taxes:
+                tax_values = taxes.compute_all(
+                    line.price_unit,
+                    currency,
+                    line.quantity,
+                    product=product,
+                    partner=partner,
+                )
+                subtotal = tax_values["total_excluded"]
+                subtotal_incl = tax_values["total_included"]
+            else:
+                subtotal = line.price_subtotal
+                subtotal_incl = line.price_subtotal
+            untaxed += subtotal
+            gst += subtotal_incl - subtotal
+
+        service_charge = 0.0
+        if (
+            self.company_id.tijara_service_charge_enabled
+            and self.company_id.tijara_has_cafe_service_charge_policy()
+        ):
+            service_charge = untaxed * self.company_id.tijara_service_charge_percent / 100.0
+
+        delivery_charge = 0.0
+        if self.company_id.tijara_delivery_charge_enabled and self.order_type == "delivery":
+            delivery_charge = self.company_id.tijara_delivery_charge_amount
+
+        payment_tax = 0.0
+        if (
+            self.company_id.tijara_food_payment_tax_enabled
+            and self.company_id.tijara_has_cafe_restaurant_payment_tax_policy()
+        ):
+            if self.payment_method == "card":
+                rate = self.company_id.tijara_food_card_tax_percent
+            elif self.payment_method == "cash":
+                rate = self.company_id.tijara_food_cash_tax_percent
+            else:
+                rate = 0.0
+            payment_tax = (untaxed + service_charge + delivery_charge) * rate / 100.0
+
+        total = untaxed + gst + service_charge + delivery_charge + payment_tax
+        if currency:
+            untaxed = currency.round(untaxed)
+            gst = currency.round(gst)
+            service_charge = currency.round(service_charge)
+            delivery_charge = currency.round(delivery_charge)
+            payment_tax = currency.round(payment_tax)
+            total = currency.round(total)
+        return {
+            "untaxed": untaxed,
+            "gst": gst,
+            "service_charge": service_charge,
+            "delivery_charge": delivery_charge,
+            "payment_tax": payment_tax,
+            "total": total,
+        }
 
     def _ensure_pickup_code(self):
         for order in self:
@@ -218,9 +345,7 @@ class TijaraKioskOrder(models.Model):
             product = line.product_id
             if not product:
                 raise UserError(_("Every kiosk line must have a product before POS sync."))
-            taxes = product.taxes_id.filtered(
-                lambda tax: not tax.company_id or tax.company_id == self.company_id
-            )
+            taxes = self._tijara_line_taxes(product)
             tax_values = taxes.compute_all(
                 line.price_unit,
                 currency,
@@ -251,9 +376,70 @@ class TijaraKioskOrder(models.Model):
                     },
                 )
             )
+        charge_lines, extra_tax, extra_total = self._prepare_tijara_charge_lines()
+        commands.extend(charge_lines)
+        amount_tax += extra_tax
+        amount_total += extra_total
         if currency:
             amount_tax = currency.round(amount_tax)
             amount_total = currency.round(amount_total)
+        return commands, amount_tax, amount_total
+
+    def _ensure_charge_product(self, default_code, name):
+        template_model = self.env["product.template"].sudo()
+        template = template_model.search([("default_code", "=", default_code)], limit=1)
+        values = {
+            "name": name,
+            "default_code": default_code,
+            "type": "service",
+            "sale_ok": True,
+            "purchase_ok": False,
+            "available_in_pos": True,
+            "list_price": 0.0,
+            "taxes_id": [(6, 0, [])],
+            "supplier_taxes_id": [(6, 0, [])],
+        }
+        if template:
+            template.write(values)
+        else:
+            template = template_model.create(values)
+        return template.product_variant_id
+
+    def _charge_line_command(self, label, amount, product):
+        currency = self.currency_id
+        amount = currency.round(amount) if currency else amount
+        return (
+            0,
+            0,
+            {
+                "name": "%s/%s" % (self.name, label),
+                "product_id": product.id,
+                "full_product_name": label,
+                "qty": 1.0,
+                "price_unit": amount,
+                "discount": 0.0,
+                "tax_ids": [(6, 0, [])],
+                "price_subtotal": amount,
+                "price_subtotal_incl": amount,
+            },
+        )
+
+    def _prepare_tijara_charge_lines(self):
+        self.ensure_one()
+        commands = []
+        amount_tax = self.amount_payment_tax
+        amount_total = 0.0
+        charge_specs = [
+            ("Service Charge", self.amount_service_charge, "TIJARA-SERVICE-CHARGE"),
+            ("Delivery Charge", self.amount_delivery_charge, "TIJARA-DELIVERY-CHARGE"),
+            ("Payment Tax", self.amount_payment_tax, "TIJARA-PAYMENT-TAX"),
+        ]
+        for label, amount, default_code in charge_specs:
+            if not amount:
+                continue
+            product = self._ensure_charge_product(default_code, label)
+            commands.append(self._charge_line_command(label, amount, product))
+            amount_total += amount
         return commands, amount_tax, amount_total
 
     def _create_linked_pos_order(self):
@@ -341,6 +527,14 @@ class TijaraKioskOrder(models.Model):
                 continue
             order._ensure_pickup_code()
             queue_ticket = False
+            partner = order._ensure_pos_partner()
+            if order.company_id.tijara_loyalty_enabled and partner and partner.tijara_loyalty_opt_in:
+                partner.sudo().write(
+                    {
+                        "tijara_loyalty_points": partner.tijara_loyalty_points
+                        + (order.amount_total * order.company_id.tijara_loyalty_points_per_currency)
+                    }
+                )
             if (
                 order.profile_id.auto_create_queue_ticket
                 and order.company_id.tijara_has_saas_feature("queue_system")
@@ -351,7 +545,7 @@ class TijaraKioskOrder(models.Model):
                         "order_type": order.order_type,
                         "audience": order.audience,
                         "pickup_code": order.pickup_code,
-                        "customer_id": order.partner_id.id or False,
+                        "customer_id": partner.id if partner else False,
                         "company_id": order.company_id.id,
                         "notes": order.notes,
                     }

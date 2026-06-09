@@ -29,6 +29,7 @@ class TijaraKioskProfile(models.Model):
     allow_dine_in = fields.Boolean(default=True)
     allow_takeaway = fields.Boolean(default=True)
     allow_pickup = fields.Boolean(default=True)
+    allow_delivery = fields.Boolean(default=True)
     allow_b2c = fields.Boolean(string="Allow B2C", default=True)
     allow_b2b = fields.Boolean(string="Allow B2B")
     require_customer_for_b2b = fields.Boolean(default=True)

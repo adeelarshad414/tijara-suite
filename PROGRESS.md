@@ -9815,3 +9815,101 @@ Status: Complete
 - Start provider/device certification work for FBR, JazzCash, Easypaisa,
   Stripe, receipt printers, barcode scanners, cash drawers, scales, and
   customer displays.
+
+## Iteration 133: Enterprise Retail Policies, Back Office, Dashboards, And Seeds
+
+### Objective
+
+- Expand the enterprise suite for Pakistani retail/restaurant operations with
+  richer vertical support, configurable charge/tax policies, back-office
+  expense/salary workflows, seeded users/data, dashboards, and login polish.
+
+### Completed
+
+- Added company-level business policy toggles for GST, delivery charge,
+  cafe-only service charge, cafe/restaurant card 5% and cash 16% tax, and
+  loyalty points.
+- Expanded business types and product vertical tags for superstore, grocery,
+  cosmetics, cloth, garments, uniform, shoes, pharmacy, bakery, cafe, fast
+  food, restaurant, mobile shop, electronics, and wholesale workflows.
+- Added partner loyalty fields and exposed them in the contact form.
+- Added `tijara.expense.request`, `tijara.salary.batch`, and
+  `tijara.salary.line` models with views, menus, sequences, and access rights.
+- Added kiosk delivery support plus server-side untaxed, GST, service charge,
+  delivery charge, payment tax, and total calculation fields.
+- Updated kiosk public payload/UI checkout totals so enabled charge policies
+  appear before submission.
+- Added cafe/restaurant charge-policy Odoo tests covering cafe service charge,
+  delivery, card 5%, and fast-food exclusion behavior.
+- Added Tijara branding to the Odoo Community login page through QWeb
+  inheritance.
+- Expanded analytics dashboards and reports from 5/4 to 9/9 with back office,
+  restaurant/cafe operations, vertical retail mix, and loyalty retention
+  templates.
+- Expanded demo seed data with 14 vertical tags, B2B/B2C prices, loyalty
+  customers, display content, delivery kiosk mode, receipt/invoice/refund/
+  quotation templates, expenses in draft/submitted/approved/paid states, and a
+  salary batch.
+- Expanded `docs/TEST_CREDENTIALS.csv` and `scripts/seed_demo_users.py` to 13
+  deterministic personas, including expense, salary, loyalty, vertical,
+  promotion, and analytics managers.
+- Added `scripts/verify_enterprise_seed.py` and `make verify-enterprise-seed`
+  for repeatable database checks of users, verticals, loyalty, templates,
+  expenses, salaries, kiosk delivery, dashboards, and reports.
+- Fixed fresh-database Pakistan GST setup by creating/assigning a GST tax group
+  with the same country as the tax.
+- Fixed live-database upgrades by skipping tax metadata writes when an existing
+  GST tax is already used by POS order lines.
+- Updated `README.md`, `DEPLOY.md`, `docs/COMMANDS_QUICKREF.md`,
+  `docs/SPEC_MAP.md`, `docs/SPEC_MAP.json`, `docs/ANALYTICS_REPORTING.md`, and
+  `docs/USER_GUIDE_ALL_USERS.md`.
+
+### Validation
+
+- Python compile checks passed for the modified Odoo models/controllers/tests
+  and seed/verification scripts.
+- JSON parse checks passed for `docs/SPEC_MAP.json` and `package.json`.
+- `make validate` passes and parses 78 XML files.
+- `bash scripts/js_check.sh` passes.
+- `git diff --check` passes.
+- Local `tijara_dev` module upgrade passes for `tijara_base`,
+  `tijara_retail_core`, `tijara_pos_experience`, `tijara_analytics`, and
+  `tijara_demo_pos`.
+- `bash scripts/seed_demo_users.sh` passes and reports 13 demo users mapped to
+  the seeded POS config.
+- `make verify-enterprise-seed DB=tijara_dev` passes with status `ready`,
+  13 demo users, 14 vertical tags, 9 dashboards, 9 reports, and all four
+  receipt/invoice template scopes.
+- `make verify-pkr-gst DB=tijara_dev` passes with company country `PK`,
+  currency `PKR`, `GST 18% Sales (PK)`, and seeded demo rice mapped to GST.
+- Focused Odoo POS experience tests pass in fresh database
+  `tijara_test_pos_policy_fix2` with 13 post-tests, 0 failures, and 0 errors.
+- `bash scripts/security_audit.sh` still blocks because this workstation has
+  ignored non-example runtime secrets under `secrets/`, which is the expected
+  public-repo safety behavior.
+
+### Known Gaps
+
+- Physical hardware certification still needs real printers, scanners, drawers,
+  scales, customer displays, and shop terminals.
+- FBR and PSP production sign-off still need certified credentials, sandbox/
+  live compliance testing, provider reconciliation, refunds, and chargebacks.
+- Full protected/staging browser matrix needs to be rerun after these new
+  backend/demo changes.
+- Dashboard widgets are modeled/cataloged, but deeper automated collectors for
+  back office, loyalty, vertical margin, and charge-policy analytics still need
+  implementation.
+- Login branding is light Odoo Community QWeb branding; a full tenant-branded
+  login/theme system remains future work.
+
+### Next Iteration
+
+- Add automated collectors for back-office expenses, salaries, loyalty points,
+  vertical catalog performance, and restaurant/cafe charge-policy KPIs.
+- Run protected/staging browser E2E matrix after reseeding the expanded demo
+  users and enterprise seed data.
+- Generate updated screenshot-based user guide pages for the new personas and
+  back-office screens.
+- Continue production-readiness work on hardware certification, FBR/PSP
+  certification, monitoring evidence, backup restore drills, load testing, and
+  security scans.

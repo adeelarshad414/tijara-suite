@@ -185,6 +185,8 @@ class TijaraDisplayController(http.Controller):
             allowed.append("takeaway")
         if profile.allow_pickup:
             allowed.append("pickup")
+        if profile.allow_delivery:
+            allowed.append("delivery")
         return allowed or [profile.default_order_type]
 
     def _kiosk_allowed_payment_methods(self, profile):
@@ -252,6 +254,7 @@ class TijaraDisplayController(http.Controller):
 
     def _kiosk_payload(self, screen):
         profile = self._find_kiosk_profile(screen)
+        company = screen.company_id
         profile_payload = {
             "id": profile.id if profile else False,
             "name": profile.name if profile else screen.name,
@@ -265,6 +268,22 @@ class TijaraDisplayController(http.Controller):
             else ["cash"],
             "require_customer_for_b2b": profile.require_customer_for_b2b if profile else True,
             "require_mobile_for_pickup": profile.require_mobile_for_pickup if profile else True,
+            "charges": {
+                "gst_enabled": bool(company.tijara_gst_enabled),
+                "service_charge_enabled": bool(
+                    company.tijara_service_charge_enabled
+                    and company.tijara_has_cafe_service_charge_policy()
+                ),
+                "service_charge_percent": company.tijara_service_charge_percent,
+                "delivery_charge_enabled": bool(company.tijara_delivery_charge_enabled),
+                "delivery_charge_amount": company.tijara_delivery_charge_amount,
+                "food_payment_tax_enabled": bool(
+                    company.tijara_food_payment_tax_enabled
+                    and company.tijara_has_cafe_restaurant_payment_tax_policy()
+                ),
+                "card_tax_percent": company.tijara_food_card_tax_percent,
+                "cash_tax_percent": company.tijara_food_cash_tax_percent,
+            },
         }
         return {
             "profile": profile_payload,
@@ -465,6 +484,7 @@ button, input, select {{ font: inherit; }}
   <aside class="panel checkout">
     <h2>Cart</h2>
     <div data-role="cart-lines" class="muted">Empty</div>
+    <div data-role="charge-breakdown" class="muted"></div>
     <div class="summary"><span>Total</span><span data-role="cart-total">PKR 0</span></div>
     <div class="field"><label>Name</label><input data-role="customer-name" autocomplete="name"></div>
     <div class="field"><label>Mobile</label><input data-role="customer-mobile" inputmode="tel" autocomplete="tel"></div>
@@ -490,6 +510,19 @@ function money(value) {{
 function itemPrice(item) {{
   return currentAudience === "b2b" ? Number(item.b2b_price || item.b2c_price || 0) : Number(item.b2c_price || 0);
 }}
+function cartSubtotal() {{
+  return [...cart.values()].reduce((sum, entry) => sum + itemPrice(entry.item) * entry.qty, 0);
+}}
+function totalBreakdown() {{
+  const charges = kioskData?.kiosk?.profile?.charges || {{}};
+  const subtotal = cartSubtotal();
+  const service = charges.service_charge_enabled ? subtotal * Number(charges.service_charge_percent || 0) / 100 : 0;
+  const delivery = charges.delivery_charge_enabled && currentOrderType === "delivery" ? Number(charges.delivery_charge_amount || 0) : 0;
+  const payment = document.querySelector('[data-role="payment-method"]')?.value || "cash";
+  const rate = charges.food_payment_tax_enabled ? (payment === "card" ? Number(charges.card_tax_percent || 0) : payment === "cash" ? Number(charges.cash_tax_percent || 0) : 0) : 0;
+  const paymentTax = (subtotal + service + delivery) * rate / 100;
+  return {{ subtotal, service, delivery, paymentTax, total: subtotal + service + delivery + paymentTax }};
+}}
 function setActive(container, value) {{
   [...container.querySelectorAll("button")].forEach(button => button.classList.toggle("active", button.dataset.value === value));
 }}
@@ -501,12 +534,13 @@ function renderSegments() {{
   audiences.innerHTML = profile.allowed_audiences.map(type => `<button type="button" data-value="${{type}}">${{escapeText(type.toUpperCase())}}</button>`).join("");
   currentOrderType = profile.allowed_order_types.includes(profile.default_order_type) ? profile.default_order_type : profile.allowed_order_types[0];
   currentAudience = profile.allowed_audiences[0] || "b2c";
-  orderTypes.addEventListener("click", event => {{ if (event.target.dataset.value) {{ currentOrderType = event.target.dataset.value; setActive(orderTypes, currentOrderType); }} }});
+  orderTypes.addEventListener("click", event => {{ if (event.target.dataset.value) {{ currentOrderType = event.target.dataset.value; setActive(orderTypes, currentOrderType); renderCart(); }} }});
   audiences.addEventListener("click", event => {{ if (event.target.dataset.value) {{ currentAudience = event.target.dataset.value; setActive(audiences, currentAudience); renderProducts(); renderCart(); }} }});
   setActive(orderTypes, currentOrderType);
   setActive(audiences, currentAudience);
   const payment = document.querySelector('[data-role="payment-method"]');
   payment.innerHTML = profile.allowed_payment_methods.map(method => `<option value="${{method}}">${{escapeText(method.replace("_", " "))}}</option>`).join("");
+  payment.addEventListener("change", renderCart);
 }}
 function renderProducts() {{
   const products = document.querySelector('[data-role="kiosk-products"]');
@@ -514,8 +548,13 @@ function renderProducts() {{
 }}
 function renderCart() {{
   const lines = document.querySelector('[data-role="cart-lines"]');
-  const total = [...cart.values()].reduce((sum, entry) => sum + itemPrice(entry.item) * entry.qty, 0);
-  document.querySelector('[data-role="cart-total"]').textContent = money(total);
+  const breakdown = totalBreakdown();
+  document.querySelector('[data-role="cart-total"]').textContent = money(breakdown.total);
+  const chargeRows = [];
+  if (breakdown.service) chargeRows.push(`Service: ${{money(breakdown.service)}}`);
+  if (breakdown.delivery) chargeRows.push(`Delivery: ${{money(breakdown.delivery)}}`);
+  if (breakdown.paymentTax) chargeRows.push(`Payment tax: ${{money(breakdown.paymentTax)}}`);
+  document.querySelector('[data-role="charge-breakdown"]').textContent = chargeRows.join(" | ");
   if (!cart.size) {{
     lines.className = "muted";
     lines.innerHTML = "Empty";
@@ -633,8 +672,8 @@ setInterval(() => {{
         customer_mobile = (payload.get("customer_mobile") or "").strip()
         if audience == "b2b" and profile.require_customer_for_b2b and not customer_name:
             raise UserError("Customer name is required for B2B kiosk orders.")
-        if order_type == "pickup" and profile.require_mobile_for_pickup and not customer_mobile:
-            raise UserError("Mobile number is required for pickup kiosk orders.")
+        if order_type in ("pickup", "delivery") and profile.require_mobile_for_pickup and not customer_mobile:
+            raise UserError("Mobile number is required for pickup or delivery kiosk orders.")
 
         raw_lines = payload.get("lines") or []
         if not isinstance(raw_lines, list) or not raw_lines:
@@ -728,6 +767,11 @@ setInterval(() => {{
                 "order_name": order.name,
                 "pickup_code": order.pickup_code or "",
                 "queue_number": order.queue_ticket_id.queue_number or "",
+                "amount_untaxed": order.amount_untaxed,
+                "amount_gst": order.amount_gst,
+                "amount_service_charge": order.amount_service_charge,
+                "amount_delivery_charge": order.amount_delivery_charge,
+                "amount_payment_tax": order.amount_payment_tax,
                 "amount_total": order.amount_total,
                 "payment_status": order.payment_status,
                 "pos_order_id": order.pos_order_id.id or False,

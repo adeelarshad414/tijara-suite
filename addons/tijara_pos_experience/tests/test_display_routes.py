@@ -12,6 +12,7 @@ class TestTijaraDisplayRoutes(TransactionCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.company = cls.env["res.company"].create({"name": "Tijara Display Tenant"})
+        cls.env["tijara.localization.setup"].ensure_pakistan_defaults()
         cls.customer = cls.env["res.partner"].create({"name": "Tijara Display Customer"})
         cls.enterprise_plan = cls.env.ref("tijara_saas_control.plan_enterprise")
 
@@ -136,6 +137,7 @@ class TestTijaraDisplayRoutes(TransactionCase):
                 "allow_b2b": True,
             }
         )
+        tax = self.env["tijara.localization.setup"].get_standard_sale_tax(self.company)
         product = self.env["product.product"].create(
             {
                 "name": "Kiosk Test Bun",
@@ -143,6 +145,7 @@ class TestTijaraDisplayRoutes(TransactionCase):
                 "available_in_pos": True,
                 "tijara_b2c_price": 120,
                 "tijara_b2b_price": 100,
+                "taxes_id": [(6, 0, [tax.id])],
             }
         )
         content = self.env["tijara.display.content"].create(
@@ -173,10 +176,106 @@ class TestTijaraDisplayRoutes(TransactionCase):
         )
 
         self.assertEqual(order.state, "submitted")
-        self.assertAlmostEqual(order.amount_tax, 43.2)
+        self.assertAlmostEqual(order.amount_gst, 43.2)
         self.assertAlmostEqual(order.amount_total, 283.2)
         self.assertEqual(order.queue_ticket_id.source, "kiosk")
         self.assertEqual(order.queue_ticket_id.state, "waiting")
+
+    def test_kiosk_business_policy_charges_follow_vertical_rules(self):
+        self._activate_enterprise_subscription("tijara_kiosk_policy_test")
+        self.company.write(
+            {
+                "tijara_business_type": "cafe",
+                "tijara_gst_enabled": False,
+                "tijara_service_charge_enabled": True,
+                "tijara_service_charge_percent": 10.0,
+                "tijara_delivery_charge_enabled": True,
+                "tijara_delivery_charge_amount": 50.0,
+                "tijara_food_payment_tax_enabled": True,
+                "tijara_food_card_tax_percent": 5.0,
+                "tijara_food_cash_tax_percent": 16.0,
+            }
+        )
+        screen = self.env["tijara.display.screen"].create(
+            {
+                "name": "Policy Kiosk",
+                "code": "policy-kiosk",
+                "url_slug": "policy-kiosk",
+                "display_type": "kiosk",
+                "company_id": self.company.id,
+                "price_mode": "b2c",
+            }
+        )
+        self.env["tijara.kiosk.profile"].create(
+            {
+                "name": "Policy Kiosk Profile",
+                "screen_id": screen.id,
+                "company_id": self.company.id,
+                "allow_takeaway": True,
+                "allow_delivery": True,
+                "allow_b2c": True,
+                "allow_cash": True,
+                "allow_card": True,
+            }
+        )
+        product = self.env["product.product"].create(
+            {
+                "name": "Cafe Policy Item",
+                "lst_price": 100,
+                "available_in_pos": True,
+                "tijara_b2c_price": 100,
+                "taxes_id": [(6, 0, [])],
+            }
+        )
+        content = self.env["tijara.display.content"].create(
+            {
+                "name": "Cafe Policy Item",
+                "content_type": "menu_item",
+                "title_english": "Cafe Policy Item",
+                "product_id": product.id,
+                "company_id": self.company.id,
+                "screen_ids": [(6, 0, [screen.id])],
+            }
+        )
+        controller = display_routes.TijaraDisplayController()
+
+        payload = controller._screen_payload(screen)
+        self.assertTrue(payload["kiosk"]["profile"]["charges"]["service_charge_enabled"])
+        self.assertTrue(payload["kiosk"]["profile"]["charges"]["food_payment_tax_enabled"])
+        order = controller._create_kiosk_order_from_payload(
+            screen,
+            {
+                "order_type": "delivery",
+                "audience": "b2c",
+                "payment_method": "card",
+                "customer_name": "Policy Guest",
+                "customer_mobile": "03001234567",
+                "lines": [{"content_id": content.id, "qty": 2}],
+            },
+        )
+
+        self.assertAlmostEqual(order.amount_untaxed, 200)
+        self.assertAlmostEqual(order.amount_service_charge, 20)
+        self.assertAlmostEqual(order.amount_delivery_charge, 50)
+        self.assertAlmostEqual(order.amount_payment_tax, 13.5)
+        self.assertAlmostEqual(order.amount_total, 283.5)
+
+        self.company.write({"tijara_business_type": "fast_food"})
+        self.assertFalse(controller._screen_payload(screen)["kiosk"]["profile"]["charges"]["food_payment_tax_enabled"])
+        fast_food_order = controller._create_kiosk_order_from_payload(
+            screen,
+            {
+                "order_type": "delivery",
+                "audience": "b2c",
+                "payment_method": "card",
+                "customer_name": "Fast Food Guest",
+                "customer_mobile": "03007654321",
+                "lines": [{"content_id": content.id, "qty": 2}],
+            },
+        )
+        self.assertAlmostEqual(fast_food_order.amount_service_charge, 0)
+        self.assertAlmostEqual(fast_food_order.amount_payment_tax, 0)
+        self.assertAlmostEqual(fast_food_order.amount_total, 250)
 
     def test_kiosk_checkout_syncs_to_pos_order_and_payment(self):
         company = self.env.company

@@ -107,8 +107,9 @@ Primary tasks:
 
 - Configure business details, branches, warehouses, POS settings, receipt
   profiles, users, payment methods, and allowed SaaS features.
-- Enable vertical-specific workflows such as superstore, grocery, bakery,
-  restaurant, pharmacy, cloth, garments, and electronics.
+- Enable vertical-specific workflows such as superstore, grocery, cosmetics,
+  bakery, cafe, fast food, restaurant, pharmacy, cloth, garments, uniform,
+  shoes, mobile shop, and electronics.
 - Assign user permissions and review cashier/inventory/accounting activity.
 - Maintain customer, supplier, product, tax, and price setup.
 
@@ -116,6 +117,8 @@ Setup checklist:
 
 - Confirm company name, Urdu name, NTN/STRN, branch code, and receipt language.
 - Configure B2C and B2B product prices.
+- Configure GST on/off, delivery charge on/off, cafe service charge on/off,
+  and cafe/restaurant card/cash tax policy.
 - Configure receipt/invoice templates and return policy text.
 - Configure POS sessions, cash shifts, payment methods, and barcode settings.
 - Configure warehouses, racks, shelves, bins, and expiry tracking.
@@ -219,6 +222,48 @@ Bulk import/export:
 - Import in small batches first.
 - Recheck stock, price, and category after import.
 
+### Vertical Catalog Manager
+
+Maintains product and policy readiness for each business type.
+
+Primary tasks:
+
+- Tag products by vertical: superstore, grocery, cosmetics, cloth, garments,
+  uniform, shoes, pharmacy, bakery, cafe, fast food, restaurant, mobile shop,
+  electronics, and wholesale.
+- Maintain separate B2C and B2B prices.
+- Check that each vertical has the right unit, barcode, tax category, stock
+  alert, and display-screen pricing.
+- Coordinate tenant policy changes with the tenant admin before go-live.
+
+Policy checklist:
+
+- GST can be enabled or disabled at company level.
+- Delivery charge can be enabled for any business where delivery is offered.
+- Service charge applies only to cafe policy.
+- Card 5% and cash 16% food payment tax applies only to cafe/restaurant policy.
+- Restaurants and fast-food counters should confirm dine-in, takeaway, pickup,
+  and delivery visibility before launch.
+
+### Customer And Loyalty Manager
+
+Maintains customer details, walk-in conversion, and loyalty programs.
+
+Primary tasks:
+
+- Review customer profiles, phone, email, CNIC/NTN/STRN where required.
+- Keep walk-in, retail, wholesale, corporate, and supplier customer types clean.
+- Maintain loyalty opt-in, loyalty number, tier, and points.
+- Review B2B customer credit limits and customer history.
+
+Loyalty workflow:
+
+1. Open the customer profile.
+2. Confirm customer type and contact details.
+3. Enable loyalty opt-in where the customer agrees.
+4. Assign or verify loyalty number and tier.
+5. Review loyalty points after POS or kiosk orders.
+
 ### Accountant
 
 Reviews financial records, invoices, settlements, refunds, disputes, and FBR
@@ -257,21 +302,54 @@ FBR queue workflow:
 4. Retry only when provider credentials and endpoint are configured.
 5. Keep dry-run evidence separate from live compliance evidence.
 
+### Back Office Expense And Salary Manager
+
+Runs non-POS office operations such as expenses, petty cash, delivery
+settlements, and salary batches.
+
+Primary tasks:
+
+- Submit, approve, pay, and audit expense requests.
+- Maintain receipt reference, vendor/employee, category, payment method, tax,
+  and notes for each expense.
+- Review salary batches, employee lines, gross pay, deductions, bonuses, and net
+  payable.
+- Keep monthly paid/unpaid status ready for owner and accountant review.
+
+Expense workflow:
+
+1. Open Back Office > Expenses.
+2. Create or review an expense request.
+3. Add category, vendor/employee, payment method, amount, tax, and receipt
+   reference.
+4. Submit for approval.
+5. Manager approves, then marks paid after payment evidence is confirmed.
+
+Salary workflow:
+
+1. Open Back Office > Salaries.
+2. Review the period start/end and employee salary lines.
+3. Confirm gross, deduction, bonus, and net totals.
+4. Approve the batch after manager review.
+5. Mark paid after salary disbursement evidence is available.
+
 ### Restaurant Operator
 
 Runs restaurant, bakery, and food-service operations.
 
 Primary tasks:
 
-- Manage dine-in, takeaway, and pickup orders.
+- Manage dine-in, takeaway, pickup, and delivery orders.
 - Use kiosk/self-order flow for customer ordering where enabled.
 - Track queue tickets and kitchen status.
 - Update menu, deals, and promotion display screens.
 - Coordinate tables, service type, and order readiness.
+- Confirm cafe/restaurant tax policy, delivery charge, and service charge rules
+  before opening a live session.
 
 Service workflow:
 
-1. Select service type: dine-in, takeaway, or pickup.
+1. Select service type: dine-in, takeaway, pickup, or delivery.
 2. For dine-in, assign table or service area.
 3. Add menu items and modifiers.
 4. Confirm order and send to kitchen queue.
@@ -281,7 +359,7 @@ Service workflow:
 Kiosk workflow:
 
 1. Confirm kiosk profile is enabled for the tenant.
-2. Customer selects dine-in, takeaway, or pickup.
+2. Customer selects dine-in, takeaway, pickup, or delivery.
 3. Customer chooses menu items and deals.
 4. Customer confirms order.
 5. Queue ticket is created.
@@ -336,6 +414,8 @@ Daily dashboard checklist:
 - Refunds, exchanges, voids, and high discounts.
 - Queue wait time and restaurant order status.
 - Promotion/deal performance.
+- Back-office expenses, salary payable, delivery charges, service charges,
+  card/cash food tax, loyalty movement, and vertical catalog performance.
 
 ## 6. SaaS Feature Flags
 
@@ -467,4 +547,3 @@ Escalate to technical support when:
 - Hardware bridge does not respond.
 - Database, module upgrade, or schema errors appear.
 - Browser E2E, security, load, or deployment checks fail.
-
