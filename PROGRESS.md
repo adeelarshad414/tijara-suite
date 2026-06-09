@@ -9670,3 +9670,73 @@ Status: Complete
 - Run the full staging browser E2E suite against seeded users and capture
   evidence for POS checkout, refund barcode scan, print-to-bridge, kiosk
   checkout, offline replay, and customer display.
+
+## Iteration 131: Repeatable Local Browser E2E Evidence Harness
+
+### Objective
+
+- Turn the local/staging browser proof into a repeatable operator command and
+  remove the live-database blockers found while running it.
+
+### Completed
+
+- Added `scripts/run_local_browser_e2e_evidence.sh`.
+- Added `make local-e2e-evidence` and `npm run test:e2e:local-evidence`.
+- The harness starts the local Compose stack, waits for Odoo, upgrades the
+  Pakistan/demo modules, verifies country `PK`, currency `PKR`, and GST 18%,
+  seeds all demo users from `docs/TEST_CREDENTIALS.csv`, seeds authenticated
+  browser E2E data, runs the full Playwright browser suite, and exports
+  execution evidence.
+- Fixed Pakistan localization upgrades so an already-correct GST tax is not
+  rewritten during module upgrade. This avoids Odoo's POS tax lock when prior
+  draft POS orders reference `GST 18% Sales (PK)`.
+- Fixed the authenticated enterprise POS/offline replay E2E payload so the
+  paid amount is GST-inclusive under the Pakistan 18% default.
+- Updated `README.md`, `DEPLOY.md`, and `docs/COMMANDS_QUICKREF.md` with the
+  new local evidence workflow.
+
+### Validation
+
+- `bash -n scripts/run_local_browser_e2e_evidence.sh` passes.
+- `node --check tests/e2e/pos-enterprise-journey.spec.mjs` passes.
+- `node -e "JSON.parse(require('fs').readFileSync('package.json','utf8'))"`
+  passes.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  addons/tijara_base/models/localization_setup.py` passes.
+- `make validate` passes and parses 76 XML files.
+- `bash scripts/js_check.sh` passes.
+- `git diff --check` passes.
+- `make local-e2e-evidence` passes with run ID
+  `local-e2e-20260609T073524Z`.
+- The passed run includes Compose startup, Odoo readiness, PKR/GST module
+  upgrade, live PKR/GST verification, demo-user seeding, browser E2E seed,
+  full Playwright browser E2E, and execution-evidence export.
+- Execution evidence for `local-e2e-20260609T073524Z` reports status `ready`
+  with no blockers.
+- `bash scripts/security_audit.sh` still blocks because this workstation has
+  ignored non-example runtime secrets under `secrets/`, which is the expected
+  public-repo safety behavior.
+
+### Known Gaps
+
+- This is local/staging-style evidence; real production still needs physical
+  hardware certification on target printers, scanners, drawers, scales, and
+  customer displays.
+- FBR still needs certified provider credentials, sandbox/live compliance
+  testing, and sign-off.
+- PSPs still need live JazzCash/Easypaisa/Stripe certification, settlement-file
+  reconciliation, refunds, and chargeback evidence.
+- Tenant provisioning still needs provider-specific DNS/TLS/ingress execution
+  evidence, restore drills, and production monitoring attachment.
+- Full cross-browser and mobile-device execution should be repeated on seeded
+  staging, not only local Chromium desktop.
+
+### Next Iteration
+
+- Add bilingual Urdu/English quick-start pages for cashiers, tenant admins,
+  inventory managers, and restaurant operators.
+- Run protected/staging browser E2E against real seeded staging users across
+  the required browser/device matrix.
+- Attach monitoring, alerting, backup restore-drill, load-test, security-scan,
+  tenant-rollout, PSP, FBR, and hardware-certification evidence to the release
+  sign-off package.

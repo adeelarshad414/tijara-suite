@@ -34,7 +34,15 @@ async function getJson(page, url) {
   );
 }
 
+function taxInclusiveTotal(subtotal) {
+  const gstRate = Number(process.env.TIJARA_E2E_GST_RATE || "18");
+  return Number((subtotal * (1 + gstRate / 100)).toFixed(2));
+}
+
 function buildOfflinePayload(sourceOrderUid) {
+  const subtotal = 240;
+  const total = taxInclusiveTotal(subtotal);
+
   return {
     source_app: "pos_frontend",
     source_device_id: "playwright-enterprise-pos-browser",
@@ -44,12 +52,12 @@ function buildOfflinePayload(sourceOrderUid) {
     audience: "b2c",
     order_type: "takeaway",
     payment_status: "paid",
-    amount_total: 240,
-    amount_paid: 240,
+    amount_total: total,
+    amount_paid: total,
     payment_method_id: Number(process.env.TIJARA_E2E_PAYMENT_METHOD_ID),
     payments: [
       {
-        amount: 240,
+        amount: total,
         payment_method_id: Number(process.env.TIJARA_E2E_PAYMENT_METHOD_ID),
         payment_reference: sourceOrderUid,
         payment_status: "paid",

@@ -21,6 +21,7 @@
 | Verify live PKR and GST 18% | `make verify-pkr-gst` |
 | Seed POS demo | `make seed-pos-demo` |
 | Seed all demo users | `make seed-demo-users` |
+| Run full local browser E2E evidence | `make local-e2e-evidence` |
 | Run Odoo tests | `make test-odoo` |
 | Run Playwright E2E | `make e2e` |
 | Capture screenshots | `node scripts/capture-screenshots.js` |
@@ -114,6 +115,15 @@ docker compose --env-file .env --env-file secrets/.env.secrets down -v
 | Record against staging URL | `TIJARA_DEMO_BASE_URL=https://staging.example.com node scripts/record-demo.js` |
 | Generate customer demo with voiceover | `make customer-demo-video` |
 | Assemble clips with ffmpeg | `bash scripts/assemble-video.sh` |
+
+## Local Production Evidence
+
+| Action | Command |
+|---|---|
+| Start stack, upgrade PKR/GST modules, verify PKR/GST, seed users, run full browser E2E, export evidence | `make local-e2e-evidence` |
+| Skip module upgrade during local evidence run | `TIJARA_LOCAL_E2E_UPGRADE=0 make local-e2e-evidence` |
+| Limit local evidence to display routes | `TIJARA_E2E_SCOPE=display make local-e2e-evidence` |
+| Limit local evidence to POS flows | `TIJARA_E2E_SCOPE=pos make local-e2e-evidence` |
 
 ## Protected Release Evidence
 

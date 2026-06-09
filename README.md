@@ -158,6 +158,18 @@ make seed-pos-demo
 make seed-demo-users
 ```
 
+For a repeatable local/staging-style production evidence run:
+
+```bash
+make local-e2e-evidence
+```
+
+This starts the local Compose stack, upgrades the Pakistan/demo modules,
+verifies country `PK`, currency `PKR`, and GST 18%, seeds all demo users,
+prepares the browser E2E POS/display data, runs the full Playwright browser
+suite, and exports execution evidence under `deploy/runtime/local-e2e/`,
+`deploy/runtime/e2e-evidence/`, and `deploy/runtime/e2e-execution/`.
+
 Run the local scaffold validator from the project root with:
 
 ```bash
@@ -279,6 +291,10 @@ currency `PKR`, `GST 18% Sales (PK)`, and GST mapped to the seeded demo rice
 product. All seven documented demo personas from `docs/TEST_CREDENTIALS.csv`
 have been created/mapped in the local database, and live browser screenshots
 now back the screenshot-based guide.
+The local evidence harness run `local-e2e-20260609T073524Z` also passed all
+stages: Compose startup, Odoo readiness, PKR/GST module upgrade, live PKR/GST
+verification, demo-user seeding, browser E2E seed, full Playwright browser E2E,
+and execution-evidence export.
 
 The current code is an enterprise product foundation: models, security access,
 menus, backend views, SaaS plans/features, Pakistan localization fields, POS

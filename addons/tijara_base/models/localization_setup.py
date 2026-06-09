@@ -96,9 +96,25 @@ class TijaraLocalizationSetup(models.AbstractModel):
         if "include_base_amount" in tax_model._fields:
             values["include_base_amount"] = False
         if tax:
-            tax.write(values)
+            changed_values = self._get_changed_tax_values(tax, values)
+            if changed_values:
+                tax.write(changed_values)
             return tax
         return tax_model.create(values)
+
+    def _get_changed_tax_values(self, tax, values):
+        changed_values = {}
+        for field_name, expected_value in values.items():
+            current_value = tax[field_name]
+            if tax._fields[field_name].type == "many2one":
+                current_value = current_value.id or False
+            if tax._fields[field_name].type in ("float", "monetary"):
+                if abs((current_value or 0.0) - expected_value) > 0.000001:
+                    changed_values[field_name] = expected_value
+                continue
+            if current_value != expected_value:
+                changed_values[field_name] = expected_value
+        return changed_values
 
     def _set_company_default_sale_tax(self, company, tax):
         if "account_sale_tax_id" in company._fields and company.account_sale_tax_id != tax:

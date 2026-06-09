@@ -77,6 +77,7 @@ make verify-pkr-gst
 make seed-pos-demo
 make seed-demo-users
 make seed-e2e DB=tijara_dev
+make local-e2e-evidence
 make test-odoo
 make e2e
 make bridge-up
@@ -172,6 +173,21 @@ make seed-demo-users
 make capture-screenshots
 make screenshot-user-guide
 ```
+
+For a single repeatable local/staging-style evidence pass, run:
+
+```bash
+make local-e2e-evidence
+```
+
+The harness starts Compose, waits for Odoo, upgrades `tijara_base`,
+`tijara_retail_core`, and `tijara_demo_pos`, verifies Pakistan country/PKR/GST
+18%, seeds demo users from `docs/TEST_CREDENTIALS.csv`, seeds the authenticated
+browser E2E profile, runs the full Playwright browser suite, and exports the
+correlated execution decision. The latest local run
+`local-e2e-20260609T073524Z` passed with no blockers; generated evidence is
+ignored under `deploy/runtime/local-e2e/`,
+`deploy/runtime/e2e-evidence/`, and `deploy/runtime/e2e-execution/`.
 
 `make verify-pkr-gst` writes ignored runtime evidence under
 `deploy/runtime/pkr-gst-verification/`, and `make seed-demo-users` writes

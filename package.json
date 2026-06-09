@@ -11,6 +11,7 @@
     "demo:record": "node scripts/record-demo.js",
     "demo:customer-video": "python3 scripts/generate_customer_demo_video.py",
     "test:e2e": "playwright test",
+    "test:e2e:local-evidence": "bash scripts/run_local_browser_e2e_evidence.sh",
     "test:e2e:staging": "bash scripts/run_staging_e2e.sh",
     "test:e2e:profile": "python3 scripts/export_staging_e2e_profile.py",
     "test:e2e:execution": "python3 scripts/export_e2e_execution_evidence.py",
