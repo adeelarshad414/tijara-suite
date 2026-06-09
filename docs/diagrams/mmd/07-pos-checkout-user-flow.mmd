@@ -1,0 +1,24 @@
+flowchart TD
+    Start(["Cashier opens POS"])
+    Session["Verify active session\nand cashier permissions"]
+    Scan["Scan barcode or search product"]
+    PriceMode{"B2B or B2C?"}
+    Customer["Select or create customer\nwhen needed"]
+    Cart["Update cart lines\nquantity, taxes, discounts"]
+    Discount{"Bill discount?"}
+    SyncDiscount["Sync percent and amount"]
+    Pay["Select payment method"]
+    Validate["Validate sale"]
+    Receipt["Render bilingual receipt\nQR/barcode and policy"]
+    Print{"Printer configured?"}
+    Bridge["Send signed print job\nto hardware bridge"]
+    Done(["Sale completed"])
+
+    Start --> Session --> Scan --> PriceMode
+    PriceMode --> Customer --> Cart
+    Cart --> Discount
+    Discount -- yes --> SyncDiscount --> Pay
+    Discount -- no --> Pay
+    Pay --> Validate --> Receipt --> Print
+    Print -- yes --> Bridge --> Done
+    Print -- no --> Done

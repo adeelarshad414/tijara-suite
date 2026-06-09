@@ -10,6 +10,7 @@
     "demo:screenshots": "node scripts/capture-screenshots.js",
     "demo:record": "node scripts/record-demo.js",
     "demo:customer-video": "python3 scripts/generate_customer_demo_video.py",
+    "docs:diagrams:png": "python3 scripts/export_diagrams_png.py",
     "test:e2e": "playwright test",
     "test:e2e:local-evidence": "bash scripts/run_local_browser_e2e_evidence.sh",
     "test:e2e:staging": "bash scripts/run_staging_e2e.sh",
@@ -50,6 +51,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.15.0",
     "@playwright/test": "^1.52.0"
   }
 }

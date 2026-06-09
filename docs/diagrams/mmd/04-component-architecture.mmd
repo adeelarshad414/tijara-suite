@@ -1,0 +1,44 @@
+flowchart TB
+    subgraph Client["Client Surfaces"]
+        POS["POS browser"]
+        BackOffice["Odoo back office"]
+        Kiosk["Kiosk"]
+        Storefront["Ecommerce storefront"]
+        Displays["Customer, queue,\nmenu, deals displays"]
+    end
+
+    subgraph Odoo["Odoo Community Runtime"]
+        Controllers["HTTP/JSON controllers"]
+        CoreModels["Odoo core models\nPOS, Sale, Stock, Account"]
+        TijaraModels["Tijara custom models"]
+        QWeb["QWeb reports and templates"]
+        SaaS["Feature flags and subscriptions"]
+        Analytics["KPI collectors and dashboards"]
+    end
+
+    subgraph Infrastructure["Infrastructure"]
+        DB[("PostgreSQL")]
+        Filestore[("Filestore")]
+        Bridge["Hardware bridge"]
+        Monitoring["Monitoring"]
+        Backup["Backups"]
+    end
+
+    POS --> Controllers
+    BackOffice --> Controllers
+    Kiosk --> Controllers
+    Storefront --> Controllers
+    Displays --> Controllers
+    Controllers --> TijaraModels
+    Controllers --> CoreModels
+    TijaraModels --> CoreModels
+    TijaraModels --> SaaS
+    TijaraModels --> Analytics
+    TijaraModels --> QWeb
+    CoreModels --> DB
+    TijaraModels --> DB
+    QWeb --> Filestore
+    TijaraModels --> Bridge
+    Odoo --> Monitoring
+    DB --> Backup
+    Filestore --> Backup

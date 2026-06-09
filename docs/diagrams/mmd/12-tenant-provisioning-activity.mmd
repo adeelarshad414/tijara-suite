@@ -1,0 +1,17 @@
+flowchart TD
+    Request(["Tenant provision request"])
+    Validate["Validate plan, owner,\ndomain, admin email"]
+    Database["Create tenant database"]
+    Install["Install Tijara modules"]
+    Seed["Apply localization,\nfeatures, admin user"]
+    DNS["Create DNS and ingress"]
+    Backup["Register backup policy"]
+    Monitoring["Register monitoring probes"]
+    Smoke["Run tenant smoke tests"]
+    Decision{"Smoke passed?"}
+    Active["Mark tenant active"]
+    Blocked["Block rollout and attach evidence"]
+
+    Request --> Validate --> Database --> Install --> Seed --> DNS --> Backup --> Monitoring --> Smoke --> Decision
+    Decision -- yes --> Active
+    Decision -- no --> Blocked

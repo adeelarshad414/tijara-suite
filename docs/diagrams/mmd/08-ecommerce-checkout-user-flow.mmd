@@ -1,0 +1,25 @@
+flowchart TD
+    Open(["Customer opens storefront"])
+    Catalog["Load catalog\nPKR, Urdu, B2C/B2B, stock"]
+    Audience{"Audience mode"}
+    Cart["Add products to cart"]
+    Fulfillment{"Fulfillment"}
+    Customer["Enter customer\nmobile and address"]
+    Payment["Select payment method"]
+    Policy["Apply GST, delivery,\nservice, payment-tax policy"]
+    CreateSO["Create Odoo sale order"]
+    Queue{"Pickup or delivery queue?"}
+    Ticket["Create queue ticket"]
+    Provider{"Delivery or courier?"}
+    Shipment["Assign dry-run/certified\nprovider tracking"]
+    Track["Customer tracks order\nby token or pickup/mobile"]
+    Review["Ecommerce manager reviews\norder, queue, and delivery"]
+    Done(["Order ready for fulfillment"])
+
+    Open --> Catalog --> Audience
+    Audience --> Cart --> Fulfillment --> Customer --> Payment --> Policy --> CreateSO
+    CreateSO --> Queue
+    Queue -- yes --> Ticket --> Provider
+    Queue -- no --> Provider
+    Provider -- yes --> Shipment --> Track --> Review --> Done
+    Provider -- no --> Track --> Review --> Done

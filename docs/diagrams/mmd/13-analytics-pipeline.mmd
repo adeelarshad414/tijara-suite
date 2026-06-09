@@ -1,0 +1,21 @@
+flowchart LR
+    POS["POS orders"]
+    Sales["Sales orders"]
+    Inventory["Stock moves and alerts"]
+    BackOffice["Expenses and salaries"]
+    Loyalty["Customers and loyalty"]
+    Ecommerce["Ecommerce orders"]
+    Collectors["Automated KPI collectors"]
+    Snapshots[("tijara.analytics.snapshot")]
+    Dashboards["Dashboards"]
+    Reports["Report catalog\npivot, graph, list"]
+
+    POS --> Collectors
+    Sales --> Collectors
+    Inventory --> Collectors
+    BackOffice --> Collectors
+    Loyalty --> Collectors
+    Ecommerce --> Collectors
+    Collectors --> Snapshots
+    Snapshots --> Dashboards
+    Snapshots --> Reports

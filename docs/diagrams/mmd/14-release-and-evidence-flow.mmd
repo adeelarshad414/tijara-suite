@@ -1,0 +1,16 @@
+flowchart TD
+    Code["Code and docs change"]
+    Validate["Local validation\nXML, JS, Python, tests"]
+    OdooTests["Odoo transaction tests"]
+    Browser["Browser E2E\npublic, authenticated, matrix"]
+    Ops["Ops evidence\nbackup, monitoring, load, security"]
+    Cert["External certification\nhardware, PSP, FBR"]
+    Bundle["Release evidence bundle"]
+    Gate{"Release gate"}
+    Promote["Promote to staging/production"]
+    Rollback["Rollback runbook ready"]
+    Block["Block release and fix gaps"]
+
+    Code --> Validate --> OdooTests --> Browser --> Ops --> Cert --> Bundle --> Gate
+    Gate -- approved --> Promote --> Rollback
+    Gate -- blocked --> Block

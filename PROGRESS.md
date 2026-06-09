@@ -10576,3 +10576,45 @@ Status: Complete
 - Build customer account order-history portal beyond private tracking links.
 - Continue PSP/FBR certification hardening, physical hardware evidence,
   monitoring/alerting proof, restore drills, load tests, and security scans.
+
+## Iteration 142: Rendered Architecture Diagram PNG Exports
+
+### Objective
+
+- Produce actual PNG files for the Mermaid diagrams already maintained in
+  `docs/DIAGRAMS.md`.
+- Keep the export repeatable for future documentation, customer handoff, and
+  DevOps review work.
+
+### Completed
+
+- Added `@mermaid-js/mermaid-cli` as an open-source dev dependency.
+- Added `scripts/export_diagrams_png.py` to extract Mermaid blocks from
+  `docs/DIAGRAMS.md`, write matching `.mmd` files, and render PNG exports using
+  a local Chrome/Playwright browser.
+- Added npm shortcut: `npm run docs:diagrams:png`.
+- Generated 14 PNG files under `docs/diagrams/png/`:
+  deployment architecture, local development deployment, system context,
+  component architecture, Odoo module map, data model UML, POS checkout user
+  flow, ecommerce checkout user flow, restaurant/kiosk activity, offline POS
+  activity, hardware print sequence, tenant provisioning activity, analytics
+  pipeline, and release/evidence flow.
+- Generated matching extracted Mermaid sources under `docs/diagrams/mmd/`.
+- Added `docs/diagrams/README.md` as the PNG/source index.
+- Updated `README.md`, `DEPLOY.md`, and `docs/DIAGRAMS.md` with output paths
+  and regeneration command.
+
+### Validation
+
+- `npm run docs:diagrams:png` passed and rendered 14 PNG files.
+- `file docs/diagrams/png/*.png` confirmed all exported files are valid PNGs.
+- Visual spot-check passed for
+  `docs/diagrams/png/01-deployment-architecture.png`.
+
+### Next Iteration
+
+- Optionally embed selected PNG diagrams into the Word/PDF user guide and
+  customer-facing presentation pack.
+- Continue provider-specific delivery adapters, retry/backoff queue, customer
+  account order history, PSP/FBR certification hardening, hardware evidence,
+  monitoring proof, restore drills, load tests, and security scans.

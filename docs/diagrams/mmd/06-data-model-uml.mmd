@@ -1,0 +1,108 @@
+classDiagram
+    class ResCompany {
+        currency_pkr
+        gst_policy
+        delivery_charge_policy
+        cafe_service_charge_policy
+        saas_feature_checks
+    }
+    class SaasSubscription {
+        tenant_name
+        database_name
+        state
+    }
+    class SaasPlan {
+        feature_ids
+        price
+    }
+    class ProductTemplate {
+        b2c_price
+        b2b_price
+        urdu_name
+        ecommerce_published
+        vertical_tag
+    }
+    class EcommerceChannel {
+        code
+        slug
+        fulfillment_methods
+        payment_methods
+        auto_queue
+        default_delivery_provider
+    }
+    class DeliveryProvider {
+        code
+        provider_type
+        service_level
+        dry_run
+        adapter_mode
+        label_format
+        webhook_signature_mode
+        tracking_url_template
+    }
+    class DeliveryEvent {
+        event_type
+        direction
+        status
+        signature_status
+        payload_hash
+    }
+    class SaleOrder {
+        ecommerce_channel
+        audience
+        fulfillment_method
+        payment_status
+        pickup_code
+        tracking_token
+        delivery_status
+        delivery_adapter_state
+        delivery_provider_reference
+    }
+    class QueueTicket {
+        queue_number
+        source
+        state
+    }
+    class PosOrder {
+        receipt_profile
+        invoice_barcode
+        bridge_job
+    }
+    class OfflinePosQueue {
+        source_order_uid
+        replay_state
+        conflict_reason
+    }
+    class ReceiptProfile {
+        template_scope
+        print_language
+        header_footer
+    }
+    class AnalyticsSnapshot {
+        business_area
+        metric_code
+        value
+        snapshot_date
+    }
+    class HardwareDevice {
+        device_type
+        connection_type
+        printer_language
+        bridge_endpoint
+    }
+
+    ResCompany "1" --> "*" SaasSubscription
+    SaasPlan "1" --> "*" SaasSubscription
+    EcommerceChannel "1" --> "*" SaleOrder
+    DeliveryProvider "1" --> "*" SaleOrder
+    DeliveryProvider "1" --> "*" DeliveryEvent
+    SaleOrder "1" --> "*" DeliveryEvent
+    EcommerceChannel "*" --> "*" DeliveryProvider
+    ProductTemplate "*" --> "*" EcommerceChannel
+    SaleOrder "1" --> "0..1" QueueTicket
+    ProductTemplate "1" --> "*" PosOrder
+    PosOrder "1" --> "*" OfflinePosQueue
+    ReceiptProfile "1" --> "*" PosOrder
+    ReceiptProfile "1" --> "*" ProductTemplate
+    ResCompany "1" --> "*" AnalyticsSnapshot
+    HardwareDevice "1" --> "*" PosOrder

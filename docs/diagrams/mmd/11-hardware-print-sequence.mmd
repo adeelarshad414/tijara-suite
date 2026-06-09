@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant Cashier
+    participant POS as POS Browser
+    participant Odoo as Odoo Backend
+    participant Bridge as Hardware Bridge
+    participant Printer as Printer/Drawer/Display
+
+    Cashier->>POS: Validate sale
+    POS->>Odoo: Request receipt render
+    Odoo->>Odoo: Apply receipt profile and bilingual template
+    POS->>Odoo: Submit print request
+    Odoo->>Bridge: Signed bridge job
+    Bridge->>Bridge: Validate HMAC and adapter profile
+    Bridge->>Printer: ESC/POS, CUPS, ZPL, drawer pulse, or display update
+    Printer-->>Bridge: Device response
+    Bridge-->>Odoo: Job id, status, result JSON
+    Odoo-->>POS: Printed status

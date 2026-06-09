@@ -7,6 +7,15 @@ flows, or production operations change.
 The diagrams use Mermaid so they remain source-controlled, open-source friendly,
 and renderable in GitHub-compatible Markdown viewers.
 
+PNG exports are committed under `docs/diagrams/png/` for documents, customer
+handoffs, and tools that cannot render Mermaid directly. The extracted Mermaid
+sources are under `docs/diagrams/mmd/`, with an index at
+`docs/diagrams/README.md`. Regenerate both from the repository root with:
+
+```bash
+npm run docs:diagrams:png
+```
+
 ## Diagram Index
 
 | Diagram | Purpose |

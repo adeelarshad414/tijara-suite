@@ -97,6 +97,7 @@ docs/                          Architecture, roadmap, analytics, inventory, QA
                                retail operations, hardware, and data exchange
 docs/DIAGRAMS.md               Deployment, system, UML, module, component,
                                activity, and user-flow diagram pack
+docs/diagrams/png/             Rendered PNG exports of the Mermaid diagrams
 docs/COMMANDS_QUICKREF.md      Generated local run/test command sheet
 docs/SPEC_MAP.json             Machine-readable app, persona, and screen map
 docs/TEST_CREDENTIALS.csv      Deterministic demo/staging account matrix
@@ -255,6 +256,7 @@ make screenshot-user-guide
 make record-demo
 make assemble-video
 make customer-demo-video
+npm run docs:diagrams:png
 ```
 
 Current enterprise-readiness helpers now include automated daily KPI collectors
@@ -268,7 +270,8 @@ FBR, fixture, and hardware dry-run evidence under
 need for real hardware, FBR, and PSP sign-off before production.
 
 See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
-`docs/DIAGRAMS.md`, `docs/TEST_CREDENTIALS.csv`,
+`docs/DIAGRAMS.md`, `docs/diagrams/README.md`,
+`docs/TEST_CREDENTIALS.csv`,
 `docs/BILINGUAL_QUICK_STARTS.md`,
 `docs/USER_GUIDE_ALL_USERS.md`,
 `docs/Tijara_Suite_All_User_Guide.docx`,

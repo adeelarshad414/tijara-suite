@@ -1,0 +1,29 @@
+flowchart TB
+    PlatformAdmin["Platform superadmin"]
+    TenantAdmin["Tenant admin"]
+    Cashier["Cashier"]
+    Inventory["Inventory manager"]
+    Accountant["Accountant"]
+    Restaurant["Restaurant operator"]
+    Ecommerce["Ecommerce manager"]
+    Customer["Customer"]
+    PublicDisplays["Customer display,\nqueue, menu, deals"]
+    Tijara["Tijara Suite\nOdoo Community SaaS"]
+    PSP["Payment providers"]
+    FBR["FBR provider"]
+    Hardware["Store hardware"]
+    DevOps["DevOps and QA tools"]
+
+    PlatformAdmin --> Tijara
+    TenantAdmin --> Tijara
+    Cashier --> Tijara
+    Inventory --> Tijara
+    Accountant --> Tijara
+    Restaurant --> Tijara
+    Ecommerce --> Tijara
+    Customer --> Tijara
+    Tijara --> PublicDisplays
+    Tijara --> PSP
+    Tijara --> FBR
+    Tijara --> Hardware
+    DevOps --> Tijara

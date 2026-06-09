@@ -1,0 +1,31 @@
+flowchart TB
+    Base["tijara_base\nPakistan localization"]
+    Retail["tijara_retail_core\nRetail operations"]
+    Inventory["tijara_inventory_intelligence\nStock alerts and placement"]
+    POSPK["tijara_pos_pk\nReceipts, FBR queue"]
+    Experience["tijara_pos_experience\nKiosk, displays, queue"]
+    Analytics["tijara_analytics\nDashboards and KPI history"]
+    SaaS["tijara_saas_control\nPlans and feature flags"]
+    Ecommerce["tijara_ecommerce\nStorefront and online checkout"]
+    Demo["tijara_demo_pos\nDemo seed"]
+    Verticals["Vertical modules\npharmacy, restaurant,\ngrocery, bakery, cloth,\ngarments, shoes, electronics"]
+
+    Base --> Retail
+    Base --> Inventory
+    Base --> POSPK
+    Base --> SaaS
+    Retail --> POSPK
+    Retail --> Experience
+    Retail --> Analytics
+    Inventory --> Analytics
+    POSPK --> Experience
+    SaaS --> Experience
+    SaaS --> Ecommerce
+    Experience --> Ecommerce
+    Analytics --> Ecommerce
+    Retail --> Ecommerce
+    Base --> Verticals
+    Retail --> Verticals
+    Experience --> Demo
+    Ecommerce --> Demo
+    Verticals --> Demo

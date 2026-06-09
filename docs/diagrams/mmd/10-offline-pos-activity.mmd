@@ -1,0 +1,14 @@
+stateDiagram-v2
+    [*] --> Online
+    Online --> OfflineCapture: network issue
+    OfflineCapture --> StoredLocally: cashier keeps selling
+    StoredLocally --> ReplayPending: connection returns
+    ReplayPending --> Replayed: server accepts order
+    ReplayPending --> Conflict: duplicate or validation issue
+    Conflict --> Review: back office opens conflict screen
+    Review --> Replayed: retry or merge
+    Review --> Cancelled: cancel
+    Review --> Duplicate: mark duplicate
+    Replayed --> [*]
+    Cancelled --> [*]
+    Duplicate --> [*]

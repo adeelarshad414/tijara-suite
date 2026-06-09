@@ -1,0 +1,33 @@
+flowchart TB
+    UserWeb["Business users\nCashier, admin, manager"]
+    PublicUser["Customers\nKiosk, ecommerce, display"]
+    Browser["Browser or touch device"]
+    Kiosk["Kiosk / display browser"]
+    Proxy["HTTPS reverse proxy\nNginx or ingress"]
+    Odoo["Odoo Community app\nTijara addons"]
+    Postgres[("PostgreSQL\nDatabase per tenant")]
+    Filestore[("Odoo filestore\nReports, attachments")]
+    Bridge["Local hardware bridge\nShop machine"]
+    Devices["Printers, scanners,\ncash drawer, scale,\ncustomer display"]
+    Monitoring["Prometheus, Blackbox,\nGrafana, Alertmanager"]
+    Backup["Backup and restore\nobject storage or vault"]
+    PSP["Payment providers\nJazzCash, Easypaisa, Stripe"]
+    FBR["FBR certified provider\nPOS invoice adapter"]
+    SecretStore["Secret manager\nVault, SOPS, K8s secrets"]
+
+    UserWeb --> Browser
+    PublicUser --> Kiosk
+    Browser --> Proxy
+    Kiosk --> Proxy
+    Proxy --> Odoo
+    Odoo --> Postgres
+    Odoo --> Filestore
+    Odoo --> Bridge
+    Bridge --> Devices
+    Odoo --> PSP
+    Odoo --> FBR
+    Odoo --> SecretStore
+    Odoo --> Monitoring
+    Proxy --> Monitoring
+    Postgres --> Backup
+    Filestore --> Backup

@@ -1,0 +1,23 @@
+flowchart LR
+    Dev["Developer workstation"]
+    Browser["Browser\nlocalhost:8069"]
+    Compose["Docker Compose"]
+    Odoo["odoo service\nOdoo 19 + addons mount"]
+    DB[("db service\nPostgreSQL 16")]
+    Bridge["hardware-bridge profile\nlocalhost:9109"]
+    Monitoring["monitoring profile\nPrometheus/Grafana"]
+    Env[".env\nnon-secret config"]
+    Secrets["secrets/.env.secrets\nlocal secrets"]
+    Docs["docs and evidence\nignored runtime folders"]
+
+    Dev --> Browser
+    Dev --> Compose
+    Compose --> Odoo
+    Compose --> DB
+    Compose -. optional .-> Bridge
+    Compose -. optional .-> Monitoring
+    Env --> Compose
+    Secrets --> Compose
+    Odoo --> DB
+    Odoo --> Bridge
+    Dev --> Docs

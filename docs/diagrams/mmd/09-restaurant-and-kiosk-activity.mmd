@@ -1,0 +1,21 @@
+flowchart TD
+    Start(["Customer starts kiosk"])
+    Type{"Order type"}
+    DineIn["Assign table or area"]
+    Takeaway["Takeaway counter flow"]
+    Pickup["Pickup code flow"]
+    Delivery["Delivery address and charge"]
+    Menu["Select menu items and deals"]
+    Pay["Select payment method"]
+    Order["Create kiosk order"]
+    Queue["Create queue ticket"]
+    Kitchen["Kitchen prepares order"]
+    Ready["Mark ready or called"]
+    Close(["Close after pickup/payment"])
+
+    Start --> Type
+    Type -- dine in --> DineIn --> Menu
+    Type -- takeaway --> Takeaway --> Menu
+    Type -- pickup --> Pickup --> Menu
+    Type -- delivery --> Delivery --> Menu
+    Menu --> Pay --> Order --> Queue --> Kitchen --> Ready --> Close

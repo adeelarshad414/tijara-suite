@@ -26,6 +26,7 @@ hardware-bridge/                      Local shop-machine bridge service
 docs/RETAIL_OPERATIONS_DATA.md        Hardware, templates, scanning, CSV notes
 docs/DIAGRAMS.md                      Deployment, system, UML, module,
                                       component, activity, and user-flow diagrams
+docs/diagrams/png/                    Rendered PNG exports of architecture diagrams
 docs/COMMANDS_QUICKREF.md             Generated local and staging command sheet
 docs/SPEC_MAP.json                    Machine-readable app/persona/screen map
 docs/TEST_CREDENTIALS.csv             Public-safe demo/staging account matrix
@@ -42,6 +43,9 @@ payment credentials, or JWT/session material in committed configuration files.
 Deployment topology and runtime flow diagrams are maintained in
 `docs/DIAGRAMS.md`. Use that pack during DevOps handoff, architecture review,
 tenant onboarding, release readiness review, and incident exercises.
+Rendered PNG exports are maintained in `docs/diagrams/png/` for slide decks,
+customer handoff documents, and tools that do not render Mermaid. Regenerate
+them with `npm run docs:diagrams:png`.
 
 ## Environment Files
 
