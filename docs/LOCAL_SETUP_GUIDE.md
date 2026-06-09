@@ -58,6 +58,12 @@ python3 scripts/tijara_services.py status
 python3 scripts/tijara_services.py logs odoo --tail 200
 ```
 
+Native Bash operator wrapper:
+
+```bash
+bash scripts/tijara-start.sh --all --install-suite --seed-demo
+```
+
 Install the suite and seed demo POS data during startup:
 
 ```bash
@@ -82,6 +88,12 @@ Python equivalents:
 ```bash
 python3 scripts/tijara_services.py stop --force-kill-ports
 python3 scripts/tijara_services.py restart --all-profiles
+```
+
+Native Bash stop wrapper:
+
+```bash
+bash scripts/tijara-stop.sh --force-kill-ports
 ```
 
 If a previous tool left local ports occupied, force free known Tijara ports:
@@ -125,6 +137,9 @@ bash scripts/assemble-video.sh
 powershell -File scripts/dev-start.ps1
 powershell -File scripts/dev-stop.ps1
 powershell -File scripts/dev-start.ps1 -Hardware -Monitoring
+powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
+powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
+powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
 ```
 
 ## Troubleshooting

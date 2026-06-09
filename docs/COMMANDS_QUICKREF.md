@@ -6,11 +6,14 @@
 |---|---|
 | Start all core services | `bash scripts/dev-start.sh` |
 | Start all services with Python manager | `python3 scripts/tijara_services.py start --all-profiles` |
+| Start all services with Bash wrapper | `bash scripts/tijara-start.sh --all` |
 | Start with hardware bridge | `TIJARA_DEV_START_HARDWARE=1 bash scripts/dev-start.sh` |
 | Start with monitoring | `TIJARA_DEV_START_MONITORING=1 bash scripts/dev-start.sh` |
 | Start, install suite, and seed POS demo | `TIJARA_DEV_INSTALL_SUITE=1 TIJARA_DEV_SEED_POS_DEMO=1 bash scripts/dev-start.sh` |
+| Start, install suite, and seed through Bash wrapper | `bash scripts/tijara-start.sh --all --install-suite --seed-demo` |
 | Stop all Compose services | `bash scripts/dev-stop.sh` |
 | Stop all services with Python manager | `python3 scripts/tijara_services.py stop --force-kill-ports` |
+| Stop all services with Bash wrapper | `bash scripts/tijara-stop.sh --force-kill-ports` |
 | Stop and force free known ports | `TIJARA_FORCE_KILL_PORTS=1 bash scripts/dev-stop.sh` |
 | Restart everything | `bash scripts/dev-restart.sh` |
 | Restart with Python manager | `python3 scripts/tijara_services.py restart --all-profiles` |
@@ -21,11 +24,14 @@
 | Server hosting preflight | `python3 scripts/tijara_host.py preflight --all-profiles` |
 | Server init central config | `python3 scripts/tijara_host.py init-config --environment staging --public-url https://staging.example.com --generate-secrets` |
 | Server deploy stack | `python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite` |
+| Server deploy stack with Bash wrapper | `bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite` |
 | Validate scaffold | `make validate` |
 | Start Compose manually | `make up` |
 | Start via Python Make target | `make py-start` |
+| Start via Bash wrapper Make target | `make tijara-start TIJARA_SERVICE_FLAGS="--all"` |
 | Stop Compose manually | `make down` |
 | Stop via Python Make target | `make py-stop` |
+| Stop via Bash wrapper Make target | `make tijara-stop TIJARA_SERVICE_FLAGS="--force-kill-ports"` |
 | Show service status | `make ps` |
 | Show Python service status | `make py-status` |
 | Follow Odoo logs | `make logs` |
@@ -69,10 +75,14 @@
 | Action | Command |
 |---|---|
 | Start all services | `powershell -File scripts/dev-start.ps1` |
+| Start all services with PowerShell wrapper | `powershell -File scripts/tijara-start.ps1 -AllProfiles` |
 | Start with hardware bridge | `powershell -File scripts/dev-start.ps1 -Hardware` |
 | Start with monitoring | `powershell -File scripts/dev-start.ps1 -Monitoring` |
+| Start, install suite, and seed with PowerShell wrapper | `powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo` |
 | Stop services | `powershell -File scripts/dev-stop.ps1` |
+| Stop services with PowerShell wrapper | `powershell -File scripts/tijara-stop.ps1 -ForceKillPorts` |
 | Stop and force known ports | `powershell -File scripts/dev-stop.ps1 -ForceKillPorts` |
+| Deploy with PowerShell wrapper | `powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite` |
 
 ## Stop And Kill
 

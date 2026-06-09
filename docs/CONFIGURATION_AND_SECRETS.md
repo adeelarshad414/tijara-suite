@@ -42,6 +42,12 @@ These files may read or reference variables, but they are not secret stores:
 - `scripts/dev-start.sh`
 - `scripts/tijara_host.py`
 - `scripts/tijara_services.py`
+- `scripts/tijara-start.sh`
+- `scripts/tijara-stop.sh`
+- `scripts/tijara-deploy.sh`
+- `scripts/tijara-start.ps1`
+- `scripts/tijara-stop.ps1`
+- `scripts/tijara-deploy.ps1`
 - `deploy/bin/start-odoo.sh`
 - `deploy/config/odoo.conf.template`
 - `deploy/nginx/tijara.conf`
@@ -116,6 +122,18 @@ The Python hosting helper uses the same files:
 ```bash
 python3 scripts/tijara_host.py init-config --environment staging --generate-secrets
 python3 scripts/tijara_host.py deploy --with-monitoring
+```
+
+The native wrappers are thin entrypoints over the same centralized files:
+
+```bash
+bash scripts/tijara-start.sh --all
+bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring
+```
+
+```powershell
+powershell -File scripts/tijara-start.ps1 -AllProfiles
+powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring
 ```
 
 Generated local secrets from this helper are for controlled demo/staging use.

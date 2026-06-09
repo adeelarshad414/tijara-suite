@@ -41,6 +41,12 @@ scripts/dev-stop.sh                   Local stop and port verification script
 scripts/dev-restart.sh                Local restart wrapper
 scripts/tijara_host.py                Python server host/bootstrap script
 scripts/tijara_services.py            Python service manager for PC/server
+scripts/tijara-start.sh               Native Bash start wrapper for PC/server
+scripts/tijara-stop.sh                Native Bash stop wrapper for PC/server
+scripts/tijara-deploy.sh              Native Bash deploy wrapper for PC/server
+scripts/tijara-start.ps1              Native PowerShell start wrapper
+scripts/tijara-stop.ps1               Native PowerShell stop wrapper
+scripts/tijara-deploy.ps1             Native PowerShell deploy wrapper
 Makefile                              Operator shortcuts
 ```
 
@@ -154,6 +160,37 @@ Both Python scripts use the same central runtime files documented in
 `docs/CONFIGURATION_AND_SECRETS.md`; they do not introduce separate secret
 stores.
 
+## Bash And PowerShell Wrappers
+
+Use the native wrappers when an operator should not have to remember the Python
+manager syntax. They call the same Python managers underneath and still use only
+the central `.env` and `secrets/.env.secrets` files.
+
+Linux/macOS Bash:
+
+```bash
+bash scripts/tijara-start.sh --all --install-suite --seed-demo
+bash scripts/tijara-stop.sh --force-kill-ports
+bash scripts/tijara-deploy.sh \
+  --environment staging \
+  --generate-secrets \
+  --with-monitoring \
+  --install-suite
+```
+
+Windows PowerShell:
+
+```powershell
+powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
+powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
+powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+```
+
+For production, use `-Production -Domain tijara.example.com` or
+`--production --domain tijara.example.com` after real secret-manager values are
+injected. Use `-DryRun` or `--dry-run` to print actions before changing files or
+services.
+
 ## Compose Commands
 
 The Makefile automatically includes `.env` and `secrets/.env.secrets` when they
@@ -169,6 +206,9 @@ make py-config
 make host-preflight
 make host-init-config
 make host-deploy
+make tijara-start TIJARA_SERVICE_FLAGS="--all --install-suite --seed-demo"
+make tijara-stop TIJARA_SERVICE_FLAGS="--force-kill-ports"
+make tijara-deploy TIJARA_DEPLOY_FLAGS="--environment staging --generate-secrets --monitoring"
 make security-audit
 make dev-start
 make dev-stop

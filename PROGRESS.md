@@ -11133,3 +11133,77 @@ Status: Complete
 - Add production DNS/TLS/backup automation wrappers around the Python host
   script for specific deployment targets.
 - Run protected/staging evidence after the new monitoring dashboard layer.
+
+## Iteration 149: Native Bash And PowerShell Operations Wrappers
+
+### Objective
+
+- Add first-class Bash and PowerShell scripts for starting, stopping, and
+  deploying Tijara Suite on local PCs, Windows machines, Linux/macOS servers,
+  and production-like hosts.
+- Keep the wrappers aligned with the existing Python operations layer and the
+  centered `.env` plus `secrets/.env.secrets` runtime configuration contract.
+- Update README, deployment, setup, command, config, and spec-map docs in the
+  same iteration.
+
+### Completed
+
+- Added executable Bash wrappers:
+  `scripts/tijara-start.sh`, `scripts/tijara-stop.sh`, and
+  `scripts/tijara-deploy.sh`.
+- Added PowerShell wrappers:
+  `scripts/tijara-start.ps1`, `scripts/tijara-stop.ps1`, and
+  `scripts/tijara-deploy.ps1`.
+- The start wrappers support all-profile startup, hardware and monitoring
+  profiles, module install, demo seeding, DB selection, wait/no-wait controls,
+  timeout, and dry-run behavior.
+- The stop wrappers support normal Compose shutdown, known-port cleanup, and
+  dry-run behavior.
+- The deploy wrappers support environment/public URL/domain setup, production
+  defaults, placeholder blocking override for assumed/demo paths, generated
+  local demo secrets, hardware/monitoring/all profiles, pull/no-pull, build,
+  module install, demo seeding, DB selection, host labels, and dry-run behavior.
+- Added Makefile targets `tijara-start`, `tijara-stop`, and `tijara-deploy`
+  with `TIJARA_SERVICE_FLAGS` and `TIJARA_DEPLOY_FLAGS` passthrough variables.
+- Updated `README.md`, `DEPLOY.md`, `docs/COMMANDS_QUICKREF.md`,
+  `docs/LOCAL_SETUP_GUIDE.md`, `docs/SETUP_STEP_BY_STEP.md`,
+  `docs/CONFIGURATION_AND_SECRETS.md`, `docs/SPEC_MAP.md`, and
+  `docs/SPEC_MAP.json`.
+
+### Validation
+
+- `bash -n scripts/tijara-start.sh scripts/tijara-stop.sh scripts/tijara-deploy.sh`
+  passed.
+- `bash scripts/tijara-start.sh --dry-run --all --install-suite --seed-demo --no-wait`
+  passed and printed the all-profile startup, install, and seed commands.
+- `bash scripts/tijara-stop.sh --dry-run --force-kill-ports` passed and
+  printed all-profile shutdown plus known-port cleanup commands.
+- `bash scripts/tijara-deploy.sh --dry-run --production --allow-placeholders --with-hardware --with-monitoring --domain demo.example.com --no-pull --install-suite --db tijara_dev`
+  passed and printed the production-style deploy plan without writing config or
+  starting services.
+- `make tijara-start TIJARA_SERVICE_FLAGS="--dry-run --all --no-wait"`,
+  `make tijara-stop TIJARA_SERVICE_FLAGS="--dry-run --force-kill-ports"`, and
+  `make tijara-deploy TIJARA_DEPLOY_FLAGS="--dry-run --production --allow-placeholders --monitoring --domain demo.example.com --no-pull"`
+  passed.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `make validate` passed: 103 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- `git diff --check` passed.
+- PowerShell runtime execution was not performed because neither `pwsh` nor
+  Windows PowerShell is installed on this macOS workstation; the wrappers are
+  committed for Windows/PowerShell validation on an appropriate machine.
+
+### Known Gaps
+
+- PowerShell wrappers still need a real Windows or PowerShell Core runtime
+  smoke test.
+- Production deployment still requires environment-specific DNS/TLS automation,
+  secret-manager injection, backup scheduling, alert routing, and release
+  sign-off evidence before go-live.
+
+### Next Iteration
+
+- Run the monitoring profile against seeded `tijara_dev`, open Grafana, and
+  capture dashboard screenshots/evidence.
+- Validate the PowerShell wrappers on Windows or PowerShell Core once available.
+- Continue production DNS/TLS/backup automation and protected/staging evidence.

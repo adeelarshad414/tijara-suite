@@ -138,6 +138,12 @@ scripts/dev-stop.sh            Universal local shutdown script
 scripts/dev-restart.sh         Local restart wrapper
 scripts/tijara_host.py         Python server hosting/bootstrap script
 scripts/tijara_services.py     Python start/stop/status service manager
+scripts/tijara-start.sh        Native Bash start wrapper for PC/server
+scripts/tijara-stop.sh         Native Bash stop wrapper for PC/server
+scripts/tijara-deploy.sh       Native Bash deploy wrapper for PC/server
+scripts/tijara-start.ps1       Native PowerShell start wrapper for Windows
+scripts/tijara-stop.ps1        Native PowerShell stop wrapper for Windows
+scripts/tijara-deploy.ps1      Native PowerShell deploy wrapper for Windows
 tests/e2e/                     Playwright browser E2E staging scaffolds
 DEPLOY.md                      Deployment, secrets, release, and rollback guide
 LICENSE                        Root LGPL-3.0 project license notice
@@ -180,6 +186,14 @@ python3 scripts/tijara_services.py status
 python3 scripts/tijara_services.py stop --force-kill-ports
 ```
 
+Native Bash wrappers for local PCs and Linux/macOS servers:
+
+```bash
+bash scripts/tijara-start.sh --all --install-suite --seed-demo
+bash scripts/tijara-stop.sh --force-kill-ports
+bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite
+```
+
 Server hosting/bootstrap helper:
 
 ```bash
@@ -188,7 +202,15 @@ python3 scripts/tijara_host.py init-config --environment staging --public-url ht
 python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite
 ```
 
-Windows PowerShell equivalents live in `scripts/dev-start.ps1` and
+Windows PowerShell equivalents:
+
+```powershell
+powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
+powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
+powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+```
+
+The older local developer helpers still live in `scripts/dev-start.ps1` and
 `scripts/dev-stop.ps1`, and VS Code tasks are available in `.vscode/tasks.json`.
 
 Manual Compose flow:

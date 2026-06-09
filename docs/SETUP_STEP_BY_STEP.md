@@ -82,6 +82,18 @@ python3 scripts/tijara_services.py status
 python3 scripts/tijara_services.py stop --force-kill-ports
 ```
 
+Native wrappers for PC/server operators:
+
+```bash
+bash scripts/tijara-start.sh --all --install-suite --seed-demo
+bash scripts/tijara-stop.sh --force-kill-ports
+```
+
+```powershell
+powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
+powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
+```
+
 Open:
 
 ```text
@@ -217,6 +229,16 @@ python3 scripts/tijara_host.py deploy \
   --with-monitoring \
   --install-suite \
   --db tijara_dev
+```
+
+Native wrapper equivalents:
+
+```bash
+bash scripts/tijara-deploy.sh --environment staging --generate-secrets --with-monitoring --install-suite
+```
+
+```powershell
+powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
 ```
 
 For production, inject real secrets from the secret manager and use

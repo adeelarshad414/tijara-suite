@@ -8,11 +8,13 @@ endif
 
 COMPOSE ?= docker compose $(ENV_FILE_ARGS)
 DB ?= tijara_dev
+TIJARA_SERVICE_FLAGS ?=
+TIJARA_DEPLOY_FLAGS ?=
 TIJARA_MODULES := tijara_base,tijara_retail_core,tijara_inventory_intelligence,tijara_pos_pk,tijara_saas_control,tijara_pos_experience,tijara_analytics,tijara_ecommerce,tijara_vertical_pharmacy,tijara_vertical_restaurant,tijara_vertical_garments,tijara_vertical_electronics,tijara_vertical_cloth,tijara_vertical_superstore,tijara_vertical_grocery,tijara_vertical_bakery
 DEMO_MODULES := tijara_demo_pos
 
 .PHONY: dev-start dev-stop dev-restart capture-screenshots screenshot-user-guide record-demo assemble-video customer-demo-video up down logs shell restart ps validate js-check security-audit config install-suite upgrade-pkr-gst seed-pos-demo seed-demo-users verify-pkr-gst verify-enterprise-seed seed-e2e local-e2e-evidence staging-e2e-profile e2e-execution-evidence test-odoo e2e e2e-staging browser-e2e-matrix protected-browser-e2e protected-browser-e2e-matrix ops-staging operations-release-bundle production-ops-readiness ops-tool-evidence release-candidate signoff-pack check-release-readiness staging-release-signoff production-deployment-gate production-rollback production-smoke tenant-smoke tenant-rollout protected-runner-bootstrap protected-runner-bootstrap-verification protected-runbook-handoff protected-first-run-checklist protected-runner-preflight protected-service-checks protected-provider-readiness protected-payment-lifecycle-evidence protected-offline-replay-evidence protected-offline-queue-snapshot protected-offline-pilot-evidence protected-post-run-verification github-artifact-metadata github-step-summary protected-artifact-summary protected-run-decision protected-evidence-retention protected-sidecar-verification protected-evidence-replay protected-release-evidence-index protected-release-closure protected-closure-result-verification protected-release-archive protected-archive-upload-verification protected-evidence-bundle-score protected-evidence-bundle-drift certification-evidence protected-certification-evidence certification-result-matrix psp-readiness-evidence psp-fixture-smoke fbr-readiness-evidence fbr-fixture-smoke assumed-certification-evidence monitoring-evidence incident-runbook-evidence release-retention-evidence secret-manager-evidence secret-runtime-evidence deployment-environment-evidence tenant-ops-evidence load-evidence load-profile load-enterprise-surfaces load-profile-matrix-evidence bridge-up bridge-logs bridge-ps backup-db restore-drill provision-tenant provision-tenant-ops hardware-cert-smoke load-smoke container-scan dependency-scan monitoring-up monitoring-logs monitoring-drill
-.PHONY: py-start py-stop py-restart py-status py-config host-preflight host-init-config host-deploy monitoring-dashboards monitoring-dashboards-check
+.PHONY: py-start py-stop py-restart py-status py-config host-preflight host-init-config host-deploy tijara-start tijara-stop tijara-deploy monitoring-dashboards monitoring-dashboards-check
 
 dev-start:
 	bash scripts/dev-start.sh
@@ -46,6 +48,15 @@ host-init-config:
 
 host-deploy:
 	python3 scripts/tijara_host.py deploy
+
+tijara-start:
+	bash scripts/tijara-start.sh $(TIJARA_SERVICE_FLAGS)
+
+tijara-stop:
+	bash scripts/tijara-stop.sh $(TIJARA_SERVICE_FLAGS)
+
+tijara-deploy:
+	bash scripts/tijara-deploy.sh $(TIJARA_DEPLOY_FLAGS)
 
 capture-screenshots:
 	node scripts/capture-screenshots.js

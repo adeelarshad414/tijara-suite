@@ -132,4 +132,10 @@ python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --instal
 python3 scripts/tijara_services.py start --all-profiles
 python3 scripts/tijara_services.py status
 python3 scripts/tijara_services.py stop --force-kill-ports
+bash scripts/tijara-start.sh --all --install-suite --seed-demo
+bash scripts/tijara-stop.sh --force-kill-ports
+bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite
+powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
+powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
+powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
 ```
