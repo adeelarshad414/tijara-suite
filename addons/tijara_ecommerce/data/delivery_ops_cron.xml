@@ -1,0 +1,21 @@
+<odoo>
+    <record id="ir_cron_tijara_ecommerce_delivery_retry_queue" model="ir.cron">
+        <field name="name">Tijara Ecommerce Delivery Retry Queue</field>
+        <field name="model_id" ref="model_tijara_ecommerce_delivery_retry"/>
+        <field name="state">code</field>
+        <field name="code">model.run_due_retries()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_tijara_ecommerce_delivery_sla_monitor" model="ir.cron">
+        <field name="name">Tijara Ecommerce Delivery SLA Monitor</field>
+        <field name="model_id" ref="model_tijara_ecommerce_delivery_exception"/>
+        <field name="state">code</field>
+        <field name="code">model.run_sla_monitor()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

@@ -17,9 +17,13 @@
     "data": [
         "security/ir.model.access.csv",
         "data/ecommerce_analytics.xml",
+        "data/delivery_ops_cron.xml",
         "views/ecommerce_menus.xml",
         "views/delivery_event_views.xml",
         "views/delivery_provider_views.xml",
+        "views/delivery_retry_views.xml",
+        "views/delivery_exception_views.xml",
+        "views/delivery_reconciliation_views.xml",
         "views/ecommerce_channel_views.xml",
         "views/product_template_views.xml",
         "views/sale_order_views.xml",

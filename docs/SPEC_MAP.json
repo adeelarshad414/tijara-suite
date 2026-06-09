@@ -219,6 +219,7 @@
         "online catalog publishing",
         "B2B B2C ecommerce pricing",
         "pickup delivery order review",
+        "delivery retry exception reconciliation review",
         "ecommerce reports"
       ],
       "key_workflows": [
@@ -226,7 +227,10 @@
         "Publish online products",
         "Validate B2B B2C storefront pricing",
         "Review online sale orders",
-        "Hand off pickup delivery orders to queue"
+        "Hand off pickup delivery orders to queue",
+        "Review delivery exceptions and SLA breaches",
+        "Generate provider reconciliation report",
+        "Verify customer order history"
       ]
     },
     {
@@ -431,6 +435,27 @@
       "description": "Customer-safe order, queue, payment, delivery provider, and tracking payload endpoint."
     },
     {
+      "name": "Ecommerce Order History",
+      "route_path": "/tijara/ecommerce/tijara-demo-web/orders",
+      "auth": "public",
+      "personas": [
+        "ecommerce_manager",
+        "tenant_admin"
+      ],
+      "description": "Customer account-style recent order lookup by mobile or email."
+    },
+    {
+      "name": "Ecommerce Order History API",
+      "route_path": "/tijara/ecommerce/tijara-demo-web/orders/list",
+      "auth": "public_json",
+      "personas": [
+        "ecommerce_manager",
+        "analytics_manager",
+        "tenant_admin"
+      ],
+      "description": "Customer-safe recent order history with queue, payment, delivery, SLA, retry, and exception status."
+    },
+    {
       "name": "Ecommerce Delivery Webhook",
       "route_path": "/tijara/ecommerce/delivery/webhook/TIJARA-INHOUSE",
       "auth": "signed_public_json",
@@ -550,7 +575,7 @@
     "CSV import export for operational data",
     "Hardware bridge for printers scanners drawers scales labels and customer displays",
     "Kiosk menu deals promotion queue and customer-display public routes",
-    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff customer tracking dry-run delivery provider assignment label manifest signed webhook adapter events and ecommerce analytics templates",
+    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff customer tracking order history Pakistan courier fixtures retry queue SLA exceptions delivery reconciliation dry-run delivery provider assignment label manifest signed webhook adapter events and ecommerce analytics templates",
     "Offline POS capture replay and conflict review",
     "SaaS feature flags for B2B queue promotion display and customer display",
     "Tenant database provisioning and operations manifests",
@@ -614,7 +639,7 @@
   "demo_data": {
     "module": "tijara_demo_pos",
     "seed_command": "make seed-pos-demo",
-    "notes": "Seeds POS config, open session, vertical demo products, B2B and B2C customers, loyalty records, screens, kiosk profile, queue ticket, promotions, ecommerce storefront channel, published online products, invoice and receipt templates, back-office expenses, and salary batch data. Demo login users must be created or mapped in staging before authenticated E2E."
+    "notes": "Seeds POS config, open session, vertical demo products, B2B and B2C customers, loyalty records, screens, kiosk profile, queue ticket, promotions, ecommerce storefront channel, Pakistan delivery provider fixtures, published online products, invoice and receipt templates, back-office expenses, and salary batch data. Demo login users must be created or mapped in staging before authenticated E2E."
   },
   "commands": {
     "start": "bash scripts/dev-start.sh",

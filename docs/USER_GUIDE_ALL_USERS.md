@@ -156,6 +156,10 @@ Primary tasks:
   with certified providers before production.
 - Use Online Orders delivery actions for shipment creation, label generation,
   manifest creation, shipment cancellation, and delivery adapter event review.
+- Use Delivery Operations for retry/backoff queues, exception/SLA review, and
+  provider reconciliation.
+- Use the public order-history portal when customers need to review recent
+  ecommerce purchases by mobile/email.
 - Share the customer tracking link or lookup instructions after checkout.
 - Coordinate with inventory when online products are low stock.
 - Coordinate with accounting before live payment provider activation.
@@ -177,7 +181,9 @@ Storefront setup workflow:
    default provider to the channel for delivery/courier orders.
 9. Confirm adapter mode, endpoint paths, label format, webhook signature mode,
    webhook field mapping, and secret-manager reference for the provider.
-10. Open the storefront route and test catalog search, cart, checkout, pickup,
+10. Review SLA hours, retry attempts, COD fee percent, provider flat fee,
+   settlement cycle, and rider contact details.
+11. Open the storefront route and test catalog search, cart, checkout, pickup,
    delivery, queue ticket creation, and customer order tracking.
 
 Online order workflow:
@@ -198,10 +204,31 @@ Online order workflow:
    payload hash evidence.
 8. Certified provider webhooks or dry-run webhook tests update delivery status
    back into the order and customer tracking payload.
-9. Staff confirm stock, prepare the order, update queue status, collect or
+9. Staff review Delivery Operations > Retry Queue if a live/assumed HTTP JSON
+   delivery operation is queued or failed.
+10. Staff review Delivery Operations > Exceptions And SLA for breached,
+   failed, webhook-error, or retry-exhausted orders.
+11. Staff generate Delivery Operations > Reconciliation by provider/date range
+   to compare COD, delivery charge, provider fee, and net receivable totals.
+12. Customers can use `/tijara/ecommerce/<slug>/orders` with their mobile/email
+   to view recent order history and tracking links.
+13. Staff confirm stock, prepare the order, update queue status, collect or
    reconcile payment, and print invoice/receipt as needed.
-10. Customer tracks status through `/tijara/ecommerce/<slug>/track`, either with
+14. Customer tracks status through `/tijara/ecommerce/<slug>/track`, either with
    the private tracking link or with pickup code plus mobile/email.
+
+Delivery operations workflow:
+
+1. Open Tijara > Ecommerce > Delivery Operations > Retry Queue.
+2. Review pending, running, failed, and done delivery adapter work.
+3. Use Run Now for a safe retry in local/staging assumed adapter mode.
+4. Use Reset when a provider outage is resolved and a failed item should retry.
+5. Open Exceptions And SLA to acknowledge, resolve, or ignore delivery issues.
+6. Resolve exceptions only after the order is delivered, cancelled, merged, or
+   otherwise cleared by the ecommerce operations team.
+7. Open Reconciliation, select provider and date range, then Generate Report.
+8. Review delivered, failed, cancelled, COD total, delivery charge, provider
+   fee, and net receivable totals before marking reviewed or approved.
 
 Ecommerce smoke-test workflow:
 
@@ -214,7 +241,9 @@ Ecommerce smoke-test workflow:
    B2C/B2B prices, pickup checkout, delivery checkout, charge policy, sale
    order creation, queue ticket handoff, provider assignment, label/manifest
    actions, dry-run webhook sync, and customer tracking payloads.
-5. Regenerate screenshot guide evidence after checkout routes or storefront
+5. Confirm the order-history portal and `/orders/list` API return the new order
+   with safe customer-facing delivery, queue, SLA, retry, and exception fields.
+6. Regenerate screenshot guide evidence after checkout routes or storefront
    copy/layout changes.
 
 ### Cashier

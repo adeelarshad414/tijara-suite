@@ -155,6 +155,38 @@ Chrome, `say`, `afconvert`, Node, and Node dependencies installed. It writes
 `docs/PRODUCT_DEMO_CUSTOMER.webm` with generated voiceover; keep that generated
 media out of git and share it as a release, sales, or customer deliverable.
 
+## Ecommerce Delivery Operations Runtime
+
+The `tijara_ecommerce` module includes a production-layer delivery operations
+foundation for open-source/local/staging execution:
+
+- Provider-specific assumed fixtures for in-house riders and Pakistan courier
+  profiles such as TCS, Leopards, PostEx, M&P, BlueEx, Trax, Rider, and Call
+  Courier.
+- `tijara.ecommerce.delivery.retry` for retry/backoff queue evidence.
+- `tijara.ecommerce.delivery.exception` for SLA breaches, failed deliveries,
+  webhook errors, and retry exhaustion review.
+- `tijara.ecommerce.delivery.reconciliation` for COD, delivery charge,
+  provider fee, and net receivable reporting by provider/date range.
+- Public customer order history at `/tijara/ecommerce/<slug>/orders` and JSON
+  lookup at `/tijara/ecommerce/<slug>/orders/list`.
+
+The retry queue and SLA monitor are installed as Odoo crons. In local/demo mode
+they process assumed HTTP JSON responses without making live courier network
+calls. Before production, replace dry-run endpoints, payload mappings,
+credentials, webhook secret-manager entries, and provider fee assumptions with
+certified courier/API details.
+
+After changing delivery operations code or fixtures, upgrade ecommerce and run
+focused tests before the protected browser matrix:
+
+```bash
+docker compose --env-file .env --env-file secrets/.env.secrets run --rm odoo bash /usr/local/bin/tijara-start-odoo -d tijara_dev -u tijara_ecommerce --without-demo --stop-after-init
+make test-odoo
+make seed-e2e DB=tijara_dev
+make protected-browser-e2e-matrix
+```
+
 Direct Compose usage should include both env files:
 
 ```bash

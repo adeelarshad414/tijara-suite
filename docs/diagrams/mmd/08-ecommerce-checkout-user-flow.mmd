@@ -12,7 +12,11 @@ flowchart TD
     Ticket["Create queue ticket"]
     Provider{"Delivery or courier?"}
     Shipment["Assign dry-run/certified\nprovider tracking"]
+    Retry["Queue retry/backoff\nfor HTTP adapter"]
+    Exception["Monitor SLA and\nreview exceptions"]
+    Reconcile["Reconcile COD,\nfees, and net receivable"]
     Track["Customer tracks order\nby token or pickup/mobile"]
+    History["Customer order history\nby mobile/email"]
     Review["Ecommerce manager reviews\norder, queue, and delivery"]
     Done(["Order ready for fulfillment"])
 
@@ -21,5 +25,5 @@ flowchart TD
     CreateSO --> Queue
     Queue -- yes --> Ticket --> Provider
     Queue -- no --> Provider
-    Provider -- yes --> Shipment --> Track --> Review --> Done
-    Provider -- no --> Track --> Review --> Done
+    Provider -- yes --> Shipment --> Retry --> Exception --> Reconcile --> Track --> History --> Review --> Done
+    Provider -- no --> Track --> History --> Review --> Done

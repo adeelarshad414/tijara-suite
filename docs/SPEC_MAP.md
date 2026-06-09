@@ -54,6 +54,8 @@ agentic development pipeline.
 | Ecommerce Checkout API | `/tijara/ecommerce/tijara-demo-web/checkout` | Public JSON | Online checkout submission into Odoo sale orders |
 | Ecommerce Tracking | `/tijara/ecommerce/tijara-demo-web/track` | Public | Customer pickup-code/mobile and private-token order tracking |
 | Ecommerce Tracking API | `/tijara/ecommerce/tijara-demo-web/track/status` | Public JSON | Customer-safe order, queue, payment, and delivery tracking payload |
+| Ecommerce Order History | `/tijara/ecommerce/tijara-demo-web/orders` | Public | Customer account-style recent order lookup by mobile/email |
+| Ecommerce Order History API | `/tijara/ecommerce/tijara-demo-web/orders/list` | Public JSON | Customer-safe recent order history with queue, payment, delivery, SLA, retry, and exception status |
 | Ecommerce Delivery Webhook | `/tijara/ecommerce/delivery/webhook/TIJARA-INHOUSE` | Signed public JSON | Dry-run/certified provider delivery status webhook ingestion |
 | Payment Webhook | `/tijara/saas/payment/webhook/generic` | Signed public | PSP webhook ingestion |
 
@@ -67,9 +69,11 @@ agentic development pipeline.
 - Hardware bridge for printers, scanners, drawers, scales, labels, and customer displays.
 - Kiosk, menu, deals, promotion, queue, and customer-display routes.
 - Ecommerce storefront, catalog API, checkout API, sale-order sync, pickup/
-  delivery queue handoff, customer order tracking, dry-run delivery-provider
-  assignment, label/manifest actions, signed/dry-run delivery webhooks, adapter
-  event audit records, and ecommerce analytics templates.
+  delivery queue handoff, customer order tracking, customer order-history
+  portal, Pakistan courier/rider delivery fixtures, retry/backoff queue,
+  SLA exception dashboard, delivery reconciliation reports, dry-run delivery
+  provider assignment, label/manifest actions, signed/dry-run delivery
+  webhooks, adapter event audit records, and ecommerce analytics templates.
 - Offline POS capture, replay, and conflict review.
 - SaaS feature flags and runtime enforcement.
 - Tenant provisioning and operations manifests.
@@ -93,7 +97,7 @@ make seed-demo-users
 The optional `tijara_demo_pos` module seeds POS config, an open POS session,
 vertical demo products, B2B/B2C customers, loyalty records, display screens,
 kiosk profile, queue ticket, promotion/deal records, ecommerce storefront
-channel, published online products, invoice/receipt templates, back-office
+channel, Pakistan delivery provider fixtures, published online products, invoice/receipt templates, back-office
 expenses, and a salary batch. Demo users in
 `docs/TEST_CREDENTIALS.csv` are deterministic staging accounts that can be
 created or mapped with `make seed-demo-users` before authenticated browser E2E

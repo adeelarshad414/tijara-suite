@@ -10618,3 +10618,105 @@ Status: Complete
 - Continue provider-specific delivery adapters, retry/backoff queue, customer
   account order history, PSP/FBR certification hardening, hardware evidence,
   monitoring proof, restore drills, load tests, and security scans.
+
+## Iteration 143: Delivery Operations Production Layer
+
+### Objective
+
+- Build the delivery operations production layer for ecommerce delivery/courier
+  workflows.
+- Add Pakistan courier and in-house rider fixtures/adapters, retry/backoff,
+  SLA exceptions, reconciliation, and customer order history.
+- Rerun Odoo transaction tests and the protected browser matrix.
+
+### Completed
+
+- Added provider-specific delivery profiles for in-house riders and common
+  Pakistan courier assumptions: TCS, Leopards, PostEx, M&P, BlueEx, Trax,
+  Rider, and Call Courier.
+- Extended delivery providers with adapter profile, SLA hours, rider contact,
+  retry/backoff policy, provider fee, COD fee percent, settlement cycle, and
+  smart buttons for retries, exceptions, and reconciliations.
+- Added `tijara.ecommerce.delivery.retry` with payload hashing, retry/backoff
+  scheduling, Run Now/Reset/Cancel actions, assumed HTTP JSON response
+  processing, event linkage, and retry-exhausted exception creation.
+- Added `tijara.ecommerce.delivery.exception` with SLA breach, failed delivery,
+  webhook error, retry-exhausted, and manual-review categories plus
+  acknowledge/resolve/ignore actions.
+- Added `tijara.ecommerce.delivery.reconciliation` and line records for
+  provider/date COD totals, delivery charges, provider fees, net receivable,
+  delivered/failed/cancelled counts, JSON summary, review, and approval.
+- Added Odoo crons for delivery retry processing and SLA monitoring.
+- Extended ecommerce sale orders with delivery SLA deadline/state, retry count,
+  exception count, retry/exception smart actions, and customer tracking payload
+  fields.
+- Added public customer order-history page and API:
+  `/tijara/ecommerce/<slug>/orders` and
+  `/tijara/ecommerce/<slug>/orders/list`.
+- Storefront now links to Order History alongside Track Order.
+- Demo ecommerce seed now attaches the in-house provider plus Pakistan courier
+  fixtures to the demo channel, with in-house rider as the default.
+- Extended Odoo transaction tests for live-mode assumed retry queue, SLA
+  exception creation, reconciliation totals, and customer order history.
+- Extended Playwright ecommerce coverage for storefront Order History link,
+  order-history API, delivery SLA fields, and safe customer-facing status.
+- Updated `README.md`, `DEPLOY.md`, `docs/ARCHITECTURE.md`,
+  `docs/DIAGRAMS.md`, `docs/USER_GUIDE_ALL_USERS.md`,
+  `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`,
+  `docs/SCREENSHOT_USER_GUIDE.md`, `docs/SPEC_MAP.md`,
+  `docs/SPEC_MAP.json`, and `tests/e2e/README.md`.
+- Regenerated Mermaid source extracts and PNG diagram exports after ecommerce
+  flow and module/data-model diagram updates.
+
+### Validation
+
+- `make validate` passed: 102 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- Python compile passed for touched ecommerce model/controller/test files using
+  `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `npm run docs:diagrams:png` passed after sandbox escalation for local
+  headless browser launch, rendering 14 PNG files.
+- `git diff --check` passed.
+- Local `tijara_dev` was upgraded with `tijara_ecommerce`, loading the new
+  delivery operations models, fields, crons, views, routes, and seed fixtures.
+- Long-running local Odoo service was restarted after the upgrade.
+- Focused Odoo ecommerce transaction tests passed against fresh database
+  `tijara_test_delivery_ops`: 5 post-test methods, 0 failures, 0 errors.
+- E2E seed run `20260609-delivery-ops` passed with decision `ready` and
+  exported evidence under `deploy/runtime/e2e-seed/20260609-delivery-ops/`.
+- Protected full browser matrix run `20260609-delivery-ops-full` passed with
+  decision `ready` and `ci_status=pass`; Chromium desktop, mobile touch,
+  Firefox desktop, WebKit desktop, and tablet touch all passed with no blockers
+  or warnings.
+- Aggregate matrix evidence:
+  `deploy/runtime/browser-e2e-matrix/20260609-delivery-ops-full/`.
+
+### Known Gaps
+
+- Courier integrations are still assumed/dry-run or assumed HTTP JSON adapters;
+  real TCS/Leopards/PostEx/M&P/BlueEx/Trax/Rider/Call Courier credentials,
+  payload mapping, certification, labels, manifests, and webhook sign-off are
+  still required before production.
+- Public order-history and tracking routes need production rate limits, WAF/bot
+  controls, privacy review, logging review, and abuse monitoring.
+- Delivery exceptions currently live in Odoo dashboards; production alerting
+  needs Alertmanager/Grafana notification rules and on-call runbook evidence.
+- PSP/FBR live certification, real hardware certification, restore drills, load
+  tests, dependency/container scanning, and deeper security testing remain
+  production blockers.
+- Customer order history is lookup-based; authenticated portal accounts,
+  saved addresses, returns-from-order, and customer notifications are still
+  future production work.
+
+### Next Iteration
+
+- Add provider-specific payload mapping classes and certification fixture packs
+  for each Pakistan courier profile.
+- Add delivery exception Alertmanager/Grafana rules and runbook evidence.
+- Add delivery analytics widgets for SLA breach rate, retry aging, courier
+  success rate, COD receivable aging, and reconciliation variance.
+- Build authenticated customer portal accounts with saved addresses, order
+  returns/exchanges, notifications, and consent controls.
+- Continue PSP/FBR certification, hardware evidence, load/security scans,
+  backup restore drills, and production operations sign-off.

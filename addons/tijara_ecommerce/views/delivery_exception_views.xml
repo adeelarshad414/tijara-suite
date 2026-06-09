@@ -1,0 +1,123 @@
+<odoo>
+    <record id="action_tijara_ecommerce_delivery_exception" model="ir.actions.act_window">
+        <field name="name">Delivery Exceptions</field>
+        <field name="res_model">tijara.ecommerce.delivery.exception</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="context">{'search_default_open': 1}</field>
+    </record>
+
+    <record id="view_tijara_ecommerce_delivery_exception_list" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.delivery.exception.list</field>
+        <field name="model">tijara.ecommerce.delivery.exception</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="severity == 'critical' and state in ('open', 'acknowledged')" decoration-warning="severity == 'warning' and state in ('open', 'acknowledged')" decoration-success="state == 'resolved'">
+                <field name="detected_at"/>
+                <field name="deadline_at"/>
+                <field name="name"/>
+                <field name="provider_id"/>
+                <field name="sale_order_id"/>
+                <field name="category"/>
+                <field name="severity"/>
+                <field name="state"/>
+                <field name="owner_id"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_delivery_exception_form" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.delivery.exception.form</field>
+        <field name="model">tijara.ecommerce.delivery.exception</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_acknowledge" type="object" string="Acknowledge" class="btn-primary"/>
+                    <button name="action_resolve" type="object" string="Resolve"/>
+                    <button name="action_ignore" type="object" string="Ignore"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="provider_id"/>
+                            <field name="sale_order_id"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <field name="category"/>
+                            <field name="severity"/>
+                            <field name="owner_id"/>
+                            <field name="deadline_at"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="detected_at"/>
+                            <field name="acknowledged_at"/>
+                            <field name="resolved_at"/>
+                        </group>
+                        <group>
+                            <field name="last_event_id"/>
+                            <field name="retry_id"/>
+                        </group>
+                    </group>
+                    <group string="Message">
+                        <field name="message"/>
+                    </group>
+                    <group string="Resolution Notes">
+                        <field name="resolution_notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_delivery_exception_search" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.delivery.exception.search</field>
+        <field name="model">tijara.ecommerce.delivery.exception</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="provider_id"/>
+                <field name="sale_order_id"/>
+                <filter name="open" string="Open" domain="[('state', 'in', ['open', 'acknowledged'])]"/>
+                <filter name="critical" string="Critical" domain="[('severity', '=', 'critical')]"/>
+                <filter name="sla_breach" string="SLA Breach" domain="[('category', '=', 'sla_breach')]"/>
+                <filter name="resolved" string="Resolved" domain="[('state', '=', 'resolved')]"/>
+                <group>
+                    <filter name="group_provider" string="Provider" context="{'group_by': 'provider_id'}"/>
+                    <filter name="group_category" string="Category" context="{'group_by': 'category'}"/>
+                    <filter name="group_severity" string="Severity" context="{'group_by': 'severity'}"/>
+                    <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
+                    <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_delivery_exception_pivot" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.delivery.exception.pivot</field>
+        <field name="model">tijara.ecommerce.delivery.exception</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="provider_id" type="row"/>
+                <field name="category" type="row"/>
+                <field name="state" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_delivery_exception_graph" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.delivery.exception.graph</field>
+        <field name="model">tijara.ecommerce.delivery.exception</field>
+        <field name="arch" type="xml">
+            <graph type="bar">
+                <field name="category"/>
+                <field name="state"/>
+            </graph>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_ecommerce_delivery_exception" name="Exceptions And SLA" parent="menu_tijara_ecommerce_delivery_ops" action="action_tijara_ecommerce_delivery_exception" sequence="20"/>
+</odoo>

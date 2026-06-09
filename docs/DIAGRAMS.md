@@ -195,7 +195,7 @@ flowchart TB
     Experience["tijara_pos_experience\nKiosk, displays, queue"]
     Analytics["tijara_analytics\nDashboards and KPI history"]
     SaaS["tijara_saas_control\nPlans and feature flags"]
-    Ecommerce["tijara_ecommerce\nStorefront and online checkout"]
+    Ecommerce["tijara_ecommerce\nStorefront, delivery ops,\nand online checkout"]
     Demo["tijara_demo_pos\nDemo seed"]
     Verticals["Vertical modules\npharmacy, restaurant,\ngrocery, bakery, cloth,\ngarments, shoes, electronics"]
 
@@ -257,13 +257,33 @@ classDiagram
     }
     class DeliveryProvider {
         code
+        adapter_profile
         provider_type
         service_level
         dry_run
         adapter_mode
+        sla_hours
         label_format
         webhook_signature_mode
         tracking_url_template
+    }
+    class DeliveryRetry {
+        operation
+        state
+        attempt_count
+        next_attempt_at
+    }
+    class DeliveryException {
+        category
+        severity
+        state
+        deadline_at
+    }
+    class DeliveryReconciliation {
+        date_from
+        date_to
+        cod_amount_total
+        net_receivable
     }
     class DeliveryEvent {
         event_type
@@ -282,6 +302,7 @@ classDiagram
         delivery_status
         delivery_adapter_state
         delivery_provider_reference
+        delivery_sla_state
     }
     class QueueTicket {
         queue_number
@@ -321,7 +342,12 @@ classDiagram
     EcommerceChannel "1" --> "*" SaleOrder
     DeliveryProvider "1" --> "*" SaleOrder
     DeliveryProvider "1" --> "*" DeliveryEvent
+    DeliveryProvider "1" --> "*" DeliveryRetry
+    DeliveryProvider "1" --> "*" DeliveryException
+    DeliveryProvider "1" --> "*" DeliveryReconciliation
     SaleOrder "1" --> "*" DeliveryEvent
+    SaleOrder "1" --> "*" DeliveryRetry
+    SaleOrder "1" --> "*" DeliveryException
     EcommerceChannel "*" --> "*" DeliveryProvider
     ProductTemplate "*" --> "*" EcommerceChannel
     SaleOrder "1" --> "0..1" QueueTicket
@@ -379,7 +405,11 @@ flowchart TD
     Ticket["Create queue ticket"]
     Provider{"Delivery or courier?"}
     Shipment["Assign dry-run/certified\nprovider tracking"]
+    Retry["Queue retry/backoff\nfor HTTP adapter"]
+    Exception["Monitor SLA and\nreview exceptions"]
+    Reconcile["Reconcile COD,\nfees, and net receivable"]
     Track["Customer tracks order\nby token or pickup/mobile"]
+    History["Customer order history\nby mobile/email"]
     Review["Ecommerce manager reviews\norder, queue, and delivery"]
     Done(["Order ready for fulfillment"])
 
@@ -388,8 +418,8 @@ flowchart TD
     CreateSO --> Queue
     Queue -- yes --> Ticket --> Provider
     Queue -- no --> Provider
-    Provider -- yes --> Shipment --> Track --> Review --> Done
-    Provider -- no --> Track --> Review --> Done
+    Provider -- yes --> Shipment --> Retry --> Exception --> Reconcile --> Track --> History --> Review --> Done
+    Provider -- no --> Track --> History --> Review --> Done
 ```
 
 ## Restaurant And Kiosk Activity

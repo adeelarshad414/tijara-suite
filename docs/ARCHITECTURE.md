@@ -69,7 +69,9 @@ service in a later phase.
 8. `tijara_ecommerce`
    Public storefront channels, online catalog publishing, B2B/B2C checkout,
    pickup/delivery queue handoff, customer order tracking, delivery-provider
-   assignment, shipment create/cancel adapter events, label/manifest payloads,
+   assignment, Pakistan courier/rider profiles, shipment create/cancel adapter
+   events, label/manifest payloads, retry/backoff queue, SLA exception
+   dashboard, delivery reconciliation reports, customer order-history portal,
    signed or dry-run delivery webhooks, and ecommerce analytics/report
    templates.
 

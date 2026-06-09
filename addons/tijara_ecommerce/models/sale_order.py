@@ -107,6 +107,20 @@ class SaleOrder(models.Model):
     tijara_delivery_label_payload = fields.Text(string="Delivery Label Payload", copy=False)
     tijara_delivery_manifest_reference = fields.Char(string="Manifest Reference", copy=False)
     tijara_delivery_exception_reason = fields.Text(string="Delivery Exception Reason", copy=False)
+    tijara_delivery_sla_deadline = fields.Datetime(string="Delivery SLA Deadline", copy=False)
+    tijara_delivery_sla_state = fields.Selection(
+        [
+            ("not_started", "Not Started"),
+            ("on_track", "On Track"),
+            ("due_soon", "Due Soon"),
+            ("breached", "Breached"),
+            ("resolved", "Resolved"),
+            ("cancelled", "Cancelled"),
+        ],
+        default="not_started",
+        copy=False,
+        string="Delivery SLA State",
+    )
     tijara_delivery_last_event_id = fields.Many2one(
         "tijara.ecommerce.delivery.event",
         string="Last Delivery Adapter Event",
@@ -114,6 +128,8 @@ class SaleOrder(models.Model):
         readonly=True,
     )
     tijara_delivery_event_count = fields.Integer(compute="_compute_tijara_delivery_event_count")
+    tijara_delivery_retry_count = fields.Integer(compute="_compute_tijara_delivery_ops_counts")
+    tijara_delivery_exception_count = fields.Integer(compute="_compute_tijara_delivery_ops_counts")
     tijara_delivery_eta = fields.Datetime(string="Delivery ETA", copy=False)
     tijara_last_tracking_at = fields.Datetime(string="Last Tracking Update", copy=False)
     tijara_tracking_token = fields.Char(string="Customer Tracking Token", copy=False, readonly=True)
@@ -130,6 +146,13 @@ class SaleOrder(models.Model):
         event_model = self.env["tijara.ecommerce.delivery.event"].sudo()
         for order in self:
             order.tijara_delivery_event_count = event_model.search_count([("sale_order_id", "=", order.id)])
+
+    def _compute_tijara_delivery_ops_counts(self):
+        retry_model = self.env["tijara.ecommerce.delivery.retry"].sudo()
+        exception_model = self.env["tijara.ecommerce.delivery.exception"].sudo()
+        for order in self:
+            order.tijara_delivery_retry_count = retry_model.search_count([("sale_order_id", "=", order.id)])
+            order.tijara_delivery_exception_count = exception_model.search_count([("sale_order_id", "=", order.id)])
 
     def _tijara_tracking_public_url(self):
         self.ensure_one()
@@ -242,6 +265,45 @@ class SaleOrder(models.Model):
             "context": {"default_sale_order_id": self.id, "default_company_id": self.company_id.id},
         }
 
+    def action_tijara_open_delivery_retries(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Delivery Retry Queue"),
+            "res_model": "tijara.ecommerce.delivery.retry",
+            "view_mode": "list,form,pivot,graph",
+            "domain": [("sale_order_id", "=", self.id)],
+            "context": {"default_sale_order_id": self.id, "default_company_id": self.company_id.id},
+        }
+
+    def action_tijara_open_delivery_exceptions(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Delivery Exceptions"),
+            "res_model": "tijara.ecommerce.delivery.exception",
+            "view_mode": "list,form,pivot,graph",
+            "domain": [("sale_order_id", "=", self.id)],
+            "context": {"default_sale_order_id": self.id, "default_company_id": self.company_id.id},
+        }
+
+    def _tijara_resolve_delivery_exceptions(self, resolution_notes=""):
+        exception_model = self.env["tijara.ecommerce.delivery.exception"].sudo()
+        for order in self:
+            exceptions = exception_model.search(
+                [
+                    ("sale_order_id", "=", order.id),
+                    ("state", "in", ["open", "acknowledged"]),
+                ]
+            )
+            exceptions.write(
+                {
+                    "state": "resolved",
+                    "resolved_at": fields.Datetime.now(),
+                    "resolution_notes": resolution_notes or _("Resolved from delivery status update."),
+                }
+            )
+
     def action_tijara_mark_delivery_picked(self):
         self.write({"tijara_delivery_status": "picked", "tijara_last_tracking_at": fields.Datetime.now()})
         return True
@@ -251,7 +313,14 @@ class SaleOrder(models.Model):
         return True
 
     def action_tijara_mark_delivered(self):
-        self.write({"tijara_delivery_status": "delivered", "tijara_last_tracking_at": fields.Datetime.now()})
+        self.write(
+            {
+                "tijara_delivery_status": "delivered",
+                "tijara_last_tracking_at": fields.Datetime.now(),
+                "tijara_delivery_sla_state": "resolved",
+            }
+        )
+        self._tijara_resolve_delivery_exceptions(_("Delivery marked delivered by operator."))
         return True
 
     def _tijara_ecommerce_tracking_payload(self):
@@ -292,6 +361,7 @@ class SaleOrder(models.Model):
                 "status": self.tijara_delivery_status,
                 "provider": provider.name or "",
                 "provider_type": provider.provider_type or "",
+                "adapter_profile": provider.adapter_profile or "",
                 "dry_run": bool(provider.dry_run) if provider else False,
                 "adapter_state": self.tijara_delivery_adapter_state or "",
                 "provider_reference": self.tijara_delivery_provider_reference or "",
@@ -301,7 +371,13 @@ class SaleOrder(models.Model):
                 "manifest_reference": self.tijara_delivery_manifest_reference or "",
                 "exception_reason": self.tijara_delivery_exception_reason or "",
                 "event_count": self.tijara_delivery_event_count,
+                "retry_count": self.tijara_delivery_retry_count,
+                "exception_count": self.tijara_delivery_exception_count,
                 "last_event_id": self.tijara_delivery_last_event_id.id if self.tijara_delivery_last_event_id else False,
+                "sla_deadline": fields.Datetime.to_string(self.tijara_delivery_sla_deadline)
+                if self.tijara_delivery_sla_deadline
+                else "",
+                "sla_state": self.tijara_delivery_sla_state or "",
                 "eta": fields.Datetime.to_string(self.tijara_delivery_eta) if self.tijara_delivery_eta else "",
                 "last_update": fields.Datetime.to_string(self.tijara_last_tracking_at) if self.tijara_last_tracking_at else "",
             },

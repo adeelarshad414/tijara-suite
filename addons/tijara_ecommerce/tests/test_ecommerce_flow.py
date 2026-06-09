@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from odoo import Command, fields
 from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase, tagged
@@ -148,6 +150,8 @@ class TestTijaraEcommerceFlow(TransactionCase):
         self.assertEqual(tracking["delivery"]["provider"], self.provider.name)
         self.assertEqual(tracking["delivery"]["adapter_state"], "created")
         self.assertEqual(tracking["delivery"]["provider_reference"], order.tijara_delivery_provider_reference)
+        self.assertEqual(tracking["delivery"]["sla_state"], "on_track")
+        self.assertTrue(tracking["delivery"]["sla_deadline"])
         order.action_tijara_mark_ecommerce_paid()
         self.assertEqual(order.tijara_payment_status, "paid")
         self.assertGreater(order.partner_id.tijara_loyalty_points, 0)
@@ -214,3 +218,107 @@ class TestTijaraEcommerceFlow(TransactionCase):
         )
         payload = self.channel.tijara_catalog_payload(audience="b2c")
         self.assertEqual(payload["status"], "ok")
+
+    def test_delivery_retry_sla_reconciliation_and_order_history(self):
+        live_provider = self.env["tijara.ecommerce.delivery.provider"].sudo().create(
+            {
+                "name": "Tijara Test PostEx Live Assumption",
+                "code": "TIJARA-TEST-POSTEX",
+                "company_id": self.company.id,
+                "adapter_profile": "postex",
+                "provider_type": "aggregator",
+                "service_level": "standard",
+                "dry_run": False,
+                "adapter_mode": "http_json",
+                "auto_assign": True,
+                "supports_cancel": True,
+                "supports_labels": True,
+                "supports_manifests": True,
+                "supports_webhooks": True,
+                "create_endpoint": "/shipments",
+                "cancel_endpoint": "/shipments/{provider_reference}/cancel",
+                "status_endpoint": "/shipments/{tracking_number}",
+                "label_endpoint": "/shipments/{tracking_number}/label",
+                "manifest_endpoint": "/manifests",
+                "tracking_url_template": "https://tracking.example.test/postex/{tracking_number}",
+                "retry_initial_delay_minutes": 1,
+                "retry_max_attempts": 3,
+                "provider_fee_flat": 100.0,
+                "cod_fee_percent": 2.0,
+            }
+        )
+        self.channel.write(
+            {
+                "delivery_provider_ids": [Command.set((self.provider | live_provider).ids)],
+                "default_delivery_provider_id": live_provider.id,
+            }
+        )
+        mobile = "03001234569"
+        order = self.channel.tijara_create_order(
+            {
+                "audience": "b2c",
+                "fulfillment_method": "delivery",
+                "payment_method": "cod",
+                "customer": {
+                    "name": "Online Delivery Ops Customer",
+                    "mobile": mobile,
+                    "email": "online-delivery-ops@example.com",
+                    "delivery_address": "Delivery ops address",
+                },
+                "lines": [{"product_id": self.product.id, "quantity": 1}],
+            }
+        )
+        self.assertEqual(order.tijara_delivery_provider_id, live_provider)
+        self.assertEqual(order.tijara_delivery_sla_state, "on_track")
+        retry = self.env["tijara.ecommerce.delivery.retry"].sudo().search(
+            [("sale_order_id", "=", order.id), ("operation", "=", "shipment_create")],
+            limit=1,
+        )
+        self.assertTrue(retry)
+        self.assertEqual(retry.state, "pending")
+        retry.action_run_now()
+        self.assertEqual(retry.state, "done")
+        self.assertEqual(retry.attempt_count, 1)
+        self.assertTrue(retry.last_response_json)
+
+        order.write({"tijara_delivery_sla_deadline": fields.Datetime.now() - timedelta(hours=1)})
+        self.env["tijara.ecommerce.delivery.exception"].sudo().run_sla_monitor()
+        exception = self.env["tijara.ecommerce.delivery.exception"].sudo().search(
+            [
+                ("sale_order_id", "=", order.id),
+                ("category", "=", "sla_breach"),
+                ("state", "in", ["open", "acknowledged"]),
+            ],
+            limit=1,
+        )
+        self.assertTrue(exception)
+        self.assertEqual(exception.severity, "critical")
+        self.assertEqual(order.tijara_delivery_sla_state, "breached")
+
+        today = fields.Date.context_today(self.env.user)
+        reconciliation = self.env["tijara.ecommerce.delivery.reconciliation"].sudo().create(
+            {
+                "provider_id": live_provider.id,
+                "company_id": self.company.id,
+                "date_from": today,
+                "date_to": today,
+            }
+        )
+        reconciliation.action_generate_lines()
+        self.assertEqual(reconciliation.order_count, 1)
+        self.assertEqual(reconciliation.cod_order_count, 1)
+        self.assertGreater(reconciliation.cod_amount_total, 0.0)
+        self.assertGreater(reconciliation.provider_fee_total, 0.0)
+        self.assertTrue(reconciliation.report_json)
+        reconciliation.action_mark_reviewed()
+        self.assertEqual(reconciliation.state, "reviewed")
+        reconciliation.action_approve()
+        self.assertEqual(reconciliation.state, "approved")
+
+        history = self.channel.tijara_order_history_payload({"mobile": mobile})
+        self.assertEqual(history["status"], "ok")
+        self.assertEqual(history["count"], 1)
+        self.assertEqual(history["orders"][0]["name"], order.name)
+        self.assertEqual(history["orders"][0]["delivery_profile"], "postex")
+        self.assertEqual(history["orders"][0]["delivery_retry_count"], 1)
+        self.assertEqual(history["orders"][0]["delivery_exception_count"], 1)

@@ -43,6 +43,7 @@ class TijaraEcommerceController(http.Controller):
         catalog_url = json.dumps("/tijara/ecommerce/%s/catalog" % channel.url_slug)
         checkout_url = json.dumps("/tijara/ecommerce/%s/checkout" % channel.url_slug)
         track_href = html.escape("/tijara/ecommerce/%s/track" % channel.url_slug, quote=True)
+        orders_href = html.escape("/tijara/ecommerce/%s/orders" % channel.url_slug, quote=True)
         return """<!doctype html>
 <html lang="en">
 <head>
@@ -93,6 +94,7 @@ aside { position: sticky; top: 74px; align-self: start; }
   <h1>__TITLE__</h1>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
     <a class="button-link" href="__TRACK_HREF__">Track Order</a>
+    <a class="button-link" href="__ORDERS_HREF__">Order History</a>
     <div class="status" id="status"></div>
   </div>
 </header>
@@ -236,7 +238,7 @@ el("checkout").addEventListener("click", () => submitCheckout().catch(error => s
 loadCatalog().catch(error => setStatus(error.message));
 </script>
 </body>
-</html>""".replace("__TITLE__", title).replace("__TRACK_HREF__", track_href).replace("__CATALOG_URL__", catalog_url).replace("__CHECKOUT_URL__", checkout_url)
+</html>""".replace("__TITLE__", title).replace("__TRACK_HREF__", track_href).replace("__ORDERS_HREF__", orders_href).replace("__CATALOG_URL__", catalog_url).replace("__CHECKOUT_URL__", checkout_url)
 
     def _tracking_html(self, channel, tracking_token=""):
         title = html.escape("%s Order Tracking" % (channel.name or "Tijara Store"))
@@ -333,6 +335,102 @@ if (initialToken) checkStatus().catch(error => setStatus(error.message));
 </body>
 </html>""".replace("__TITLE__", title).replace("__SLUG__", html.escape(channel.url_slug, quote=True)).replace("__STATUS_URL__", status_url).replace("__TOKEN__", token_json)
 
+    def _order_history_html(self, channel):
+        title = html.escape("%s Order History" % (channel.name or "Tijara Store"))
+        orders_url = json.dumps("/tijara/ecommerce/%s/orders/list" % channel.url_slug)
+        return """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root { color-scheme: light; font-family: Inter, Arial, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f6f8f7; color: #14221d; }
+header { padding: 16px 18px; background: #ffffff; border-bottom: 1px solid #dbe4df; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+main { max-width: 1080px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; }
+h1 { margin: 0; font-size: 22px; letter-spacing: 0; }
+h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+a { color: #0f5f4d; font-weight: 700; text-decoration: none; }
+.panel, .order { background: #ffffff; border: 1px solid #dbe4df; border-radius: 8px; padding: 14px; }
+.field { display: grid; gap: 4px; margin-bottom: 10px; }
+.field label { font-size: 12px; color: #52645c; }
+input { min-height: 44px; border: 1px solid #adc1b7; border-radius: 6px; padding: 8px 10px; font: inherit; }
+button { width: 100%; min-height: 44px; border: 1px solid #16634f; background: #16634f; color: #fff; border-radius: 6px; font: inherit; cursor: pointer; }
+.status { color: #0f5f4d; font-weight: 700; min-height: 22px; }
+.orders { display: grid; gap: 10px; }
+.order { display: grid; gap: 8px; }
+.order-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.badge { display: inline-flex; align-items: center; min-height: 30px; padding: 4px 10px; border-radius: 6px; background: #e8f5ef; color: #0f5f4d; font-weight: 700; }
+.meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; color: #52645c; font-size: 13px; }
+.meta strong { display: block; color: #14221d; font-size: 14px; margin-top: 2px; }
+@media (max-width: 780px) { main { grid-template-columns: 1fr; padding: 10px; } .meta { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>__TITLE__</h1>
+  <a href="/tijara/ecommerce/__SLUG__">Storefront</a>
+</header>
+<main>
+  <section class="panel">
+    <h2>Find orders</h2>
+    <div class="field"><label for="mobile">Mobile</label><input id="mobile" autocomplete="tel"></div>
+    <div class="field"><label for="email">Email</label><input id="email" autocomplete="email"></div>
+    <button type="button" id="lookup">Show Orders</button>
+    <div class="status" id="status" style="margin-top:10px;"></div>
+  </section>
+  <section>
+    <h2>Recent order history</h2>
+    <div class="orders" id="orders"><span class="status">Enter mobile or email to load recent orders.</span></div>
+  </section>
+</main>
+<script>
+const ordersEndpoint = __ORDERS_URL__;
+const el = id => document.getElementById(id);
+const money = (value, currency) => new Intl.NumberFormat("en-PK", { style: "currency", currency: currency || "PKR" }).format(Number(value || 0));
+function setStatus(text) { el("status").textContent = text || ""; }
+function meta(label, value) { return `<span>${label}<strong>${value || "-"}</strong></span>`; }
+function render(result) {
+  if (!result.orders || !result.orders.length) {
+    el("orders").innerHTML = `<span class="status">No matching orders found.</span>`;
+    return;
+  }
+  el("orders").innerHTML = result.orders.map(order => `
+    <article class="order">
+      <div class="order-head">
+        <strong>${order.name}</strong>
+        <span class="badge">${order.delivery_status || order.fulfillment_method || "order"}</span>
+      </div>
+      <div class="meta">
+        ${meta("Total", money(order.amount_total, order.currency))}
+        ${meta("Payment", [order.payment_method, order.payment_status].filter(Boolean).join(" / "))}
+        ${meta("Fulfillment", order.fulfillment_method)}
+        ${meta("Pickup", order.pickup_code)}
+        ${meta("Queue", [order.queue_number, order.queue_state].filter(Boolean).join(" / "))}
+        ${meta("Delivery", [order.delivery_provider, order.delivery_adapter_state].filter(Boolean).join(" / "))}
+      </div>
+      ${order.tracking_url ? `<a href="${order.tracking_url}">Open tracking</a>` : ""}
+    </article>
+  `).join("");
+}
+async function loadOrders() {
+  const response = await fetch(ordersEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mobile: el("mobile").value, email: el("email").value, limit: 20 })
+  });
+  const result = await response.json();
+  if (result.status !== "ok") { setStatus(result.message || "Order history unavailable."); return; }
+  setStatus(`${result.count} order(s) loaded.`);
+  render(result);
+}
+el("lookup").addEventListener("click", () => loadOrders().catch(error => setStatus(error.message)));
+</script>
+</body>
+</html>""".replace("__TITLE__", title).replace("__SLUG__", html.escape(channel.url_slug, quote=True)).replace("__ORDERS_URL__", orders_url)
+
     @http.route(
         "/tijara/ecommerce/<string:channel_code>",
         type="http",
@@ -369,6 +467,24 @@ if (initialToken) checkStatus().catch(error => setStatus(error.message));
             return self._json_response({"status": "forbidden"}, status=403)
         return request.make_response(
             self._tracking_html(channel, tracking_token=tracking_token),
+            headers=[("Content-Type", "text/html; charset=utf-8")],
+        )
+
+    @http.route(
+        "/tijara/ecommerce/<string:channel_code>/orders",
+        type="http",
+        methods=["GET"],
+        auth="public",
+        csrf=False,
+    )
+    def order_history_page(self, channel_code, **kwargs):
+        channel = self._find_channel(channel_code)
+        if not channel:
+            return request.not_found()
+        if not channel.company_id.tijara_has_saas_feature("ecommerce_store"):
+            return self._json_response({"status": "forbidden"}, status=403)
+        return request.make_response(
+            self._order_history_html(channel),
             headers=[("Content-Type", "text/html; charset=utf-8")],
         )
 
@@ -476,6 +592,23 @@ if (initialToken) checkStatus().catch(error => setStatus(error.message));
             return self._json_response({"status": "not_found"}, status=404)
         try:
             result = channel.tijara_tracking_payload(self._request_json_payload())
+        except (UserError, ValidationError, ValueError) as error:
+            return self._json_response({"status": "error", "message": str(error)}, status=400)
+        return self._json_response(result)
+
+    @http.route(
+        "/tijara/ecommerce/<string:channel_code>/orders/list",
+        type="http",
+        methods=["POST"],
+        auth="public",
+        csrf=False,
+    )
+    def order_history_list(self, channel_code, **kwargs):
+        channel = self._find_channel(channel_code)
+        if not channel:
+            return self._json_response({"status": "not_found"}, status=404)
+        try:
+            result = channel.tijara_order_history_payload(self._request_json_payload())
         except (UserError, ValidationError, ValueError) as error:
             return self._json_response({"status": "error", "message": str(error)}, status=400)
         return self._json_response(result)

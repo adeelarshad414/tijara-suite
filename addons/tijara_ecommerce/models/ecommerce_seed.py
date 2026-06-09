@@ -9,11 +9,12 @@ class TijaraEcommerceSeed(models.AbstractModel):
     def seed_demo(self, products=False):
         company = self.env.company
         channel = self._seed_channel(company)
-        provider = self._seed_delivery_provider(company)
+        providers = self._seed_delivery_providers(company)
+        default_provider = providers.filtered(lambda provider: provider.code == "TIJARA-INHOUSE")[:1] or providers[:1]
         channel.write(
             {
-                "delivery_provider_ids": [Command.set(provider.ids)],
-                "default_delivery_provider_id": provider.id,
+                "delivery_provider_ids": [Command.set(providers.ids)],
+                "default_delivery_provider_id": default_provider.id,
             }
         )
         products = products or self.env["product.product"].sudo().search(
@@ -60,17 +61,12 @@ class TijaraEcommerceSeed(models.AbstractModel):
             return channel
         return channel_model.create(values)
 
-    def _seed_delivery_provider(self, company):
+    def _seed_delivery_providers(self, company):
         provider_model = self.env["tijara.ecommerce.delivery.provider"].sudo()
-        values = {
-            "name": "Tijara In-House Delivery",
-            "code": "TIJARA-INHOUSE",
+        base_values = {
             "company_id": company.id,
-            "provider_type": "dummy",
-            "service_level": "same_day",
             "dry_run": True,
             "adapter_mode": "dry_run",
-            "auto_assign": True,
             "supports_delivery": True,
             "supports_courier": True,
             "supports_cod": True,
@@ -89,16 +85,93 @@ class TijaraEcommerceSeed(models.AbstractModel):
             "webhook_reference_field": "tracking_number",
             "webhook_status_field": "status",
             "webhook_eta_field": "eta",
-            "tracking_url_template": "https://tracking.example.test/tijara/{tracking_number}",
             "contact_phone": "0300-0000000",
             "webhook_secret_ref": "secret://tijara/demo/ecommerce-delivery-webhook",
-            "notes": "Dry-run provider for public repository demos and assumed certification evidence. Replace with a certified provider before production.",
         }
-        provider = provider_model.search([("code", "=", values["code"]), ("company_id", "=", company.id)], limit=1)
-        if provider:
-            provider.write(values)
-            return provider
-        return provider_model.create(values)
+        provider_specs = [
+            {
+                "name": "Tijara In-House Delivery",
+                "code": "TIJARA-INHOUSE",
+                "adapter_profile": "in_house_rider",
+                "provider_type": "in_house",
+                "service_level": "same_day",
+                "auto_assign": True,
+                "rider_name": "Demo Rider One",
+                "rider_mobile": "0300-1111111",
+                "tracking_url_template": "https://tracking.example.test/tijara/{tracking_number}",
+                "notes": "Dry-run in-house rider profile for public repository demos and assumed certification evidence.",
+            },
+            {
+                "name": "TCS Pakistan Sandbox",
+                "code": "TIJARA-TCS",
+                "adapter_profile": "tcs",
+                "auto_assign": False,
+                "contact_phone": "021-111-123456",
+                "notes": "Assumed TCS Pakistan courier fixture. Replace endpoints, credentials, payload mapping, and certification evidence before production.",
+            },
+            {
+                "name": "Leopards Courier Sandbox",
+                "code": "TIJARA-LEOPARDS",
+                "adapter_profile": "leopards",
+                "auto_assign": False,
+                "contact_phone": "021-111-300-786",
+                "notes": "Assumed Leopards courier fixture for demo delivery reconciliation and SLA practice.",
+            },
+            {
+                "name": "PostEx Sandbox",
+                "code": "TIJARA-POSTEX",
+                "adapter_profile": "postex",
+                "auto_assign": False,
+                "contact_phone": "042-111-767-839",
+                "notes": "Assumed PostEx COD courier fixture for provider fee and settlement testing.",
+            },
+            {
+                "name": "M&P Sandbox",
+                "code": "TIJARA-MNP",
+                "adapter_profile": "mnp",
+                "auto_assign": False,
+                "contact_phone": "021-111-202-202",
+                "notes": "Assumed M&P courier fixture.",
+            },
+            {
+                "name": "BlueEx Sandbox",
+                "code": "TIJARA-BLUEEX",
+                "adapter_profile": "blue_ex",
+                "auto_assign": False,
+                "notes": "Assumed BlueEx courier fixture.",
+            },
+            {
+                "name": "Trax Sandbox",
+                "code": "TIJARA-TRAX",
+                "adapter_profile": "trax",
+                "auto_assign": False,
+                "notes": "Assumed Trax courier fixture.",
+            },
+            {
+                "name": "Rider Sandbox",
+                "code": "TIJARA-RIDER",
+                "adapter_profile": "rider",
+                "auto_assign": False,
+                "notes": "Assumed Rider same-day delivery fixture.",
+            },
+            {
+                "name": "Call Courier Sandbox",
+                "code": "TIJARA-CALL-COURIER",
+                "adapter_profile": "call_courier",
+                "auto_assign": False,
+                "notes": "Assumed Call Courier fixture.",
+            },
+        ]
+        providers = provider_model.browse()
+        for spec in provider_specs:
+            values = dict(base_values, **spec)
+            provider = provider_model.search([("code", "=", values["code"]), ("company_id", "=", company.id)], limit=1)
+            if provider:
+                provider.write(values)
+            else:
+                provider = provider_model.create(values)
+            providers |= provider
+        return providers
 
     def _publish_products(self, products):
         sequence = 10

@@ -27,6 +27,10 @@ The POS counter flow also includes a keyboard-first cashier mode for product
 lookup/scanner entry, Enter-based primary actions, payment navigation, receipt
 printing, quantity changes, B2B/B2C switching, and service-mode cycling when a
 cashier cannot rely on touch or mouse input.
+The ecommerce delivery operations layer now includes Pakistan courier and
+in-house rider profiles, retry/backoff queue records, SLA breach exception
+monitoring, delivery reconciliation reports, signed/dry-run webhook evidence,
+and a customer order-history portal linked from the public storefront.
 
 The first market verticals are:
 
@@ -74,7 +78,7 @@ addons/
   tijara_pos_pk/               POS receipt, QR, and FBR integration readiness
   tijara_pos_experience/       Kiosk, displays, promotions, queue, B2B/B2C POS
   tijara_analytics/            Dashboards, KPI history, trends, charts, reports
-  tijara_ecommerce/            Storefront, catalog, checkout, pickup/delivery
+  tijara_ecommerce/            Storefront, checkout, delivery ops, order portal
   tijara_saas_control/         SaaS plans, tenants, feature flags
   tijara_demo_pos/             Optional POS demo seed for cashier smoke tests
   tijara_vertical_pharmacy/    Pharmacy-specific fields and workflows

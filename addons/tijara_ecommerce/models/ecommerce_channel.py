@@ -640,6 +640,68 @@ class TijaraEcommerceChannel(models.Model):
         order.action_tijara_generate_tracking_token()
         return order._tijara_ecommerce_tracking_payload()
 
+    def _order_history_row(self, order):
+        provider = order.tijara_delivery_provider_id
+        queue = order.tijara_queue_ticket_id
+        return {
+            "id": order.id,
+            "name": order.name,
+            "reference": order.client_order_ref or order.tijara_ecommerce_reference or "",
+            "date_order": fields.Datetime.to_string(order.date_order) if order.date_order else "",
+            "state": order.state,
+            "amount_total": order.amount_total,
+            "currency": order.currency_id.name,
+            "audience": order.tijara_ecommerce_audience or "",
+            "fulfillment_method": order.tijara_fulfillment_method or "",
+            "payment_method": order.tijara_payment_method or "",
+            "payment_status": order.tijara_payment_status or "",
+            "pickup_code": order.tijara_pickup_code or "",
+            "tracking_url": order.tijara_tracking_url or order._tijara_tracking_public_url(),
+            "queue_number": queue.queue_number or "",
+            "queue_state": queue.state or "",
+            "delivery_provider": provider.name or "",
+            "delivery_profile": provider.adapter_profile or "",
+            "delivery_status": order.tijara_delivery_status or "",
+            "delivery_adapter_state": order.tijara_delivery_adapter_state or "",
+            "delivery_tracking_number": order.tijara_delivery_tracking_number or "",
+            "delivery_tracking_url": order.tijara_delivery_tracking_url or "",
+            "delivery_sla_deadline": fields.Datetime.to_string(order.tijara_delivery_sla_deadline)
+            if order.tijara_delivery_sla_deadline
+            else "",
+            "delivery_sla_state": order.tijara_delivery_sla_state or "",
+            "delivery_exception_count": order.tijara_delivery_exception_count,
+            "delivery_retry_count": order.tijara_delivery_retry_count,
+        }
+
+    def tijara_order_history_payload(self, payload):
+        self.ensure_one()
+        self._check_saas_entitlement()
+        if not isinstance(payload, dict):
+            raise UserError(_("Order history payload must be a JSON object."))
+        mobile = (payload.get("mobile") or payload.get("phone") or "").strip()
+        email = (payload.get("email") or "").strip()
+        if not mobile and not email:
+            raise UserError(_("Enter the mobile number or email used on the order."))
+        limit = max(1, min(int(payload.get("limit") or 20), 50))
+        candidate_orders = self.env["sale.order"].sudo().search(
+            [("tijara_ecommerce_channel_id", "=", self.id)],
+            order="date_order desc, id desc",
+            limit=max(limit * 5, 50),
+        )
+        matched = candidate_orders.filtered(lambda order: self._tracking_contact_matches(order, mobile=mobile, email=email))
+        orders = matched[:limit]
+        return {
+            "status": "ok",
+            "channel": {
+                "id": self.id,
+                "name": self.name,
+                "slug": self.url_slug,
+                "currency": self.currency_id.name,
+            },
+            "count": len(orders),
+            "orders": [self._order_history_row(order) for order in orders],
+        }
+
     def _fulfillment_to_queue_order_type(self, fulfillment_method):
         return {
             "delivery": "delivery",

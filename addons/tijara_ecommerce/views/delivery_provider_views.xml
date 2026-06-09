@@ -14,6 +14,7 @@
                 <field name="name"/>
                 <field name="code"/>
                 <field name="provider_type"/>
+                <field name="adapter_profile"/>
                 <field name="service_level"/>
                 <field name="adapter_mode"/>
                 <field name="dry_run"/>
@@ -33,6 +34,7 @@
             <form>
                 <header>
                     <button name="action_test_provider" type="object" string="Test Provider" class="btn-primary"/>
+                    <button name="action_apply_profile_defaults" type="object" string="Apply Profile Defaults"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -42,6 +44,15 @@
                         <button name="action_open_events" type="object" class="oe_stat_button" icon="fa-exchange">
                             <field name="event_count" widget="statinfo" string="Events"/>
                         </button>
+                        <button name="action_open_retries" type="object" class="oe_stat_button" icon="fa-refresh">
+                            <field name="retry_count" widget="statinfo" string="Retries"/>
+                        </button>
+                        <button name="action_open_exceptions" type="object" class="oe_stat_button" icon="fa-exclamation-triangle">
+                            <field name="exception_count" widget="statinfo" string="Exceptions"/>
+                        </button>
+                        <button name="action_open_reconciliations" type="object" class="oe_stat_button" icon="fa-calculator">
+                            <field name="reconciliation_count" widget="statinfo" string="Reconcile"/>
+                        </button>
                     </div>
                     <group>
                         <group>
@@ -50,9 +61,11 @@
                             <field name="sequence"/>
                             <field name="active"/>
                             <field name="company_id"/>
+                            <field name="currency_id"/>
                         </group>
                         <group>
                             <field name="provider_type"/>
+                            <field name="adapter_profile"/>
                             <field name="service_level"/>
                             <field name="adapter_mode"/>
                             <field name="dry_run"/>
@@ -94,6 +107,23 @@
                                 </group>
                             </group>
                         </page>
+                        <page string="Operations">
+                            <group>
+                                <group string="Rider And SLA">
+                                    <field name="rider_name"/>
+                                    <field name="rider_mobile"/>
+                                    <field name="sla_hours"/>
+                                    <field name="retry_initial_delay_minutes"/>
+                                    <field name="retry_backoff_multiplier"/>
+                                    <field name="retry_max_attempts"/>
+                                </group>
+                                <group string="Settlement Assumptions">
+                                    <field name="provider_fee_flat"/>
+                                    <field name="cod_fee_percent"/>
+                                    <field name="settlement_cycle"/>
+                                </group>
+                            </group>
+                        </page>
                         <page string="Notes">
                             <field name="notes"/>
                         </page>
@@ -110,12 +140,14 @@
             <search>
                 <field name="name"/>
                 <field name="code"/>
+                <field name="adapter_profile"/>
                 <filter name="active" string="Active" domain="[('active', '=', True)]"/>
                 <filter name="dry_run" string="Dry Run" domain="[('dry_run', '=', True)]"/>
                 <filter name="live_mode" string="Live Mode" domain="[('dry_run', '=', False)]"/>
                 <filter name="http_json" string="HTTP JSON Adapter" domain="[('adapter_mode', '=', 'http_json')]"/>
                 <group>
                     <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
+                    <filter name="group_profile" string="Adapter Profile" context="{'group_by': 'adapter_profile'}"/>
                     <filter name="group_provider_type" string="Provider Type" context="{'group_by': 'provider_type'}"/>
                     <filter name="group_service_level" string="Service Level" context="{'group_by': 'service_level'}"/>
                     <filter name="group_adapter" string="Adapter Mode" context="{'group_by': 'adapter_mode'}"/>

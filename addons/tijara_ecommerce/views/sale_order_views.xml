@@ -21,6 +21,8 @@
                 <button name="action_tijara_create_delivery_manifest" type="object" string="Create Manifest" invisible="not tijara_delivery_provider_id"/>
                 <button name="action_tijara_cancel_delivery_shipment" type="object" string="Cancel Shipment" invisible="not tijara_delivery_provider_id or tijara_delivery_status in ('cancelled', 'not_required')"/>
                 <button name="action_tijara_open_delivery_events" type="object" string="Delivery Events" invisible="not tijara_delivery_provider_id"/>
+                <button name="action_tijara_open_delivery_retries" type="object" string="Delivery Retries" invisible="not tijara_delivery_provider_id"/>
+                <button name="action_tijara_open_delivery_exceptions" type="object" string="Delivery Exceptions" invisible="not tijara_delivery_provider_id"/>
                 <button name="action_tijara_mark_delivery_picked" type="object" string="Mark Picked" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status not in ('assigned', 'pending')"/>
                 <button name="action_tijara_mark_out_for_delivery" type="object" string="Out For Delivery" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status not in ('assigned', 'picked')"/>
                 <button name="action_tijara_mark_delivered" type="object" string="Mark Delivered" invisible="not tijara_ecommerce_channel_id or tijara_delivery_status == 'delivered'"/>
@@ -63,8 +65,12 @@
                             <field name="tijara_delivery_manifest_reference"/>
                             <field name="tijara_delivery_eta"/>
                             <field name="tijara_last_tracking_at"/>
+                            <field name="tijara_delivery_sla_deadline"/>
+                            <field name="tijara_delivery_sla_state"/>
                             <field name="tijara_delivery_last_event_id"/>
                             <field name="tijara_delivery_event_count"/>
+                            <field name="tijara_delivery_retry_count"/>
+                            <field name="tijara_delivery_exception_count"/>
                         </group>
                     </group>
                     <group string="Delivery Label And Exception">

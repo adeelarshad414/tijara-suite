@@ -56,6 +56,18 @@ async function trackOrder(request, payload) {
   return result;
 }
 
+async function orderHistory(request, payload) {
+  const activeSlug = requireSlug();
+  const response = await request.post(`/tijara/ecommerce/${activeSlug}/orders/list`, {
+    headers: databaseHeaders(),
+    data: payload,
+  });
+  const result = await response.json();
+  expect(response.status(), result.message || JSON.stringify(result)).toBe(200);
+  expect(result.status).toBe("ok");
+  return result;
+}
+
 test("ecommerce catalog exposes PKR, Urdu names, B2C, B2B, stock, promotions, and fulfillment", async ({ request }) => {
   const b2cCatalog = await loadCatalog(request, "b2c");
   expect(b2cCatalog.channel.currency).toBe("PKR");
@@ -83,6 +95,7 @@ test("ecommerce storefront renders and completes a pickup checkout from the brow
   await page.setExtraHTTPHeaders(databaseHeaders());
   await page.goto(`/tijara/ecommerce/${activeSlug}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("h1")).toContainText(/Tijara/i);
+  await expect(page.locator("a", { hasText: "Order History" })).toBeVisible();
   await expect(page.locator(".product").first()).toBeVisible();
 
   await page.locator("button[data-value='b2b']").click();
@@ -136,7 +149,21 @@ test("ecommerce API delivery checkout applies charges and creates a queue handof
   expect(tracking.delivery.adapter_state).toBe("created");
   expect(tracking.delivery.provider_reference).toBe(result.delivery_provider_reference);
   expect(tracking.delivery.event_count).toBeGreaterThan(0);
+  expect(tracking.delivery.sla_state).toBeTruthy();
+  expect(tracking.delivery.sla_deadline).toBeTruthy();
   expect(tracking.delivery.tracking_number || result.delivery_tracking_number).toBeTruthy();
+
+  const history = await orderHistory(request, {
+    mobile: "03000000022",
+    email: "ecommerce.delivery@example.test",
+    limit: 20,
+  });
+  const createdOrder = history.orders.find((order) => order.name === result.order_name);
+  expect(createdOrder).toBeTruthy();
+  expect(createdOrder.delivery_status).toBe(result.delivery_status);
+  expect(createdOrder.delivery_adapter_state).toBe("created");
+  expect(createdOrder.delivery_sla_state).toBeTruthy();
+  expect(createdOrder.tracking_url).toContain("/track/");
 });
 
 test("ecommerce customer can track an order with pickup code and mobile", async ({ request }) => {
@@ -166,6 +193,9 @@ test("ecommerce customer can track an order with pickup code and mobile", async 
   expect(tracking.order.customer_tracking_url).toContain("/track/");
   expect(["pending", "assigned", "not_required"]).toContain(tracking.delivery.status);
   expect(tracking.next_step).toBeTruthy();
+
+  const history = await orderHistory(request, { mobile, limit: 5 });
+  expect(history.orders.some((order) => order.name === result.order_name)).toBe(true);
 });
 
 test("authenticated ecommerce manager can review the created ecommerce sale order and queue ticket", async ({
