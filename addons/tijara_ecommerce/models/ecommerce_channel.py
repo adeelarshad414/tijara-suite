@@ -494,12 +494,14 @@ class TijaraEcommerceChannel(models.Model):
             raise UserError(_("Mobile number is required for pickup, takeaway, courier, or delivery checkout."))
         partner_model = self.env["res.partner"].sudo()
         partner = partner_model
-        domain = []
-        if mobile:
-            domain = ["|", ("mobile", "=", mobile), ("phone", "=", mobile)] if "mobile" in partner_model._fields else [("phone", "=", mobile)]
-        elif email:
-            domain = [("email", "=", email)]
-        if domain:
+        if email:
+            partner = partner_model.search([("email", "=", email)], limit=1)
+        if not partner and mobile:
+            domain = (
+                ["|", ("mobile", "=", mobile), ("phone", "=", mobile)]
+                if "mobile" in partner_model._fields
+                else [("phone", "=", mobile)]
+            )
             partner = partner_model.search(domain, limit=1)
         values = {
             "name": name or mobile or email or _("Online Guest"),
@@ -580,7 +582,9 @@ class TijaraEcommerceChannel(models.Model):
         contact_mobile = (mobile or "").strip()
         contact_email = (email or "").strip().lower()
         partner = order.partner_id
-        order_mobile = (order.tijara_delivery_mobile or partner.mobile or partner.phone or "").strip()
+        order_mobile = (
+            order.tijara_delivery_mobile or getattr(partner, "mobile", "") or partner.phone or ""
+        ).strip()
         order_email = (partner.email or "").strip().lower()
         if contact_mobile and order_mobile and contact_mobile == order_mobile:
             return True
@@ -671,6 +675,143 @@ class TijaraEcommerceChannel(models.Model):
             "delivery_sla_state": order.tijara_delivery_sla_state or "",
             "delivery_exception_count": order.tijara_delivery_exception_count,
             "delivery_retry_count": order.tijara_delivery_retry_count,
+        }
+
+    def _customer_account_orders(self, partner, limit=20):
+        self.ensure_one()
+        commercial_partner = partner.commercial_partner_id
+        domain = [
+            ("tijara_ecommerce_channel_id", "=", self.id),
+            "|",
+            ("partner_id", "=", partner.id),
+            ("partner_id.commercial_partner_id", "=", commercial_partner.id),
+        ]
+        return self.env["sale.order"].sudo().search(
+            domain,
+            order="date_order desc, id desc",
+            limit=max(1, min(int(limit or 20), 50)),
+        )
+
+    def tijara_customer_account_payload(self, partner, limit=20):
+        self.ensure_one()
+        self._check_saas_entitlement()
+        address_model = self.env["tijara.ecommerce.customer.address"].sudo()
+        addresses = address_model.search(
+            [
+                ("partner_id", "=", partner.id),
+                ("channel_id", "=", self.id),
+                ("active", "=", True),
+            ],
+            order="default_delivery desc, name",
+        )
+        orders = self._customer_account_orders(partner, limit=limit)
+        return {
+            "status": "ok",
+            "channel": {
+                "id": self.id,
+                "name": self.name,
+                "slug": self.url_slug,
+                "currency": self.currency_id.name,
+            },
+            "customer": {
+                "id": partner.id,
+                "name": partner.name,
+                "email": partner.email or "",
+                "mobile": getattr(partner, "mobile", "") or partner.phone or "",
+                "loyalty_points": getattr(partner, "tijara_loyalty_points", 0.0),
+                "loyalty_tier": getattr(partner, "tijara_loyalty_tier", "") or "",
+            },
+            "addresses": [address.to_portal_payload() for address in addresses],
+            "orders": [self._order_history_row(order) for order in orders],
+        }
+
+    def tijara_save_customer_address(self, partner, payload):
+        self.ensure_one()
+        self._check_saas_entitlement()
+        if not isinstance(payload, dict):
+            raise UserError(_("Address payload must be a JSON object."))
+        address = self.env["tijara.ecommerce.customer.address"].sudo().create_from_portal_payload(
+            self,
+            partner,
+            payload,
+        )
+        return {"status": "ok", "address": address.to_portal_payload()}
+
+    def _customer_order_for_portal(self, partner, order_id):
+        self.ensure_one()
+        order = self.env["sale.order"].sudo().browse(int(order_id or 0)).exists()
+        if not order or order.tijara_ecommerce_channel_id != self:
+            raise UserError(_("Order was not found for this ecommerce account."))
+        commercial_partner = partner.commercial_partner_id
+        if order.partner_id != partner and order.partner_id.commercial_partner_id != commercial_partner:
+            raise UserError(_("Order does not belong to this ecommerce account."))
+        return order
+
+    def tijara_create_customer_return_request(self, partner, payload):
+        self.ensure_one()
+        self._check_saas_entitlement()
+        if not isinstance(payload, dict):
+            raise UserError(_("Return payload must be a JSON object."))
+        order = self._customer_order_for_portal(partner, payload.get("order_id"))
+        reason_model = self.env["tijara.refund.reason"].sudo()
+        reason = reason_model.search([("code", "=", "ONLINE-RETURN")], limit=1)
+        if not reason:
+            reason = reason_model.create(
+                {
+                    "name": _("Online Return / Exchange"),
+                    "code": "ONLINE-RETURN",
+                    "requires_manager_approval": True,
+                }
+            )
+        request_values = {
+            "customer_id": partner.id,
+            "original_order_ref": order.name,
+            "scanned_invoice_barcode": order.tijara_tracking_token or order.name,
+            "reason_id": reason.id,
+            "company_id": self.company_id.id,
+            "note": payload.get("note") or _("Created from ecommerce customer portal."),
+            "line_ids": [Command.clear()],
+        }
+        requested_lines = payload.get("lines") or []
+        requested_by_product = {
+            int(line.get("product_id") or 0): float(line.get("quantity") or line.get("qty") or 0.0)
+            for line in requested_lines
+            if isinstance(line, dict)
+        }
+        charge_product_codes = {
+            "TIJARA-ECOM-SERVICE-CHARGE",
+            "TIJARA-ECOM-DELIVERY-CHARGE",
+            "TIJARA-ECOM-PAYMENT-TAX",
+        }
+        for order_line in order.order_line.filtered("product_id"):
+            if order_line.product_id.default_code in charge_product_codes:
+                continue
+            qty = requested_by_product.get(order_line.product_id.id, order_line.product_uom_qty)
+            if qty <= 0:
+                continue
+            request_values["line_ids"].append(
+                Command.create(
+                    {
+                        "product_id": order_line.product_id.id,
+                        "return_qty": min(qty, order_line.product_uom_qty or qty),
+                        "return_price": order_line.price_unit,
+                        "note": payload.get("reason") or _("Online return request"),
+                    }
+                )
+            )
+        if len(request_values["line_ids"]) <= 1:
+            raise UserError(_("No returnable ecommerce order lines were found for this request."))
+        exchange_request = self.env["tijara.exchange.request"].sudo().create(request_values)
+        exchange_request.action_submit()
+        return {
+            "status": "ok",
+            "return_request": {
+                "id": exchange_request.id,
+                "name": exchange_request.name,
+                "state": exchange_request.state,
+                "amount_total": exchange_request.amount_total,
+                "order_name": order.name,
+            },
         }
 
     def tijara_order_history_payload(self, payload):

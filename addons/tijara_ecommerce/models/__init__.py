@@ -1,4 +1,5 @@
 from . import analytics
+from . import customer_address
 from . import delivery_event
 from . import delivery_exception
 from . import delivery_provider

@@ -96,6 +96,7 @@ test("ecommerce storefront renders and completes a pickup checkout from the brow
   await page.goto(`/tijara/ecommerce/${activeSlug}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("h1")).toContainText(/Tijara/i);
   await expect(page.locator("a", { hasText: "Order History" })).toBeVisible();
+  await expect(page.locator("a", { hasText: "Account" })).toBeVisible();
   await expect(page.locator(".product").first()).toBeVisible();
 
   await page.locator("button[data-value='b2b']").click();
@@ -202,7 +203,7 @@ test("authenticated ecommerce manager can review the created ecommerce sale orde
   page,
   request,
 }) => {
-  requireSlug();
+  const activeSlug = requireSlug();
   test.skip(
     !process.env.ODOO_USERNAME || !process.env.ODOO_PASSWORD || !process.env.ODOO_DATABASE,
     "Set ODOO_USERNAME, ODOO_PASSWORD, and ODOO_DATABASE to run authenticated ecommerce review E2E.",
@@ -220,13 +221,66 @@ test("authenticated ecommerce manager can review the created ecommerce sale orde
     customer: {
       name: "E2E Ecommerce B2B Review",
       mobile: "03000000023",
-      email: "ecommerce.b2b@example.test",
+      email: process.env.ODOO_USERNAME,
       loyalty_opt_in: true,
     },
     lines: [{ product_id: product.product_id, quantity: 1 }],
   });
 
   await login(page);
+  await page.setExtraHTTPHeaders(databaseHeaders());
+  await page.goto(`/tijara/ecommerce/${activeSlug}/account`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator("h1")).toContainText(/Account/i);
+  await expect(page.locator("#orders")).toContainText(result.order_name);
+
+  const accountResult = await page.evaluate(async ({ slug }) => {
+    const response = await fetch(`/tijara/ecommerce/${slug}/account/payload`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ limit: 10 }),
+    });
+    return { status: response.status, body: await response.json() };
+  }, { slug: activeSlug });
+  expect(accountResult.status, JSON.stringify(accountResult.body)).toBe(200);
+  expect(accountResult.body.status).toBe("ok");
+  expect(accountResult.body.orders.some((order) => order.name === result.order_name)).toBe(true);
+
+  const addressResult = await page.evaluate(async ({ slug }) => {
+    const response = await fetch(`/tijara/ecommerce/${slug}/account/address`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "E2E Saved Address",
+        mobile: "03000000023",
+        street: "E2E customer portal address",
+        city: "Karachi",
+        default_delivery: true,
+      }),
+    });
+    return { status: response.status, body: await response.json() };
+  }, { slug: activeSlug });
+  expect(addressResult.status, JSON.stringify(addressResult.body)).toBe(200);
+  expect(addressResult.body.status).toBe("ok");
+  expect(addressResult.body.address.default_delivery).toBe(true);
+
+  const returnResult = await page.evaluate(async ({ slug, orderId }) => {
+    const response = await fetch(`/tijara/ecommerce/${slug}/account/return`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order_id: orderId,
+        note: "E2E authenticated portal return request.",
+      }),
+    });
+    return { status: response.status, body: await response.json() };
+  }, { slug: activeSlug, orderId: result.order_id });
+  expect(returnResult.status, JSON.stringify(returnResult.body)).toBe(200);
+  expect(returnResult.body.status).toBe("ok");
+  expect(["pending_approval", "approved"]).toContain(returnResult.body.return_request.state);
+
   const orders = await odooCallKw(
     page,
     "sale.order",

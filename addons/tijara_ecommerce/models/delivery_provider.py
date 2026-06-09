@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
+from ..services import get_delivery_adapter
+
 
 class TijaraEcommerceDeliveryProvider(models.Model):
     _name = "tijara.ecommerce.delivery.provider"
@@ -521,30 +523,7 @@ class TijaraEcommerceDeliveryProvider(models.Model):
     def _assumed_http_adapter_response(self, operation, payload, order=False):
         self.ensure_one()
         order = order or self.env["sale.order"].sudo().browse(payload.get("order_id")).exists()
-        tracking_number = ""
-        external_reference = ""
-        if order:
-            tracking_number = order.tijara_delivery_tracking_number or self._tracking_number_for_order(order)
-            external_reference = order.tijara_delivery_provider_reference or self._provider_reference_for_order(order)
-        else:
-            tracking_number = payload.get("tracking_number") or ""
-            external_reference = payload.get("external_reference") or ""
-        response = {
-            "provider": self.code,
-            "adapter_profile": self.adapter_profile,
-            "operation": operation,
-            "assumed": True,
-            "status": "accepted",
-            "tracking_number": tracking_number,
-            "external_reference": external_reference,
-        }
-        if operation == "label":
-            response.update({"label_format": self.label_format, "label_ready": True})
-        if operation == "manifest":
-            response.update({"manifest_reference": payload.get("manifest_reference") or ""})
-        if operation == "shipment_cancel":
-            response.update({"status": "cancelled"})
-        return response
+        return self._profile_adapter().assumed_response(self, operation, payload, order=order)
 
     def _raise_delivery_exception(
         self,
@@ -579,28 +558,13 @@ class TijaraEcommerceDeliveryProvider(models.Model):
             if line.product_id and line.product_uom_qty
         ]
 
+    def _profile_adapter(self):
+        self.ensure_one()
+        return get_delivery_adapter(self.adapter_profile)
+
     def _shipment_payload(self, order):
         self.ensure_one()
-        return {
-            "provider": self.code,
-            "adapter_mode": self.adapter_mode,
-            "dry_run": self.dry_run,
-            "order": {
-                "id": order.id,
-                "name": order.name,
-                "reference": order.client_order_ref or order.tijara_ecommerce_reference or "",
-                "fulfillment_method": order.tijara_fulfillment_method,
-                "amount_total": order.amount_total,
-                "currency": order.currency_id.name,
-            },
-            "customer": {
-                "name": order.partner_id.name or "",
-                "mobile": order.tijara_delivery_mobile or order.partner_id.mobile or order.partner_id.phone or "",
-                "email": order.partner_id.email or "",
-                "address": order.tijara_delivery_address or "",
-            },
-            "lines": self._order_line_payload(order),
-        }
+        return self._profile_adapter().shipment_payload(self, order, self._order_line_payload(order))
 
     def _provider_reference_for_order(self, order):
         raw_order = re.sub(r"[^A-Za-z0-9]+", "", order.name or str(order.id))[-10:]
@@ -659,7 +623,7 @@ class TijaraEcommerceDeliveryProvider(models.Model):
                 "tijara_delivery_provider_reference": external_reference,
                 "tijara_delivery_tracking_number": tracking_number,
                 "tijara_delivery_tracking_url": tracking_url,
-                "tijara_delivery_provider_payload": json.dumps(payload, ensure_ascii=False, sort_keys=True),
+                "tijara_delivery_provider_payload": json.dumps(request_payload, ensure_ascii=False, sort_keys=True),
                 "tijara_last_tracking_at": fields.Datetime.now(),
                 "tijara_delivery_sla_deadline": self._delivery_sla_deadline(),
                 "tijara_delivery_sla_state": "on_track",
@@ -671,14 +635,7 @@ class TijaraEcommerceDeliveryProvider(models.Model):
     def tijara_cancel_shipment(self, order, reason=""):
         self.ensure_one()
         self._require_live_endpoint("cancel_endpoint", _("Shipment cancel"))
-        payload = {
-            "provider": self.code,
-            "order_id": order.id,
-            "order_name": order.name,
-            "external_reference": order.tijara_delivery_provider_reference or "",
-            "tracking_number": order.tijara_delivery_tracking_number or "",
-            "reason": reason or _("Cancelled by operator"),
-        }
+        payload = self._profile_adapter().cancel_payload(self, order, reason or _("Cancelled by operator"))
         event = self._delivery_event(
             order=order,
             event_type="shipment_cancel",
@@ -713,14 +670,7 @@ class TijaraEcommerceDeliveryProvider(models.Model):
         if not self.supports_labels:
             raise UserError(_("This delivery provider does not support labels."))
         self._require_live_endpoint("label_endpoint", _("Label generation"))
-        label_payload = {
-            "format": self.label_format,
-            "tracking_number": order.tijara_delivery_tracking_number or "",
-            "order_name": order.name,
-            "provider": self.code,
-            "dry_run": self.dry_run,
-            "content": "TIJARA LABEL %s %s" % (self.code, order.tijara_delivery_tracking_number or order.name),
-        }
+        label_payload = self._profile_adapter().label_payload(self, order)
         event = self._delivery_event(
             order=order,
             event_type="label",
@@ -760,19 +710,7 @@ class TijaraEcommerceDeliveryProvider(models.Model):
             self.code,
             datetime.utcnow().strftime("%Y%m%d%H%M%S"),
         )
-        payload = {
-            "provider": self.code,
-            "manifest_reference": manifest_reference,
-            "orders": [
-                {
-                    "order_id": order.id,
-                    "order_name": order.name,
-                    "tracking_number": order.tijara_delivery_tracking_number or "",
-                    "external_reference": order.tijara_delivery_provider_reference or "",
-                }
-                for order in orders
-            ],
-        }
+        payload = self._profile_adapter().manifest_payload(self, manifest_reference, orders)
         event = self._delivery_event(
             event_type="manifest",
             status="processed" if self.dry_run or self.adapter_mode != "http_json" else "queued",

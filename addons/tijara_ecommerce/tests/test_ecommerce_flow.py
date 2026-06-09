@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 
 from odoo import Command, fields
@@ -270,6 +271,11 @@ class TestTijaraEcommerceFlow(TransactionCase):
         )
         self.assertEqual(order.tijara_delivery_provider_id, live_provider)
         self.assertEqual(order.tijara_delivery_sla_state, "on_track")
+        provider_payload = json.loads(order.tijara_delivery_provider_payload or "{}")
+        self.assertEqual(provider_payload["adapter"]["profile"], "postex")
+        self.assertEqual(provider_payload["adapter"]["credential_refs"]["api_token_ref"], "secret://tijara/delivery/TIJARA-TEST-POSTEX/api-token")
+        self.assertEqual(provider_payload["provider_payload"]["orderReferenceNumber"], order.name)
+        self.assertEqual(provider_payload["provider_payload"]["invoicePayment"], order.amount_total)
         retry = self.env["tijara.ecommerce.delivery.retry"].sudo().search(
             [("sale_order_id", "=", order.id), ("operation", "=", "shipment_create")],
             limit=1,
@@ -322,3 +328,71 @@ class TestTijaraEcommerceFlow(TransactionCase):
         self.assertEqual(history["orders"][0]["delivery_profile"], "postex")
         self.assertEqual(history["orders"][0]["delivery_retry_count"], 1)
         self.assertEqual(history["orders"][0]["delivery_exception_count"], 1)
+
+    def test_customer_account_saved_address_return_and_ecommerce_snapshots(self):
+        mobile = "03001234570"
+        order = self.channel.tijara_create_order(
+            {
+                "audience": "b2c",
+                "fulfillment_method": "delivery",
+                "payment_method": "cod",
+                "customer": {
+                    "name": "Online Portal Customer",
+                    "mobile": mobile,
+                    "email": "online-portal-customer@example.com",
+                    "delivery_address": "Portal customer delivery address",
+                    "loyalty_opt_in": True,
+                },
+                "lines": [{"product_id": self.product.id, "quantity": 2}],
+            }
+        )
+        address_result = self.channel.tijara_save_customer_address(
+            order.partner_id,
+            {
+                "name": "Home",
+                "mobile": mobile,
+                "street": "House 10, Test Block",
+                "area": "Gulshan",
+                "city": "Karachi",
+                "default_delivery": True,
+            },
+        )
+        self.assertEqual(address_result["status"], "ok")
+        self.assertTrue(address_result["address"]["default_delivery"])
+
+        account = self.channel.tijara_customer_account_payload(order.partner_id, limit=5)
+        self.assertEqual(account["status"], "ok")
+        self.assertEqual(account["addresses"][0]["name"], "Home")
+        self.assertIn(order.name, [row["name"] for row in account["orders"]])
+
+        return_result = self.channel.tijara_create_customer_return_request(
+            order.partner_id,
+            {
+                "order_id": order.id,
+                "reason": "Portal exchange size issue",
+                "note": "Customer submitted from authenticated account portal.",
+                "lines": [{"product_id": self.product.id, "quantity": 1}],
+            },
+        )
+        self.assertEqual(return_result["status"], "ok")
+        self.assertEqual(return_result["return_request"]["state"], "pending_approval")
+        exchange_request = self.env["tijara.exchange.request"].sudo().browse(return_result["return_request"]["id"])
+        self.assertEqual(exchange_request.original_order_ref, order.name)
+        self.assertEqual(len(exchange_request.line_ids), 1)
+        self.assertEqual(exchange_request.line_ids.product_id, self.product)
+
+        self.env["tijara.analytics.snapshot"].sudo().action_collect_daily_snapshots()
+        snapshots = self.env["tijara.analytics.snapshot"].sudo().search(
+            [
+                ("company_id", "=", self.company.id),
+                ("snapshot_date", "=", fields.Date.context_today(self.env.user)),
+                ("business_area", "=", "ecommerce"),
+            ]
+        )
+        metric_types = set(snapshots.mapped("metric_type"))
+        self.assertIn("ecommerce_order_pipeline", metric_types)
+        self.assertIn("delivery_sla_breach_rate", metric_types)
+        self.assertIn("delivery_retry_aging", metric_types)
+        self.assertIn("courier_success_rate", metric_types)
+        self.assertIn("cod_receivable_aging", metric_types)
+        self.assertIn("delivery_reconciliation_variance", metric_types)

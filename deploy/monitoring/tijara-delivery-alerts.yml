@@ -1,0 +1,62 @@
+groups:
+  - name: tijara-delivery-operations
+    rules:
+      - alert: TijaraDeliveryCriticalExceptions
+        expr: tijara_delivery_open_exceptions{severity="critical"} > 0
+        for: 5m
+        labels:
+          severity: critical
+          area: ecommerce_delivery
+        annotations:
+          summary: "Critical delivery exception is open"
+          description: "{{ $labels.provider }} has {{ $value }} critical open delivery exception(s)."
+
+      - alert: TijaraDeliveryRetryBacklogHigh
+        expr: tijara_delivery_retry_pending > 25
+        for: 10m
+        labels:
+          severity: warning
+          area: ecommerce_delivery
+        annotations:
+          summary: "Delivery retry backlog is high"
+          description: "{{ $labels.provider }} has {{ $value }} pending/running/failed retry item(s)."
+
+      - alert: TijaraDeliveryRetryAging
+        expr: tijara_delivery_retry_oldest_seconds > 1800
+        for: 5m
+        labels:
+          severity: warning
+          area: ecommerce_delivery
+        annotations:
+          summary: "Delivery retry queue has aged work"
+          description: "{{ $labels.provider }} has retry work older than 30 minutes."
+
+      - alert: TijaraDeliverySLABreachRateHigh
+        expr: tijara_delivery_sla_breach_rate_percent > 5
+        for: 15m
+        labels:
+          severity: critical
+          area: ecommerce_delivery
+        annotations:
+          summary: "Delivery SLA breach rate is high"
+          description: "{{ $labels.provider }} SLA breach rate is {{ $value }}%."
+
+      - alert: TijaraCourierWebhookFailures
+        expr: increase(tijara_delivery_webhook_failures_total[15m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+          area: ecommerce_delivery
+        annotations:
+          summary: "Courier webhook failures detected"
+          description: "{{ $labels.provider }} has repeated delivery webhook failures in the last 15 minutes."
+
+      - alert: TijaraDeliveryCODReconciliationVariance
+        expr: abs(tijara_delivery_cod_variance_amount) > 1000
+        for: 30m
+        labels:
+          severity: warning
+          area: ecommerce_delivery
+        annotations:
+          summary: "Delivery COD reconciliation variance detected"
+          description: "{{ $labels.provider }} COD variance is PKR {{ $value }}."

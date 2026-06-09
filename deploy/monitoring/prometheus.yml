@@ -4,6 +4,7 @@ global:
 
 rule_files:
   - /etc/prometheus/rules/tijara-alerts.yml
+  - /etc/prometheus/rules/tijara-delivery-alerts.yml
 
 alerting:
   alertmanagers:

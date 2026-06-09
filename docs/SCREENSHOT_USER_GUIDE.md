@@ -24,6 +24,7 @@ Generated from live local Odoo screenshots on 2026-06-09 10:29 UTC.
 | `vertical_manager` | `vertical-manager@demo.tijara-suite.local` | Maintain vertical catalog settings, B2B/B2C prices, GST, service charge, delivery charge, and food-service tax policy. |
 | `promotion_manager` | `promotion-manager@demo.tijara-suite.local` | Publish promotions, menu boards, deals boards, queue displays, and customer-facing messages. |
 | `ecommerce_manager` | `ecommerce-manager@demo.tijara-suite.local` | Manage storefront channels, online catalog publishing, B2B/B2C ecommerce prices, pickup/delivery orders, and ecommerce reports. |
+| `ecommerce_customer` | `ecommerce-customer@demo.tijara-suite.local` | Review ecommerce account orders, saved addresses, delivery tracking, and return/exchange requests. |
 | `analytics_manager` | `analytics-manager@demo.tijara-suite.local` | Review dashboards, KPI history, trend charts, vertical sales, loyalty, expenses, salaries, and charge policy analytics. |
 | `restaurant_operator` | `restaurant@demo.tijara-suite.local` | Operate dine-in, takeaway, pickup, kiosk orders, queue tickets, kitchen status, menu boards, and pickup screens. |
 | `public_display` | `public-display@demo.tijara-suite.local` | Run public display routes for kiosk, customer display, queue, menu, deals, and promotions. |
@@ -162,7 +163,7 @@ The deals board highlights discount campaigns and promotion messages for in-stor
 
 ### Ecommerce Storefront
 
-The ecommerce storefront exposes the online catalog with PKR prices, Urdu/English product names, B2C/B2B pricing, pickup and delivery options, checkout into Odoo sale orders, customer order tracking links, customer order-history lookup, and delivery-provider adapter state.
+The ecommerce storefront exposes the online catalog with PKR prices, Urdu/English product names, B2C/B2B pricing, pickup and delivery options, checkout into Odoo sale orders, customer order tracking links, customer order-history lookup, authenticated account history, saved addresses, return/exchange requests, and delivery-provider adapter state.
 
 ![Ecommerce Storefront](screenshots/ecommerce-manager/ecommerce-storefront.png)
 
@@ -171,8 +172,9 @@ The ecommerce storefront exposes the online catalog with PKR prices, Urdu/Englis
 3. Add products to the cart, choose pickup or delivery, enter customer details, and place the order for sale-order and queue handoff.
 4. Use `/tijara/ecommerce/tijara-demo-web/track` or the private `/track/<token>` link to verify pickup code, queue state, delivery status, provider reference, adapter state, SLA state, and provider tracking number.
 5. Use `/tijara/ecommerce/tijara-demo-web/orders` to verify customer-safe recent order history by mobile/email.
-6. In Online Orders, use delivery actions to generate labels, create manifests, cancel shipments when needed, and review Delivery Adapter Events for webhook/signature evidence.
-7. In Delivery Operations, review Retry Queue, Exceptions And SLA, and Reconciliation reports before rollout.
+6. Sign in and open `/tijara/ecommerce/tijara-demo-web/account` to verify authenticated order history, saved delivery addresses, and return/exchange requests.
+7. In Online Orders, use delivery actions to generate labels, create manifests, cancel shipments when needed, and review Delivery Adapter Events for webhook/signature evidence.
+8. In Delivery Operations, review Retry Queue, Exceptions And SLA, Reconciliation reports, and delivery KPI snapshots before rollout.
 
 ## Workflow Checklist
 
@@ -220,7 +222,9 @@ The ecommerce storefront exposes the online catalog with PKR prices, Urdu/Englis
 - Publish products with B2C/B2B prices, Urdu/English descriptions, SKU, barcode, stock visibility, and active promotions.
 - Use pickup, store pickup, takeaway, delivery, or courier fulfillment according to the channel policy.
 - Review online sale orders, payment status, delivery address, pickup code, queue ticket, delivery provider, tracking number, estimated GST, delivery charge, loyalty point award, retry count, SLA state, and exception count.
-- Run ecommerce Playwright coverage for catalog, storefront checkout, delivery checkout, queue handoff, customer tracking, customer order history, and authenticated order review before rollout.
+- Use customer account routes for order history, saved delivery addresses, and
+  return/exchange requests when customers have portal logins.
+- Run ecommerce Playwright coverage for catalog, storefront checkout, delivery checkout, queue handoff, customer tracking, customer order history, authenticated account review, saved address, and return request before rollout.
 
 ### SaaS Controls And Tenant Operations
 

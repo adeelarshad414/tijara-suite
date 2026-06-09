@@ -30,7 +30,8 @@ cashier cannot rely on touch or mouse input.
 The ecommerce delivery operations layer now includes Pakistan courier and
 in-house rider profiles, retry/backoff queue records, SLA breach exception
 monitoring, delivery reconciliation reports, signed/dry-run webhook evidence,
-and a customer order-history portal linked from the public storefront.
+delivery analytics/alerting contracts, and customer account portals for order
+history, saved addresses, and return/exchange requests.
 
 The first market verticals are:
 
@@ -335,9 +336,9 @@ The local `tijara_dev` database has also been upgraded after the Pakistan
 currency/tax correction: live verification now reports company country `PK`,
 currency `PKR`, `GST 18% Sales (PK)`, and GST mapped to the seeded demo rice
 product. The local `tijara_dev` database has now also been upgraded with
-`tijara_ecommerce`; all fourteen documented demo personas from
+`tijara_ecommerce`; all fifteen documented demo personas from
 `docs/TEST_CREDENTIALS.csv` have been created/mapped in the local database, and
-enterprise seed verification reports 14 users, 14 verticals, 10 dashboards, 11
+enterprise seed verification reports 15 users, 14 verticals, 10 dashboards, 11
 reports, one ecommerce channel, and 15 ecommerce products.
 Live browser screenshots now back the screenshot-based guide, including the
 ecommerce storefront.
@@ -376,8 +377,10 @@ workflows. The ecommerce layer publishes those same B2B/B2C priced products to
 public storefront routes, creates Odoo sale orders from online checkout, applies
 tenant charge policies, links pickup/delivery orders to the shared queue system,
 exposes ecommerce KPI/report templates, returns customer order-tracking links,
-and can assign dry-run delivery-provider shipment records for local/staging
-delivery certification drills. The delivery adapter layer now records shipment
+supports authenticated account pages with saved delivery addresses and
+portal-created return/exchange requests, and can assign dry-run
+delivery-provider shipment records for local/staging delivery certification
+drills. The delivery adapter layer now records provider-shaped shipment
 create/cancel, label, manifest, and webhook events with payload hashes,
 provider references, tracking numbers, signature status, adapter state, and
 customer-safe tracking updates for dry-run or certified provider rollout. The
@@ -415,7 +418,9 @@ has a best-effort live publisher for continuous cart updates. The FBR queue now
 has dry-run/live HTTP adapter modes plus certified-provider metadata,
 certification environment, payload hash, and compliance status tracking.
 Analytics can collect daily KPI snapshots from POS, inventory alerts, queue
-tickets, and promotions.
+tickets, promotions, ecommerce order pipeline, delivery SLA breach rate, retry
+aging, courier success rate, COD receivable aging, and delivery reconciliation
+variance.
 Offline POS now includes a cashier-facing queue button, back-office conflict
 review workbench, retry/cancel/duplicate/merge resolution actions, replay audit
 pivots/graphs, pilot attention metrics for queue age/failure buckets/recovery

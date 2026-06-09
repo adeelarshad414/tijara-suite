@@ -79,6 +79,7 @@ These credentials are for local demo only and must not be used in production.
 | Vertical Manager | `vertical-manager@demo.tijara-suite.local` | `Demo@Vertical2024!` | Vertical catalogs, business policies, B2C/B2B prices, stock policy |
 | Promotion Manager | `promotion-manager@demo.tijara-suite.local` | `Demo@Promo2024!` | Promotions, menu boards, deals boards, customer/queue display content |
 | Ecommerce Manager | `ecommerce-manager@demo.tijara-suite.local` | `Demo@Ecommerce2024!` | Online catalog, storefront channels, pickup/delivery orders, ecommerce reports |
+| Ecommerce Customer | `ecommerce-customer@demo.tijara-suite.local` | `Demo@Customer2024!` | Customer account portal, saved addresses, order history, returns/exchanges |
 | Analytics Manager | `analytics-manager@demo.tijara-suite.local` | `Demo@Analytics2024!` | Dashboards, trends, reports, KPI history, owner analytics |
 | Restaurant Operator | `restaurant@demo.tijara-suite.local` | `Demo@Restaurant2024!` | Dine-in, takeaway, pickup, kiosk, queue and kitchen tickets |
 | Public Display | `public-display@demo.tijara-suite.local` | `Demo@Display2024!` | Public display route smoke testing; many display URLs are public |
@@ -160,6 +161,9 @@ Primary tasks:
   provider reconciliation.
 - Use the public order-history portal when customers need to review recent
   ecommerce purchases by mobile/email.
+- Review Customer Addresses for authenticated account delivery profiles.
+- Review customer-created return/exchange requests from ecommerce account
+  portal orders before approving refunds or replacements.
 - Share the customer tracking link or lookup instructions after checkout.
 - Coordinate with inventory when online products are low stock.
 - Coordinate with accounting before live payment provider activation.
@@ -243,7 +247,10 @@ Ecommerce smoke-test workflow:
    actions, dry-run webhook sync, and customer tracking payloads.
 5. Confirm the order-history portal and `/orders/list` API return the new order
    with safe customer-facing delivery, queue, SLA, retry, and exception fields.
-6. Regenerate screenshot guide evidence after checkout routes or storefront
+6. Sign in as an ecommerce customer or staging test user and open
+   `/tijara/ecommerce/tijara-demo-web/account` to review account orders, save a
+   delivery address, and submit a return/exchange request against an order.
+7. Regenerate screenshot guide evidence after checkout routes or storefront
    copy/layout changes.
 
 ### Cashier

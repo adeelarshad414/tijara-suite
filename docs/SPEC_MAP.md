@@ -33,6 +33,7 @@ agentic development pipeline.
 | Vertical manager | `vertical-manager@demo.tijara-suite.local` | Vertical catalogs, B2B/B2C prices, stock policy, business settings |
 | Promotion manager | `promotion-manager@demo.tijara-suite.local` | Promotions, menu/deal screens, customer display, queue display |
 | Ecommerce manager | `ecommerce-manager@demo.tijara-suite.local` | Storefront channels, online catalog, B2B/B2C ecommerce pricing, pickup/delivery orders |
+| Ecommerce customer | `ecommerce-customer@demo.tijara-suite.local` | Account order history, saved addresses, tracking, return/exchange requests |
 | Analytics manager | `analytics-manager@demo.tijara-suite.local` | Dashboards, reports, trends, KPI and audit review |
 | Restaurant operator | `restaurant@demo.tijara-suite.local` | Dine-in, takeaway, pickup, kiosk, queue, kitchen tickets |
 | Public display | `public-display@demo.tijara-suite.local` | Kiosk, queue, customer display, menu board, deals board route checks |
@@ -56,6 +57,10 @@ agentic development pipeline.
 | Ecommerce Tracking API | `/tijara/ecommerce/tijara-demo-web/track/status` | Public JSON | Customer-safe order, queue, payment, and delivery tracking payload |
 | Ecommerce Order History | `/tijara/ecommerce/tijara-demo-web/orders` | Public | Customer account-style recent order lookup by mobile/email |
 | Ecommerce Order History API | `/tijara/ecommerce/tijara-demo-web/orders/list` | Public JSON | Customer-safe recent order history with queue, payment, delivery, SLA, retry, and exception status |
+| Ecommerce Customer Account | `/tijara/ecommerce/tijara-demo-web/account` | Authenticated | Customer account order history, saved addresses, and return/exchange request UI |
+| Ecommerce Account API | `/tijara/ecommerce/tijara-demo-web/account/payload` | Authenticated JSON | Customer-safe account payload with orders, loyalty, and saved addresses |
+| Ecommerce Saved Address API | `/tijara/ecommerce/tijara-demo-web/account/address` | Authenticated JSON | Create or update saved customer delivery addresses |
+| Ecommerce Return Request API | `/tijara/ecommerce/tijara-demo-web/account/return` | Authenticated JSON | Create return/exchange requests from ecommerce account orders |
 | Ecommerce Delivery Webhook | `/tijara/ecommerce/delivery/webhook/TIJARA-INHOUSE` | Signed public JSON | Dry-run/certified provider delivery status webhook ingestion |
 | Payment Webhook | `/tijara/saas/payment/webhook/generic` | Signed public | PSP webhook ingestion |
 
@@ -70,10 +75,12 @@ agentic development pipeline.
 - Kiosk, menu, deals, promotion, queue, and customer-display routes.
 - Ecommerce storefront, catalog API, checkout API, sale-order sync, pickup/
   delivery queue handoff, customer order tracking, customer order-history
-  portal, Pakistan courier/rider delivery fixtures, retry/backoff queue,
-  SLA exception dashboard, delivery reconciliation reports, dry-run delivery
-  provider assignment, label/manifest actions, signed/dry-run delivery
-  webhooks, adapter event audit records, and ecommerce analytics templates.
+  portal, authenticated customer account portal, saved addresses, customer
+  return/exchange requests, Pakistan courier/rider delivery fixtures,
+  retry/backoff queue, SLA exception dashboard, delivery reconciliation
+  reports, dry-run delivery provider assignment, label/manifest actions,
+  signed/dry-run delivery webhooks, adapter event audit records, delivery
+  alert rules, and ecommerce analytics templates.
 - Offline POS capture, replay, and conflict review.
 - SaaS feature flags and runtime enforcement.
 - Tenant provisioning and operations manifests.

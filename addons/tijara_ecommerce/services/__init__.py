@@ -1,0 +1,1 @@
+from .delivery_adapters import get_delivery_adapter

@@ -51,6 +51,66 @@
         <field name="query_note">Tracks ecommerce queue tickets by waiting, preparing, ready, called, completed, and cancelled states.</field>
     </record>
 
+    <record id="widget_ecommerce_delivery_sla_breach_rate" model="tijara.analytics.widget">
+        <field name="name">Delivery SLA Breach Rate</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">50</field>
+        <field name="widget_type">alert</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">delivery_sla_breach_rate</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="target_note">Keep critical SLA breaches below 5% of delivery/courier orders.</field>
+        <field name="query_note">Collected from delivery exception records and ecommerce delivery/courier sale orders.</field>
+    </record>
+
+    <record id="widget_ecommerce_delivery_retry_aging" model="tijara.analytics.widget">
+        <field name="name">Delivery Retry Aging</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">60</field>
+        <field name="widget_type">table</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">delivery_retry_aging</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="target_note">No open retry older than 30 minutes in production operations.</field>
+        <field name="query_note">Collected from pending/running/failed delivery retry queue records.</field>
+    </record>
+
+    <record id="widget_ecommerce_courier_success_rate" model="tijara.analytics.widget">
+        <field name="name">Courier Success Rate</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">70</field>
+        <field name="widget_type">graph</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">courier_success_rate</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="target_note">Track delivered versus failed/cancelled terminal delivery orders.</field>
+        <field name="query_note">Collected from ecommerce delivery/courier sale order delivery statuses.</field>
+    </record>
+
+    <record id="widget_ecommerce_cod_receivable_aging" model="tijara.analytics.widget">
+        <field name="name">COD Receivable Aging</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">80</field>
+        <field name="widget_type">kpi</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">cod_receivable_aging</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="target_note">Monitor open COD receivable amount and oldest COD age in days.</field>
+        <field name="query_note">Collected from ecommerce COD orders pending settlement/reconciliation.</field>
+    </record>
+
+    <record id="widget_ecommerce_delivery_reconciliation_variance" model="tijara.analytics.widget">
+        <field name="name">Delivery Reconciliation Variance</field>
+        <field name="dashboard_id" ref="dashboard_ecommerce_store"/>
+        <field name="sequence">90</field>
+        <field name="widget_type">table</field>
+        <field name="business_area">ecommerce</field>
+        <field name="metric_code">delivery_reconciliation_variance</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="target_note">Expected variance is PKR 0 after COD minus provider fee equals net receivable.</field>
+        <field name="query_note">Collected from delivery reconciliation lines by provider/date range.</field>
+    </record>
+
     <record id="report_ecommerce_order_pipeline" model="tijara.analytics.report">
         <field name="name">Ecommerce Order Pipeline</field>
         <field name="code">ecommerce_order_pipeline</field>
@@ -71,5 +131,17 @@
         <field name="owner_role">Ecommerce Manager / Inventory Manager</field>
         <field name="feature_code">ecommerce_store</field>
         <field name="description">Published products, Urdu/English names, SKU, barcode, stock availability, low-stock online alerts, B2B/B2C price coverage, GST and charge-policy readiness.</field>
+    </record>
+
+    <record id="report_ecommerce_delivery_operations" model="tijara.analytics.report">
+        <field name="name">Ecommerce Delivery Operations</field>
+        <field name="code">ecommerce_delivery_operations</field>
+        <field name="business_area">ecommerce</field>
+        <field name="report_type">dashboard</field>
+        <field name="frequency">daily</field>
+        <field name="owner_role">Ecommerce Manager / Operations Manager</field>
+        <field name="feature_code">ecommerce_store</field>
+        <field name="description">Delivery SLA breaches, retry aging, courier success rate, COD receivable aging, and reconciliation variance by provider.</field>
+        <field name="acceptance_notes">Uses assumed/open-source delivery provider metrics until certified courier APIs and business metric exporters are connected.</field>
     </record>
 </odoo>

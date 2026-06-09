@@ -1,0 +1,8 @@
+# Example OpenMetrics payload for a future Odoo/business-metrics exporter.
+# Values here are dummy/assumed and are not scraped by default.
+tijara_delivery_open_exceptions{provider="TIJARA-INHOUSE",severity="critical"} 0
+tijara_delivery_retry_pending{provider="TIJARA-INHOUSE"} 0
+tijara_delivery_retry_oldest_seconds{provider="TIJARA-INHOUSE"} 0
+tijara_delivery_sla_breach_rate_percent{provider="TIJARA-INHOUSE"} 0
+tijara_delivery_webhook_failures_total{provider="TIJARA-INHOUSE"} 0
+tijara_delivery_cod_variance_amount{provider="TIJARA-INHOUSE"} 0

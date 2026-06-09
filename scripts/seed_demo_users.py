@@ -87,6 +87,9 @@ ROLE_GROUPS = {
         "stock.group_stock_user",
         "sales_team.group_sale_manager",
     ],
+    "ecommerce_customer": [
+        "base.group_portal",
+    ],
     "analytics_manager": [
         "base.group_user",
         "tijara_base.group_tijara_user",
@@ -151,6 +154,19 @@ def grant_groups(user, xmlids):
     groups = [group for group in (ref(xmlid) for xmlid in xmlids) if group]
     if not groups:
         return []
+    if "base.group_portal" in xmlids:
+        exclusive_groups = [
+            group
+            for group in (
+                ref("base.group_user"),
+                ref("base.group_public"),
+            )
+            if group
+        ]
+        if exclusive_groups and "group_ids" in user._fields:
+            user.sudo().write({"group_ids": [(3, group.id) for group in exclusive_groups]})
+        elif exclusive_groups and "groups_id" in user._fields:
+            user.sudo().write({"groups_id": [(3, group.id) for group in exclusive_groups]})
     if "group_ids" in user._fields:
         user.sudo().write({"group_ids": [(4, group.id) for group in groups]})
     elif "groups_id" in user._fields:

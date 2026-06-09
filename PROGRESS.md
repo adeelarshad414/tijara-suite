@@ -10720,3 +10720,111 @@ Status: Complete
   returns/exchanges, notifications, and consent controls.
 - Continue PSP/FBR certification, hardware evidence, load/security scans,
   backup restore drills, and production operations sign-off.
+
+## Iteration 144: Delivery Portal, Metrics, And Assumed Provider Completion
+
+### Objective
+
+- Complete the next delivery/ecommerce production layer using dummy or assumed
+  values where real courier hardware, API credentials, or tokens are required.
+- Add authenticated customer account workflows, saved addresses, portal return/
+  exchange requests, provider-specific payload snapshots, delivery KPI
+  collectors, and monitoring alert contracts.
+- Rerun local upgrade, Odoo tests, demo-user seed, E2E seed, and protected
+  browser matrix.
+
+### Completed
+
+- Added provider-specific open-source-safe adapter classes for in-house rider,
+  TCS, Leopards, PostEx, M&P, BlueEx, Trax, Rider, Call Courier, manual, and
+  dummy profiles.
+- Delivery providers now delegate shipment create/cancel, label, manifest, and
+  assumed response payloads through the adapter profile layer.
+- Sale orders now retain the full provider-shaped shipment payload snapshot,
+  including dummy secret references such as
+  `secret://tijara/delivery/<PROVIDER>/api-token`.
+- Added authenticated ecommerce account routes:
+  `/tijara/ecommerce/<slug>/account`,
+  `/tijara/ecommerce/<slug>/account/payload`,
+  `/tijara/ecommerce/<slug>/account/address`, and
+  `/tijara/ecommerce/<slug>/account/return`.
+- Added `tijara.ecommerce.customer.address` with list/form/search/pivot/graph
+  views and Ecommerce menu entry.
+- Customer account payloads now include customer details, loyalty fields, saved
+  addresses, and ecommerce order history.
+- Portal return/exchange requests now create `tijara.exchange.request` records
+  from ecommerce orders while skipping service, delivery, and payment-tax
+  charge lines.
+- Ecommerce customer matching now prefers email before mobile/phone so
+  authenticated customer account history attaches to the correct portal user.
+- Added ecommerce KPI collectors for:
+  ecommerce order pipeline, delivery SLA breach rate, delivery retry aging,
+  courier success rate, COD receivable aging, and delivery reconciliation
+  variance.
+- Added ecommerce analytics widgets/reports for delivery operations metrics.
+- Added Prometheus/Alertmanager delivery alert rules for critical exceptions,
+  retry backlog, retry aging, SLA breach rate, webhook failures, and COD
+  reconciliation variance.
+- Added dummy OpenMetrics examples for the future Odoo/business metrics exporter.
+- Added `ecommerce_customer` to `docs/TEST_CREDENTIALS.csv` and updated
+  `scripts/seed_demo_users.py` to assign Portal role without conflicting with
+  internal user groups.
+- Updated `README.md`, `DEPLOY.md`, `docs/ARCHITECTURE.md`,
+  `docs/USER_GUIDE_ALL_USERS.md`, `docs/SCREENSHOT_USER_GUIDE.md`,
+  `docs/VISUAL_USER_GUIDE_ALL_FUNCTIONS.md`, `docs/SPEC_MAP.md`,
+  `docs/SPEC_MAP.json`, `tests/e2e/README.md`, and monitoring docs.
+- Extended Odoo transaction tests for PostEx-shaped payloads, account saved
+  addresses, portal return requests, and ecommerce KPI snapshots.
+- Extended Playwright ecommerce coverage for storefront Account link,
+  authenticated account payload, saved address, and return request.
+
+### Validation
+
+- `make validate` passed: 103 XML files parsed and scaffold validation passed.
+- `bash scripts/js_check.sh` passed.
+- Python compile passed for touched ecommerce models, services, controllers,
+  tests, and seed scripts using
+  `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache`.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `git diff --check` passed.
+- Local `tijara_dev` was upgraded with `tijara_ecommerce`; Odoo loaded customer
+  address views, ecommerce analytics data, delivery alert-related code, and
+  account routes.
+- Demo user seed passed and reports `TIJARA_DEMO_USER_COUNT=15`, including
+  `ecommerce_customer` with `Role / Portal`.
+- Initial focused Odoo ecommerce test run found and fixed a partner `mobile`
+  compatibility issue for this Odoo build.
+- Focused Odoo ecommerce transaction tests passed against fresh database
+  `tijara_test_delivery_portal_metrics_2`: 6 post-test methods, 0 failures,
+  0 errors.
+- E2E seed run `20260609-delivery-portal-metrics` passed with decision `ready`
+  and exported evidence under
+  `deploy/runtime/e2e-seed/20260609-delivery-portal-metrics/`.
+- Protected full browser matrix run
+  `20260609-delivery-portal-metrics-full` passed with decision `ready` and
+  `ci_status=pass`; aggregate evidence is under
+  `deploy/runtime/browser-e2e-matrix/20260609-delivery-portal-metrics-full/`.
+
+### Known Gaps
+
+- Courier integrations still use dummy/assumed API endpoints, token references,
+  labels, manifests, and responses until certified providers supply sandbox/live
+  credentials and sign-off.
+- Delivery alert rules are present, but production still needs a real exporter
+  or log-derived metrics pipeline to emit the documented OpenMetrics names.
+- Authenticated account routes need production privacy review, rate limits,
+  abuse monitoring, consent/notification policy, and WAF rules.
+- Physical hardware certification, PSP/FBR live certification, restore drills,
+  load tests, dependency/container scanning, and deeper security testing remain
+  production blockers.
+
+### Next Iteration
+
+- Add delivery metrics exporter or log-derived metric bridge for the Prometheus
+  delivery alert contract.
+- Add customer account consent, notification preferences, and rate-limit/WAF
+  hardening.
+- Add portal return approval notifications and customer-visible status updates.
+- Continue certified courier, PSP, FBR, and hardware evidence work.
+- Continue production monitoring, backup restore drill, load, and security scan
+  evidence.

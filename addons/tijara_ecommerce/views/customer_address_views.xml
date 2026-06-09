@@ -1,0 +1,106 @@
+<odoo>
+    <record id="action_tijara_ecommerce_customer_address" model="ir.actions.act_window">
+        <field name="name">Customer Saved Addresses</field>
+        <field name="res_model">tijara.ecommerce.customer.address</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+    </record>
+
+    <record id="view_tijara_ecommerce_customer_address_list" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.customer.address.list</field>
+        <field name="model">tijara.ecommerce.customer.address</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active" decoration-success="default_delivery">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="channel_id"/>
+                <field name="default_delivery"/>
+                <field name="mobile"/>
+                <field name="city"/>
+                <field name="area"/>
+                <field name="company_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_customer_address_form" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.customer.address.form</field>
+        <field name="model">tijara.ecommerce.customer.address</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="channel_id"/>
+                            <field name="company_id"/>
+                            <field name="active"/>
+                            <field name="default_delivery"/>
+                        </group>
+                        <group>
+                            <field name="contact_name"/>
+                            <field name="mobile"/>
+                            <field name="email"/>
+                        </group>
+                    </group>
+                    <group string="Address">
+                        <field name="street"/>
+                        <field name="street2"/>
+                        <field name="area"/>
+                        <field name="city"/>
+                        <field name="postal_code"/>
+                    </group>
+                    <group string="Delivery Notes">
+                        <field name="delivery_notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_customer_address_search" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.customer.address.search</field>
+        <field name="model">tijara.ecommerce.customer.address</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="mobile"/>
+                <field name="city"/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="default_delivery" string="Default Delivery" domain="[('default_delivery', '=', True)]"/>
+                <group>
+                    <filter name="group_channel" string="Channel" context="{'group_by': 'channel_id'}"/>
+                    <filter name="group_city" string="City" context="{'group_by': 'city'}"/>
+                    <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_customer_address_pivot" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.customer.address.pivot</field>
+        <field name="model">tijara.ecommerce.customer.address</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="channel_id" type="row"/>
+                <field name="city" type="row"/>
+                <field name="default_delivery" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_tijara_ecommerce_customer_address_graph" model="ir.ui.view">
+        <field name="name">tijara.ecommerce.customer.address.graph</field>
+        <field name="model">tijara.ecommerce.customer.address</field>
+        <field name="arch" type="xml">
+            <graph type="bar">
+                <field name="city"/>
+                <field name="default_delivery"/>
+            </graph>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_ecommerce_customer_address" name="Customer Addresses" parent="menu_tijara_ecommerce" action="action_tijara_ecommerce_customer_address" sequence="40"/>
+</odoo>

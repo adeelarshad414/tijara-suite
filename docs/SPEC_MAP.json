@@ -230,7 +230,25 @@
         "Hand off pickup delivery orders to queue",
         "Review delivery exceptions and SLA breaches",
         "Generate provider reconciliation report",
-        "Verify customer order history"
+        "Verify customer order history",
+        "Review saved customer addresses",
+        "Review portal return requests"
+      ]
+    },
+    {
+      "role": "ecommerce_customer",
+      "email": "ecommerce-customer@demo.tijara-suite.local",
+      "permissions": [
+        "authenticated account portal",
+        "saved delivery addresses",
+        "order history",
+        "return exchange requests"
+      ],
+      "key_workflows": [
+        "Review ecommerce account orders",
+        "Save delivery address",
+        "Track delivery status",
+        "Submit return exchange request"
       ]
     },
     {
@@ -456,6 +474,49 @@
       "description": "Customer-safe recent order history with queue, payment, delivery, SLA, retry, and exception status."
     },
     {
+      "name": "Ecommerce Customer Account",
+      "route_path": "/tijara/ecommerce/tijara-demo-web/account",
+      "auth": "authenticated",
+      "personas": [
+        "ecommerce_customer",
+        "ecommerce_manager",
+        "tenant_admin"
+      ],
+      "description": "Authenticated customer account route for order history, saved addresses, and return/exchange requests."
+    },
+    {
+      "name": "Ecommerce Account API",
+      "route_path": "/tijara/ecommerce/tijara-demo-web/account/payload",
+      "auth": "authenticated_json",
+      "personas": [
+        "ecommerce_customer",
+        "ecommerce_manager",
+        "analytics_manager"
+      ],
+      "description": "Customer-safe account payload with orders, loyalty, and saved delivery addresses."
+    },
+    {
+      "name": "Ecommerce Saved Address API",
+      "route_path": "/tijara/ecommerce/tijara-demo-web/account/address",
+      "auth": "authenticated_json",
+      "personas": [
+        "ecommerce_customer",
+        "ecommerce_manager"
+      ],
+      "description": "Create or update saved customer delivery addresses for account checkout and delivery operations."
+    },
+    {
+      "name": "Ecommerce Return Request API",
+      "route_path": "/tijara/ecommerce/tijara-demo-web/account/return",
+      "auth": "authenticated_json",
+      "personas": [
+        "ecommerce_customer",
+        "ecommerce_manager",
+        "tenant_admin"
+      ],
+      "description": "Create return/exchange requests from ecommerce account orders."
+    },
+    {
       "name": "Ecommerce Delivery Webhook",
       "route_path": "/tijara/ecommerce/delivery/webhook/TIJARA-INHOUSE",
       "auth": "signed_public_json",
@@ -575,7 +636,7 @@
     "CSV import export for operational data",
     "Hardware bridge for printers scanners drawers scales labels and customer displays",
     "Kiosk menu deals promotion queue and customer-display public routes",
-    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff customer tracking order history Pakistan courier fixtures retry queue SLA exceptions delivery reconciliation dry-run delivery provider assignment label manifest signed webhook adapter events and ecommerce analytics templates",
+    "Ecommerce storefront catalog checkout sale-order sync pickup delivery queue handoff customer tracking order history authenticated account portal saved addresses customer returns Pakistan courier fixtures retry queue SLA exceptions delivery reconciliation dry-run delivery provider assignment label manifest signed webhook adapter events delivery alerts and ecommerce analytics templates",
     "Offline POS capture replay and conflict review",
     "SaaS feature flags for B2B queue promotion display and customer display",
     "Tenant database provisioning and operations manifests",

@@ -19,6 +19,7 @@
         "data/ecommerce_analytics.xml",
         "data/delivery_ops_cron.xml",
         "views/ecommerce_menus.xml",
+        "views/customer_address_views.xml",
         "views/delivery_event_views.xml",
         "views/delivery_provider_views.xml",
         "views/delivery_retry_views.xml",

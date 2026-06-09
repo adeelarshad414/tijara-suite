@@ -163,6 +163,9 @@ foundation for open-source/local/staging execution:
 - Provider-specific assumed fixtures for in-house riders and Pakistan courier
   profiles such as TCS, Leopards, PostEx, M&P, BlueEx, Trax, Rider, and Call
   Courier.
+- Adapter payload classes for shipment create/cancel, label, manifest, and
+  assumed response mapping. All real endpoints and token references remain
+  dummy/open-source safe until certified courier onboarding replaces them.
 - `tijara.ecommerce.delivery.retry` for retry/backoff queue evidence.
 - `tijara.ecommerce.delivery.exception` for SLA breaches, failed deliveries,
   webhook errors, and retry exhaustion review.
@@ -170,6 +173,15 @@ foundation for open-source/local/staging execution:
   provider fee, and net receivable reporting by provider/date range.
 - Public customer order history at `/tijara/ecommerce/<slug>/orders` and JSON
   lookup at `/tijara/ecommerce/<slug>/orders/list`.
+- Authenticated customer account routes at `/tijara/ecommerce/<slug>/account`
+  with JSON endpoints for account payload, saved addresses, and portal-created
+  return/exchange requests.
+- Daily KPI collectors for ecommerce order pipeline, delivery SLA breach rate,
+  retry aging, courier success rate, COD receivable aging, and delivery
+  reconciliation variance.
+- Prometheus/Alertmanager delivery alert rules in
+  `deploy/monitoring/tijara-delivery-alerts.yml`, with dummy metric examples in
+  `deploy/monitoring/tijara-delivery-metrics.example.prom`.
 
 The retry queue and SLA monitor are installed as Odoo crons. In local/demo mode
 they process assumed HTTP JSON responses without making live courier network
@@ -1111,6 +1123,9 @@ Public display routes are available for store screens:
 /tijara/ecommerce/<slug>
 /tijara/ecommerce/<slug>/catalog
 /tijara/ecommerce/<slug>/checkout
+/tijara/ecommerce/<slug>/track
+/tijara/ecommerce/<slug>/orders
+/tijara/ecommerce/<slug>/account
 ```
 
 Use HTTPS and reverse-proxy rate limiting in production. The baseline Nginx file

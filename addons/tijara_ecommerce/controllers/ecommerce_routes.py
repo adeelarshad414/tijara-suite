@@ -44,6 +44,7 @@ class TijaraEcommerceController(http.Controller):
         checkout_url = json.dumps("/tijara/ecommerce/%s/checkout" % channel.url_slug)
         track_href = html.escape("/tijara/ecommerce/%s/track" % channel.url_slug, quote=True)
         orders_href = html.escape("/tijara/ecommerce/%s/orders" % channel.url_slug, quote=True)
+        account_href = html.escape("/tijara/ecommerce/%s/account" % channel.url_slug, quote=True)
         return """<!doctype html>
 <html lang="en">
 <head>
@@ -95,6 +96,7 @@ aside { position: sticky; top: 74px; align-self: start; }
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
     <a class="button-link" href="__TRACK_HREF__">Track Order</a>
     <a class="button-link" href="__ORDERS_HREF__">Order History</a>
+    <a class="button-link" href="__ACCOUNT_HREF__">Account</a>
     <div class="status" id="status"></div>
   </div>
 </header>
@@ -238,7 +240,7 @@ el("checkout").addEventListener("click", () => submitCheckout().catch(error => s
 loadCatalog().catch(error => setStatus(error.message));
 </script>
 </body>
-</html>""".replace("__TITLE__", title).replace("__TRACK_HREF__", track_href).replace("__ORDERS_HREF__", orders_href).replace("__CATALOG_URL__", catalog_url).replace("__CHECKOUT_URL__", checkout_url)
+</html>""".replace("__TITLE__", title).replace("__TRACK_HREF__", track_href).replace("__ORDERS_HREF__", orders_href).replace("__ACCOUNT_HREF__", account_href).replace("__CATALOG_URL__", catalog_url).replace("__CHECKOUT_URL__", checkout_url)
 
     def _tracking_html(self, channel, tracking_token=""):
         title = html.escape("%s Order Tracking" % (channel.name or "Tijara Store"))
@@ -431,6 +433,131 @@ el("lookup").addEventListener("click", () => loadOrders().catch(error => setStat
 </body>
 </html>""".replace("__TITLE__", title).replace("__SLUG__", html.escape(channel.url_slug, quote=True)).replace("__ORDERS_URL__", orders_url)
 
+    def _account_html(self, channel):
+        title = html.escape("%s Account" % (channel.name or "Tijara Store"))
+        payload_url = json.dumps("/tijara/ecommerce/%s/account/payload" % channel.url_slug)
+        address_url = json.dumps("/tijara/ecommerce/%s/account/address" % channel.url_slug)
+        return_url = json.dumps("/tijara/ecommerce/%s/account/return" % channel.url_slug)
+        return """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root { color-scheme: light; font-family: Inter, Arial, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f6f8f7; color: #14221d; }
+header { padding: 16px 18px; background: #ffffff; border-bottom: 1px solid #dbe4df; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+main { max-width: 1160px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; }
+h1 { margin: 0; font-size: 22px; letter-spacing: 0; }
+h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: 0; }
+a { color: #0f5f4d; font-weight: 700; text-decoration: none; }
+.panel, .item { background: #ffffff; border: 1px solid #dbe4df; border-radius: 8px; padding: 14px; }
+.stack { display: grid; gap: 10px; }
+.field { display: grid; gap: 4px; margin-bottom: 10px; }
+.field label { font-size: 12px; color: #52645c; }
+input, textarea { min-height: 44px; border: 1px solid #adc1b7; border-radius: 6px; padding: 8px 10px; font: inherit; }
+button { min-height: 44px; border: 1px solid #16634f; background: #16634f; color: #fff; border-radius: 6px; padding: 8px 12px; font: inherit; cursor: pointer; }
+.status { color: #0f5f4d; font-weight: 700; min-height: 22px; }
+.meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; color: #52645c; font-size: 13px; }
+.meta strong { display: block; color: #14221d; font-size: 14px; margin-top: 2px; }
+@media (max-width: 820px) { main { grid-template-columns: 1fr; padding: 10px; } .meta { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>__TITLE__</h1>
+  <a href="/tijara/ecommerce/__SLUG__">Storefront</a>
+</header>
+<main>
+  <section class="panel">
+    <h2>Saved address</h2>
+    <div class="field"><label for="label">Label</label><input id="label" value="Home"></div>
+    <div class="field"><label for="mobile">Mobile</label><input id="mobile" autocomplete="tel"></div>
+    <div class="field"><label for="street">Address</label><textarea id="street" rows="3"></textarea></div>
+    <div class="field"><label for="city">City</label><input id="city" value="Karachi"></div>
+    <button type="button" id="saveAddress">Save Address</button>
+    <div class="status" id="status" style="margin-top:10px;"></div>
+  </section>
+  <section class="stack">
+    <div class="panel">
+      <h2>Account</h2>
+      <div id="customer" class="status">Loading account...</div>
+    </div>
+    <div class="panel">
+      <h2>Addresses</h2>
+      <div id="addresses" class="stack"></div>
+    </div>
+    <div class="panel">
+      <h2>Orders</h2>
+      <div id="orders" class="stack"></div>
+    </div>
+  </section>
+</main>
+<script>
+const payloadEndpoint = __PAYLOAD_URL__;
+const addressEndpoint = __ADDRESS_URL__;
+const returnEndpoint = __RETURN_URL__;
+const el = id => document.getElementById(id);
+const money = (value, currency) => new Intl.NumberFormat("en-PK", { style: "currency", currency: currency || "PKR" }).format(Number(value || 0));
+function setStatus(text) { el("status").textContent = text || ""; }
+function meta(label, value) { return `<span>${label}<strong>${value || "-"}</strong></span>`; }
+function render(data) {
+  const customer = data.customer || {};
+  el("customer").textContent = `${customer.name || "Customer"} / ${customer.mobile || customer.email || ""}`;
+  el("addresses").innerHTML = (data.addresses || []).map(address => `<article class="item"><strong>${address.name}</strong><br>${address.display}<br><small>${address.mobile}</small></article>`).join("") || `<span class="status">No saved addresses.</span>`;
+  el("orders").innerHTML = (data.orders || []).map(order => `
+    <article class="item">
+      <strong>${order.name}</strong>
+      <div class="meta">
+        ${meta("Total", money(order.amount_total, order.currency))}
+        ${meta("Payment", [order.payment_method, order.payment_status].filter(Boolean).join(" / "))}
+        ${meta("Delivery", [order.delivery_provider, order.delivery_status].filter(Boolean).join(" / "))}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        ${order.tracking_url ? `<a href="${order.tracking_url}">Track</a>` : ""}
+        <button type="button" data-return="${order.id}">Return / Exchange</button>
+      </div>
+    </article>
+  `).join("") || `<span class="status">No ecommerce orders yet.</span>`;
+}
+async function loadAccount() {
+  const response = await fetch(payloadEndpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+  const result = await response.json();
+  if (result.status !== "ok") { setStatus(result.message || "Account unavailable."); return; }
+  render(result);
+}
+async function saveAddress() {
+  const response = await fetch(addressEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: el("label").value, mobile: el("mobile").value, street: el("street").value, city: el("city").value, default_delivery: true })
+  });
+  const result = await response.json();
+  if (result.status !== "ok") { setStatus(result.message || "Address save failed."); return; }
+  setStatus("Address saved.");
+  await loadAccount();
+}
+async function requestReturn(orderId) {
+  const response = await fetch(returnEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ order_id: orderId, reason: "Customer portal return", note: "Assumed self-service return request." })
+  });
+  const result = await response.json();
+  if (result.status !== "ok") { setStatus(result.message || "Return request failed."); return; }
+  setStatus(`Return request ${result.return_request.name} created.`);
+}
+document.addEventListener("click", event => {
+  if (event.target.id === "saveAddress") saveAddress().catch(error => setStatus(error.message));
+  if (event.target.dataset.return) requestReturn(Number(event.target.dataset.return)).catch(error => setStatus(error.message));
+});
+loadAccount().catch(error => setStatus(error.message));
+</script>
+</body>
+</html>""".replace("__TITLE__", title).replace("__SLUG__", html.escape(channel.url_slug, quote=True)).replace("__PAYLOAD_URL__", payload_url).replace("__ADDRESS_URL__", address_url).replace("__RETURN_URL__", return_url)
+
     @http.route(
         "/tijara/ecommerce/<string:channel_code>",
         type="http",
@@ -485,6 +612,24 @@ el("lookup").addEventListener("click", () => loadOrders().catch(error => setStat
             return self._json_response({"status": "forbidden"}, status=403)
         return request.make_response(
             self._order_history_html(channel),
+            headers=[("Content-Type", "text/html; charset=utf-8")],
+        )
+
+    @http.route(
+        "/tijara/ecommerce/<string:channel_code>/account",
+        type="http",
+        methods=["GET"],
+        auth="user",
+        csrf=False,
+    )
+    def customer_account_page(self, channel_code, **kwargs):
+        channel = self._find_channel(channel_code)
+        if not channel:
+            return request.not_found()
+        if not channel.company_id.tijara_has_saas_feature("ecommerce_store"):
+            return self._json_response({"status": "forbidden"}, status=403)
+        return request.make_response(
+            self._account_html(channel),
             headers=[("Content-Type", "text/html; charset=utf-8")],
         )
 
@@ -609,6 +754,64 @@ el("lookup").addEventListener("click", () => loadOrders().catch(error => setStat
             return self._json_response({"status": "not_found"}, status=404)
         try:
             result = channel.tijara_order_history_payload(self._request_json_payload())
+        except (UserError, ValidationError, ValueError) as error:
+            return self._json_response({"status": "error", "message": str(error)}, status=400)
+        return self._json_response(result)
+
+    @http.route(
+        "/tijara/ecommerce/<string:channel_code>/account/payload",
+        type="http",
+        methods=["POST"],
+        auth="user",
+        csrf=False,
+    )
+    def customer_account_payload(self, channel_code, **kwargs):
+        channel = self._find_channel(channel_code)
+        if not channel:
+            return self._json_response({"status": "not_found"}, status=404)
+        try:
+            payload = self._request_json_payload()
+            result = channel.tijara_customer_account_payload(
+                request.env.user.partner_id,
+                limit=payload.get("limit") or 20,
+            )
+        except (UserError, ValidationError, ValueError) as error:
+            return self._json_response({"status": "error", "message": str(error)}, status=400)
+        return self._json_response(result)
+
+    @http.route(
+        "/tijara/ecommerce/<string:channel_code>/account/address",
+        type="http",
+        methods=["POST"],
+        auth="user",
+        csrf=False,
+    )
+    def customer_account_address(self, channel_code, **kwargs):
+        channel = self._find_channel(channel_code)
+        if not channel:
+            return self._json_response({"status": "not_found"}, status=404)
+        try:
+            result = channel.tijara_save_customer_address(request.env.user.partner_id, self._request_json_payload())
+        except (UserError, ValidationError, ValueError) as error:
+            return self._json_response({"status": "error", "message": str(error)}, status=400)
+        return self._json_response(result)
+
+    @http.route(
+        "/tijara/ecommerce/<string:channel_code>/account/return",
+        type="http",
+        methods=["POST"],
+        auth="user",
+        csrf=False,
+    )
+    def customer_account_return(self, channel_code, **kwargs):
+        channel = self._find_channel(channel_code)
+        if not channel:
+            return self._json_response({"status": "not_found"}, status=404)
+        try:
+            result = channel.tijara_create_customer_return_request(
+                request.env.user.partner_id,
+                self._request_json_payload(),
+            )
         except (UserError, ValidationError, ValueError) as error:
             return self._json_response({"status": "error", "message": str(error)}, status=400)
         return self._json_response(result)

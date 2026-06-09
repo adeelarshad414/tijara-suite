@@ -71,9 +71,10 @@ service in a later phase.
    pickup/delivery queue handoff, customer order tracking, delivery-provider
    assignment, Pakistan courier/rider profiles, shipment create/cancel adapter
    events, label/manifest payloads, retry/backoff queue, SLA exception
-   dashboard, delivery reconciliation reports, customer order-history portal,
-   signed or dry-run delivery webhooks, and ecommerce analytics/report
-   templates.
+   dashboard, delivery reconciliation reports, customer order-history and
+   authenticated account portal, saved delivery addresses, portal return/
+   exchange requests, signed or dry-run delivery webhooks, and ecommerce
+   analytics/report templates.
 
 9. Vertical modules
    Pharmacy, restaurant, garments, electronics, and future industry packs.
@@ -86,9 +87,9 @@ every dashboard directly to transactional queries. The first dashboard catalog
 covers owner overview, inventory control, POS performance, purchase/procurement,
 and customer/promotion performance.
 
-Future automated KPI collectors should read POS, sales, purchase, inventory,
-refund/exchange, queue, promotion, and customer data into
-`tijara.analytics.snapshot`.
+Automated KPI collectors read POS, sales, purchase, inventory, refund/exchange,
+queue, promotion, customer, ecommerce, delivery SLA, retry, COD receivable, and
+delivery reconciliation data into `tijara.analytics.snapshot`.
 
 ## Inventory Intelligence Strategy
 
