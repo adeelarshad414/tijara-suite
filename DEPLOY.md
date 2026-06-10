@@ -323,9 +323,12 @@ and Grafana. The scripts keep generated logs and runtime process metadata under
 `logs/`, which is intentionally ignored by git.
 
 For customer-facing sales handoff, run `make customer-demo-video` on macOS with
-Chrome, `say`, `afconvert`, Node, and Node dependencies installed. It writes
-`docs/PRODUCT_DEMO_CUSTOMER.webm` with generated voiceover; keep that generated
-media out of git and share it as a release, sales, or customer deliverable.
+Chrome, `say`, `afconvert`, `ffmpeg`, Node, and Node dependencies installed. It writes
+`docs/PRODUCT_DEMO_CUSTOMER.webm` with generated voiceover, captured app-screen
+slides, and a persona-led sales/training story. Keep that generated media out of
+git and share it as a release, sales, or customer deliverable. Use
+`docs/VIDEO_SCRIPT.md` as the source script and
+`docs/SALES_WALKTHROUGH_VIDEO.md` as the sales-team presentation guide.
 
 ## Ecommerce Delivery Operations Runtime
 

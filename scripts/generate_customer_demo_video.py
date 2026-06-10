@@ -21,134 +21,261 @@ FPS = int(os.environ.get("TIJARA_CUSTOMER_DEMO_FPS", "2"))
 SAMPLE_RATE = int(os.environ.get("TIJARA_CUSTOMER_DEMO_SAMPLE_RATE", "22050"))
 VOICE = os.environ.get("TIJARA_CUSTOMER_DEMO_VOICE", "")
 CHROME = Path(os.environ.get("TIJARA_CUSTOMER_DEMO_CHROME", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
+ENCODER = os.environ.get("TIJARA_CUSTOMER_DEMO_ENCODER", "auto").strip().lower()
 
 
 SCENES = [
     {
         "slug": "intro",
-        "eyebrow": "Pakistan-focused open-source retail suite",
-        "title": "Tijara Suite",
-        "subtitle": "POS, inventory, restaurant, analytics, SaaS control, and hardware readiness on Odoo Community.",
+        "eyebrow": "Customer sales walkthrough",
+        "title": "Tijara Suite for Pakistani businesses",
+        "subtitle": "A modular Odoo Community suite for POS, inventory, restaurant, ecommerce, back office, analytics, SaaS control, and hardware readiness.",
         "bullets": [
-            "Built for superstores, groceries, bakeries, restaurants, pharmacies, garments, cloth, electronics, and wholesale.",
-            "Urdu-ready operations, barcode workflows, customer display, queue, kiosk, and back-office controls.",
-            "Open-source-first foundation for community adoption and enterprise deployment.",
+            "Built for superstores, groceries, pharmacies, restaurants, bakeries, garments, shoes, mobile, electronics, and wholesale.",
+            "PKR, GST policy, Urdu/English printing, barcode workflows, customer display, queue, kiosk, and delivery readiness.",
+            "Open-source-first foundation that can start locally and mature into hosted SaaS.",
         ],
-        "metric": "Enterprise SaaS foundation",
+        "metric": "Enterprise retail and restaurant platform",
+        "screenshot": "docs/screenshots/platform-superadmin/odoo-login.png",
+        "screen_label": "Login and onboarding",
+        "screen_notes": ["Public-safe demo", "Role-based access", "SaaS-ready", "Pakistan-first"],
         "voiceover": (
-            "Meet Tijara Suite, an open-source-first business platform for Pakistan. "
-            "It brings point of sale, inventory, restaurant service, customer displays, analytics, and back-office controls "
-            "into one Odoo Community based suite that can grow from one shop to a multi-tenant SaaS rollout."
+            "Welcome to Tijara Suite, a Pakistan-focused business platform built on Odoo Community. "
+            "This customer walkthrough shows how one suite can cover point of sale, inventory, restaurant service, ecommerce, back office, analytics, SaaS controls, and hardware readiness for real Pakistani businesses."
         ),
     },
     {
-        "slug": "pos",
-        "eyebrow": "Fast cashier workflow",
-        "title": "Touch-friendly POS for B2C and B2B",
-        "subtitle": "Cashiers can sell retail or wholesale, scan barcodes, apply controlled discounts, and print receipts.",
+        "slug": "personas",
+        "eyebrow": "Persona-led training",
+        "title": "One system for every role",
+        "subtitle": "Sales teams can explain the product through the people who use it every day.",
         "bullets": [
-            "Separate B2C and B2B prices on inventory products.",
-            "Overall bill discount by percentage or fixed amount with automatic sync.",
-            "Refund and exchange flow using invoice barcode scan.",
+            "Owner, tenant admin, cashier, inventory manager, accountant, restaurant operator, ecommerce manager, and DevOps.",
+            "Each persona has seeded workflows and public-safe demo credentials.",
+            "Dashboards, screens, and guides are organized for onboarding and training.",
         ],
-        "metric": "Checkout, refund, and print",
+        "metric": "15 demo personas",
+        "screenshot": "docs/screenshots/tenant-admin/odoo-app-shell.png",
+        "screen_label": "Role-based app shell",
+        "screen_notes": ["Owner", "Cashier", "Back office", "DevOps"],
         "voiceover": (
-            "At the counter, cashiers get a touch-friendly POS. They can scan products, switch between B2C and B2B pricing, "
-            "apply an overall bill discount by amount or percentage, print a receipt, and process returns by scanning the invoice barcode."
+            "The easiest way to sell and train Tijara is by persona. "
+            "Owners look at trends and margins, cashiers run fast checkout, inventory teams control stock, accountants review payments and taxes, restaurant teams manage queues, and DevOps teams run the release and monitoring process."
         ),
     },
     {
-        "slug": "restaurant",
-        "eyebrow": "Restaurant and bakery operations",
+        "slug": "pos-cashier",
+        "eyebrow": "Cashier and counter workflow",
+        "title": "POS for B2C, B2B, refunds, and printing",
+        "subtitle": "The counter flow is designed for touch, barcode scanners, keyboard use, and Enter-friendly cashier operation.",
+        "bullets": [
+            "B2C and B2B prices are handled separately on inventory products.",
+            "Bill discount supports amount or percentage with automatic calculation sync.",
+            "Refund and exchange flow can start from invoice barcode scanning.",
+        ],
+        "metric": "Checkout, refund, print, replay",
+        "screenshot": "docs/screenshots/cashier/customer-display.png",
+        "screen_label": "POS and customer display",
+        "screen_notes": ["B2B/B2C", "Barcode", "Discount", "Receipt"],
+        "voiceover": (
+            "At the counter, cashiers can sell to walk-in retail customers or wholesale B2B customers, scan products, use keyboard shortcuts, apply a discount by amount or percentage, print receipts, and process refunds or exchanges by scanning the invoice barcode."
+        ),
+    },
+    {
+        "slug": "restaurant-kiosk",
+        "eyebrow": "Restaurant, cafe, and bakery",
         "title": "Dine-in, takeaway, pickup, and kiosk",
-        "subtitle": "Restaurant teams can run self-ordering, queue tickets, kitchen status, menu boards, and deals displays.",
+        "subtitle": "Food-service businesses get self-ordering, menu boards, queue screens, deals displays, and service-mode policies.",
         "bullets": [
-            "Kiosk checkout supports dine-in, takeaway, and pickup.",
-            "Queue display shows waiting, preparing, ready, and called orders.",
-            "Menu, deals, and promotion screens can be enabled per SaaS plan.",
+            "Restaurant mode supports dine-in, takeaway, pickup, and delivery.",
+            "Cafe and restaurant policies can enable GST, card/cash tax rates, service charges, and delivery charges.",
+            "Kiosk, queue, menu, deals, and promotion screens are SaaS-controlled features.",
         ],
-        "metric": "Kiosk plus queue system",
+        "metric": "Kiosk and queue-ready",
+        "screenshot": "docs/screenshots/public-display/kiosk-display.png",
+        "screen_label": "Kiosk ordering",
+        "screen_notes": ["Dine-in", "Takeaway", "Pickup", "Deals"],
         "voiceover": (
-            "For restaurants and bakeries, Tijara supports dine-in, takeaway, and pickup. "
-            "Customers can order from a kiosk, teams can manage queue tickets and kitchen status, and managers can publish menu, deal, and promotion screens."
+            "For restaurants, cafes, fast food, and bakeries, Tijara supports dine-in, takeaway, pickup, and delivery. "
+            "Customers can use a kiosk, managers can publish menu and deal screens, and the business can control GST, card and cash tax rules, service charges, and delivery charges."
         ),
     },
     {
-        "slug": "inventory",
-        "eyebrow": "Inventory intelligence",
-        "title": "Stock, expiry, racks, shelves, and bulk data",
-        "subtitle": "Inventory managers get alerts and location-aware records for daily retail control.",
+        "slug": "queue-displays",
+        "eyebrow": "Screen features",
+        "title": "Queue, customer, menu, deal, and promotion displays",
+        "subtitle": "Customer-facing screens help stores guide the buyer and reduce counter confusion.",
         "bullets": [
-            "Low-stock and expiry alerts for perishable, pharmacy, grocery, and bakery items.",
-            "Warehouse, store, rack, shelf, bin, and product placement metadata.",
-            "CSV import and export for products, prices, contacts, stock, and devices.",
+            "Queue screens show waiting, preparing, ready, and called order states.",
+            "Customer display shows cart lines, totals, receipt context, and checkout status.",
+            "Menu, deal, and promotion screens can be switched on per tenant plan.",
         ],
-        "metric": "Low stock and expiry alerts",
+        "metric": "Display features as SaaS add-ons",
+        "screenshot": "docs/screenshots/restaurant-operator/queue-display.png",
+        "screen_label": "Queue display",
+        "screen_notes": ["Waiting", "Preparing", "Ready", "Called"],
         "voiceover": (
-            "Inventory teams can manage stock with low-stock and expiry alerts, storage positions, racks, shelves, bins, and warehouse locations. "
-            "Bulk import and export keeps product, price, contact, stock, hardware, and promotion data easy to maintain."
+            "Tijara also gives businesses customer-facing screens. "
+            "A queue display keeps restaurant and pickup flow clear, a customer display shows cart and total information, and promotion, menu, and deal boards help sell more from the same counter."
         ),
     },
     {
-        "slug": "customer-experience",
-        "eyebrow": "Customer-facing screens",
-        "title": "Displays that sell and guide",
-        "subtitle": "Customer display, queue, menu, deals, and promotion screens are controlled as SaaS features.",
+        "slug": "inventory-verticals",
+        "eyebrow": "Inventory and vertical control",
+        "title": "Stock, expiry, racks, shelves, and business policies",
+        "subtitle": "Inventory and policy controls adapt to superstore, grocery, pharmacy, cloth, garments, shoes, mobile, electronics, and food businesses.",
         "bullets": [
-            "Customer display publishes live cart lines, totals, and receipt context.",
-            "Queue screen keeps pickup and service flow visible.",
-            "Promotions and deals help stores run campaigns from the back office.",
+            "Track stock by warehouse, store, rack, shelf, bin, aisle, and placement.",
+            "Use low-stock and expiry alerts for pharmacy, grocery, bakery, and perishable items.",
+            "Enable or disable GST, service charges, delivery charges, and vertical-specific policies.",
         ],
-        "metric": "SaaS feature flags",
+        "metric": "Inventory plus policy intelligence",
+        "screenshot": "docs/screenshots/tenant-admin/business-policy-settings.png",
+        "screen_label": "Business policy settings",
+        "screen_notes": ["GST", "Service charge", "Delivery", "Verticals"],
         "voiceover": (
-            "Customer experience features are plan controlled. Businesses can enable customer display, queue display, promotion boards, menu boards, and deal screens only where the tenant has subscribed."
+            "Inventory managers can control products, prices, stock, expiry, and locations such as warehouse, rack, shelf, bin, and aisle. "
+            "Tenant admins can also manage business policies for GST, service charges, delivery fees, cafe rules, restaurant rules, and vertical-specific workflows."
         ),
     },
     {
-        "slug": "back-office",
-        "eyebrow": "Back office and compliance",
-        "title": "Purchasing, payments, FBR, and finance evidence",
-        "subtitle": "Operators can prepare subscription billing, PSP settlement review, refunds, chargebacks, and FBR submission queues.",
+        "slug": "back-office-expenses",
+        "eyebrow": "Back-office operations",
+        "title": "Expenses, purchases, procurement, and salaries",
+        "subtitle": "The back office gives owners and managers daily control beyond the cash counter.",
         "bullets": [
-            "JazzCash, Easypaisa, Stripe, and generic PSP readiness foundations.",
-            "Settlement, refund, chargeback, and draft accounting action records.",
-            "FBR queue adapter foundation with dry-run and live-mode guardrails.",
+            "Expense and salary records support operational review and owner reporting.",
+            "Purchase, procurement, supplier, customer, and import/export workflows are part of the suite plan.",
+            "Each record is built for history, audit, dashboards, and manager approval patterns.",
         ],
-        "metric": "Finance and compliance control",
+        "metric": "Owner and manager control",
+        "screenshot": "docs/screenshots/accountant/expense-management.png",
+        "screen_label": "Expense management",
+        "screen_notes": ["Expenses", "Purchases", "Suppliers", "Audit"],
         "voiceover": (
-            "The back office foundation covers subscription billing, payment webhooks, settlement reconciliation, refunds, chargebacks, draft accounting actions, and FBR queue readiness, with clear audit records for finance and compliance teams."
+            "Back-office users can manage expenses, salaries, purchases, procurement, suppliers, and customer records. "
+            "The goal is to give owners a practical operating system where every record can feed reports, approvals, and audit history."
+        ),
+    },
+    {
+        "slug": "salary-operations",
+        "eyebrow": "People and branch operations",
+        "title": "Salary records and operating history",
+        "subtitle": "Managers can track staff-related cost records as part of the same business suite.",
+        "bullets": [
+            "Salary records are included for back-office and owner visibility.",
+            "Operations can be reviewed by role, branch, business vertical, and reporting period.",
+            "The same role matrix supports training, access control, and staged customer demos.",
+        ],
+        "metric": "People cost visibility",
+        "screenshot": "docs/screenshots/salary-manager/salary-management.png",
+        "screen_label": "Salary management",
+        "screen_notes": ["Staff", "Cost", "History", "Reports"],
+        "voiceover": (
+            "For growing businesses, operating cost matters. "
+            "Tijara includes salary management foundations so staff-related costs can sit beside expenses, sales, purchase, inventory, and branch performance in one operating view."
+        ),
+    },
+    {
+        "slug": "ecommerce-delivery",
+        "eyebrow": "Online selling and delivery",
+        "title": "Ecommerce, customer portal, and delivery operations",
+        "subtitle": "Online orders connect to customer records, delivery providers, reconciliation, and return or exchange requests.",
+        "bullets": [
+            "Storefront, checkout, account portal, saved addresses, and order history are included.",
+            "Pakistan courier and in-house rider adapters have dummy-safe provider fixtures.",
+            "Delivery retry queue, SLA exceptions, and reconciliation reports support operations.",
+        ],
+        "metric": "Online plus store operations",
+        "screenshot": "docs/screenshots/public-display/ecommerce-storefront.png",
+        "screen_label": "Ecommerce storefront",
+        "screen_notes": ["Checkout", "Portal", "Delivery", "Returns"],
+        "voiceover": (
+            "Tijara is not only a counter system. "
+            "It includes ecommerce storefront and customer account foundations, saved addresses, order history, return requests, Pakistan courier profiles, in-house rider support, delivery retries, SLA exceptions, and delivery reconciliation."
+        ),
+    },
+    {
+        "slug": "loyalty-promotions",
+        "eyebrow": "Customer growth tools",
+        "title": "Customers, loyalty, promotions, menus, and deals",
+        "subtitle": "Sales teams can show how the suite helps businesses retain buyers and run campaigns.",
+        "bullets": [
+            "Customer records support walk-in conversion, loyalty, order history, and returns.",
+            "Promotions and deals can target retail, restaurant, bakery, grocery, and branch campaigns.",
+            "Promotion display and customer display are controllable SaaS add-ons.",
+        ],
+        "metric": "Retention and campaigns",
+        "screenshot": "docs/screenshots/loyalty-manager/loyalty-customer-records.png",
+        "screen_label": "Loyalty customer records",
+        "screen_notes": ["Customers", "Loyalty", "Deals", "Campaigns"],
+        "voiceover": (
+            "For growth, Tijara connects customer records, loyalty foundations, promotions, deals, menus, and display screens. "
+            "A business can start simple with walk-in sales, then add loyalty, campaigns, and display upsell features as the plan grows."
         ),
     },
     {
         "slug": "analytics",
-        "eyebrow": "Enterprise dashboards",
-        "title": "Trends, history, reports, and release confidence",
-        "subtitle": "Owners see sales, inventory, queue, promotion, operations, and release-readiness evidence in one workflow.",
+        "eyebrow": "Owner dashboard and analytics",
+        "title": "Trends, charts, reports, and KPI history",
+        "subtitle": "Owners and managers get the reports needed to run the business, not just close sales.",
         "bullets": [
-            "Daily KPI collectors feed dashboards, charts, reports, and history.",
-            "Protected release gates collect evidence for QA, security, DevOps, and business owners.",
-            "Deployment docs, monitoring, backups, rollback, and runbooks are maintained for production readiness.",
+            "Dashboards cover sales, inventory, expenses, salaries, loyalty, vertical performance, delivery, PSP, FBR, and hardware state.",
+            "KPI collectors create trend, history, report, and alert evidence for managers.",
+            "Grafana and Odoo dashboards support business and DevOps visibility.",
         ],
-        "metric": "Analytics plus release gates",
+        "metric": "Decision-ready analytics",
+        "screenshot_options": [
+            "deploy/runtime/grafana-dashboard-evidence/*/screenshots/tijara-owner-ops.png",
+            "docs/screenshots/tenant-admin/analytics-dashboards.png",
+        ],
+        "screen_label": "Analytics dashboard",
+        "screen_notes": ["Trends", "Charts", "KPIs", "Reports"],
         "voiceover": (
-            "Owners and operators get analytics for sales, inventory, queues, promotions, and operational history. "
-            "For enterprise delivery, Tijara also includes protected release evidence, monitoring notes, backup drills, rollback guidance, and deployment runbooks."
+            "Owners need more than bills. "
+            "Tijara tracks trends, history, charts, reports, and dashboards for sales, inventory, expenses, salary liability, loyalty, verticals, delivery, payments, FBR queues, hardware readiness, and DevOps operations."
+        ),
+    },
+    {
+        "slug": "enterprise-readiness",
+        "eyebrow": "Enterprise delivery and honest readiness",
+        "title": "SaaS controls, security, DevOps, FBR, PSP, and hardware",
+        "subtitle": "The product includes enterprise scaffolding while clearly separating demo assumptions from certified production evidence.",
+        "bullets": [
+            "Feature flags, tenant provisioning, monitoring, backups, release gates, and protected evidence are documented.",
+            "Hardware bridge covers printers, scanners, drawers, scales, labels, and customer displays in dummy-safe mode.",
+            "FBR, JazzCash, Easypaisa, Stripe, courier, and device integrations still need real certification before go-live.",
+        ],
+        "metric": "Pilot-ready, certification-aware",
+        "screenshot_options": [
+            "deploy/runtime/grafana-dashboard-evidence/*/screenshots/tijara-finance-fbr.png",
+            "deploy/runtime/grafana-dashboard-evidence/*/screenshots/tijara-hardware-integrations.png",
+            "docs/screenshots/platform-superadmin/payment-webhook.png",
+        ],
+        "screen_label": "Payment and integration readiness",
+        "screen_notes": ["SaaS", "FBR", "PSP", "Hardware"],
+        "voiceover": (
+            "For enterprise delivery, Tijara includes SaaS feature flags, tenant provisioning foundations, monitoring dashboards, backups, release gates, protected evidence, hardware bridge readiness, FBR queue readiness, and PSP adapter readiness. "
+            "For production go-live, real devices, provider credentials, and certified compliance evidence are still required."
         ),
     },
     {
         "slug": "closing",
-        "eyebrow": "Ready for pilots and community growth",
-        "title": "A modular suite for Pakistani businesses",
-        "subtitle": "Start with the needed vertical, enable features per tenant, and keep the foundation open-source friendly.",
+        "eyebrow": "Sales close",
+        "title": "Modular rollout for every business size",
+        "subtitle": "Start with the right vertical, enable features by plan, train each role, and grow toward production-certified SaaS.",
         "bullets": [
-            "Deployable to superstores, pharmacies, restaurants, garments, electronics, groceries, cloth shops, and bakeries.",
-            "Features can be enabled or disabled per SaaS plan.",
-            "Built to mature into an enterprise production-ready product with real certification evidence.",
+            "Best pilot paths: retail POS, restaurant kiosk and queue, inventory alerts, ecommerce, and owner dashboards.",
+            "Best sales message: one open-source-first suite, many business verticals, SaaS-controlled features.",
+            "Best next step: run a demo tenant with seeded users and choose the first customer vertical.",
         ],
-        "metric": "Public repo friendly",
+        "metric": "Ready for customer demos",
+        "screenshot": "docs/screenshots/promotion-manager/promotions-management.png",
+        "screen_label": "Promotions management",
+        "screen_notes": ["Pilot", "Train", "Launch", "Scale"],
         "voiceover": (
-            "Tijara Suite is designed for pilots today and enterprise maturity over time. "
-            "It gives Pakistani businesses a modular, open-source-friendly platform that can be deployed by vertical, controlled by SaaS plan, and hardened with real production evidence."
+            "Tijara Suite gives the sales team a clear customer story. "
+            "Start with one vertical, demonstrate the key persona workflows, enable the right SaaS features, and move from pilot to production only after the needed hardware, payment, FBR, courier, security, and infrastructure evidence is complete."
         ),
     },
 ]
@@ -164,9 +291,15 @@ def _build_avi_enabled():
 
 def _require_tools(build_avi):
     missing = []
-    for tool in ["say", "afconvert", "node"]:
+    for tool in ["say", "afconvert"]:
         if not shutil.which(tool):
             missing.append(tool)
+    if ENCODER == "browser" and not shutil.which("node"):
+        missing.append("node")
+    if ENCODER == "ffmpeg" and not shutil.which("ffmpeg"):
+        missing.append("ffmpeg")
+    if ENCODER == "auto" and not shutil.which("ffmpeg") and not shutil.which("node"):
+        missing.append("ffmpeg or node")
     if build_avi and not shutil.which("sips"):
         missing.append("sips")
     if not CHROME.is_file():
@@ -186,19 +319,39 @@ def _list(kind, data):
     return b"LIST" + struct.pack("<I", len(data) + 4) + kind + data
 
 
+def _resolve_screenshot_path(scene):
+    candidates = list(scene.get("screenshot_options") or [])
+    if scene.get("screenshot"):
+        candidates.append(scene["screenshot"])
+    for candidate in candidates:
+        if any(marker in candidate for marker in "*?[]"):
+            paths = sorted(ROOT_DIR.glob(candidate), reverse=True)
+        else:
+            paths = [ROOT_DIR / candidate]
+        for path in paths:
+            if path.is_file():
+                return path.resolve()
+    return None
+
+
 def _scene_html(scene, index):
     bullets = "\n".join("<li>%s</li>" % html.escape(item) for item in scene["bullets"])
     accent = ["#1f7a8c", "#0f766e", "#b45309", "#2563eb", "#7c3aed", "#be123c", "#334155", "#047857"][index % 8]
-    card_rows = "\n".join(
-        '<div class="row"><span>%s</span><strong>%s</strong></div>'
-        % (html.escape(label), html.escape(value))
-        for label, value in [
-            ("POS", "B2C/B2B"),
-            ("Inventory", "Expiry alerts"),
-            ("Display", "Queue live"),
-            ("SaaS", "Feature flags"),
-        ]
-    )
+    screen_notes = scene.get("screen_notes") or []
+    note_rows = "\n".join('<div class="note">%s</div>' % html.escape(item) for item in screen_notes[:4])
+    screenshot_markup = ""
+    screenshot_path = _resolve_screenshot_path(scene)
+    if screenshot_path:
+        screenshot_markup = (
+            '<div class="screenshot-frame">'
+            '<img src="%s" alt="%s">'
+            "</div>"
+        ) % (
+            html.escape(screenshot_path.as_uri()),
+            html.escape(scene.get("screen_label") or scene["title"]),
+        )
+    if not screenshot_markup:
+        screenshot_markup = '<div class="screenshot-missing">Feature overview screen</div>'
     return f"""<!doctype html>
 <html>
 <head>
@@ -252,26 +405,26 @@ def _scene_html(scene, index):
     margin-bottom: 8px;
   }}
   h1 {{
-    font-size: 43px;
+    font-size: 38px;
     line-height: 1.05;
     margin: 0 0 12px;
     letter-spacing: 0;
   }}
   .subtitle {{
-    font-size: 19px;
+    font-size: 17px;
     line-height: 1.36;
     color: #4b5563;
-    margin-bottom: 22px;
+    margin-bottom: 18px;
   }}
   ul {{
     margin: 0;
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 10px;
+    gap: 8px;
   }}
   li {{
-    font-size: 17px;
+    font-size: 15px;
     line-height: 1.32;
     padding-left: 28px;
     position: relative;
@@ -316,45 +469,63 @@ def _scene_html(scene, index):
   .dots span:nth-child(2) {{ background: #f59e0b; }}
   .dots span:nth-child(3) {{ background: #22c55e; }}
   .screen {{
-    padding: 20px;
+    padding: 16px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 12px;
     background: #fbfcfe;
+    min-height: 0;
   }}
   .metric {{
-    grid-column: span 2;
     border-left: 5px solid {accent};
     background: #fff;
     border-radius: 8px;
-    padding: 16px;
-    font-size: 24px;
+    padding: 13px 14px;
+    font-size: 21px;
     font-weight: 850;
   }}
-  .tile {{
-    min-height: 86px;
-    border: 1px solid #e5e7eb;
+  .screenshot-frame {{
+    min-height: 0;
+    border: 1px solid #dce3ec;
     border-radius: 8px;
-    padding: 14px;
+    background: #e5e7eb;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.42);
+  }}
+  .screenshot-frame img {{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top left;
+    display: block;
+  }}
+  .screenshot-missing {{
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    min-height: 230px;
+    color: #64748b;
+    font-weight: 800;
     background: #fff;
   }}
-  .tile small {{
-    display: block;
-    color: #64748b;
-    font-weight: 700;
-    margin-bottom: 8px;
+  .screen-notes {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }}
-  .tile strong {{
-    font-size: 22px;
+  .note {{
+    min-height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    background: #fff;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
   }}
-  .row {{
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid #eef2f7;
-    padding: 9px 0;
-    font-size: 15px;
-  }}
-  .row:last-child {{ border-bottom: 0; }}
   .footer {{
     position: absolute;
     left: 32px;
@@ -375,12 +546,11 @@ def _scene_html(scene, index):
       <div class="footer">Customer demo with generated voiceover</div>
     </section>
     <section class="panel">
-      <div class="topbar"><div class="dots"><span></span><span></span><span></span></div><div>{html.escape(scene["slug"]).replace("-", " ").title()}</div></div>
+      <div class="topbar"><div class="dots"><span></span><span></span><span></span></div><div>{html.escape(scene.get("screen_label") or scene["slug"]).replace("-", " ").title()}</div></div>
       <div class="screen">
         <div class="metric">{html.escape(scene["metric"])}</div>
-        <div class="tile"><small>Today</small><strong>PKR 284K</strong></div>
-        <div class="tile"><small>Orders</small><strong>412</strong></div>
-        <div class="tile" style="grid-column: span 2;">{card_rows}</div>
+        {screenshot_markup}
+        <div class="screen-notes">{note_rows}</div>
       </div>
     </section>
   </div>
@@ -590,7 +760,83 @@ def _write_combined_wav(scene_audio):
     return len(combined) // 2
 
 
+def _record_webm_with_ffmpeg(scenes, scene_audio):
+    if not shutil.which("ffmpeg"):
+        raise FileNotFoundError("ffmpeg is not installed")
+    concat_path = WORK_DIR / "customer-demo-ffmpeg-list.txt"
+    spec_path = WORK_DIR / "customer-demo-recording-spec.json"
+    lines = []
+    scene_specs = []
+    timeline = 0.0
+    for index, scene in enumerate(scenes):
+        duration = len(scene_audio[index]) / 2 / SAMPLE_RATE
+        png_path = WORK_DIR / ("%02d-%s.png" % (index + 1, scene["slug"]))
+        lines.append("file '%s'\n" % str(png_path).replace("'", "'\\''"))
+        lines.append("duration %.3f\n" % duration)
+        scene_specs.append(
+            {
+                "slug": scene["slug"],
+                "title": scene["title"],
+                "start": timeline,
+                "end": timeline + duration,
+                "png": str(png_path),
+            }
+        )
+        timeline += duration
+    last_png = WORK_DIR / ("%02d-%s.png" % (len(scenes), scenes[-1]["slug"]))
+    lines.append("file '%s'\n" % str(last_png).replace("'", "'\\''"))
+    concat_path.write_text("".join(lines), encoding="utf-8")
+    spec_path.write_text(
+        json.dumps(
+            {
+                "width": WIDTH,
+                "height": HEIGHT,
+                "fps": max(6, FPS * 4),
+                "encoder": "ffmpeg",
+                "audio": str(OUTPUT_WAV),
+                "output": str(OUTPUT_WEBM),
+                "duration": timeline,
+                "scenes": scene_specs,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    _run(
+        [
+            "ffmpeg",
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(concat_path),
+            "-i",
+            str(OUTPUT_WAV),
+            "-vf",
+            "fps=%s,format=yuv420p" % max(6, FPS * 4),
+            "-c:v",
+            "libvpx-vp9",
+            "-b:v",
+            "2200k",
+            "-c:a",
+            "libopus",
+            "-b:a",
+            "128k",
+            "-shortest",
+            str(OUTPUT_WEBM),
+        ]
+    )
+    return timeline
+
+
 def _record_webm_with_browser(scenes, scene_audio):
+    if not shutil.which("node"):
+        raise FileNotFoundError("node is not installed")
     scene_specs = []
     timeline = 0.0
     for index, scene in enumerate(scenes):
@@ -739,8 +985,14 @@ def main():
     print("Synthesizing voiceover...")
     scene_audio = [_synthesize_scene(scene, index) for index, scene in enumerate(SCENES)]
     total_audio_samples = _write_combined_wav(scene_audio)
-    print("Recording narrated WebM with Chrome MediaRecorder...")
-    _record_webm_with_browser(SCENES, scene_audio)
+    if ENCODER in {"auto", "ffmpeg"} and shutil.which("ffmpeg"):
+        print("Recording narrated WebM with ffmpeg slideshow encoder...")
+        _record_webm_with_ffmpeg(SCENES, scene_audio)
+    elif ENCODER == "ffmpeg":
+        raise SystemExit("ffmpeg is required when TIJARA_CUSTOMER_DEMO_ENCODER=ffmpeg")
+    else:
+        print("Recording narrated WebM with Chrome MediaRecorder...")
+        _record_webm_with_browser(SCENES, scene_audio)
     if build_avi:
         print("Writing optional narrated AVI...")
         total_frames, total_audio_samples = _write_avi(slides, scene_audio)

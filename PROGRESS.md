@@ -11886,3 +11886,95 @@ Status: Complete
   sign-off package.
 - Replace local warning-mode POS matrix proof with real protected staging
   `ready/pass` evidence.
+
+## Iteration 157: Sales Walkthrough Video And Voiceover Refresh
+
+### Scope Completed
+
+- Expanded `scripts/generate_customer_demo_video.py` from a short generic demo
+  into a persona-led customer walkthrough.
+- The generated video now covers:
+  - product positioning for Pakistani businesses
+  - role/persona-based training story
+  - cashier POS, B2C/B2B pricing, discounts, barcode, refunds, and printing
+  - restaurant/cafe/bakery kiosk, dine-in, takeaway, pickup, queue, menu, deals,
+    service charge, tax, and delivery policy
+  - queue display, customer display, promotion display, menu board, and deals
+    board as SaaS add-ons
+  - inventory placement, low-stock, expiry, vertical policies, GST, delivery
+    charges, and service charges
+  - back-office expenses, purchases, procurement, suppliers, customers, salary
+    management, and operating history
+  - ecommerce storefront, customer portal, delivery providers, retries,
+    exceptions, and reconciliation
+  - customer records, loyalty, promotions, menus, and growth campaigns
+  - analytics, trends, reports, KPI history, Grafana/Odoo dashboards, DevOps,
+    SaaS controls, FBR readiness, PSP readiness, and hardware readiness
+- Updated the renderer to place captured application screenshots inside each
+  generated sales slide instead of only generic dashboard tiles.
+- Added screenshot fallback resolution so analytics and enterprise-readiness
+  scenes can prefer richer local Grafana evidence screenshots when available
+  while still working with the standard screenshot capture paths.
+- Added default `ffmpeg` slideshow WebM encoding with browser MediaRecorder as
+  an explicit fallback path, avoiding browser audio-capture stalls during longer
+  sales walkthrough renders.
+- Rebuilt `docs/VIDEO_SCRIPT.md` as a full customer walkthrough script with
+  scene goals, voiceover copy, and sales notes.
+- Added `docs/SALES_WALKTHROUGH_VIDEO.md` for the sales/training team with:
+  - generated asset paths
+  - generation commands
+  - vertical-specific follow-up paths
+  - core talking points
+  - integration/certification guardrails
+  - recommended customer call flow
+- Updated `README.md` and `DEPLOY.md` so the sales walkthrough video guide and
+  generated voiceover workflow are discoverable.
+
+### Validation
+
+- `env PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/generate_customer_demo_video.py` passed.
+- `git diff --check` passed.
+- `make customer-demo-video` passed using the default `ffmpeg` slideshow
+  encoder.
+- Generated local customer video:
+  `docs/PRODUCT_DEMO_CUSTOMER.webm`, 7.7M, duration about 260.9 seconds by
+  `ffprobe`, with VP9 video at 960x540 and Opus audio.
+- Generated local voiceover:
+  `docs/video-clips/customer-demo/customer-demo-voiceover.wav`, 16-bit mono
+  22050 Hz PCM WAV.
+- `docs/video-clips/customer-demo/customer-demo-recording-spec.json` validates
+  as JSON, records `encoder=ffmpeg`, and lists all 13 scene slugs.
+- Visual spot-check passed for the intro, inventory/policy, and analytics
+  slides; analytics now uses the richer Grafana dashboard evidence screenshot
+  when available.
+- `make validate` passed and parsed 103 XML files.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 84%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 84%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 88%
+- Overall production readiness: around 77-81%
+
+### Known Gaps
+
+- The generated walkthrough uses available captured screenshots and generated
+  voiceover; it is suitable for customer briefings and sales training, not a
+  replacement for a protected live staging demo.
+- Real FBR, PSP, courier, hardware, load, monitoring, backup, restore, and
+  security evidence still require certified provider/device or protected-runner
+  artifacts.
+
+### Next Iteration
+
+- Re-run the sales video after the next protected staging screenshot capture so
+  it uses fresh live screens.
+- Bring the `tijara-protected` self-hosted runner online and execute the
+  protected POS matrix plus release evidence chain.

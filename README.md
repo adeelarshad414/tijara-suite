@@ -138,6 +138,8 @@ docs/SCREENSHOT_USER_GUIDE.md  Live screenshot-based guide source
 docs/Tijara_Suite_Screenshot_User_Guide.docx
                                Live screenshot-based training document
 ABOUT.md                       Product overview, purpose, features, and usage
+docs/SALES_WALKTHROUGH_VIDEO.md
+                               Sales-team walkthrough video usage guide
 secrets/                       Ignored local/staging secrets, example included
 scripts/                       Operational helper scripts
 scripts/dev-start.sh           Universal local startup script
@@ -360,7 +362,8 @@ See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
 `docs/Tijara_Suite_Visual_User_Guide.docx`,
 `docs/SCREENSHOT_USER_GUIDE.md`,
 `docs/Tijara_Suite_Screenshot_User_Guide.docx`,
-`docs/LOCAL_SETUP_GUIDE.md`, `docs/VIDEO_SCRIPT.md`, and
+`docs/LOCAL_SETUP_GUIDE.md`, `docs/VIDEO_SCRIPT.md`,
+`docs/SALES_WALKTHROUGH_VIDEO.md`, and
 `docs/VOICEOVER_RECORDING_GUIDE.md`.
 
 The all-user guide covers platform superadmins, tenant admins, cashiers,
@@ -395,10 +398,16 @@ Regenerate it with `make capture-screenshots` followed by
 `make screenshot-user-guide`.
 
 `make customer-demo-video` generates a customer-facing narrated WebM at
-`docs/PRODUCT_DEMO_CUSTOMER.webm` using local Chrome slide rendering, macOS
-text-to-speech voiceover, and browser MediaRecorder encoding. The generated
-video and intermediate slide/audio files are ignored so the public repo keeps
-the repeatable source script instead of bulky generated media.
+`docs/PRODUCT_DEMO_CUSTOMER.webm` using local Chrome slide rendering, captured
+application screenshots, macOS text-to-speech voiceover, and browser
+MediaRecorder or `ffmpeg` slideshow encoding. The current source script renders
+a persona-led sales
+walkthrough covering POS, B2B/B2C pricing, refunds, kiosk, queue/customer
+display, inventory, back office, ecommerce, delivery, loyalty, promotions,
+analytics, SaaS controls, DevOps, FBR, PSP, and hardware readiness. The
+generated video and intermediate slide/audio files are ignored so the public
+repo keeps the repeatable source script instead of bulky generated media. Use
+`docs/SALES_WALKTHROUGH_VIDEO.md` for sales-team presentation guidance.
 
 See `DEPLOY.md` for deployment, secret handling, backups, release checks, and
 rollback guidance. See `docs/CONFIGURATION_AND_SECRETS.md` before adding or
