@@ -120,6 +120,8 @@ docs/diagrams/png/             Rendered PNG exports of the Mermaid diagrams
 docs/COMMANDS_QUICKREF.md      Generated local run/test command sheet
 docs/CONFIGURATION_AND_SECRETS.md
                                Central config and secret handling rules
+docs/CROSS_PLATFORM_CLOUD_DOMAIN_RUNBOOK.md
+                               Configure/install/run/stop/domain/cloud runbook
 docs/SPEC_MAP.json             Machine-readable app, persona, and screen map
 docs/TEST_CREDENTIALS.csv      Deterministic demo/staging account matrix
 docs/BILINGUAL_QUICK_STARTS.md Urdu/English quick starts for key roles
@@ -150,11 +152,15 @@ scripts/tijara_services.py     Python start/stop/status service manager
 scripts/tijara-start.sh        Native Bash start wrapper for PC/server
 scripts/tijara-stop.sh         Native Bash stop wrapper for PC/server
 scripts/tijara-deploy.sh       Native Bash deploy wrapper for PC/server
+scripts/tijara-cloud-domain-deploy.sh
+                               Native Bash cloud/domain deploy wrapper
 scripts/tijara-production-infra.sh
                                Native Bash DNS/TLS/backup wrapper generator
 scripts/tijara-start.ps1       Native PowerShell start wrapper for Windows
 scripts/tijara-stop.ps1        Native PowerShell stop wrapper for Windows
 scripts/tijara-deploy.ps1      Native PowerShell deploy wrapper for Windows
+scripts/tijara-cloud-domain-deploy.ps1
+                               Native PowerShell cloud/domain deploy wrapper
 scripts/tijara-production-infra.ps1
                                Native PowerShell DNS/TLS/backup wrapper generator
 tests/e2e/                     Playwright browser E2E staging scaffolds
@@ -205,6 +211,7 @@ Native Bash wrappers for local PCs and Linux/macOS servers:
 bash scripts/tijara-start.sh --all --install-suite --seed-demo
 bash scripts/tijara-stop.sh --force-kill-ports
 bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite
+bash scripts/tijara-cloud-domain-deploy.sh --domain pos.example.com --monitoring --install-suite
 bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
@@ -222,6 +229,7 @@ Windows PowerShell equivalents:
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+pwsh -File scripts/tijara-cloud-domain-deploy.ps1 -Domain pos.example.com -Monitoring -InstallSuite
 pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
@@ -352,6 +360,7 @@ need for real hardware, FBR, and PSP sign-off before production.
 See `docs/COMMANDS_QUICKREF.md`, `docs/SPEC_MAP.md`,
 `docs/DIAGRAMS.md`, `docs/diagrams/README.md`,
 `docs/TEST_CREDENTIALS.csv`,
+`docs/CROSS_PLATFORM_CLOUD_DOMAIN_RUNBOOK.md`,
 `docs/BILINGUAL_QUICK_STARTS.md`,
 `docs/SETUP_STEP_BY_STEP.md`,
 `docs/HOW_TO_USE_GUIDELINES.md`,
@@ -401,8 +410,8 @@ Regenerate it with `make capture-screenshots` followed by
 `docs/PRODUCT_DEMO_CUSTOMER.webm` using local Chrome slide rendering, captured
 application screenshots, macOS text-to-speech voiceover, and browser
 MediaRecorder or `ffmpeg` slideshow encoding. The current source script renders
-a persona-led sales
-walkthrough covering POS, B2B/B2C pricing, refunds, kiosk, queue/customer
+a persona-led sales walkthrough covering POS, B2B/B2C pricing, refunds, kiosk,
+queue/customer
 display, inventory, back office, ecommerce, delivery, loyalty, promotions,
 analytics, SaaS controls, DevOps, FBR, PSP, and hardware readiness. The
 generated video and intermediate slide/audio files are ignored so the public

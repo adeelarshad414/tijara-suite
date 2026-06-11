@@ -35,6 +35,8 @@ docs/DIAGRAMS.md                      Deployment, system, UML, module,
                                       component, activity, and user-flow diagrams
 docs/diagrams/png/                    Rendered PNG exports of architecture diagrams
 docs/COMMANDS_QUICKREF.md             Generated local and staging command sheet
+docs/CROSS_PLATFORM_CLOUD_DOMAIN_RUNBOOK.md
+                                      Configure/install/run/stop/domain/cloud guide
 docs/SETUP_STEP_BY_STEP.md            Step-by-step setup guide
 docs/HOW_TO_USE_GUIDELINES.md         Daily usage guidelines
 docs/PRODUCTION_READINESS_CHECKLIST.md Go-live checklist
@@ -49,9 +51,11 @@ scripts/tijara_services.py            Python service manager for PC/server
 scripts/tijara-start.sh               Native Bash start wrapper for PC/server
 scripts/tijara-stop.sh                Native Bash stop wrapper for PC/server
 scripts/tijara-deploy.sh              Native Bash deploy wrapper for PC/server
+scripts/tijara-cloud-domain-deploy.sh Native Bash cloud/domain deploy wrapper
 scripts/tijara-start.ps1              Native PowerShell start wrapper
 scripts/tijara-stop.ps1               Native PowerShell stop wrapper
 scripts/tijara-deploy.ps1             Native PowerShell deploy wrapper
+scripts/tijara-cloud-domain-deploy.ps1 Native PowerShell cloud/domain deploy wrapper
 Makefile                              Operator shortcuts
 ```
 
@@ -181,6 +185,12 @@ bash scripts/tijara-deploy.sh \
   --generate-secrets \
   --with-monitoring \
   --install-suite
+bash scripts/tijara-cloud-domain-deploy.sh \
+  --domain pos.example.com \
+  --environment production \
+  --monitoring \
+  --install-suite \
+  --db tijara_prod
 bash scripts/tijara-production-infra.sh \
   --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
@@ -191,6 +201,7 @@ Windows PowerShell:
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+pwsh -File scripts/tijara-cloud-domain-deploy.ps1 -Domain pos.example.com -Environment production -Monitoring -InstallSuite -Database tijara_prod
 pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```
 
@@ -205,6 +216,13 @@ Provider-specific templates are committed under
 `deploy/config/production-infra-templates/`. These are non-secret command
 packs; provider tokens, kubeconfig credentials, and backup encryption keys stay
 in `secrets/.env.secrets` or the production secret manager.
+
+For cross-platform configure, install, run, stop, domain, and cloud-provider
+commands, use `docs/CROSS_PLATFORM_CLOUD_DOMAIN_RUNBOOK.md`. The domain wrapper
+sets `TIJARA_DOMAIN`, `TIJARA_PUBLIC_URL`, `ODOO_PROXY_MODE`, and
+`ODOO_DB_FILTER` through the central `.env` file and can optionally generate
+DNS/TLS/backup planning evidence from Cloudflare, Route53, cert-manager, and
+PostgreSQL backup templates.
 
 ```bash
 python3 scripts/run_production_infra_automation.py \
@@ -250,6 +268,7 @@ make host-deploy
 make tijara-start TIJARA_SERVICE_FLAGS="--all --install-suite --seed-demo"
 make tijara-stop TIJARA_SERVICE_FLAGS="--force-kill-ports"
 make tijara-deploy TIJARA_DEPLOY_FLAGS="--environment staging --generate-secrets --monitoring"
+make tijara-cloud-domain-deploy TIJARA_CLOUD_DOMAIN_FLAGS="--domain pos.example.com --monitoring --install-suite --db tijara_prod"
 make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001"
 make security-audit
 make dev-start

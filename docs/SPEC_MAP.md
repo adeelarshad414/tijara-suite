@@ -153,6 +153,7 @@ python3 scripts/tijara_services.py stop --force-kill-ports
 bash scripts/tijara-start.sh --all --install-suite --seed-demo
 bash scripts/tijara-stop.sh --force-kill-ports
 bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite
+bash scripts/tijara-cloud-domain-deploy.sh --domain pos.example.com --monitoring --install-suite --db tijara_prod
 bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict
 make infra-provider-readiness
@@ -161,5 +162,6 @@ make protected-release-chain
 powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo
 powershell -File scripts/tijara-stop.ps1 -ForceKillPorts
 powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite
+pwsh -File scripts/tijara-cloud-domain-deploy.ps1 -Domain pos.example.com -Monitoring -InstallSuite -Database tijara_prod
 pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001
 ```

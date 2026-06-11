@@ -11978,3 +11978,88 @@ Status: Complete
   it uses fresh live screens.
 - Bring the `tijara-protected` self-hosted runner online and execute the
   protected POS matrix plus release evidence chain.
+
+## Iteration 158: Cross-Platform Cloud Domain Operations
+
+### Scope Completed
+
+- Added `docs/CROSS_PLATFORM_CLOUD_DOMAIN_RUNBOOK.md` covering:
+  - configure
+  - install
+  - run
+  - stop
+  - local workstation usage
+  - Windows, Linux, and macOS commands
+  - cloud VM/domain deployment
+  - DNS, TLS, backup, restore-drill, and rollback planning
+  - Cloudflare, Route53, cert-manager, PostgreSQL backup, and generic cloud
+    provider mapping
+  - production go-live checklist for domain, TLS, secrets, monitoring, backups,
+    hardware, FBR, PSP, courier, load, and security evidence
+- Added Linux/macOS Bash cloud/domain deployment wrapper:
+  `scripts/tijara-cloud-domain-deploy.sh`.
+- Added Windows/PowerShell cloud/domain deployment wrapper:
+  `scripts/tijara-cloud-domain-deploy.ps1`.
+- Added `make tijara-cloud-domain-deploy` and
+  `TIJARA_CLOUD_DOMAIN_FLAGS`.
+- Added `TIJARA_DOMAIN` to `.env.example`.
+- Updated `scripts/tijara_host.py` so `--domain` persists:
+  - `TIJARA_DOMAIN`
+  - `TIJARA_PUBLIC_URL=https://<domain>`
+  - `ODOO_PROXY_MODE=True`
+  - `ODOO_DB_FILTER=^%d$|^%h$`
+- Updated `README.md`, `DEPLOY.md`, `docs/COMMANDS_QUICKREF.md`,
+  `docs/CONFIGURATION_AND_SECRETS.md`, `docs/SPEC_MAP.md`, and
+  `docs/SPEC_MAP.json`.
+
+### Validation
+
+- `bash -n scripts/tijara-cloud-domain-deploy.sh` passed.
+- `env PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile
+  scripts/tijara_host.py` passed.
+- PowerShell parser validation passed for
+  `scripts/tijara-cloud-domain-deploy.ps1`.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `make -n tijara-cloud-domain-deploy
+  TIJARA_CLOUD_DOMAIN_FLAGS="--domain pos.example.com --monitoring
+  --install-suite --db tijara_prod"` expands to the expected Bash wrapper
+  command.
+- Bash dry-run passed:
+  `bash scripts/tijara-cloud-domain-deploy.sh --domain staging.example.com
+  --environment staging --monitoring --install-suite --db tijara_dev --dry-run
+  --skip-infra-plan`.
+- PowerShell dry-run passed:
+  `pwsh -NoProfile -File scripts/tijara-cloud-domain-deploy.ps1 -Domain
+  staging.example.com -Environment staging -Monitoring -InstallSuite -Database
+  tijara_dev -DryRun -SkipInfraPlan`.
+- `git diff --check` passed.
+- `make validate` passed and parsed 103 XML files.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 84%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 85%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 89%
+- Overall production readiness: around 78-82%
+
+### Known Gaps
+
+- The new wrappers are domain/cloud deployment orchestration helpers. Real
+  production still requires provider credentials, DNS/TLS execution approval,
+  backup restore evidence, protected runner evidence, and certified
+  provider/device artifacts.
+- Kubernetes deployment remains template/planning-ready; final Helm/Kustomize or
+  cluster-specific manifests should match the customer's platform standard.
+
+### Next Iteration
+
+- Run the new cloud/domain wrapper on a protected staging runner with a real
+  domain and provider credentials.
+- Attach DNS, TLS, backup, restore, monitoring, and rollback evidence to the
+  protected release chain.

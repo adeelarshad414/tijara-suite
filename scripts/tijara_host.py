@@ -124,6 +124,7 @@ def cmd_init_config(args: argparse.Namespace) -> int:
     if args.public_url:
         env_updates["TIJARA_PUBLIC_URL"] = args.public_url
     if args.domain:
+        env_updates["TIJARA_DOMAIN"] = args.domain
         env_updates["ODOO_DB_FILTER"] = "^%d$|^%h$"
         env_updates["ODOO_PROXY_MODE"] = "True"
         env_updates["TIJARA_PUBLIC_URL"] = "https://%s" % args.domain

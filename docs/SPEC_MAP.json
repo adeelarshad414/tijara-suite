@@ -704,6 +704,7 @@
     "non_secret": [
       "COMPOSE_PROJECT_NAME",
       "TIJARA_ENV",
+      "TIJARA_DOMAIN",
       "TIJARA_PUBLIC_URL",
       "ODOO_IMAGE",
       "POSTGRES_IMAGE",
@@ -787,6 +788,7 @@
     "bash_start": "bash scripts/tijara-start.sh --all --install-suite --seed-demo",
     "bash_stop": "bash scripts/tijara-stop.sh --force-kill-ports",
     "bash_deploy": "bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite",
+    "bash_cloud_domain_deploy": "bash scripts/tijara-cloud-domain-deploy.sh --domain pos.example.com --monitoring --install-suite --db tijara_prod",
     "bash_production_infra": "bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001",
         "bash_production_infra_cloudflare": "bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict",
         "bash_production_infra_route53": "bash scripts/tijara-production-infra.sh --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template route53-cert-manager-postgres --strict",
@@ -796,6 +798,7 @@
         "powershell_start": "powershell -File scripts/tijara-start.ps1 -AllProfiles -InstallSuite -SeedDemo",
     "powershell_stop": "powershell -File scripts/tijara-stop.ps1 -ForceKillPorts",
     "powershell_deploy": "powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite",
+    "powershell_cloud_domain_deploy": "pwsh -File scripts/tijara-cloud-domain-deploy.ps1 -Domain pos.example.com -Monitoring -InstallSuite -Database tijara_prod",
     "powershell_production_infra": "pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001",
     "server_preflight": "python3 scripts/tijara_host.py preflight --all-profiles",
     "server_deploy": "python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite",

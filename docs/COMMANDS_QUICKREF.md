@@ -25,6 +25,8 @@
 | Server init central config | `python3 scripts/tijara_host.py init-config --environment staging --public-url https://staging.example.com --generate-secrets` |
 | Server deploy stack | `python3 scripts/tijara_host.py deploy --with-hardware --with-monitoring --install-suite` |
 | Server deploy stack with Bash wrapper | `bash scripts/tijara-deploy.sh --environment staging --generate-secrets --monitoring --install-suite` |
+| Deploy to cloud VM/domain with Bash wrapper | `bash scripts/tijara-cloud-domain-deploy.sh --domain pos.example.com --environment production --monitoring --install-suite --db tijara_prod` |
+| Deploy to cloud VM/domain with Make | `make tijara-cloud-domain-deploy TIJARA_CLOUD_DOMAIN_FLAGS="--domain pos.example.com --monitoring --install-suite --db tijara_prod"` |
 | Validate scaffold | `make validate` |
 | Start Compose manually | `make up` |
 | Start via Python Make target | `make py-start` |
@@ -60,6 +62,7 @@
 | Capture Grafana dashboard evidence | `make grafana-dashboard-evidence` |
 | Validate Grafana dashboards without running Grafana | `node scripts/capture-grafana-evidence.js --metadata-only` |
 | Generate production DNS/TLS/backup wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001"` |
+| Generate app deploy plus Cloudflare/cert-manager/Postgres plan | `bash scripts/tijara-cloud-domain-deploy.sh --domain pos.example.com --provider-template cloudflare-cert-manager-postgres --tenant-artifact deploy/runtime/tenants/tijara_customer_001` |
 | Generate Cloudflare/cert-manager/Postgres wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict"` |
 | Generate Route53/cert-manager/Postgres wrappers | `make production-infra TIJARA_PRODUCTION_INFRA_FLAGS="--tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template route53-cert-manager-postgres --strict"` |
 | Export infra provider readiness | `make infra-provider-readiness TIJARA_INFRA_PROVIDER_READINESS_FLAGS="--production-infra-evidence deploy/runtime/production-infra/20260609-provider-templates-cloudflare --allow-assumptions --assume-provider all --strict"` |
@@ -91,6 +94,8 @@
 | Stop services with PowerShell wrapper | `powershell -File scripts/tijara-stop.ps1 -ForceKillPorts` |
 | Stop and force known ports | `powershell -File scripts/dev-stop.ps1 -ForceKillPorts` |
 | Deploy with PowerShell wrapper | `powershell -File scripts/tijara-deploy.ps1 -Environment staging -GenerateSecrets -Monitoring -InstallSuite` |
+| Deploy to cloud VM/domain with PowerShell wrapper | `pwsh -File scripts/tijara-cloud-domain-deploy.ps1 -Domain pos.example.com -Environment production -Monitoring -InstallSuite -Database tijara_prod` |
+| Deploy plus Cloudflare/cert-manager/Postgres plan | `pwsh -File scripts/tijara-cloud-domain-deploy.ps1 -Domain pos.example.com -ProviderTemplate cloudflare-cert-manager-postgres -TenantArtifact deploy/runtime/tenants/tijara_customer_001` |
 | Generate production infra wrappers | `pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001` |
 | Generate provider infra wrappers | `pwsh -File scripts/tijara-production-infra.ps1 --tenant-artifact deploy/runtime/tenants/tijara_customer_001 --provider-template cloudflare-cert-manager-postgres --strict` |
 
