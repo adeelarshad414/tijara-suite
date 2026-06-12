@@ -13,6 +13,7 @@
         "data/business_roles.xml",
         "views/tijara_menus.xml",
         "views/rbac_views.xml",
+        "views/home_templates.xml",
         "views/web_login_templates.xml",
         "views/res_company_views.xml",
         "views/res_partner_views.xml",

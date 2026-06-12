@@ -1,35 +1,42 @@
 <odoo>
-    <template id="tijara_web_login_layout" inherit_id="web.login_layout" priority="60" name="Tijara End User Login Layout">
+    <template id="tijara_web_login_layout" inherit_id="web.login_layout" priority="60" name="Tijara Branded Login Layout">
         <xpath expr="//t[@t-call]" position="replace">
             <t t-call="web.frontend_layout">
                 <t t-set="html_data" t-value="{'style': 'height: 100%;'}"/>
                 <t t-set="body_classname" t-value="'tijara-login-page'"/>
                 <t t-set="no_header" t-value="True"/>
                 <t t-set="no_footer" t-value="True"/>
+                <t t-set="tijara_platform_login" t-value="request.params.get('platform') in ('1', 'true', 'yes', 'admin', 'platform')"/>
+                <t t-set="tijara_primary" t-value="'#246f7a' if tijara_platform_login else (res_company.tijara_brand_primary or '#1f7a8c')"/>
+                <t t-set="tijara_secondary" t-value="'#334155' if tijara_platform_login else (res_company.tijara_brand_secondary or '#2d6a4f')"/>
+                <t t-set="tijara_accent" t-value="'#c8861f' if tijara_platform_login else (res_company.tijara_brand_accent or '#d18f1e')"/>
+                <t t-set="tijara_brand_name" t-value="'Tijara Platform Console' if tijara_platform_login else (res_company.name or 'Tijara Suite')"/>
+                <t t-set="tijara_kicker" t-value="'Platform superadmin' if tijara_platform_login else (res_company.tijara_brand_tagline or 'Pakistan-ready business suite')"/>
+                <t t-set="tijara_headline" t-value="'Control tenants, subscriptions, releases, and operations from one secure console.' if tijara_platform_login else (res_company.tijara_login_headline or 'Run your store, restaurant, inventory, and back office from one secure system.')"/>
+                <t t-set="tijara_subtitle" t-value="'Built for SaaS operators who manage onboarding, billing evidence, monitoring, security, and production readiness across customer tenants.' if tijara_platform_login else (res_company.tijara_login_subtitle or 'Use Tijara Suite for POS, inventory, ecommerce, customer management, promotions, reports, and daily operations.')"/>
                 <style>
-                    :root {
-                        --tijara-login-ink: #172033;
-                        --tijara-login-muted: #536174;
-                        --tijara-login-primary: #1f7a8c;
-                        --tijara-login-primary-dark: #155e6f;
-                        --tijara-login-border: #dfe6ee;
-                        --tijara-login-panel: #ffffff;
-                        --tijara-login-soft: #f6f8fb;
-                    }
                     body.tijara-login-page {
                         min-height: 100vh;
-                        background: linear-gradient(135deg, #f8fafc 0%, #eef7f6 48%, #f9fbfd 100%);
-                        color: var(--tijara-login-ink);
+                        margin: 0;
+                        background: #f5f7fa;
+                        color: #172033;
+                    }
+                    .tijara-login {
+                        min-height: 100vh;
+                        --tj-primary: #1f7a8c;
+                        --tj-secondary: #2d6a4f;
+                        --tj-accent: #d18f1e;
+                        background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 58%, #edf3f5 100%);
                     }
                     .tijara-login-shell {
                         min-height: 100vh;
                         display: grid;
-                        grid-template-columns: minmax(0, 1.08fr) minmax(360px, .72fr);
-                        gap: 48px;
+                        grid-template-columns: minmax(0, 1.05fr) minmax(370px, .72fr);
+                        gap: 44px;
                         align-items: center;
                         width: min(1120px, calc(100vw - 48px));
                         margin: 0 auto;
-                        padding: 48px 0;
+                        padding: 46px 0;
                     }
                     .tijara-login-story {
                         max-width: 650px;
@@ -38,27 +45,27 @@
                         display: inline-flex;
                         align-items: center;
                         min-height: 34px;
-                        border: 1px solid rgba(31, 122, 140, .28);
+                        border: 1px solid rgba(23,32,51,.12);
                         border-radius: 7px;
                         padding: 0 12px;
-                        background: rgba(255, 255, 255, .78);
-                        color: var(--tijara-login-primary-dark);
-                        font-weight: 800;
+                        background: #fff;
+                        color: var(--tj-primary);
+                        font-weight: 850;
                         font-size: .86rem;
                     }
                     .tijara-login-story h1 {
                         margin: 18px 0 12px;
-                        max-width: 620px;
-                        font-size: clamp(2.2rem, 5vw, 4.35rem);
-                        line-height: .98;
+                        max-width: 650px;
+                        font-size: 3.6rem;
+                        line-height: 1;
                         letter-spacing: 0;
-                        font-weight: 850;
+                        font-weight: 880;
                     }
                     .tijara-login-story p {
                         margin: 0;
                         max-width: 570px;
-                        color: var(--tijara-login-muted);
-                        font-size: 1.08rem;
+                        color: #536174;
+                        font-size: 1.06rem;
                         line-height: 1.58;
                     }
                     .tijara-login-feature-grid {
@@ -68,29 +75,29 @@
                         margin-top: 28px;
                     }
                     .tijara-login-feature {
-                        min-height: 74px;
-                        border: 1px solid var(--tijara-login-border);
+                        min-height: 82px;
+                        border: 1px solid #dfe6ee;
                         border-radius: 8px;
                         padding: 14px;
-                        background: rgba(255, 255, 255, .82);
+                        background: rgba(255,255,255,.9);
                     }
                     .tijara-login-feature strong {
                         display: block;
                         margin-bottom: 4px;
-                        color: var(--tijara-login-ink);
+                        color: #172033;
                         font-size: .98rem;
                     }
                     .tijara-login-feature span {
                         display: block;
-                        color: var(--tijara-login-muted);
+                        color: #5b6878;
                         font-size: .86rem;
                         line-height: 1.35;
                     }
                     .tijara-login-card {
-                        border: 1px solid var(--tijara-login-border);
+                        border: 1px solid #dfe6ee;
                         border-radius: 8px;
-                        background: var(--tijara-login-panel);
-                        box-shadow: 0 24px 70px rgba(15, 23, 42, .14);
+                        background: #ffffff;
+                        box-shadow: 0 24px 70px rgba(15,23,42,.14);
                         overflow: hidden;
                     }
                     .tijara-login-card-header {
@@ -99,9 +106,10 @@
                         padding: 30px 30px 18px;
                         text-align: center;
                         border-bottom: 1px solid #eef2f7;
-                        background: linear-gradient(180deg, #fff, #fbfcfe);
+                        background: #fbfcfe;
                     }
-                    .tijara-login-card-header img {
+                    .tijara-login-card-header img,
+                    .tijara-login-mark {
                         display: block;
                         max-width: 170px;
                         max-height: 92px;
@@ -109,15 +117,27 @@
                         height: auto;
                         margin: 0 auto;
                     }
+                    .tijara-login-mark {
+                        width: 68px;
+                        height: 68px;
+                        border-radius: 8px;
+                        background: var(--tj-primary);
+                        color: #fff;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: 900;
+                        font-size: 1.2rem;
+                    }
                     .tijara-login-card-header h2 {
                         margin: 0;
-                        font-size: 1.38rem;
+                        font-size: 1.36rem;
                         letter-spacing: 0;
                         font-weight: 850;
                     }
                     .tijara-login-card-header p {
                         margin: 0;
-                        color: var(--tijara-login-muted);
+                        color: #5b6878;
                         font-size: .92rem;
                         line-height: 1.42;
                     }
@@ -130,19 +150,19 @@
                         border-color: #d8e1ea;
                     }
                     .tijara-login-card-body .form-label {
-                        font-weight: 750;
+                        font-weight: 760;
                         color: #273449;
                     }
                     .tijara-login-card-body .btn-primary {
                         min-height: 48px;
                         border: 0;
                         border-radius: 7px;
-                        background: var(--tijara-login-primary);
+                        background: var(--tj-primary);
                         font-weight: 850;
                     }
                     .tijara-login-card-body .btn-primary:hover,
                     .tijara-login-card-body .btn-primary:focus {
-                        background: var(--tijara-login-primary-dark);
+                        background: var(--tj-secondary);
                     }
                     .tijara-login-card-body a[href*="/web/database"],
                     .tijara-login-card-body a[href*="/web/signup"],
@@ -154,13 +174,18 @@
                     .tijara-login-card-note {
                         margin: 18px 30px 28px;
                         border: 1px solid #e3eaf2;
+                        border-left: 4px solid var(--tj-accent);
                         border-radius: 8px;
                         padding: 12px 14px;
-                        background: var(--tijara-login-soft);
+                        background: #f8fafc;
                         color: #526176;
                         font-size: .84rem;
                         line-height: 1.42;
-                        text-align: center;
+                    }
+                    @media (max-width: 980px) {
+                        .tijara-login-story h1 {
+                            font-size: 2.6rem;
+                        }
                     }
                     @media (max-width: 860px) {
                         .tijara-login-shell {
@@ -197,52 +222,73 @@
                         }
                     }
                 </style>
-                <div class="tijara-login-shell" role="main" aria-label="Tijara Suite sign in">
-                    <section class="tijara-login-story">
-                        <div class="tijara-login-kicker">Pakistan-ready business suite</div>
-                        <h1>Run your store, restaurant, inventory, and back office from one secure system.</h1>
-                        <p>
-                            Tijara Suite gives your team one place for POS, inventory, ecommerce,
-                            customer management, promotions, reports, and daily operations.
-                        </p>
-                        <div class="tijara-login-feature-grid" aria-label="Tijara Suite highlights">
-                            <div class="tijara-login-feature">
-                                <strong>Retail and POS</strong>
-                                <span>B2C, B2B, barcode, refunds, discounts, and receipt printing.</span>
+                <div class="tijara-login" t-att-style="'--tj-primary:%s; --tj-secondary:%s; --tj-accent:%s;' % (tijara_primary, tijara_secondary, tijara_accent)">
+                    <div class="tijara-login-shell" role="main" aria-label="Tijara Suite sign in">
+                        <section class="tijara-login-story">
+                            <div class="tijara-login-kicker"><t t-esc="tijara_kicker"/></div>
+                            <h1><t t-esc="tijara_headline"/></h1>
+                            <p><t t-esc="tijara_subtitle"/></p>
+                            <div class="tijara-login-feature-grid" aria-label="Workspace highlights">
+                                <t t-if="tijara_platform_login">
+                                    <div class="tijara-login-feature">
+                                        <strong>Tenant operations</strong>
+                                        <span>Provision customers, domains, admin access, and readiness evidence.</span>
+                                    </div>
+                                    <div class="tijara-login-feature">
+                                        <strong>SaaS control</strong>
+                                        <span>Plans, feature flags, subscriptions, dunning, and billing records.</span>
+                                    </div>
+                                    <div class="tijara-login-feature">
+                                        <strong>Release governance</strong>
+                                        <span>Protected runner checks, sign-off packages, rollback, and audits.</span>
+                                    </div>
+                                    <div class="tijara-login-feature">
+                                        <strong>Operations visibility</strong>
+                                        <span>Monitoring, backups, hardware, FBR, PSP, courier, and risk status.</span>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="tijara-login-feature">
+                                        <strong>Retail and POS</strong>
+                                        <span>B2C, B2B, barcode, refunds, discounts, and receipt printing.</span>
+                                    </div>
+                                    <div class="tijara-login-feature">
+                                        <strong>Restaurant and kiosk</strong>
+                                        <span>Dine-in, takeaway, pickup, queue, menu, and deals screens.</span>
+                                    </div>
+                                    <div class="tijara-login-feature">
+                                        <strong>Inventory control</strong>
+                                        <span>Stock, expiry, racks, shelves, warehouses, and alerts.</span>
+                                    </div>
+                                    <div class="tijara-login-feature">
+                                        <strong>Pakistan localization</strong>
+                                        <span>PKR, GST policy, Urdu/English printing, and FBR readiness.</span>
+                                    </div>
+                                </t>
                             </div>
-                            <div class="tijara-login-feature">
-                                <strong>Restaurant and kiosk</strong>
-                                <span>Dine-in, takeaway, pickup, queue, menu, and deals screens.</span>
+                        </section>
+                        <section class="tijara-login-card" aria-label="Sign in">
+                            <div class="tijara-login-card-header">
+                                <div t-if="tijara_platform_login" class="tijara-login-mark">TP</div>
+                                <img t-else="" t-attf-src="/web/binary/company_logo{{ '?dbname='+db if db else '' }}" alt="Business logo"/>
+                                <h2>Sign in to <t t-esc="tijara_brand_name"/></h2>
+                                <p>Use your assigned account to continue to the right workspace.</p>
                             </div>
-                            <div class="tijara-login-feature">
-                                <strong>Inventory control</strong>
-                                <span>Stock, expiry, racks, shelves, warehouses, and alerts.</span>
+                            <div class="tijara-login-card-body">
+                                <t t-out="0"/>
                             </div>
-                            <div class="tijara-login-feature">
-                                <strong>Pakistan localization</strong>
-                                <span>PKR, GST policy, Urdu/English printing, and FBR readiness.</span>
+                            <div class="tijara-login-card-note">
+                                <t t-if="tijara_platform_login">Platform access is limited to authorized SaaS operators.</t>
+                                <t t-else="">For access issues, contact your manager or system administrator.</t>
                             </div>
-                        </div>
-                    </section>
-                    <section class="tijara-login-card" aria-label="Sign in">
-                        <div class="tijara-login-card-header">
-                            <img t-attf-src="/web/binary/company_logo{{ '?dbname='+db if db else '' }}" alt="Business logo"/>
-                            <h2>Sign in to <span t-field="res_company.name">Tijara Suite</span></h2>
-                            <p>Use your assigned business account to continue.</p>
-                        </div>
-                        <div class="tijara-login-card-body">
-                            <t t-out="0"/>
-                        </div>
-                        <div class="tijara-login-card-note">
-                            For access issues, contact your manager or system administrator.
-                        </div>
-                    </section>
+                        </section>
+                    </div>
                 </div>
             </t>
         </xpath>
     </template>
 
-    <template id="tijara_web_login_form" inherit_id="web.login" name="Tijara End User Login Form">
+    <template id="tijara_web_login_form" inherit_id="web.login" name="Tijara Branded Login Form">
         <xpath expr="//form[contains(@t-attf-class, 'oe_login_form')]" position="attributes">
             <attribute name="t-attf-class">oe_login_form</attribute>
         </xpath>
@@ -253,6 +299,12 @@
         <xpath expr="//t[@t-call='web.login_oauth']" position="replace"/>
         <xpath expr="//div[hasclass('oe_login_buttons')]/button[@type='submit']" position="replace">
             <button type="submit" class="btn btn-primary">Sign in</button>
+        </xpath>
+        <xpath expr="//input[@name='redirect']" position="replace">
+            <input type="hidden" name="redirect" t-att-value="redirect or '/tijara/home'"/>
+        </xpath>
+        <xpath expr="//input[@name='type']" position="after">
+            <input t-if="request.params.get('platform') in ('1', 'true', 'yes', 'admin', 'platform')" type="hidden" name="platform" value="1"/>
         </xpath>
         <xpath expr="//t[@t-if='debug']" position="replace"/>
     </template>

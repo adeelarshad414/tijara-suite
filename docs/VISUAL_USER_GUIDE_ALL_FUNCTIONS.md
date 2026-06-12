@@ -85,8 +85,8 @@ Steps:
 | --- | --- | --- |
 | 1 | Open the local demo URL or assigned tenant domain. | Production domains should not show database selection or developer links. |
 | 2 | Enter your assigned email and password. | Use only your own login. |
-| 3 | Confirm the Odoo dashboard loads. | If it fails, check active user status. |
-| 4 | Open the assigned app area. | Menus depend on role and SaaS flags. |
+| 3 | Confirm Tijara Home loads. | Platform superadmin, tenant admin, and staff users see different cards and branding. |
+| 4 | Open the assigned app area from Tijara Home or the app menu. | Menus depend on role and SaaS flags. |
 
 ## Tenant Setup
 
@@ -110,11 +110,12 @@ Steps:
 | Step | Action | Visual check |
 | --- | --- | --- |
 | 1 | Set company name, Pakistan identifiers, Urdu name, branch code. | Confirm country/currency are Pakistan/PKR. |
-| 2 | Create users and assign one or more Business Roles from User Role Assignments. | Ali can receive Cashier plus Inventory Manager and sees only matching menus. |
-| 3 | Configure warehouses, locations, racks, shelves, and bins. | Inventory alerts can locate items. |
-| 4 | Configure POS sessions, payment methods, tax, and cash shift rules. | Cashier can open a session. |
-| 5 | Choose invoice/receipt template and return policy. | Receipt preview has tax and barcode. |
-| 6 | Enable subscribed SaaS features. | B2B, queue, display, kiosk appear only when enabled. |
+| 2 | Configure tenant logo, brand colors, login copy, and home copy. | `/web/login` and `/tijara/home` show tenant branding. |
+| 3 | Create users and assign one or more Business Roles from User Role Assignments. | Ali can receive Cashier plus Inventory Manager and sees only matching menus. |
+| 4 | Configure warehouses, locations, racks, shelves, and bins. | Inventory alerts can locate items. |
+| 5 | Configure POS sessions, payment methods, tax, and cash shift rules. | Cashier can open a session. |
+| 6 | Choose invoice/receipt template and return policy. | Receipt preview has tax and barcode. |
+| 7 | Enable subscribed SaaS features. | B2B, queue, display, kiosk appear only when enabled. |
 
 ## User Role Assignment
 

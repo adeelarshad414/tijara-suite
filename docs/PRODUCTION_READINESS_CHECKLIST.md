@@ -136,6 +136,12 @@ Required for production:
 - [ ] Placeholder secrets are removed.
 - [ ] Secret manager or protected secret store is used.
 - [ ] Production startup refuses placeholder secrets.
+- [ ] Tenant logo, primary/secondary/accent colors, login copy, and home copy
+      are configured and verified on `/web/login` and `/tijara/home`.
+- [ ] Platform superadmin sign-in branding is verified at
+      `/web/login?platform=1`.
+- [ ] Successful login routes to Tijara Home unless an explicit protected-page
+      redirect is present.
 - [ ] RBAC for admin, cashier, inventory, accounting, ecommerce, analytics, and
       display users is reviewed, including tenant role templates, allow-listed
       groups, multi-role user assignments, disabled leavers, and proof that

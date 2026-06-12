@@ -97,8 +97,9 @@ These credentials are for local demo only and must not be used in production.
 
 1. Open the tenant or local login URL.
 2. Enter the assigned email and password.
-3. Confirm the main Odoo dashboard loads.
-4. Use the app launcher/menu to open the assigned area: POS, Inventory, Tijara,
+3. Confirm the Tijara Home screen loads with the correct platform or tenant
+   branding.
+4. Use the home cards or app launcher/menu to open the assigned area: POS, Inventory, Tijara,
    Analytics, Restaurant, SaaS Control, or Accounting.
 5. If the expected menu is missing, ask the tenant admin or platform admin to
    verify user groups and SaaS feature flags.
@@ -112,6 +113,8 @@ Owns the platform-level configuration and production-readiness controls.
 Primary tasks:
 
 - Manage SaaS plans, feature flags, tenant readiness, and platform settings.
+- Use `/web/login?platform=1` for the platform-branded sign-in screen and
+  confirm Tijara Home opens as Platform Superadmin after login.
 - Review protected release evidence, certification status, operations reports,
   and security/DevOps readiness notes.
 - Confirm that production secrets, provider credentials, backups, monitoring,
@@ -132,7 +135,8 @@ Owns business setup for one company or tenant.
 Primary tasks:
 
 - Configure business details, branches, warehouses, POS settings, receipt
-  profiles, users, payment methods, and allowed SaaS features.
+  profiles, tenant logo, brand colors, login/home copy, users, payment methods,
+  and allowed SaaS features.
 - Enable vertical-specific workflows such as superstore, grocery, cosmetics,
   bakery, cafe, fast food, restaurant, pharmacy, cloth, garments, uniform,
   shoes, mobile shop, and electronics.
@@ -144,6 +148,9 @@ Primary tasks:
 Setup checklist:
 
 - Confirm company name, Urdu name, NTN/STRN, branch code, and receipt language.
+- Set tenant logo in the standard company logo field and configure Tijara brand
+  primary, secondary, accent, tagline, login headline, login subtitle, home
+  headline, and home subtitle.
 - Configure B2C and B2B product prices.
 - Configure GST on/off, delivery charge on/off, cafe service charge on/off,
   and cafe/restaurant card/cash tax policy.

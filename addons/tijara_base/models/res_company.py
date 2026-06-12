@@ -67,6 +67,41 @@ class ResCompany(models.Model):
         string="Loyalty Points per Currency",
         default=0.01,
     )
+    tijara_brand_primary = fields.Char(
+        string="Brand Primary Color",
+        default="#1f7a8c",
+        help="Tenant login and home-screen primary color. Use a CSS hex value.",
+    )
+    tijara_brand_secondary = fields.Char(
+        string="Brand Secondary Color",
+        default="#2d6a4f",
+        help="Tenant login and home-screen secondary color. Use a CSS hex value.",
+    )
+    tijara_brand_accent = fields.Char(
+        string="Brand Accent Color",
+        default="#d18f1e",
+        help="Tenant login and home-screen accent color. Use a CSS hex value.",
+    )
+    tijara_brand_tagline = fields.Char(
+        string="Brand Tagline",
+        default="Pakistan-ready business suite",
+    )
+    tijara_login_headline = fields.Char(
+        string="Login Headline",
+        default="Run your store, restaurant, inventory, and back office from one secure system.",
+    )
+    tijara_login_subtitle = fields.Char(
+        string="Login Subtitle",
+        default="Use Tijara Suite for POS, inventory, ecommerce, customer management, promotions, reports, and daily operations.",
+    )
+    tijara_home_headline = fields.Char(
+        string="Home Headline",
+        default="Welcome back to your business workspace",
+    )
+    tijara_home_subtitle = fields.Char(
+        string="Home Subtitle",
+        default="Run POS, inventory, ecommerce, staff permissions, reports, and daily operations from one clean workspace.",
+    )
 
     def tijara_is_food_service_business(self):
         self.ensure_one()

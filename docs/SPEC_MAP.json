@@ -332,6 +332,37 @@
       "description": "Branded tenant sign-in without visible database selection."
     },
     {
+      "name": "Tijara Platform Login",
+      "route_path": "/web/login?platform=1",
+      "auth": "public",
+      "personas": [
+        "platform_superadmin"
+      ],
+      "description": "Platform superadmin sign-in with separate SaaS console branding."
+    },
+    {
+      "name": "Tijara Role-Aware Home",
+      "route_path": "/tijara/home",
+      "auth": "authenticated",
+      "personas": [
+        "platform_superadmin",
+        "tenant_admin",
+        "cashier",
+        "inventory_manager",
+        "accountant",
+        "expense_manager",
+        "salary_manager",
+        "loyalty_manager",
+        "vertical_manager",
+        "promotion_manager",
+        "ecommerce_manager",
+        "analytics_manager",
+        "restaurant_operator",
+        "public_display"
+      ],
+      "description": "Branded post-login home screen with platform, tenant admin, or staff quick actions."
+    },
+    {
       "name": "Odoo App Shell",
       "route_path": "/odoo",
       "auth": "authenticated",
@@ -682,6 +713,7 @@
     "Bill-level percentage and amount discount synchronization",
     "Refund and exchange workflows with invoice barcode scanning",
     "Receipt and invoice template customization",
+    "Platform and tenant branded login screens with role-aware Tijara Home routing",
     "Tenant-admin RBAC business-role catalog and audited multi-role user assignment",
     "Back-office expense and salary management",
     "Customer details and loyalty programs",

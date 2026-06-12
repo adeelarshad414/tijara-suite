@@ -1,5 +1,11 @@
 <odoo>
+    <record id="action_tijara_home" model="ir.actions.act_url">
+        <field name="name">Tijara Home</field>
+        <field name="url">/tijara/home</field>
+        <field name="target">self</field>
+    </record>
+
     <menuitem id="menu_tijara_root" name="Tijara" sequence="5"/>
+    <menuitem id="menu_tijara_home" name="Home" parent="menu_tijara_root" action="action_tijara_home" sequence="1"/>
     <menuitem id="menu_tijara_configuration" name="Configuration" parent="menu_tijara_root" sequence="90"/>
 </odoo>
-

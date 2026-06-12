@@ -24,6 +24,15 @@
                 <field name="tijara_food_cash_tax_percent"/>
                 <field name="tijara_loyalty_enabled"/>
                 <field name="tijara_loyalty_points_per_currency"/>
+                <separator string="Tenant Branding"/>
+                <field name="tijara_brand_primary" placeholder="#1f7a8c"/>
+                <field name="tijara_brand_secondary" placeholder="#2d6a4f"/>
+                <field name="tijara_brand_accent" placeholder="#d18f1e"/>
+                <field name="tijara_brand_tagline"/>
+                <field name="tijara_login_headline"/>
+                <field name="tijara_login_subtitle"/>
+                <field name="tijara_home_headline"/>
+                <field name="tijara_home_subtitle"/>
             </xpath>
         </field>
     </record>

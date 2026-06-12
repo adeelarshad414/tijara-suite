@@ -1,0 +1,299 @@
+<odoo>
+    <template id="tijara_home_page" name="Tijara Branded Home">
+        <t t-call="web.frontend_layout">
+            <t t-set="html_data" t-value="{'style': 'height: 100%;'}"/>
+            <t t-set="body_classname" t-value="'tijara-home-body'"/>
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+            <style>
+                body.tijara-home-body {
+                    min-height: 100vh;
+                    margin: 0;
+                    background: #f5f7fa;
+                    color: #172033;
+                }
+                .tijara-home {
+                    min-height: 100vh;
+                    --tj-primary: #1f7a8c;
+                    --tj-secondary: #2d6a4f;
+                    --tj-accent: #d18f1e;
+                    background:
+                        linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(245,247,250,.98) 44%, #eef3f6 100%);
+                }
+                .tijara-home-shell {
+                    width: min(1180px, calc(100vw - 40px));
+                    margin: 0 auto;
+                    padding: 26px 0 40px;
+                }
+                .tijara-home-topbar {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 16px;
+                    min-height: 66px;
+                    border-bottom: 1px solid rgba(23,32,51,.09);
+                }
+                .tijara-home-brand {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-width: 0;
+                }
+                .tijara-home-logo,
+                .tijara-home-mark {
+                    flex: 0 0 auto;
+                    width: 46px;
+                    height: 46px;
+                    border-radius: 8px;
+                    background: #fff;
+                    border: 1px solid rgba(23,32,51,.12);
+                    object-fit: contain;
+                }
+                .tijara-home-mark {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: var(--tj-primary);
+                    color: #fff;
+                    font-weight: 850;
+                }
+                .tijara-home-brand h1,
+                .tijara-home-hero h2,
+                .tijara-home-card h3 {
+                    letter-spacing: 0;
+                }
+                .tijara-home-brand h1 {
+                    margin: 0;
+                    font-size: 1.05rem;
+                    font-weight: 850;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .tijara-home-brand span,
+                .tijara-home-user span {
+                    display: block;
+                    color: #5b6878;
+                    font-size: .86rem;
+                }
+                .tijara-home-user {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    gap: 12px;
+                    min-width: 220px;
+                    text-align: right;
+                }
+                .tijara-home-user strong {
+                    display: block;
+                    font-size: .94rem;
+                }
+                .tijara-home-button {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 42px;
+                    border: 1px solid rgba(23,32,51,.14);
+                    border-radius: 7px;
+                    padding: 0 14px;
+                    background: #fff;
+                    color: #172033;
+                    font-weight: 800;
+                    text-decoration: none;
+                    white-space: nowrap;
+                }
+                .tijara-home-button.primary {
+                    background: var(--tj-primary);
+                    border-color: var(--tj-primary);
+                    color: #fff;
+                }
+                .tijara-home-hero {
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+                    gap: 28px;
+                    align-items: end;
+                    padding: 48px 0 30px;
+                }
+                .tijara-home-eyebrow {
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 32px;
+                    border: 1px solid #d8e1ea;
+                    border-radius: 7px;
+                    padding: 0 11px;
+                    background: #fff;
+                    color: var(--tj-primary);
+                    font-size: .84rem;
+                    font-weight: 850;
+                }
+                .tijara-home-hero h2 {
+                    margin: 16px 0 12px;
+                    max-width: 760px;
+                    font-size: 3.1rem;
+                    line-height: 1.03;
+                    font-weight: 880;
+                }
+                .tijara-home-hero p {
+                    margin: 0;
+                    max-width: 720px;
+                    color: #536174;
+                    font-size: 1.05rem;
+                    line-height: 1.55;
+                }
+                .tijara-home-rail {
+                    display: grid;
+                    gap: 10px;
+                    border-left: 4px solid var(--tj-accent);
+                    padding-left: 16px;
+                }
+                .tijara-home-rail span {
+                    min-height: 34px;
+                    display: inline-flex;
+                    align-items: center;
+                    color: #243044;
+                    font-weight: 760;
+                }
+                .tijara-home-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 14px;
+                }
+                .tijara-home-card {
+                    display: grid;
+                    grid-template-rows: auto 1fr auto;
+                    min-height: 210px;
+                    border: 1px solid #dfe6ee;
+                    border-radius: 8px;
+                    padding: 18px;
+                    background: #fff;
+                    color: #172033;
+                    text-decoration: none;
+                    box-shadow: 0 14px 38px rgba(15,23,42,.08);
+                }
+                .tijara-home-card:hover,
+                .tijara-home-card:focus {
+                    border-color: var(--tj-primary);
+                    box-shadow: 0 18px 48px rgba(15,23,42,.12);
+                    color: #172033;
+                }
+                .tijara-home-card h3 {
+                    margin: 0 0 8px;
+                    font-size: 1.05rem;
+                    font-weight: 850;
+                }
+                .tijara-home-card p {
+                    margin: 0;
+                    color: #5b6878;
+                    font-size: .92rem;
+                    line-height: 1.45;
+                }
+                .tijara-home-card-metric {
+                    display: flex;
+                    align-items: baseline;
+                    justify-content: space-between;
+                    gap: 10px;
+                    margin-top: 18px;
+                    padding-top: 14px;
+                    border-top: 1px solid #edf1f5;
+                }
+                .tijara-home-card-metric strong {
+                    color: var(--tj-secondary);
+                    font-size: 1.45rem;
+                    line-height: 1;
+                }
+                .tijara-home-card-metric span {
+                    color: #697789;
+                    font-size: .82rem;
+                    font-weight: 760;
+                }
+                @media (max-width: 940px) {
+                    .tijara-home-hero,
+                    .tijara-home-grid {
+                        grid-template-columns: 1fr;
+                    }
+                    .tijara-home-hero h2 {
+                        font-size: 2.2rem;
+                    }
+                }
+                @media (max-width: 640px) {
+                    .tijara-home-shell {
+                        width: min(100vw - 24px, 560px);
+                        padding-top: 14px;
+                    }
+                    .tijara-home-topbar {
+                        align-items: flex-start;
+                        flex-direction: column;
+                        padding-bottom: 16px;
+                    }
+                    .tijara-home-user {
+                        width: 100%;
+                        justify-content: space-between;
+                        min-width: 0;
+                        text-align: left;
+                    }
+                    .tijara-home-hero {
+                        padding-top: 28px;
+                    }
+                    .tijara-home-hero h2 {
+                        font-size: 1.72rem;
+                        line-height: 1.12;
+                    }
+                    .tijara-home-card {
+                        min-height: 188px;
+                    }
+                }
+            </style>
+            <div class="tijara-home" t-att-style="'--tj-primary:%s; --tj-secondary:%s; --tj-accent:%s;' % (brand.get('primary'), brand.get('secondary'), brand.get('accent'))">
+                <main class="tijara-home-shell">
+                    <header class="tijara-home-topbar">
+                        <div class="tijara-home-brand">
+                            <img t-if="brand.get('logo_url')" class="tijara-home-logo" t-att-src="brand.get('logo_url')" alt="Business logo"/>
+                            <div t-else="" class="tijara-home-mark"><t t-esc="brand.get('mark')"/></div>
+                            <div>
+                                <h1><t t-esc="brand.get('name')"/></h1>
+                                <span><t t-esc="persona"/></span>
+                            </div>
+                        </div>
+                        <div class="tijara-home-user">
+                            <div>
+                                <strong><t t-esc="user.name"/></strong>
+                                <span><t t-esc="user.login"/></span>
+                            </div>
+                            <a class="tijara-home-button" href="/web/session/logout?redirect=/web/login">Sign out</a>
+                        </div>
+                    </header>
+
+                    <section class="tijara-home-hero">
+                        <div>
+                            <div class="tijara-home-eyebrow"><t t-esc="brand.get('eyebrow')"/></div>
+                            <h2><t t-esc="brand.get('headline')"/></h2>
+                            <p><t t-esc="brand.get('subtitle')"/></p>
+                        </div>
+                        <aside class="tijara-home-rail" aria-label="Workspace focus">
+                            <t t-foreach="highlights" t-as="highlight">
+                                <span><t t-esc="highlight"/></span>
+                            </t>
+                            <a class="tijara-home-button primary" href="/odoo">Open Odoo Apps</a>
+                        </aside>
+                    </section>
+
+                    <section class="tijara-home-grid" aria-label="Primary work areas">
+                        <t t-foreach="cards" t-as="card">
+                            <a class="tijara-home-card" t-att-href="card.get('url')">
+                                <div>
+                                    <h3><t t-esc="card.get('title')"/></h3>
+                                    <p><t t-esc="card.get('text')"/></p>
+                                </div>
+                                <span></span>
+                                <div class="tijara-home-card-metric">
+                                    <strong><t t-esc="card.get('metric')"/></strong>
+                                    <span><t t-esc="card.get('metric_label')"/></span>
+                                </div>
+                            </a>
+                        </t>
+                    </section>
+                </main>
+            </div>
+        </t>
+    </template>
+</odoo>

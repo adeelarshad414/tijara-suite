@@ -582,6 +582,12 @@ Production ecommerce rollout must include:
   branding, email, password, and sign in. Do not expose database selection,
   database manager links, debug login options, or developer-only helper links
   on customer domains.
+- Configure tenant logo and brand colors in Settings > Companies before
+  go-live. Tenant users should see tenant branding at `/web/login` and
+  `/tijara/home`; platform operators should use `/web/login?platform=1` for the
+  separate SaaS console brand.
+- Verify successful login redirects to `/tijara/home` unless a protected page
+  requested a specific redirect.
 - Use database-per-tenant isolation for SaaS customers.
 - Use separate staging and production databases.
 - Run `make validate` before every release.

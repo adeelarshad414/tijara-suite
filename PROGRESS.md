@@ -12194,3 +12194,83 @@ Status: Complete
   changes.
 - Rerun the protected staging browser matrix after the RBAC screens are seeded
   into a protected environment.
+
+## Iteration 161: Platform And Tenant Branding Home UX
+
+### Scope Completed
+
+- Polished the Odoo Community login override into a brand-aware Tijara sign-in
+  system.
+- Added a separate platform superadmin login mode at `/web/login?platform=1`
+  with Tijara Platform Console branding, platform colors, TP mark, and
+  SaaS-operator copy.
+- Kept tenant login at `/web/login` focused on tenant logo, tenant colors,
+  business copy, email, password, and one sign-in action with no database
+  selector or developer links.
+- Added tenant branding fields on company records:
+  - primary, secondary, and accent colors
+  - brand tagline
+  - login headline/subtitle
+  - home headline/subtitle
+- Added `/tijara/home`, an authenticated role-aware home screen:
+  - Platform superadmins see tenant provisioning, SaaS plans, subscriptions,
+    payments/webhooks, dashboards, and release evidence cards.
+  - Tenant admins see RBAC, business branding, POS/retail, inventory, display,
+    and analytics cards.
+  - Regular tenant users see a simpler team workspace with start-work,
+    customer, inventory-alert, and queue/order cards.
+- Added a Tijara > Home menu entry that opens the branded home route from Odoo.
+- Updated README, DEPLOY, user guide, visual guide, screenshot guide, spec map,
+  and production readiness checklist for platform/tenant branding and home
+  routing.
+
+### Validation
+
+- `make validate` passed and parsed 106 XML files.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile addons/tijara_base/controllers/home.py addons/tijara_base/models/res_company.py`
+  passed.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `git diff --check` passed.
+- Live `tijara_dev` upgrade passed for `tijara_base`.
+- Restarted local Odoo after controller routing changes.
+- Browser verification passed:
+  - Tenant login at `/web/login?db=tijara_dev` shows tenant copy/color, hides
+    database/developer controls, and posts `redirect=/tijara/home`.
+  - Platform login at `/web/login?db=tijara_dev&platform=1` shows platform
+    console copy, TP mark, platform color, and hidden platform mode input.
+  - Platform superadmin login redirects to `/tijara/home` with 6 platform cards.
+  - Tenant admin login redirects to `/tijara/home` with 6 tenant-admin cards.
+  - Regular tenant user login redirects to `/tijara/home` with 4 staff cards.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 87%
+- POS/retail/ecommerce workflows: 84%
+- SaaS feature enforcement: 75%
+- Tenant provisioning and production infra wrappers: 85%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 89%
+- End-user polish: 86%
+- RBAC/admin operations: 79%
+- Overall production readiness: around 80-84%
+
+### Known Gaps
+
+- Screenshot-based guide should be regenerated to include the new platform
+  login, tenant login, and Tijara Home screens.
+- Production tenants still need real customer logos, approved color palettes,
+  tenant-domain `ODOO_DB_FILTER`, HTTPS, and protected staging evidence.
+- The platform brand is currently a product-level default; a future iteration
+  can add a configurable platform-brand settings model if multiple operator
+  brands are required.
+
+### Next Iteration
+
+- Regenerate screenshot-based documentation for the platform login, tenant
+  login, tenant admin home, and staff home.
+- Add browser E2E coverage for post-login role-aware home routing.
+- Add optional platform-brand configuration for operators who need white-label
+  platform administration.

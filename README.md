@@ -182,12 +182,15 @@ starts the core Odoo/PostgreSQL services, waits for the Odoo login route, writes
 runtime metadata under `logs/`, and prints service URLs plus demo credential
 hints from `docs/TEST_CREDENTIALS.csv`.
 
-The suite overrides the default Odoo Community login with a customer-facing
-Tijara sign-in page. End users see the business logo, product context, email,
-password, and a single sign-in action; database selection and developer links
-are hidden. Local demo links may still include `?db=tijara_dev` so Odoo selects
-the development database, while production should use tenant domain routing,
-`ODOO_DB_FILTER`, and disabled database listing.
+The suite overrides the default Odoo Community login with branded Tijara
+sign-in pages. Tenant users see the tenant logo, tenant colors, product
+context, email, password, and a single sign-in action; database selection and
+developer links are hidden. Platform superadmins can use the separate
+`/web/login?platform=1` console branding. Successful login now lands on
+`/tijara/home`, a role-aware home screen for platform superadmins, tenant
+admins, and staff users. Local demo links may still include `?db=tijara_dev` so
+Odoo selects the development database, while production should use tenant domain
+routing, `ODOO_DB_FILTER`, and disabled database listing.
 
 Optional startup flags:
 
@@ -386,9 +389,10 @@ The all-user guide covers platform superadmins, tenant admins, cashiers,
 inventory managers, accountants, expense managers, salary managers, loyalty
 managers, vertical managers, promotion managers, ecommerce managers, analytics
 managers, restaurant operators, display/kiosk operators, and business managers,
-including local access, demo accounts, POS checkout, online storefront checkout,
-refund/exchange, inventory alerts, SaaS feature flags, hardware usage,
-troubleshooting, and escalation.
+including local access, role-aware Tijara Home, platform/tenant login branding,
+demo accounts, POS checkout, online storefront checkout, refund/exchange,
+inventory alerts, SaaS feature flags, hardware usage, troubleshooting, and
+escalation.
 
 The setup and readiness guides give a new operator a direct path from machine
 prep to local startup, seeded demo workflows, monitoring, dummy integration
@@ -471,8 +475,9 @@ POS/back-office/refund coverage plus ecommerce catalog, checkout, delivery
 adapter label/manifest actions, dry-run webhook sync, and customer tracking.
 
 The current code is an enterprise product foundation: models, security access,
-menus, backend views, tenant-admin RBAC role templates, per-user multi-role
-assignment records, SaaS plans/features, Pakistan localization fields, POS
+menus, backend views, platform/tenant branded login, role-aware home screen,
+tenant-admin RBAC role templates, per-user multi-role assignment records, SaaS
+plans/features, Pakistan localization fields, POS
 experience foundations, overall bill discount controls, configurable
 invoice/receipt templates, scanner/printer configuration, invoice barcode return
 scanning, CSV bulk import/export, inventory intelligence, analytics/reporting

@@ -36,13 +36,17 @@ Generated from live local Odoo screenshots on 2026-06-09 10:29 UTC.
 Start from the Tijara end-user login page and sign in with the role account
 assigned to your workflow. Production tenant domains should not show database
 selection or developer links; the local demo URL includes `?db=tijara_dev` only
-for database routing on a developer machine.
+for database routing on a developer machine. Platform operators can use
+`/web/login?platform=1` to see the separate SaaS console branding, while tenant
+users see the tenant logo, tenant colors, and tenant login copy. Successful
+login opens Tijara Home before the full Odoo app shell.
 
 ![Login And Authenticated App Shell](screenshots/platform-superadmin/odoo-login.png)
 
 1. Open `http://localhost:8069/web/login?db=tijara_dev`.
 2. Use the role account from `docs/TEST_CREDENTIALS.csv`.
-3. After login, confirm the top Odoo navigation and company switcher are visible.
+3. After login, confirm Tijara Home shows the correct role cards, then open the
+   Odoo app shell and confirm top navigation/company switcher are visible.
 
 ### Back Office App Shell
 
