@@ -1,0 +1,116 @@
+<odoo>
+    <record id="action_tijara_business_role" model="ir.actions.act_window">
+        <field name="name">Business Roles</field>
+        <field name="res_model">tijara.business.role</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_tijara_business_role_list" model="ir.ui.view">
+        <field name="name">tijara.business.role.list</field>
+        <field name="model">tijara.business.role</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="category"/>
+                <field name="tenant_assignable"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_business_role_form" model="ir.ui.view">
+        <field name="name">tijara.business.role.form</field>
+        <field name="model">tijara.business.role</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="category"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="tenant_assignable"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Role Mapping">
+                        <field name="technical_group_xmlids" placeholder="base.group_user"/>
+                        <field name="group_ids" widget="many2many_tags" groups="base.group_system"/>
+                    </group>
+                    <group string="Resolution">
+                        <field name="resolved_group_ids" widget="many2many_tags" readonly="1"/>
+                        <field name="missing_group_xmlids" readonly="1"/>
+                        <field name="blocked_group_xmlids" readonly="1"/>
+                    </group>
+                    <field name="description"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tijara_user_role_assignment" model="ir.actions.act_window">
+        <field name="name">User Role Assignments</field>
+        <field name="res_model">tijara.user.role.assignment</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'default_company_id': allowed_company_ids and allowed_company_ids[0] or False}</field>
+    </record>
+
+    <record id="view_tijara_user_role_assignment_list" model="ir.ui.view">
+        <field name="name">tijara.user.role.assignment.list</field>
+        <field name="model">tijara.user.role.assignment</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'applied'" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="user_id"/>
+                <field name="role_ids" widget="many2many_tags"/>
+                <field name="state"/>
+                <field name="applied_by_id"/>
+                <field name="applied_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tijara_user_role_assignment_form" model="ir.ui.view">
+        <field name="name">tijara.user.role.assignment.form</field>
+        <field name="model">tijara.user.role.assignment</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_apply_roles" type="object" string="Apply Roles" class="btn-primary" invisible="state == 'cancelled'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset To Draft" invisible="state != 'applied'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancelled'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="user_id"/>
+                            <field name="role_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="applied_by_id" readonly="1"/>
+                            <field name="applied_at" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Effective Access">
+                        <field name="resolved_group_ids" widget="many2many_tags" readonly="1"/>
+                        <field name="missing_group_xmlids" readonly="1"/>
+                        <field name="blocked_group_xmlids" readonly="1"/>
+                    </group>
+                    <field name="notes" placeholder="Reason for role change, approver note, or support ticket reference."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_tijara_business_role" name="Business Roles" parent="menu_tijara_configuration" action="action_tijara_business_role" sequence="10" groups="tijara_base.group_tijara_manager"/>
+    <menuitem id="menu_tijara_user_role_assignment" name="User Role Assignments" parent="menu_tijara_configuration" action="action_tijara_user_role_assignment" sequence="20" groups="tijara_base.group_tijara_manager"/>
+</odoo>

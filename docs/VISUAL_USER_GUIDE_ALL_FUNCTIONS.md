@@ -1,6 +1,6 @@
 # Tijara Suite Step-by-Step Visual User Guide
 
-Version: 2026-06-09
+Version: 2026-06-12
 
 Audience: platform owners, tenant admins, cashiers, inventory teams, ecommerce teams, accountants, restaurant operators, display/kiosk operators, and business managers.
 
@@ -16,6 +16,7 @@ This guide uses visual maps, workflow lanes, step cards, and quick checks so eve
 | Start | TIJARA_DEV_INSTALL_SUITE=1 TIJARA_DEV_SEED_POS_DEMO=1 bash scripts/dev-start.sh |
 | Stop | bash scripts/dev-stop.sh |
 | Currency and tax | PKR with GST 18% after affected modules are upgraded |
+| Production login | Tenant domain with no visible database selector |
 
 ## System Map
 
@@ -74,20 +75,18 @@ Visual lane:
 | Lane | Step |
 | --- | --- |
 | Open URL | Step 1 |
-| Choose database | Step 2 |
-| Login | Step 3 |
-| Open app | Step 4 |
-| Confirm menu | Step 5 |
+| Login | Step 2 |
+| Open app | Step 3 |
+| Confirm menu | Step 4 |
 
 Steps:
 
 | Step | Action | Visual check |
 | --- | --- | --- |
-| 1 | Open the local or tenant URL. | Use the assigned database. |
+| 1 | Open the local demo URL or assigned tenant domain. | Production domains should not show database selection or developer links. |
 | 2 | Enter your assigned email and password. | Use only your own login. |
 | 3 | Confirm the Odoo dashboard loads. | If it fails, check active user status. |
 | 4 | Open the assigned app area. | Menus depend on role and SaaS flags. |
-| 5 | Start daily work from the role checklist. | Escalate missing menus to tenant admin. |
 
 ## Tenant Setup
 
@@ -111,11 +110,27 @@ Steps:
 | Step | Action | Visual check |
 | --- | --- | --- |
 | 1 | Set company name, Pakistan identifiers, Urdu name, branch code. | Confirm country/currency are Pakistan/PKR. |
-| 2 | Create users and assign role groups. | Cashier sees POS; inventory sees stock menus. |
+| 2 | Create users and assign one or more Business Roles from User Role Assignments. | Ali can receive Cashier plus Inventory Manager and sees only matching menus. |
 | 3 | Configure warehouses, locations, racks, shelves, and bins. | Inventory alerts can locate items. |
 | 4 | Configure POS sessions, payment methods, tax, and cash shift rules. | Cashier can open a session. |
 | 5 | Choose invoice/receipt template and return policy. | Receipt preview has tax and barcode. |
 | 6 | Enable subscribed SaaS features. | B2B, queue, display, kiosk appear only when enabled. |
+
+## User Role Assignment
+
+| Owner | Primary screen | Success signal |
+| --- | --- | --- |
+| Tenant admin | Tijara > Configuration > User Role Assignments | A user can hold multiple business roles while protected technical groups stay blocked. |
+
+Visual lane:
+
+| Lane | Step |
+| --- | --- |
+| Roles | Review Business Roles |
+| User | Select the employee user |
+| Access | Choose one or more roles |
+| Apply | Click Apply Roles |
+| Verify | Sign in as the user and confirm menus |
 
 ## Product And Price Setup
 

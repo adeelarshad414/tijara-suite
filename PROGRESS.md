@@ -12063,3 +12063,134 @@ Status: Complete
   domain and provider credentials.
 - Attach DNS, TLS, backup, restore, monitoring, and rollback evidence to the
   protected release chain.
+
+## Iteration 159: End-User Login Experience
+
+### Scope Completed
+
+- Replaced the small default Odoo login branding override with a full Tijara
+  end-user login layout in `tijara_base`.
+- Added a customer-facing sign-in page with business logo, Tijara product
+  context, email/password form, and a single sign-in action.
+- Added a high-priority login layout override so Odoo Website does not wrap the
+  login page with website header/footer chrome when Website is installed.
+- Made narrow/tablet browser layouts place the sign-in card first, with the
+  product story below it, so cashiers and managers see the login form
+  immediately.
+- Hid database selection, database manager links, signup/reset helper links,
+  debug superuser links, and Odoo brand promotion elements from the normal
+  login card.
+- Updated user guides, visual guide, screenshot guide, deploy guide, README,
+  and screen inventory so operators are trained to use tenant/domain login
+  without choosing a database.
+
+### Validation
+
+- `make validate` passed and parsed 103 XML files after the final login
+  template changes.
+- `git diff --check` passed.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- Live `tijara_dev` upgrade passed for `tijara_base`.
+- Browser verification passed at
+  `http://localhost:8069/web/login?db=tijara_dev`:
+  - Tijara brand copy visible.
+  - Email, password, and sign-in controls visible.
+  - Database selection and Manage Databases not visible.
+  - Reset/signup helper links not visible.
+  - Odoo powered-by branding not visible.
+  - Website header/footer chrome not visible.
+  - Narrow in-app browser viewport shows the sign-in card before the product
+    story.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 86%
+- POS/retail/ecommerce workflows: 84%
+- SaaS feature enforcement: 74%
+- Tenant provisioning and production infra wrappers: 85%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 89%
+- End-user polish: 82%
+- Overall production readiness: around 78-82%
+
+### Known Gaps
+
+- Production tenant domains still require real `ODOO_DB_FILTER`, disabled DB
+  listing, HTTPS, provider credentials, and protected runner evidence.
+- Tenant-specific themes beyond the company logo remain a future enhancement.
+
+### Next Iteration
+
+- Run protected staging browser checks against a single tenant domain with no
+  visible database selector.
+- Add tenant-specific login theme controls beyond the company logo when a real
+  customer design system is available.
+
+## Iteration 160: Tenant Admin RBAC Multi-Role Assignment
+
+### Scope Completed
+
+- Added a tenant-admin RBAC layer in `tijara_base` with Business Roles and User
+  Role Assignments.
+- Seeded tenant-safe role templates for tenant admin, cashier, inventory,
+  accounting, expenses, salary, loyalty, promotion/display, ecommerce,
+  restaurant, analytics, and public display workflows.
+- Enabled the business owner or tenant admin to assign multiple business roles
+  to one user from a single screen. Example: Ali can be assigned both Cashier
+  and Inventory Manager access.
+- Mapped business roles to allow-listed Odoo groups while blocking protected
+  technical groups such as system administrator.
+- Added manager-only menus under Tijara > Configuration for Business Roles and
+  User Role Assignments.
+- Added Odoo transaction tests proving multi-role assignment and blocked
+  privileged group assignment behavior.
+- Updated README, DEPLOY, user guides, visual guide, spec map, and production
+  readiness checklist so tenant-admin RBAC is part of the documented operating
+  model.
+
+### Validation
+
+- `make validate` passed and parsed 105 XML files.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile addons/tijara_base/models/rbac.py addons/tijara_base/tests/test_rbac_assignment.py`
+  passed.
+- `git diff --check` passed.
+- Live `tijara_dev` upgrade passed for `tijara_base`.
+- Focused Odoo test run passed with 2 tests and 0 failures:
+  `env TIJARA_TEST_MODULES=tijara_base TIJARA_TEST_TAGS=/tijara_base TEST_DB=tijara_test_rbac2 bash scripts/run_odoo_tests.sh`.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 87%
+- POS/retail/ecommerce workflows: 84%
+- SaaS feature enforcement: 75%
+- Tenant provisioning and production infra wrappers: 85%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 89%
+- End-user polish: 82%
+- RBAC/admin operations: 78%
+- Overall production readiness: around 79-83%
+
+### Known Gaps
+
+- Protected staging still needs a browser E2E proving tenant admin multi-role
+  assignment through the live UI.
+- Real customer deployments should review and tune the seeded business role
+  templates against their exact job descriptions.
+- Full production readiness still requires certified hardware, PSP/FBR/courier
+  evidence, protected runner approvals, backup restore evidence, security scan
+  acceptance, and load test sign-off.
+
+### Next Iteration
+
+- Add authenticated tenant-admin browser E2E for Business Roles and User Role
+  Assignments.
+- Add tenant-specific role approval/audit reporting for staff permission
+  changes.
+- Rerun the protected staging browser matrix after the RBAC screens are seeded
+  into a protected environment.

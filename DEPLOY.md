@@ -576,6 +576,12 @@ Production ecommerce rollout must include:
 - Pin Docker image versions and record the Odoo version used for each release.
 - Use HTTPS at the reverse proxy and keep `proxy_mode=True`.
 - Disable public database listing in production with `ODOO_LIST_DB=False`.
+- Route each tenant domain directly to the correct database with
+  `ODOO_DB_FILTER` or equivalent reverse-proxy isolation.
+- Keep the Tijara end-user login page enabled so staff see only business
+  branding, email, password, and sign in. Do not expose database selection,
+  database manager links, debug login options, or developer-only helper links
+  on customer domains.
 - Use database-per-tenant isolation for SaaS customers.
 - Use separate staging and production databases.
 - Run `make validate` before every release.
@@ -588,6 +594,13 @@ Production ecommerce rollout must include:
   disk usage, worker memory, and queue latency.
 - Configure audit logging for refunds, exchanges, discounts, voids, stock
   adjustments, SaaS entitlement changes, and admin settings.
+- Review Tijara > Configuration > Business Roles before go-live and remove or
+  adjust tenant role templates that do not fit the customer scope.
+- Verify tenant admins can assign only allow-listed business roles/groups from
+  User Role Assignments. Tenant admins must not be able to grant system
+  administrator, database, developer, or unrelated technical access.
+- Test at least one multi-role staff user, such as a cashier who also handles
+  inventory, and confirm only the intended menus are visible after sign-in.
 - Rotate secrets when staff access changes or after any suspected exposure.
 
 ## Backup Baseline

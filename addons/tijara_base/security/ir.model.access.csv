@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-
+access_tijara_business_role_user,tijara.business.role.user,model_tijara_business_role,tijara_base.group_tijara_user,1,0,0,0
+access_tijara_business_role_manager,tijara.business.role.manager,model_tijara_business_role,tijara_base.group_tijara_manager,1,1,1,0
+access_tijara_user_role_assignment_manager,tijara.user.role.assignment.manager,model_tijara_user_role_assignment,tijara_base.group_tijara_manager,1,1,1,0

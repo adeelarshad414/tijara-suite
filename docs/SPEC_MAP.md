@@ -49,8 +49,10 @@ agentic development pipeline.
 
 | Screen | Route | Auth | Purpose |
 |---|---|---|---|
-| Odoo Login | `/web/login` | Public | Authentication entry point |
+| Tijara End-User Login | `/web/login` | Public | Branded tenant sign-in without visible database selection |
 | Odoo App Shell | `/odoo` | Authenticated | Odoo backend, POS, reports, and module menus |
+| Business Roles | `/web#model=tijara.business.role&view_type=list` | Authenticated | Tenant-safe role catalog for business owners |
+| User Role Assignments | `/web#model=tijara.user.role.assignment&view_type=list` | Authenticated | Tenant admin assigns one or more business roles to each user |
 | Kiosk Display | `/tijara/display/tijara-demo-kiosk` | Public | Self-ordering kiosk route by display slug |
 | Kiosk Checkout API | `/tijara/display/tijara-demo-kiosk/checkout` | Public JSON | Kiosk checkout payload submission |
 | Menu Board | `/tijara/display/tijara-demo-menu-board` | Public | Menu display screen |
@@ -78,6 +80,8 @@ agentic development pipeline.
 - Bill-level discount by amount or percentage with synchronized values.
 - Refund and exchange workflows with invoice barcode scanning.
 - Receipt and invoice template customization.
+- Tenant-admin RBAC business-role catalog and audited multi-role user
+  assignment.
 - CSV import and export for operational data.
 - Hardware bridge for printers, scanners, drawers, scales, labels, and customer displays.
 - Kiosk, menu, deals, promotion, queue, and customer-display routes.

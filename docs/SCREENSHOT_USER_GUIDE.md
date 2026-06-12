@@ -33,7 +33,10 @@ Generated from live local Odoo screenshots on 2026-06-09 10:29 UTC.
 
 ### Login And Authenticated App Shell
 
-Start from the Odoo login page, select the `tijara_dev` database when prompted, and sign in with the role account assigned to your workflow.
+Start from the Tijara end-user login page and sign in with the role account
+assigned to your workflow. Production tenant domains should not show database
+selection or developer links; the local demo URL includes `?db=tijara_dev` only
+for database routing on a developer machine.
 
 ![Login And Authenticated App Shell](screenshots/platform-superadmin/odoo-login.png)
 

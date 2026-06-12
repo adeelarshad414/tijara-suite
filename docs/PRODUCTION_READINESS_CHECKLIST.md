@@ -137,7 +137,10 @@ Required for production:
 - [ ] Secret manager or protected secret store is used.
 - [ ] Production startup refuses placeholder secrets.
 - [ ] RBAC for admin, cashier, inventory, accounting, ecommerce, analytics, and
-      display users is reviewed.
+      display users is reviewed, including tenant role templates, allow-listed
+      groups, multi-role user assignments, disabled leavers, and proof that
+      tenant admins cannot grant system administrator or unrelated technical
+      groups.
 - [ ] Public routes are reviewed.
 - [ ] Metrics endpoint requires token.
 - [ ] Payment webhook signatures are enforced.

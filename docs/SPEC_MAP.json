@@ -99,6 +99,7 @@
       ],
       "key_workflows": [
         "Configure POS and receipt templates",
+        "Assign multiple business roles to users",
         "Enable queue or customer display",
         "Review analytics dashboards",
         "Approve refunds and discounts"
@@ -324,11 +325,11 @@
   ],
   "screen_inventory": [
     {
-      "name": "Odoo Login",
+      "name": "Tijara End-User Login",
       "route_path": "/web/login",
       "auth": "public",
       "personas": [],
-      "description": "Odoo authentication entry point."
+      "description": "Branded tenant sign-in without visible database selection."
     },
     {
       "name": "Odoo App Shell",
@@ -351,6 +352,26 @@
         "public_display"
       ],
       "description": "Authenticated Odoo web app shell for backend modules and POS access."
+    },
+    {
+      "name": "Business Roles",
+      "route_path": "/web#model=tijara.business.role&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "tenant_admin",
+        "platform_superadmin"
+      ],
+      "description": "Tenant-safe business role catalog that maps role templates to allow-listed Odoo groups."
+    },
+    {
+      "name": "User Role Assignments",
+      "route_path": "/web#model=tijara.user.role.assignment&view_type=list",
+      "auth": "authenticated",
+      "personas": [
+        "tenant_admin",
+        "platform_superadmin"
+      ],
+      "description": "Tenant admin screen for assigning one or more business roles to each user."
     },
     {
       "name": "Kiosk Display",
@@ -661,6 +682,7 @@
     "Bill-level percentage and amount discount synchronization",
     "Refund and exchange workflows with invoice barcode scanning",
     "Receipt and invoice template customization",
+    "Tenant-admin RBAC business-role catalog and audited multi-role user assignment",
     "Back-office expense and salary management",
     "Customer details and loyalty programs",
     "Cafe-only service charges and cafe/restaurant card cash tax policy",
@@ -676,8 +698,8 @@
     "FBR adapter queue and provider readiness evidence",
     "Production DNS TLS backup and restore wrapper generation from tenant ops artifacts",
     "Provider-specific Cloudflare Route53 cert-manager and PostgreSQL backup restore template packs with dry-run-first runner scripts",
-        "Infrastructure provider readiness evidence wired into production operations readiness and release sign-off reviews",
-        "One-command protected release evidence chain for production infra planning infra-provider readiness production-ops readiness signoff protected deployment rollback approval refresh and CI artifact bundle manifests",
+    "Infrastructure provider readiness evidence wired into production operations readiness and release sign-off reviews",
+    "One-command protected release evidence chain for production infra planning infra-provider readiness production-ops readiness signoff protected deployment rollback approval refresh and CI artifact bundle manifests",
     "Pushgateway demo metrics for representative Grafana panel data",
     "Inventory low-stock expiry rack shelf bin and warehouse intelligence",
     "Analytics dashboards reports trends and daily KPI collectors",

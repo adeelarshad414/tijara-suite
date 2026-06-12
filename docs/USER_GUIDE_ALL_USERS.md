@@ -1,6 +1,6 @@
 # Tijara Suite All-User Guide
 
-Version: 2026-06-09
+Version: 2026-06-12
 Audience: platform owners, tenant admins, cashiers, inventory teams, ecommerce teams, accountants, restaurant operators, display/kiosk operators, and business managers.
 
 ## 1. Purpose
@@ -33,6 +33,11 @@ Open the application:
 ```text
 http://localhost:8069/web/login?db=tijara_dev
 ```
+
+For normal business users, the login page should show only the business logo,
+Tijara Suite information, email, password, and sign in. Users should not choose
+or see a database on a production tenant domain. The local demo URL includes
+`?db=tijara_dev` only so the developer machine selects the demo database.
 
 Project directory:
 
@@ -90,7 +95,7 @@ These credentials are for local demo only and must not be used in production.
 
 ## 4. First Login Checklist
 
-1. Open the login URL and select database `tijara_dev` if prompted.
+1. Open the tenant or local login URL.
 2. Enter the assigned email and password.
 3. Confirm the main Odoo dashboard loads.
 4. Use the app launcher/menu to open the assigned area: POS, Inventory, Tijara,
@@ -131,7 +136,9 @@ Primary tasks:
 - Enable vertical-specific workflows such as superstore, grocery, cosmetics,
   bakery, cafe, fast food, restaurant, pharmacy, cloth, garments, uniform,
   shoes, mobile shop, and electronics.
-- Assign user permissions and review cashier/inventory/accounting activity.
+- Assign one or more business roles to each user and review
+  cashier/inventory/accounting activity. For example, Ali can receive both
+  Cashier and Inventory Manager access from one assignment screen.
 - Maintain customer, supplier, product, tax, and price setup.
 
 Setup checklist:
@@ -143,6 +150,12 @@ Setup checklist:
 - Configure receipt/invoice templates and return policy text.
 - Configure POS sessions, cash shifts, payment methods, and barcode settings.
 - Configure warehouses, racks, shelves, bins, and expiry tracking.
+- Open Tijara > Configuration > Business Roles to review the tenant-safe role
+  catalog.
+- Open Tijara > Configuration > User Role Assignments, select the user, choose
+  one or more business roles, then click Apply Roles.
+- Verify the user can see only the expected POS, inventory, accounting,
+  ecommerce, display, or reporting menus after sign-in.
 - Enable subscribed SaaS features such as B2B POS, queue display, customer
   display, ecommerce store, and promotion/menu/deal screens.
 
@@ -667,6 +680,8 @@ The local environment is for development and demonstration:
 
 - Local URL: `http://localhost:8069/web/login?db=tijara_dev`
 - Local DB: `tijara_dev`
+- Production users should open their assigned tenant domain and should not see
+  database selection or developer links.
 - Local services: Odoo, PostgreSQL, optional hardware bridge and monitoring.
 - Demo credentials are in `docs/TEST_CREDENTIALS.csv`.
 - Generated local secrets are ignored by git.

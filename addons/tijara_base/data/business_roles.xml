@@ -1,0 +1,134 @@
+<odoo noupdate="1">
+    <record id="business_role_tenant_admin" model="tijara.business.role">
+        <field name="name">Business Owner / Tenant Admin</field>
+        <field name="code">tenant_admin</field>
+        <field name="sequence">10</field>
+        <field name="category">owner</field>
+        <field name="description">Owns tenant setup, users, business policies, POS configuration, reports, and approvals.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_manager
+stock.group_stock_manager
+sales_team.group_sale_manager
+purchase.group_purchase_manager
+account.group_account_manager</field>
+    </record>
+
+    <record id="business_role_cashier" model="tijara.business.role">
+        <field name="name">Cashier</field>
+        <field name="code">cashier</field>
+        <field name="sequence">20</field>
+        <field name="category">pos</field>
+        <field name="description">Runs B2C/B2B counter sales, barcode lookup, discounts, refund scans, and receipts.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_user
+point_of_sale.group_pos_user</field>
+    </record>
+
+    <record id="business_role_inventory_manager" model="tijara.business.role">
+        <field name="name">Inventory Manager</field>
+        <field name="code">inventory_manager</field>
+        <field name="sequence">30</field>
+        <field name="category">inventory</field>
+        <field name="description">Maintains products, warehouses, low-stock alerts, expiry alerts, racks, shelves, bins, imports, and exports.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_user
+stock.group_stock_manager</field>
+    </record>
+
+    <record id="business_role_accountant" model="tijara.business.role">
+        <field name="name">Accountant</field>
+        <field name="code">accountant</field>
+        <field name="sequence">40</field>
+        <field name="category">finance</field>
+        <field name="description">Reviews invoices, settlements, refunds, chargebacks, tax policy, and FBR queue evidence.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_user
+account.group_account_user
+account.group_account_invoice</field>
+    </record>
+
+    <record id="business_role_expense_manager" model="tijara.business.role">
+        <field name="name">Expense Manager</field>
+        <field name="code">expense_manager</field>
+        <field name="sequence">50</field>
+        <field name="category">finance</field>
+        <field name="description">Submits, approves, pays, and audits operational expenses.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_user
+hr_expense.group_hr_expense_team_approver</field>
+    </record>
+
+    <record id="business_role_salary_manager" model="tijara.business.role">
+        <field name="name">Salary Manager</field>
+        <field name="code">salary_manager</field>
+        <field name="sequence">60</field>
+        <field name="category">finance</field>
+        <field name="description">Manages salary batches, deductions, bonuses, approvals, and payment evidence.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_manager</field>
+    </record>
+
+    <record id="business_role_loyalty_manager" model="tijara.business.role">
+        <field name="name">Loyalty Manager</field>
+        <field name="code">loyalty_manager</field>
+        <field name="sequence">70</field>
+        <field name="category">marketing</field>
+        <field name="description">Manages walk-in customer conversion, customer details, loyalty tiers, points, and B2B/B2C history.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_user
+sales_team.group_sale_manager</field>
+    </record>
+
+    <record id="business_role_promotion_manager" model="tijara.business.role">
+        <field name="name">Promotion Manager</field>
+        <field name="code">promotion_manager</field>
+        <field name="sequence">80</field>
+        <field name="category">marketing</field>
+        <field name="description">Publishes promotions, deals, menu boards, queue displays, and customer display content.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_manager</field>
+    </record>
+
+    <record id="business_role_ecommerce_manager" model="tijara.business.role">
+        <field name="name">Ecommerce Manager</field>
+        <field name="code">ecommerce_manager</field>
+        <field name="sequence">90</field>
+        <field name="category">ecommerce</field>
+        <field name="description">Manages online catalogs, storefront channels, customer account orders, pickup/delivery, and returns.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_manager
+sales_team.group_sale_manager
+website.group_website_restricted_editor</field>
+    </record>
+
+    <record id="business_role_restaurant_operator" model="tijara.business.role">
+        <field name="name">Restaurant Operator</field>
+        <field name="code">restaurant_operator</field>
+        <field name="sequence">100</field>
+        <field name="category">restaurant</field>
+        <field name="description">Operates dine-in, takeaway, pickup, kiosk orders, queue tickets, kitchen status, and menu boards.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_user
+point_of_sale.group_pos_user</field>
+    </record>
+
+    <record id="business_role_analytics_manager" model="tijara.business.role">
+        <field name="name">Analytics Manager</field>
+        <field name="code">analytics_manager</field>
+        <field name="sequence">110</field>
+        <field name="category">analytics</field>
+        <field name="description">Reviews dashboards, KPI history, trends, reports, and operational analytics.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_user</field>
+    </record>
+
+    <record id="business_role_public_display" model="tijara.business.role">
+        <field name="name">Public Display Operator</field>
+        <field name="code">public_display</field>
+        <field name="sequence">120</field>
+        <field name="category">operations</field>
+        <field name="description">Checks kiosk, customer display, queue, menu, deals, and promotion display screens.</field>
+        <field name="technical_group_xmlids">base.group_user
+tijara_base.group_tijara_user</field>
+    </record>
+</odoo>
