@@ -27,7 +27,10 @@ This guide is for daily users. For credentials, use
 3. Press Enter for the primary action where the POS screen supports it.
 4. Choose B2C or B2B price mode.
 5. Add customer details for loyalty, B2B invoice, delivery, refund, or exchange.
-6. Apply line discounts or bill-level discount by amount or percentage.
+6. Use `Bill Discount` for total bill discount by amount or percentage. On
+   desktop it is in the main POS controls; on compact layouts it is inside
+   `Actions`. The paired field recalculates automatically; line discounts are
+   separate.
 7. Select cash, card, JazzCash, Easypaisa, Stripe, bank, or COD where enabled.
 8. Complete payment and print or preview the receipt.
 9. For refunds, scan the invoice barcode/FBR QR or search the original invoice.

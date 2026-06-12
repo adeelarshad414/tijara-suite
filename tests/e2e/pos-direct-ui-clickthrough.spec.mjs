@@ -154,6 +154,24 @@ test("direct cashier POS UI search, cart, payment, and optional receipt print fl
   });
 });
 
+test("direct cashier POS shows dedicated bill discount control", async ({ page }) => {
+  test.skip(
+    process.env.TIJARA_RUN_DIRECT_POS_BILL_DISCOUNT_E2E !== "1" ||
+      test.info().project.name !== "chromium-desktop" ||
+      !process.env.ODOO_USERNAME ||
+      !process.env.ODOO_PASSWORD ||
+      !process.env.TIJARA_POS_CONFIG_ID,
+    "Set TIJARA_RUN_DIRECT_POS_BILL_DISCOUNT_E2E=1, Odoo credentials, and TIJARA_POS_CONFIG_ID for bill discount POS E2E."
+  );
+
+  await login(page);
+  await openPosUi(page);
+
+  await expect(page.getByRole("button", { name: /Bill Discount/i })).toBeVisible({
+    timeout: visibleTimeout,
+  });
+});
+
 test("direct cashier POS keyboard-only product entry and payment navigation", async ({ page }) => {
   test.skip(
     process.env.TIJARA_RUN_DIRECT_POS_KEYBOARD_E2E !== "1" ||

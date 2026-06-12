@@ -12274,3 +12274,71 @@ Status: Complete
 - Add browser E2E coverage for post-login role-aware home routing.
 - Add optional platform-brand configuration for operators who need white-label
   platform administration.
+
+## Iteration 162: Visible POS Bill Discount Control
+
+### Scope Completed
+
+- Added a dedicated `Bill Discount` control button to the main desktop POS
+  control row and the compact-layout Actions dialog when bill-level discounts
+  are enabled on the POS configuration.
+- Reused the existing total-bill discount popup so cashiers can enter either a
+  discount percentage or fixed discount amount and see the paired value
+  recalculate automatically.
+- Kept Odoo's standard Discount control patched to open the same Tijara
+  bill-discount popup, preserving backward compatibility for layouts where the
+  native control is visible.
+- Adjusted demo POS seeding so cashier demo users can test bill discounts
+  directly; production tenants can still enable manager approval in POS
+  configuration.
+- Updated README, DEPLOY, user guide, visual guide, screenshot guide, and POS
+  demo seed notes for the cashier-facing workflow.
+
+### Validation
+
+- `node --check addons/tijara_pos_experience/static/src/app/bill_discount/bill_discount_pos.js`
+  passed.
+- `PYTHONPYCACHEPREFIX=/private/tmp/tijara-pycache python3 -m py_compile addons/tijara_demo_pos/models/pos_demo_seed.py`
+  passed.
+- `python3 -m json.tool docs/SPEC_MAP.json` passed.
+- `git diff --check` passed.
+- `make validate` passed and parsed 106 XML files.
+- Local `tijara_dev` module upgrade passed for `tijara_pos_experience` and
+  `tijara_demo_pos`.
+- Database check confirms `Tijara Demo POS` has bill discount enabled, default
+  mode `percent`, max discount `25%`, Odoo POS discount enabled, and manager
+  approval disabled for demo cashier testing.
+- Focused authenticated browser E2E passed with cashier credentials against
+  local `tijara_dev`: `direct cashier POS shows dedicated bill discount
+  control`.
+
+### Current Enterprise Status
+
+- Architecture: 93%
+- Core Odoo modules: 87%
+- POS/retail/ecommerce workflows: 85%
+- SaaS feature enforcement: 75%
+- Tenant provisioning and production infra wrappers: 85%
+- Subscription billing foundation: 69%
+- Hardware bridge foundation: 76%
+- Analytics/reporting/monitoring dashboards: 80%
+- DevOps/security/release evidence baseline: 89%
+- End-user polish: 86%
+- RBAC/admin operations: 79%
+- Overall production readiness: around 80-84%
+
+### Known Gaps
+
+- Production tenants should decide whether cashier-level discounting is allowed
+  or manager approval is mandatory.
+- Full production readiness still requires certified hardware, PSP/FBR/courier
+  evidence, protected runner approvals, backup restore evidence, security scan
+  acceptance, and load test sign-off.
+
+### Next Iteration
+
+- Upgrade the local `tijara_dev` database with `tijara_pos_experience` and
+  `tijara_demo_pos`, then verify the `Bill Discount` button from a cashier POS
+  session.
+- Add a protected browser E2E assertion for percent and amount bill-discount
+  entry inside the POS checkout flow.

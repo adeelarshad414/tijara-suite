@@ -299,7 +299,10 @@ Checkout workflow:
 4. Confirm quantity, price, discount, and tax.
 5. Select customer if required.
 6. For B2B sale, switch to B2B price mode before payment.
-7. Add overall bill discount if approved.
+7. Tap `Bill Discount` in the main POS controls on desktop, or open `Actions`
+   on compact layouts, if an overall discount is approved. Enter either
+   discount percentage or discount amount; the other field updates
+   automatically.
 8. Take payment.
 9. Print receipt and close the order.
 
@@ -316,9 +319,12 @@ Keyboard-only counter workflow:
 
 Bill discount rule:
 
+- Use the `Bill Discount` button for total bill discount. On desktop it is in
+  the main POS controls; on compact layouts it is inside `Actions`. Line
+  discounts remain separate.
 - If percentage is entered, amount should update automatically.
 - If amount is entered, percentage should update automatically.
-- Always confirm manager approval for high-value discounts.
+- Always follow the tenant policy for manager approval on high-value discounts.
 
 Refund and exchange workflow:
 

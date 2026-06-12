@@ -106,6 +106,18 @@ patch(ControlButtons.prototype, {
             return super.clickDiscount(...arguments);
         }
 
+        return this.clickTijaraBillDiscount();
+    },
+
+    async clickTijaraBillDiscount() {
+        if (!this.pos.config.tijara_bill_discount_enabled) {
+            this.dialog.add(AlertDialog, {
+                title: _t("Bill discount disabled"),
+                body: _t("Enable bill discounts in the POS configuration before using this action."),
+            });
+            return;
+        }
+
         if (
             this.pos.config.tijara_bill_discount_requires_manager &&
             this.pos.cashier._role !== "manager"

@@ -9,7 +9,10 @@ menu/deal screens, queue system, ecommerce storefront, online checkout, and
 B2B/B2C selling.
 The POS billing flow includes overall bill-level discount entry by either
 percentage or fixed amount, with both values kept in sync for cashier clarity
-and manager audit.
+and manager audit. The POS control area exposes this as a dedicated `Bill
+Discount` action in the main desktop POS control row and in the Actions dialog
+on compact layouts, so counter staff do not need to hunt for Odoo's standard
+discount control.
 The retail operations foundation also includes configurable invoice/receipt
 templates, rendered Tijara POS receipt and customer invoice reports, invoice
 barcode scanning for returns, scanner/printer registry metadata, and CSV
@@ -1145,7 +1148,12 @@ cross-browser. The first shared baseline stylesheet is included in
 The first touch-friendly POS overlay is the overall bill discount dialog. It
 supports discount percentage and discount amount entry on the same bill; when
 the cashier changes one value, the other recalculates automatically before the
-standard Odoo global discount line is applied.
+standard Odoo global discount line is applied. The action is visible as `Bill
+Discount` in the POS control buttons when bill discount is enabled on the POS
+configuration. On desktop it appears in the main control row before `More`; on
+smaller layouts it appears inside `Actions`. The demo POS allows cashier
+testing directly; production deployments can enable manager approval for
+stricter discount control.
 
 The POS action menu also includes first-pass B2B/B2C and
 dine-in/takeaway/pickup controls. B2B/B2C switching reprices existing ticket

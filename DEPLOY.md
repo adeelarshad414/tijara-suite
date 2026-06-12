@@ -600,6 +600,10 @@ Production ecommerce rollout must include:
   disk usage, worker memory, and queue latency.
 - Configure audit logging for refunds, exchanges, discounts, voids, stock
   adjustments, SaaS entitlement changes, and admin settings.
+- Verify the POS `Bill Discount` control is visible for every cashier profile
+  that is allowed to discount the total bill. Demo data allows cashier testing;
+  production tenants can enable manager approval in POS configuration for
+  stricter discount governance.
 - Review Tijara > Configuration > Business Roles before go-live and remove or
   adjust tenant role templates that do not fit the customer scope.
 - Verify tenant admins can assign only allow-listed business roles/groups from

@@ -591,7 +591,7 @@ class TijaraPosDemoSeed(models.AbstractModel):
             "tijara_bill_discount_enabled": True,
             "tijara_bill_discount_default_mode": "percent",
             "tijara_bill_discount_max_percent": 25.0,
-            "tijara_bill_discount_requires_manager": True,
+            "tijara_bill_discount_requires_manager": False,
             "module_pos_discount": True,
             "iface_discount": True,
         }

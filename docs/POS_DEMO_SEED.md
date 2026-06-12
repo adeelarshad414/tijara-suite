@@ -49,14 +49,17 @@ docker compose --env-file .env --env-file secrets/.env.secrets run --rm odoo \
 5. Use the POS action menu to switch B2C/B2B and confirm existing ticket lines
    reprice from the Tijara B2C/B2B product fields.
 6. Switch service mode between dine-in, takeaway, and pickup.
-7. Apply an overall bill discount as a manager.
+7. Tap `Bill Discount` in the main desktop POS control row, or inside `Actions`
+   on compact layouts, and apply an overall bill discount as a percentage or
+   fixed amount.
 8. Complete a cash sale.
 9. Start a refund from the POS ticket screen.
 
 ## Notes
 
-- Manager approval for bill discount is enabled on the seeded POS config.
-- The current runtime guard blocks non-manager cashiers from opening the
-  bill-discount dialog when manager approval is required.
+- The seeded demo POS allows cashier-level bill discount testing so training
+  users can verify the total-bill percentage/amount workflow quickly.
+- Production tenants can re-enable manager approval on the POS configuration to
+  block non-manager cashiers from opening the bill-discount dialog.
 - B2B/B2C repricing currently updates existing ticket lines. The deeper
   add-product hook for automatic new-line pricing is a future enhancement.

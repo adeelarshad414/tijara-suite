@@ -185,7 +185,7 @@ Steps:
 | 1 | Open POS and confirm active session, cashier, branch. | Wrong branch means wrong stock and cash. |
 | 2 | Scan barcode or search product manually. | Quantity and product name are visible. |
 | 3 | Select B2C or B2B mode when sale type changes. | Existing lines reprice when supported. |
-| 4 | Apply line discount or bill discount by percent/amount. | Amount and percent stay synchronized. |
+| 4 | Tap `Bill Discount` in the main POS controls on desktop, or inside `Actions` on compact layouts. Use line discount only for a single item. | Amount and percent stay synchronized. |
 | 5 | Take payment and confirm method. | Cash/card/wallet totals are correct. |
 | 6 | Print or share receipt. | Receipt shows PKR, GST, barcode/QR, return policy. |
 

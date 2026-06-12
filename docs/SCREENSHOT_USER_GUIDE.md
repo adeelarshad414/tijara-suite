@@ -204,7 +204,7 @@ The ecommerce storefront exposes the online catalog with PKR prices, Urdu/Englis
 - Open POS from the app shell and select the active Tijara Demo POS session.
 - Choose B2C or B2B when the feature is enabled for the tenant.
 - Add products by search, barcode scanner, QR scanner, or touch product cards.
-- Apply an overall bill discount by percentage or amount; the paired value recalculates automatically.
+- Tap `Bill Discount` in the main POS controls on desktop, or inside `Actions` on compact layouts, to apply an overall bill discount by percentage or amount; the paired value recalculates automatically.
 - Take payment, validate the sale, print the receipt, and use the receipt barcode for future refund/exchange lookup.
 
 ### Inventory, Expiry, Shelves, And Bulk Data
